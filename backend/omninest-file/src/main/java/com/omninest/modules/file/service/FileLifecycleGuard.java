@@ -1,0 +1,128 @@
+package com.omninest.modules.file.service;
+
+import com.omninest.common.enums.ErrorCode;
+import com.omninest.common.error.BusinessException;
+import com.omninest.modules.file.domain.FileNode;
+import com.omninest.modules.file.domain.FilePermission;
+import com.omninest.modules.file.domain.FilePurgeState;
+import com.omninest.modules.file.dto.FileDescriptor;
+import com.omninest.modules.file.repository.FileNodeRepository;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 统一校验文件生命周期状态和读取权限。
+ *
+ * @author OmniNest
+ */
+@Service
+@RequiredArgsConstructor
+public class FileLifecycleGuard {
+    private final FileNodeRepository fileNodeRepository;
+    private final FilePermissionService filePermissionService;
+
+    /**
+     * 校验当前用户可以读取活动文件。
+     *
+     * @param userId 当前用户 ID
+     * @param fileNodeId 文件节点 ID
+     * @return 文件描述符
+     */
+    @Transactional(readOnly = true)
+    public FileDescriptor requireReadable(UUID userId, UUID fileNodeId) {
+        FileNode node = requireActiveNode(fileNodeId);
+        if (!node.getOwnerUserId().equals(userId)) {
+            FilePermission permission = filePermissionService.resolvePermission(fileNodeId, userId);
+            if (!node.isShared() || !permission.allowView()) {
+                throw new BusinessException(ErrorCode.FORBIDDEN, "无权查看文件");
+            }
+        }
+        return toDescriptor(node);
+    }
+
+    /**
+     * 校验当前用户拥有并可修改活动文件。
+     *
+     * @param ownerUserId 所有者用户 ID
+     * @param fileNodeId 文件节点 ID
+     * @return 文件描述符
+     */
+    @Transactional(readOnly = true)
+    public FileDescriptor requireOwnedWritable(UUID ownerUserId, UUID fileNodeId) {
+        FileNode node = fileNodeRepository.findByIdAndOwnerUserIdAndDeletedFalse(fileNodeId, ownerUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND, "文件不存在"));
+        requireIdle(node);
+        return toDescriptor(node);
+    }
+
+    /**
+     * 判断当前用户拥有的文件是否仍允许异步任务处理。
+     *
+     * @param ownerUserId 所有者用户 ID
+     * @param fileNodeId 文件节点 ID
+     * @return 文件存在、未删除且未进入永久删除流程时返回 true
+     */
+    @Transactional(readOnly = true)
+    public boolean isOwnedProcessable(UUID ownerUserId, UUID fileNodeId) {
+        return fileNodeRepository.findByIdAndOwnerUserIdAndDeletedFalse(fileNodeId, ownerUserId)
+                .map(this::isIdle)
+                .orElse(false);
+    }
+
+    /**
+     * 校验回收站文件仍允许恢复。
+     *
+     * @param ownerUserId 所有者用户 ID
+     * @param fileNodeId 文件节点 ID
+     */
+    @Transactional(readOnly = true)
+    public void requireRestorable(UUID ownerUserId, UUID fileNodeId) {
+        FileNode node = fileNodeRepository.findByIdAndOwnerUserId(fileNodeId, ownerUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND, "文件不存在"));
+        if (!node.isDeleted()) {
+            throw new BusinessException(ErrorCode.CONFLICT, "文件不在回收站中");
+        }
+        requireIdle(node);
+    }
+
+    private FileNode requireActiveNode(UUID fileNodeId) {
+        FileNode node = fileNodeRepository.findByIdAndDeletedFalse(fileNodeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND, "文件不存在"));
+        requireIdle(node);
+        return node;
+    }
+
+    private void requireIdle(FileNode node) {
+        if (!isIdle(node)) {
+            throw new BusinessException(ErrorCode.FILE_LIFECYCLE_CONFLICT, "文件正在执行永久删除任务");
+        }
+    }
+
+    private boolean isIdle(FileNode node) {
+        FilePurgeState state = node.getPurgeState();
+        return state == null || state == FilePurgeState.NONE;
+    }
+
+    private FileDescriptor toDescriptor(FileNode node) {
+        return new FileDescriptor(
+                node.getId(),
+                node.getOwnerUserId(),
+                node.getParentId(),
+                node.getNodeType(),
+                node.getName(),
+                node.getNormalizedPath(),
+                node.getMimeType(),
+                node.getSizeBytes(),
+                node.getCurrentObjectId(),
+                node.getSourceType(),
+                node.isDeleted(),
+                node.isShared(),
+                node.getSpaceType(),
+                node.getUploadedBy(),
+                node.getCreatedAt(),
+                node.getUpdatedAt()
+        );
+    }
+}

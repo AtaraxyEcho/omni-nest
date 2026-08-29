@@ -1,0 +1,483 @@
+import 'dart:async';
+import 'dart:ui' show AppLifecycleState;
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
+
+final appBackdropVideoSessionProvider = Provider<AppBackdropVideoSession>((
+  ref,
+) {
+  final session = AppBackdropVideoSession._();
+  ref.onDispose(session.dispose);
+  return session;
+});
+
+/// 应用动态背景视频播放会话。
+class AppBackdropVideoSession extends ChangeNotifier {
+  AppBackdropVideoSession._();
+
+  static const int _maxOpenAttempts = 3;
+  static const Duration _openTimeout = Duration(seconds: 12);
+  static const Duration _stopTimeout = Duration(seconds: 3);
+  static const Duration _disposeTimeout = Duration(seconds: 5);
+  static const List<Duration> _retryDelays = <Duration>[
+    Duration(milliseconds: 700),
+    Duration(milliseconds: 1400),
+  ];
+
+  static Future<void> _nativeVideoGate = Future<void>.value();
+  static final Map<String, AppBackdropVideoSession> _sessionsByPath =
+      <String, AppBackdropVideoSession>{};
+
+  Player? _player;
+  VideoController? _controller;
+  StreamSubscription<bool>? _completedSub;
+  Timer? _retryTimer;
+  String _path = '';
+  String? _activePath;
+  Object? _openError;
+  bool _muted = true;
+  bool _layoutUsable = false;
+  bool _sceneActive = false;
+  bool _appVisible = true;
+  bool _opening = false;
+  bool _ready = false;
+  bool _disposed = false;
+  bool _openScheduled = false;
+  int _generation = 0;
+  int? _openingGeneration;
+  int _openAttempts = 0;
+  int _successfulOpenCount = 0;
+  int _retryCount = 0;
+
+  /// 当前可用于渲染的 video controller。
+  VideoController? get controller => _controller;
+
+  /// 当前视频是否已完成打开并可渲染。
+  bool get ready => _ready && _controller != null;
+
+  /// 最近一次打开失败的错误。
+  Object? get openError => _openError;
+
+  /// 当前是否正在打开视频。
+  bool get opening => _opening;
+
+  /// 返回当前会话的调试诊断信息。
+  AppBackdropVideoDiagnostics get diagnostics => AppBackdropVideoDiagnostics(
+    activePath: _activePath,
+    successfulOpenCount: _successfulOpenCount,
+    retryCount: _retryCount,
+    textureCount: _controller == null ? 0 : 1,
+    active: _sceneActive && _layoutUsable && _appVisible,
+  );
+
+  /// 按本机路径重试当前正在使用的播放会话。
+  static void retryPath(String path) {
+    _sessionsByPath[path]?.retry();
+  }
+
+  /// 同步视频路径和静音设置。
+  void configure({
+    required String? path,
+    required bool muted,
+    required bool active,
+  }) {
+    if (_disposed) {
+      return;
+    }
+    final normalizedPath = path?.trim() ?? '';
+    final oldPath = _path;
+    final pathChanged = _path != normalizedPath;
+    final mutedChanged = _muted != muted;
+    final activeChanged = _sceneActive != active;
+    _path = normalizedPath;
+    _muted = muted;
+    _sceneActive = active;
+    if (pathChanged) {
+      _unregisterPath(oldPath);
+      _registerPath(normalizedPath);
+      _generation++;
+      _cancelRetry();
+      _openAttempts = 0;
+      _openError = null;
+      _activePath = null;
+      unawaited(_disposeCurrentSession());
+    }
+    if (mutedChanged) {
+      final player = _player;
+      if (player != null) {
+        unawaited(player.setVolume(_muted ? 0 : 100));
+      }
+    }
+    if (activeChanged) {
+      if (_sceneActive) {
+        _resumeCurrentPlayerIfNeeded();
+      } else {
+        _cancelRetry();
+        _pauseCurrentPlayer();
+      }
+    }
+    if (pathChanged) {
+      _notifySafely();
+    }
+    if (_path.isNotEmpty && _sceneActive) {
+      _scheduleOpenIfNeeded();
+    }
+  }
+
+  /// 同步当前窗口是否有可用的渲染尺寸。
+  void setLayoutUsable(bool usable) {
+    if (_disposed || _layoutUsable == usable) {
+      return;
+    }
+    _layoutUsable = usable;
+    if (!usable || !_sceneActive) {
+      _cancelRetry();
+      _pauseCurrentPlayer();
+      return;
+    }
+    _resumeCurrentPlayerIfNeeded();
+    if (_openError != null && _openAttempts < _maxOpenAttempts) {
+      _scheduleRetry(_generation);
+    }
+    _scheduleOpenIfNeeded();
+  }
+
+  /// 同步 Flutter 应用生命周期。
+  void updateLifecycleState(AppLifecycleState state) {
+    if (_disposed) {
+      return;
+    }
+    final visible = state == AppLifecycleState.resumed;
+    if (_appVisible == visible) {
+      return;
+    }
+    _appVisible = visible;
+    if (visible) {
+      _resumeCurrentPlayerIfNeeded();
+    } else {
+      _pauseCurrentPlayer();
+    }
+  }
+
+  /// 手动重试当前视频。
+  void retry() {
+    if (_disposed) {
+      return;
+    }
+    _cancelRetry();
+    _openAttempts = 0;
+    _openError = null;
+    _generation++;
+    _scheduleOpenIfNeeded(force: true);
+    _notifySafely();
+  }
+
+  void _scheduleOpenIfNeeded({bool force = false}) {
+    if (_disposed ||
+        !_layoutUsable ||
+        !_sceneActive ||
+        _path.isEmpty ||
+        _openScheduled ||
+        _opening ||
+        (!force && _ready && _activePath == _path && _controller != null)) {
+      return;
+    }
+    if (!force && _openError != null) {
+      return;
+    }
+    _openScheduled = true;
+    final generation = _generation;
+    scheduleMicrotask(() {
+      _openScheduled = false;
+      if (_disposed ||
+          generation != _generation ||
+          !_layoutUsable ||
+          !_sceneActive) {
+        return;
+      }
+      unawaited(_openForCurrentPath(generation));
+    });
+  }
+
+  Future<void> _openForCurrentPath(int generation) async {
+    if (_disposed ||
+        _opening ||
+        generation != _generation ||
+        !_layoutUsable ||
+        !_sceneActive ||
+        _path.isEmpty) {
+      return;
+    }
+    final path = _path;
+    _opening = true;
+    _openingGeneration = generation;
+    _openError = null;
+    _notifySafely();
+    await _disposeCurrentSession();
+    if (!_canUseGeneration(generation, path)) {
+      _finishOpening(generation);
+      return;
+    }
+    _openAttempts++;
+    try {
+      final opened = await _withNativeVideoGate(() async {
+        if (!_canUseGeneration(generation, path)) {
+          return null;
+        }
+        final player = Player();
+        final controller = VideoController(player);
+        try {
+          await player.setVolume(_muted ? 0 : 100);
+          await player.setPlaylistMode(PlaylistMode.single);
+          await player
+              .open(Media(Uri.file(path).toString()), play: _shouldPlay)
+              .timeout(_openTimeout);
+          if (!_canUseGeneration(generation, path)) {
+            await _stopAndDisposePlayer(player);
+            return null;
+          }
+          _player = player;
+          _controller = controller;
+          _activePath = path;
+          return (player: player, controller: controller);
+        } on Object {
+          await _stopAndDisposePlayer(player);
+          rethrow;
+        }
+      });
+      if (opened == null) {
+        _finishOpening(generation);
+        return;
+      }
+      final player = opened.player;
+      if (!_canUseGeneration(generation, path) || !identical(_player, player)) {
+        _finishOpening(generation);
+        return;
+      }
+      _completedSub = player.stream.completed.listen((completed) {
+        if (!completed || _disposed || !identical(_player, player)) {
+          return;
+        }
+        unawaited(player.seek(Duration.zero));
+        if (_shouldPlay) {
+          unawaited(player.play());
+        }
+      });
+      _ready = true;
+      _successfulOpenCount++;
+      _openError = null;
+      if (!_shouldPlay) {
+        _pauseCurrentPlayer();
+      }
+      _finishOpening(generation);
+    } on Object catch (error) {
+      if (_canUseGeneration(generation, path)) {
+        _openError = error;
+        _ready = false;
+        _finishOpening(generation);
+        _scheduleRetry(generation);
+      } else {
+        _finishOpening(generation);
+      }
+    }
+  }
+
+  bool _canUseGeneration(int generation, String path) {
+    return !_disposed &&
+        generation == _generation &&
+        _path == path &&
+        _layoutUsable &&
+        _sceneActive;
+  }
+
+  bool get _shouldPlay => _layoutUsable && _appVisible && _sceneActive;
+
+  void _finishOpening(int generation) {
+    if (_openingGeneration == generation) {
+      _opening = false;
+      _openingGeneration = null;
+    }
+    _notifySafely();
+    _scheduleOpenIfNeeded();
+  }
+
+  void _scheduleRetry(int generation) {
+    if (_disposed ||
+        generation != _generation ||
+        !_layoutUsable ||
+        !_sceneActive ||
+        _retryTimer != null ||
+        _openAttempts >= _maxOpenAttempts) {
+      return;
+    }
+    final retryIndex = (_openAttempts - 1).clamp(0, _retryDelays.length - 1);
+    _retryTimer = Timer(_retryDelays[retryIndex], () {
+      _retryTimer = null;
+      if (!_canUseGeneration(generation, _path)) {
+        return;
+      }
+      _retryCount++;
+      _openError = null;
+      _scheduleOpenIfNeeded(force: true);
+      _notifySafely();
+    });
+  }
+
+  void _cancelRetry() {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+  }
+
+  void _pauseCurrentPlayer() {
+    final player = _player;
+    if (player != null) {
+      unawaited(player.pause());
+    }
+  }
+
+  void _resumeCurrentPlayerIfNeeded() {
+    final player = _player;
+    if (_ready && player != null && _shouldPlay) {
+      unawaited(player.play());
+    }
+  }
+
+  Future<void> _disposeCurrentSession() async {
+    final detached = _takeCurrentSession();
+    if (detached == null) {
+      return;
+    }
+    _notifySafely();
+    await _disposeDetachedSession(detached);
+  }
+
+  _DetachedVideoSession? _takeCurrentSession() {
+    final player = _player;
+    if (player == null) {
+      _controller = null;
+      _completedSub = null;
+      _ready = false;
+      _activePath = null;
+      return null;
+    }
+    final detached = _DetachedVideoSession(
+      player: player,
+      completedSub: _completedSub,
+    );
+    _player = null;
+    _controller = null;
+    _completedSub = null;
+    _ready = false;
+    _activePath = null;
+    return detached;
+  }
+
+  Future<void> _disposeDetachedSession(_DetachedVideoSession session) {
+    return _withNativeVideoGate(() async {
+      await session.completedSub?.cancel();
+      await _stopAndDisposePlayer(session.player);
+    });
+  }
+
+  static Future<T> _withNativeVideoGate<T>(Future<T> Function() operation) {
+    final previous = _nativeVideoGate;
+    final completer = Completer<void>();
+    _nativeVideoGate = completer.future;
+    return () async {
+      await previous;
+      try {
+        return await operation();
+      } finally {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      }
+    }();
+  }
+
+  static Future<void> _stopAndDisposePlayer(Player player) async {
+    try {
+      await player.stop().timeout(_stopTimeout);
+    } on Object catch (error) {
+      if (kDebugMode) {
+        debugPrint('应用背景：释放前停止播放器失败：$error');
+      }
+    }
+    try {
+      await player.dispose().timeout(_disposeTimeout);
+    } on Object catch (error) {
+      if (kDebugMode) {
+        debugPrint('应用背景：释放播放器失败：$error');
+      }
+    }
+  }
+
+  void _registerPath(String path) {
+    if (path.isEmpty) {
+      return;
+    }
+    _sessionsByPath[path] = this;
+  }
+
+  void _unregisterPath(String path) {
+    if (path.isEmpty) {
+      return;
+    }
+    if (identical(_sessionsByPath[path], this)) {
+      _sessionsByPath.remove(path);
+    }
+  }
+
+  void _notifySafely() {
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_disposed) {
+      super.dispose();
+      return;
+    }
+    _disposed = true;
+    _generation++;
+    _cancelRetry();
+    _unregisterPath(_path);
+    final detached = _takeCurrentSession();
+    if (detached != null) {
+      unawaited(_disposeDetachedSession(detached));
+    }
+    super.dispose();
+  }
+}
+
+/// 应用背景视频会话的只读诊断快照。
+class AppBackdropVideoDiagnostics {
+  const AppBackdropVideoDiagnostics({
+    required this.activePath,
+    required this.successfulOpenCount,
+    required this.retryCount,
+    required this.textureCount,
+    required this.active,
+  });
+
+  final String? activePath;
+  final int successfulOpenCount;
+  final int retryCount;
+  final int textureCount;
+  final bool active;
+}
+
+class _DetachedVideoSession {
+  const _DetachedVideoSession({
+    required this.player,
+    required this.completedSub,
+  });
+
+  final Player player;
+  final StreamSubscription<bool>? completedSub;
+}

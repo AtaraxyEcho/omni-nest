@@ -1,0 +1,1130 @@
+import 'dart:typed_data';
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:omninest/app/providers.dart';
+import 'package:omninest/core/errors/error_message.dart';
+import 'package:omninest/features/video/application/movie_center_state.dart';
+import 'package:omninest/features/video/application/movie_playback_service.dart';
+import 'package:omninest/features/video/data/movie_api.dart';
+import 'package:omninest/features/video/data/movie_playback_repository_impl.dart';
+import 'package:omninest/features/video/domain/movie_models.dart';
+import 'package:omninest/features/video/domain/movie_playback_repository.dart';
+import 'package:omninest/features/tasks/application/task_controller.dart';
+import 'package:omninest/features/tasks/domain/task_record.dart';
+
+export 'package:omninest/features/video/application/movie_center_state.dart';
+
+final movieApiProvider = Provider<MovieApi>((ref) {
+  return MovieApi(ref.watch(apiClientProvider));
+});
+
+/// 播放会话仓储依赖注入入口。
+final moviePlaybackRepositoryProvider = Provider<MoviePlaybackRepository>((
+  ref,
+) {
+  return MoviePlaybackRepositoryImpl(ref.watch(movieApiProvider));
+});
+
+/// 播放页面应用服务依赖注入入口。
+final moviePlaybackServiceProvider = Provider<MoviePlaybackService>((ref) {
+  return MoviePlaybackService(ref.watch(moviePlaybackRepositoryProvider));
+});
+
+/// 提供影视模块的首页摘要只读视图。
+final movieDashboardProvider = FutureProvider<MovieDashboard>((ref) {
+  return ref.watch(movieApiProvider).dashboard();
+});
+
+final videoStorageLocationsProvider =
+    FutureProvider<List<VideoStorageLocation>>((ref) {
+      return ref.watch(movieApiProvider).accessibleStorageLocations();
+    });
+
+final videoLibrarySourcesProvider = FutureProvider<List<VideoLibrarySource>>((
+  ref,
+) {
+  return ref.watch(movieApiProvider).librarySources();
+});
+
+final mediaLibraryAccessProvider = FutureProvider.autoDispose
+    .family<MediaLibraryAccessSettings, String>((ref, sourceId) {
+      return ref.watch(movieApiProvider).libraryAccess(sourceId);
+    });
+
+typedef MediaLibraryUsersKey = ({String query, int page});
+
+final mediaLibraryAccessUsersProvider = FutureProvider.autoDispose
+    .family<MediaPage<MediaLibraryUserCandidate>, MediaLibraryUsersKey>((
+      ref,
+      key,
+    ) {
+      return ref
+          .watch(movieApiProvider)
+          .libraryAccessUsers(query: key.query, page: key.page);
+    });
+
+typedef VideoDirectoryKey = ({String locationId, String? parent});
+
+final videoStorageDirectoriesProvider = FutureProvider.autoDispose
+    .family<MediaPage<VideoStorageDirectory>, VideoDirectoryKey>((ref, key) {
+      return ref
+          .watch(movieApiProvider)
+          .storageDirectories(locationId: key.locationId, parent: key.parent);
+    });
+
+final latestMediaScanRunProvider = StreamProvider.autoDispose
+    .family<MediaScanRun?, String>((ref, sourceId) async* {
+      final api = ref.watch(movieApiProvider);
+      while (true) {
+        final run = await api.latestMediaScanRun(sourceId);
+        yield run;
+        if (run == null || !run.active) {
+          if (run != null) {
+            ref.invalidate(videoLibrarySourcesProvider);
+            ref.invalidate(unavailableLocalMediaProvider);
+            if (run.status == 'COMPLETED' || run.status == 'PARTIAL') {
+              ref.invalidate(movieCenterControllerProvider);
+            }
+          }
+          return;
+        }
+        await Future<void>.delayed(const Duration(seconds: 2));
+      }
+    });
+
+typedef MediaTreeKey = ({String runId, String? parentNodeId, int page});
+
+final mediaScanTreeProvider = FutureProvider.autoDispose
+    .family<MediaPage<MediaScanTreeNode>, MediaTreeKey>((ref, key) {
+      return ref
+          .watch(movieApiProvider)
+          .mediaScanTree(
+            runId: key.runId,
+            parentNodeId: key.parentNodeId,
+            page: key.page,
+          );
+    });
+
+final unavailableLocalMediaProvider =
+    FutureProvider.autoDispose<MediaPage<MediaUnavailableItem>>((ref) {
+      return ref.watch(movieApiProvider).unavailableLocalMedia();
+    });
+
+final videoLibrarySourceActionsProvider = Provider<VideoLibrarySourceActions>((
+  ref,
+) {
+  return VideoLibrarySourceActions(ref);
+});
+
+class VideoLibrarySourceActions {
+  const VideoLibrarySourceActions(this.ref);
+
+  final Ref ref;
+
+  MovieApi get _api => ref.read(movieApiProvider);
+
+  Future<void> create({
+    required String name,
+    required String storageLocationId,
+    required String relativeRoot,
+    required VideoLibraryType libraryType,
+  }) async {
+    await _api.createLibrarySource(
+      name: name,
+      storageLocationId: storageLocationId,
+      relativeRoot: relativeRoot,
+      libraryType: libraryType,
+    );
+    ref.invalidate(videoLibrarySourcesProvider);
+  }
+
+  Future<void> update({
+    required VideoLibrarySource source,
+    required String name,
+    required String relativeRoot,
+    required VideoLibraryType libraryType,
+    required bool enabled,
+  }) async {
+    await _api.updateLibrarySource(
+      sourceId: source.id,
+      name: name,
+      relativeRoot: relativeRoot,
+      libraryType: libraryType,
+      enabled: enabled,
+    );
+    ref.invalidate(videoLibrarySourcesProvider);
+  }
+
+  Future<void> delete(String sourceId) async {
+    await _api.deleteLibrarySource(sourceId);
+    ref.invalidate(videoLibrarySourcesProvider);
+    ref.invalidate(unavailableLocalMediaProvider);
+  }
+
+  Future<MediaLibraryAccessSettings> updateAccess({
+    required String sourceId,
+    required MediaLibraryVisibility visibility,
+    required Set<String> userIds,
+    required int expectedVersion,
+  }) async {
+    final settings = await _api.updateLibraryAccess(
+      sourceId: sourceId,
+      visibility: visibility,
+      userIds: userIds,
+      expectedVersion: expectedVersion,
+    );
+    ref.invalidate(mediaLibraryAccessProvider(sourceId));
+    ref.invalidate(videoLibrarySourcesProvider);
+    return settings;
+  }
+
+  Future<ScrapeTask> scan(String sourceId) async {
+    final task = await _api.discoverLibrarySource(sourceId);
+    ref.invalidate(videoLibrarySourcesProvider);
+    ref.invalidate(latestMediaScanRunProvider(sourceId));
+    return task;
+  }
+
+  Future<MediaSelectionSummary> updateSelection({
+    required MediaScanRun run,
+    required String nodeId,
+    required bool selected,
+    int? expectedRevision,
+  }) async {
+    final summary = await _api.updateMediaSelection(
+      runId: run.id,
+      nodeId: nodeId,
+      selected: selected,
+      expectedRevision: expectedRevision ?? run.selectionRevision,
+    );
+    ref.invalidate(latestMediaScanRunProvider(run.librarySourceId));
+    ref.invalidate(mediaScanTreeProvider);
+    return summary;
+  }
+
+  Future<ScrapeTask> apply(MediaScanRun run, {int? expectedRevision}) async {
+    final task = await _api.applyMediaSelection(
+      runId: run.id,
+      expectedRevision: expectedRevision ?? run.selectionRevision,
+    );
+    ref.invalidate(latestMediaScanRunProvider(run.librarySourceId));
+    return task;
+  }
+
+  Future<void> pause(MediaScanRun run) async {
+    await _api.pauseMediaScanRun(run.id);
+    ref.invalidate(latestMediaScanRunProvider(run.librarySourceId));
+  }
+
+  Future<void> cancel(MediaScanRun run) async {
+    await _api.cancelMediaScanRun(run.id);
+    ref.invalidate(latestMediaScanRunProvider(run.librarySourceId));
+    ref.invalidate(videoLibrarySourcesProvider);
+  }
+}
+
+final movieCenterControllerProvider =
+    AsyncNotifierProvider<MovieCenterController, MovieCenterState>(
+      MovieCenterController.new,
+    );
+
+final movieDetailProvider = FutureProvider.autoDispose
+    .family<MovieVideoItem, String>((ref, videoItemId) {
+      return ref.watch(movieApiProvider).detail(videoItemId);
+    });
+
+final movieVersionsProvider = FutureProvider.autoDispose
+    .family<List<MovieVideoItem>, String>((ref, videoItemId) {
+      return ref.watch(movieApiProvider).versions(videoItemId);
+    });
+
+final moviePlaybackPlanProvider = FutureProvider.autoDispose
+    .family<PlaybackPlan, String>((ref, videoItemId) {
+      return ref.watch(movieApiProvider).playbackPlan(videoItemId);
+    });
+
+final movieSubtitlesProvider = FutureProvider.autoDispose
+    .family<List<SubtitleTrack>, String>((ref, videoItemId) {
+      return ref.watch(movieApiProvider).listSubtitles(videoItemId);
+    });
+
+final movieNfoPreviewProvider = FutureProvider.autoDispose
+    .family<NfoExport, String>((ref, videoItemId) {
+      return ref.watch(movieApiProvider).nfoPreview(videoItemId);
+    });
+
+final movieSeriesEpisodesProvider = FutureProvider.autoDispose
+    .family<List<MovieVideoItem>, String>((ref, seriesId) {
+      return ref.watch(movieApiProvider).seriesEpisodes(seriesId);
+    });
+
+final movieFavoriteProvider = FutureProvider.autoDispose
+    .family<MovieFavoriteState, String>((ref, videoItemId) {
+      return ref.watch(movieApiProvider).favoriteStatus(videoItemId);
+    });
+
+final movieSeriesDetailProvider = FutureProvider.autoDispose
+    .family<MovieSeriesDetail, String>((ref, seriesId) {
+      return ref.watch(movieApiProvider).seriesDetail(seriesId);
+    });
+
+final activeMovieSeasonKeysProvider = Provider<Set<SeasonKey>>(
+  (ref) => <SeasonKey>{},
+);
+
+final movieSeasonDetailProvider = FutureProvider.autoDispose
+    .family<MovieSeasonDetail, SeasonKey>((ref, key) {
+      final activeKeys = ref.read(activeMovieSeasonKeysProvider);
+      activeKeys.add(key);
+      ref.onDispose(() => activeKeys.remove(key));
+      return ref
+          .watch(movieApiProvider)
+          .seasonDetail(key.seriesId, key.seasonNumber);
+    });
+
+final movieItemAssetsProvider = FutureProvider.autoDispose
+    .family<List<MovieContentAsset>, String>((ref, itemId) {
+      return ref.watch(movieApiProvider).itemAssets(itemId);
+    });
+
+final collectionItemsProvider = FutureProvider.autoDispose
+    .family<List<MovieVideoItem>, String>((ref, collectionId) {
+      return ref.watch(movieApiProvider).collectionItems(collectionId);
+    });
+
+final movieItemHistoryProvider = FutureProvider.autoDispose
+    .family<MovieWatchHistory?, String>((ref, videoItemId) async {
+      final history = await ref.watch(movieApiProvider).history();
+      return history.where((h) => h.videoItemId == videoItemId).firstOrNull;
+    });
+
+final seriesFavoriteProvider = FutureProvider.autoDispose.family<bool, String>((
+  ref,
+  seriesId,
+) {
+  return ref.watch(movieApiProvider).seriesFavoriteStatus(seriesId);
+});
+
+class MovieCenterController extends AsyncNotifier<MovieCenterState> {
+  int _refreshGeneration = 0;
+  int _moviePageGeneration = 0;
+  int _episodePageGeneration = 0;
+  final Map<MovieSection, int> _sectionLoadGenerations = {};
+
+  MovieApi get _api => ref.read(movieApiProvider);
+
+  @override
+  Future<MovieCenterState> build() async {
+    return _loadState();
+  }
+
+  Future<void> refresh() async {
+    final generation = ++_refreshGeneration;
+    _moviePageGeneration++;
+    _episodePageGeneration++;
+    final current = state.asData?.value;
+    final next = await _loadState();
+    if (!ref.mounted || generation != _refreshGeneration) {
+      return;
+    }
+    _applyRefreshedState(current, next);
+    await _loadSection(current?.section ?? MovieSection.movies, force: true);
+  }
+
+  /// 严格刷新实时事件涉及的影视数据并保留当前视图状态。
+  Future<void> refreshForRealtime() async {
+    final generation = ++_refreshGeneration;
+    _moviePageGeneration++;
+    _episodePageGeneration++;
+    final current = state.asData?.value;
+    final next = await _loadState();
+    if (!ref.mounted || generation != _refreshGeneration) {
+      return;
+    }
+    if (next.errorMessage != null) {
+      throw StateError(next.errorMessage!);
+    }
+    _applyRefreshedState(current, next);
+    await _loadSection(current?.section ?? MovieSection.movies, force: true);
+  }
+
+  void _applyRefreshedState(MovieCenterState? current, MovieCenterState next) {
+    state = AsyncData(
+      (current ??
+              MovieCenterState(
+                dashboard: MovieDashboard.empty(),
+                movies: const [],
+                recentItems: const [],
+                continueWatching: const [],
+                favoriteItems: const [],
+                watchHistory: const [],
+                collections: const [],
+                tasks: const [],
+              ))
+          .copyWith(
+            dashboard: next.dashboard,
+            movies: next.movies,
+            animeSeries: next.animeSeries,
+            recentItems: next.recentItems,
+            continueWatching: next.continueWatching,
+            favoriteItems: next.favoriteItems,
+            watchHistory: next.watchHistory,
+            collections: next.collections,
+            tasks: next.tasks,
+            moviePage: next.moviePage,
+            movieHasMore: next.movieHasMore,
+            movieLoadingMore: false,
+            episodePage: next.episodePage,
+            episodeHasMore: next.episodeHasMore,
+            episodeLoadingMore: false,
+            loadedSections: next.loadedSections,
+            loadingSections: const {},
+          ),
+    );
+  }
+
+  void selectSection(MovieSection section) {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(
+        section: section,
+        searchQuery: '',
+        filter: MovieLibraryFilter.all,
+        selectedGenres: {},
+        clearYearFrom: true,
+        clearYearTo: true,
+        clearMinRating: true,
+      ),
+    );
+    unawaited(_loadSection(section));
+  }
+
+  void setSearchQuery(String query) {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(current.copyWith(searchQuery: query));
+  }
+
+  void setFilter(MovieLibraryFilter filter) {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(current.copyWith(filter: filter));
+  }
+
+  void toggleGenre(String genre) {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    final genres = Set<String>.from(current.selectedGenres);
+    if (genres.contains(genre)) {
+      genres.remove(genre);
+    } else {
+      genres.add(genre);
+    }
+    state = AsyncData(current.copyWith(selectedGenres: genres));
+  }
+
+  void setYearRange({int? from, int? to}) {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(
+        yearFrom: from,
+        yearTo: to,
+        clearYearFrom: from == null && current.yearFrom != null,
+        clearYearTo: to == null && current.yearTo != null,
+      ),
+    );
+  }
+
+  void setMinRating(double? rating) {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(
+        minRating: rating,
+        clearMinRating: rating == null && current.minRating != null,
+      ),
+    );
+  }
+
+  void clearFilters() {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(
+        selectedGenres: {},
+        clearYearFrom: true,
+        clearYearTo: true,
+        clearMinRating: true,
+      ),
+    );
+  }
+
+  void setSort(MovieSortBy sortBy, {bool? ascending}) {
+    final current = state.asData?.value;
+    if (current == null) return;
+    state = AsyncData(
+      current.copyWith(
+        sortBy: sortBy,
+        sortAscending:
+            ascending ??
+            (current.sortBy == sortBy ? !current.sortAscending : false),
+      ),
+    );
+  }
+
+  void setViewMode(MovieViewMode mode) {
+    final current = state.asData?.value;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(viewMode: mode));
+  }
+
+  Future<void> createScrapeTask(MovieVideoItem item) async {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    try {
+      final task = await _api.createScrapeTask(fileNodeId: item.fileNodeId);
+      await refresh();
+      final refreshed = state.asData?.value ?? current;
+      state = AsyncData(refreshed.copyWith(lastTask: task));
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> probeItem(MovieVideoItem item) async {
+    try {
+      await _api.probeItem(item.id);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> createTranscodeTask(MovieVideoItem item) async {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    try {
+      final task = await _api.createTranscodeTask(item.id);
+      final tasks = await _api.tasks();
+      state = AsyncData(current.copyWith(lastTask: task, tasks: tasks));
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> createAudioExtractTask(MovieVideoItem item) async {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    try {
+      final task = await _api.createTranscodeTask(item.id, audioOnly: true);
+      final tasks = await _api.tasks();
+      state = AsyncData(current.copyWith(lastTask: task, tasks: tasks));
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 仅刷新影视任务状态，不重载媒体列表或播放器数据。
+  Future<void> refreshTasksForRealtime() async {
+    final current = state.asData?.value;
+    if (current == null) return;
+    final tasks = await _api.tasks();
+    state = AsyncData(current.copyWith(tasks: tasks));
+  }
+
+  Future<void> toggleFavorite(
+    MovieVideoItem item, {
+    bool favorite = true,
+  }) async {
+    try {
+      await _api.favorite(videoItemId: item.id, favorite: favorite);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<TaskSubmission> deleteItem(
+    MovieVideoItem item, {
+    bool cascade = false,
+  }) async {
+    try {
+      final submission = await _api.deleteItem(item.id, cascade: cascade);
+      await refresh();
+      ref.invalidate(activeTaskSummaryProvider);
+      unawaited(ref.read(taskListProvider.notifier).load());
+      return submission;
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 更新影视条目元数据。
+  Future<void> updateMetadata({
+    required String videoItemId,
+    required String title,
+    String? originalTitle,
+    DateTime? releaseDate,
+    String? overview,
+    String? posterFileId,
+    String? backdropFileId,
+    int? runtimeSeconds,
+    String metadataStatus = 'MANUAL',
+  }) async {
+    try {
+      await _api.updateMetadata(
+        videoItemId: videoItemId,
+        title: title,
+        originalTitle: originalTitle,
+        releaseDate: releaseDate,
+        overview: overview,
+        posterFileId: posterFileId,
+        backdropFileId: backdropFileId,
+        runtimeSeconds: runtimeSeconds,
+        metadataStatus: metadataStatus,
+      );
+      await refresh();
+    } on Exception catch (error) {
+      _setError(describeUserFacingError(error).message);
+      rethrow;
+    }
+  }
+
+  /// 切换剧集收藏状态。
+  Future<void> toggleSeriesFavorite(String seriesId) async {
+    try {
+      await _api.toggleSeriesFavorite(seriesId);
+      await refresh();
+    } on Exception catch (error) {
+      _setError(describeUserFacingError(error).message);
+      rethrow;
+    }
+  }
+
+  /// 上传并绑定外挂字幕。
+  Future<void> uploadSubtitle({
+    required String videoItemId,
+    required String fileName,
+    required Uint8List bytes,
+    required String mimeType,
+    required String language,
+  }) async {
+    try {
+      final session = await _api.createUploadSession(
+        fileName: fileName,
+        sizeBytes: bytes.length,
+        mimeType: mimeType,
+      );
+      final uploadUrl = session.uploadUrl;
+      if (uploadUrl != null && uploadUrl.isNotEmpty) {
+        await _api.uploadToPresignedUrl(
+          presignedUrl: uploadUrl,
+          bytes: bytes,
+          mimeType: mimeType,
+        );
+      }
+      final fileNode = await _api.completeUploadSession(
+        uploadId: session.uploadId,
+      );
+      await _api.uploadSubtitle(
+        videoItemId: videoItemId,
+        fileNodeId: fileNode.id,
+        language: language,
+        label: fileName,
+      );
+      ref.invalidate(movieSubtitlesProvider(videoItemId));
+    } on Exception catch (error) {
+      _setError(describeUserFacingError(error).message);
+      rethrow;
+    }
+  }
+
+  /// 删除外挂字幕。
+  Future<void> deleteSubtitle(String subtitleId) async {
+    try {
+      await _api.deleteSubtitle(subtitleId);
+    } on Exception catch (error) {
+      _setError(describeUserFacingError(error).message);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteHistoryItem(MovieWatchHistory entry) async {
+    try {
+      await _api.deleteHistoryItem(entry.id);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> clearHistory() async {
+    try {
+      await _api.clearHistory();
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> createCollection({
+    required String name,
+    String? description,
+    String? coverFileId,
+  }) async {
+    await _api.createCollection(
+      name: name,
+      description: description,
+      coverFileId: coverFileId,
+    );
+    await refresh();
+  }
+
+  Future<List<MovieVideoItem>> collectionItems(String collectionId) async {
+    return _api.collectionItems(collectionId);
+  }
+
+  Future<void> addCollectionItem({
+    required String collectionId,
+    required String videoItemId,
+  }) async {
+    try {
+      await _api.addCollectionItem(
+        collectionId: collectionId,
+        videoItemId: videoItemId,
+      );
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> removeCollectionItem({
+    required String collectionId,
+    required String videoItemId,
+  }) async {
+    try {
+      await _api.removeCollectionItem(
+        collectionId: collectionId,
+        videoItemId: videoItemId,
+      );
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteCollection(String collectionId) async {
+    try {
+      await _api.deleteCollection(collectionId);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> scanLibrary({bool incremental = true}) async {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    try {
+      final task = await _api.scanLibrary(incremental: incremental);
+      await refresh();
+      final refreshed = state.asData?.value ?? current;
+      state = AsyncData(refreshed.copyWith(lastTask: task));
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  Future<void> loadNextLibraryPage() async {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    if (current.section == MovieSection.movies) {
+      await _loadNextMovies();
+      return;
+    }
+    if (current.section == MovieSection.tvShows ||
+        current.section == MovieSection.anime) {
+      await _loadNextEpisodes();
+    }
+  }
+
+  Future<void> _loadNextMovies() async {
+    final current = state.asData?.value;
+    if (current == null || current.movieLoadingMore || !current.movieHasMore) {
+      return;
+    }
+    final generation = _moviePageGeneration;
+    final nextPage = current.moviePage + 1;
+    state = AsyncData(current.copyWith(movieLoadingMore: true));
+    try {
+      final result = await _api.libraryPage(page: nextPage);
+      if (!ref.mounted || generation != _moviePageGeneration) {
+        return;
+      }
+      final latest = state.asData?.value;
+      if (latest == null) {
+        return;
+      }
+      final itemsById = {
+        for (final item in latest.movies) item.id: item,
+        for (final item in result.items) item.id: item,
+      };
+      state = AsyncData(
+        latest.copyWith(
+          movies: itemsById.values.toList(growable: false),
+          moviePage: result.page,
+          movieHasMore: result.page + 1 < result.totalPages,
+          movieLoadingMore: false,
+          clearError: true,
+        ),
+      );
+    } on Exception catch (error) {
+      if (!ref.mounted || generation != _moviePageGeneration) {
+        return;
+      }
+      final latest = state.asData?.value;
+      if (latest != null) {
+        state = AsyncData(
+          latest.copyWith(
+            movieLoadingMore: false,
+            errorMessage: describeUserFacingError(error).message,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<bool> _loadNextEpisodes({bool firstPage = false}) async {
+    final current = state.asData?.value;
+    if (current == null || current.episodeLoadingMore) {
+      return false;
+    }
+    if (!firstPage && !current.episodeHasMore) {
+      return true;
+    }
+    final generation = _episodePageGeneration;
+    final nextPage = firstPage ? 0 : current.episodePage + 1;
+    state = AsyncData(current.copyWith(episodeLoadingMore: true));
+    try {
+      final result = await _api.libraryPage(
+        mediaType: 'EPISODE',
+        page: nextPage,
+      );
+      if (!ref.mounted || generation != _episodePageGeneration) {
+        return false;
+      }
+      final latest = state.asData?.value;
+      if (latest == null) {
+        return false;
+      }
+      final retainedMovies = latest.movies.where(
+        (item) => item.mediaType == 'MOVIE',
+      );
+      final existingEpisodes =
+          firstPage
+              ? const <MovieVideoItem>[]
+              : latest.movies.where((item) => item.mediaType != 'MOVIE');
+      final itemsById = {
+        for (final item in retainedMovies) item.id: item,
+        for (final item in existingEpisodes) item.id: item,
+        for (final item in result.items) item.id: item,
+      };
+      state = AsyncData(
+        latest.copyWith(
+          movies: itemsById.values.toList(growable: false),
+          episodePage: result.page,
+          episodeHasMore: result.page + 1 < result.totalPages,
+          episodeLoadingMore: false,
+          clearError: true,
+        ),
+      );
+      return true;
+    } on Exception catch (error) {
+      if (!ref.mounted || generation != _episodePageGeneration) {
+        return false;
+      }
+      final latest = state.asData?.value;
+      if (latest != null) {
+        state = AsyncData(
+          latest.copyWith(
+            episodeLoadingMore: false,
+            errorMessage: describeUserFacingError(error).message,
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
+  Future<void> _loadSection(MovieSection section, {bool force = false}) async {
+    var current = state.asData?.value;
+    if (current == null || current.loadingSections.contains(section)) {
+      return;
+    }
+    if (!force && current.loadedSections.contains(section)) {
+      return;
+    }
+    if (section == MovieSection.movies) {
+      return;
+    }
+    if (section == MovieSection.tvShows || section == MovieSection.anime) {
+      await _loadSeriesSection(section, force: force);
+      return;
+    }
+
+    final generation = (_sectionLoadGenerations[section] ?? 0) + 1;
+    _sectionLoadGenerations[section] = generation;
+    final loading = Set<MovieSection>.from(current.loadingSections)
+      ..add(section);
+    state = AsyncData(current.copyWith(loadingSections: loading));
+    try {
+      final result = await switch (section) {
+        MovieSection.recent => _api.recent(),
+        MovieSection.continueWatching => _api.continueWatching(),
+        MovieSection.favorites => _api.favorites(),
+        MovieSection.history => _api.history(),
+        MovieSection.collections => _api.collections(),
+        MovieSection.scrapeQueue ||
+        MovieSection.transcodeTasks ||
+        MovieSection.libraryScan => _api.tasks(),
+        _ => Future<Object?>.value(null),
+      };
+      if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
+        return;
+      }
+      final latest = state.asData?.value;
+      if (latest == null) {
+        return;
+      }
+      final loaded = Set<MovieSection>.from(latest.loadedSections)
+        ..add(section);
+      final stillLoading = Set<MovieSection>.from(latest.loadingSections)
+        ..remove(section);
+      state = AsyncData(switch (section) {
+        MovieSection.recent => latest.copyWith(
+          recentItems: result as List<MovieVideoItem>,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+        MovieSection.continueWatching => latest.copyWith(
+          continueWatching: result as List<MovieContinueWatching>,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+        MovieSection.favorites => latest.copyWith(
+          favoriteItems: result as List<MovieVideoItem>,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+        MovieSection.history => latest.copyWith(
+          watchHistory: result as List<MovieWatchHistory>,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+        MovieSection.collections => latest.copyWith(
+          collections: result as List<MovieCollection>,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+        MovieSection.scrapeQueue ||
+        MovieSection.transcodeTasks ||
+        MovieSection.libraryScan => latest.copyWith(
+          tasks: result as List<MovieTask>,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+        _ => latest.copyWith(
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+        ),
+      });
+    } on Exception catch (error) {
+      if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
+        return;
+      }
+      final latest = state.asData?.value;
+      if (latest != null) {
+        final stillLoading = Set<MovieSection>.from(latest.loadingSections)
+          ..remove(section);
+        state = AsyncData(
+          latest.copyWith(
+            loadingSections: stillLoading,
+            errorMessage: describeUserFacingError(error).message,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadSeriesSection(
+    MovieSection section, {
+    required bool force,
+  }) async {
+    final current = state.asData?.value;
+    if (current == null) {
+      return;
+    }
+    final generation = (_sectionLoadGenerations[section] ?? 0) + 1;
+    _sectionLoadGenerations[section] = generation;
+    final loading = Set<MovieSection>.from(current.loadingSections)
+      ..add(section);
+    state = AsyncData(current.copyWith(loadingSections: loading));
+    try {
+      final series = await _api.seriesByType(
+        seriesType: section == MovieSection.anime ? 'ANIME' : 'TV',
+      );
+      if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
+        return;
+      }
+      final beforeEpisodes = state.asData?.value;
+      var episodesLoaded = true;
+      if (beforeEpisodes != null && (force || beforeEpisodes.episodePage < 0)) {
+        episodesLoaded = await _loadNextEpisodes(firstPage: true);
+      }
+      if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
+        return;
+      }
+      final latest = state.asData?.value;
+      if (latest == null) {
+        return;
+      }
+      final loaded = Set<MovieSection>.from(latest.loadedSections)
+        ..add(section);
+      final stillLoading = Set<MovieSection>.from(latest.loadingSections)
+        ..remove(section);
+      final dashboard = MovieDashboard(
+        stats: latest.dashboard.stats,
+        recentlyAdded: latest.dashboard.recentlyAdded,
+        continueWatching: latest.dashboard.continueWatching,
+        series:
+            section == MovieSection.tvShows ? series : latest.dashboard.series,
+      );
+      state = AsyncData(
+        latest.copyWith(
+          dashboard: dashboard,
+          animeSeries:
+              section == MovieSection.anime ? series : latest.animeSeries,
+          loadedSections: loaded,
+          loadingSections: stillLoading,
+          clearError: episodesLoaded,
+        ),
+      );
+    } on Exception catch (error) {
+      if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
+        return;
+      }
+      final latest = state.asData?.value;
+      if (latest != null) {
+        final stillLoading = Set<MovieSection>.from(latest.loadingSections)
+          ..remove(section);
+        state = AsyncData(
+          latest.copyWith(
+            loadingSections: stillLoading,
+            errorMessage: describeUserFacingError(error).message,
+          ),
+        );
+      }
+    }
+  }
+
+  final List<String> _partialErrors = [];
+
+  Future<MovieCenterState> _loadState() async {
+    _partialErrors.clear();
+    final results = await Future.wait([
+      _safe(_api.dashboard, MovieDashboard.empty()),
+      _safe(
+        _api.libraryPage,
+        const MediaPage<MovieVideoItem>(
+          items: [],
+          page: 0,
+          size: 36,
+          totalElements: 0,
+          totalPages: 0,
+        ),
+      ),
+    ]);
+    final dashboard = results[0] as MovieDashboard;
+    final moviePage = results[1] as MediaPage<MovieVideoItem>;
+    return MovieCenterState(
+      dashboard: dashboard,
+      movies: moviePage.items,
+      recentItems: dashboard.recentlyAdded,
+      continueWatching: dashboard.continueWatching,
+      favoriteItems: const [],
+      watchHistory: const [],
+      collections: const [],
+      tasks: const [],
+      animeSeries: dashboard.series
+          .where((series) => series.seriesType == 'ANIME')
+          .toList(growable: false),
+      moviePage: moviePage.page,
+      movieHasMore: moviePage.page + 1 < moviePage.totalPages,
+      loadedSections: const {MovieSection.movies},
+      errorMessage: _partialErrors.isEmpty ? null : _partialErrors.join('；'),
+    );
+  }
+
+  Future<T> _safe<T>(Future<T> Function() call, T fallback) async {
+    try {
+      return await call();
+    } on Exception catch (e) {
+      _partialErrors.add(describeUserFacingError(e).message);
+      return fallback;
+    }
+  }
+
+  void _setError(String message) {
+    final current = state.asData?.value;
+    if (current != null) {
+      state = AsyncData(current.copyWith(errorMessage: message));
+    }
+  }
+
+  void clearError() {
+    final current = state.asData?.value;
+    if (current != null) {
+      state = AsyncData(current.copyWith(clearError: true));
+    }
+  }
+}

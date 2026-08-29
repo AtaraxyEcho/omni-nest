@@ -1,0 +1,336 @@
+import 'package:flutter/material.dart';
+import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/theme/feature/music_colors.dart';
+import 'package:omninest/features/music/domain/music_playable_item.dart';
+import 'package:omninest/features/music/presentation/deck/music_deck_primitives.dart';
+
+/// 支持来源标识、键盘激活和局部悬停反馈的歌曲列表。
+class MusicDeckTrackList extends StatefulWidget {
+  const MusicDeckTrackList({
+    required this.items,
+    required this.onPlay,
+    this.currentPlayableKey,
+    this.onToggleFavorite,
+    this.onDelete,
+    this.emptyTitle,
+    this.emptyMessage,
+    this.scrollable = true,
+    super.key,
+  });
+
+  final List<MusicPlayableItem> items;
+  final String? currentPlayableKey;
+  final ValueChanged<int> onPlay;
+  final ValueChanged<MusicPlayableItem>? onToggleFavorite;
+  final ValueChanged<MusicPlayableItem>? onDelete;
+  final String? emptyTitle;
+  final String? emptyMessage;
+  final bool scrollable;
+
+  @override
+  State<MusicDeckTrackList> createState() => _MusicDeckTrackListState();
+}
+
+class _MusicDeckTrackListState extends State<MusicDeckTrackList> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.items.isEmpty) {
+      final l10n = AppLocalizations.of(context);
+      return _MusicDeckEmptyState(
+        title: widget.emptyTitle ?? l10n.musicNoTracks,
+        message: widget.emptyMessage ?? l10n.musicTracksHint,
+      );
+    }
+    if (!widget.scrollable) {
+      return Column(
+        children: [
+          for (var index = 0; index < widget.items.length; index++)
+            SizedBox(height: 66, child: _buildTrackRow(index)),
+        ],
+      );
+    }
+    return Scrollbar(
+      controller: _scrollController,
+      interactive: true,
+      child: ListView.builder(
+        controller: _scrollController,
+        primary: false,
+        padding: const EdgeInsets.only(bottom: 108),
+        itemCount: widget.items.length,
+        itemExtent: 66,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        itemBuilder: (context, index) {
+          return _buildTrackRow(index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildTrackRow(int index) {
+    final item = widget.items[index];
+    return _MusicDeckTrackRow(
+      item: item,
+      index: index,
+      selected: widget.currentPlayableKey == item.playableKey,
+      onTap: () => widget.onPlay(index),
+      onToggleFavorite:
+          widget.onToggleFavorite == null || item.ref is! LocalMusicRef
+              ? null
+              : () => widget.onToggleFavorite!(item),
+      onDelete:
+          widget.onDelete == null || item.ref is! LocalMusicRef
+              ? null
+              : () => widget.onDelete!(item),
+    );
+  }
+}
+
+class _MusicDeckTrackRow extends StatefulWidget {
+  const _MusicDeckTrackRow({
+    required this.item,
+    required this.index,
+    required this.selected,
+    required this.onTap,
+    this.onToggleFavorite,
+    this.onDelete,
+  });
+
+  final MusicPlayableItem item;
+  final int index;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback? onToggleFavorite;
+  final VoidCallback? onDelete;
+
+  @override
+  State<_MusicDeckTrackRow> createState() => _MusicDeckTrackRowState();
+}
+
+class _MusicDeckTrackRowState extends State<_MusicDeckTrackRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.musicColors;
+    final track = widget.item.track;
+    final platform = switch (widget.item.ref) {
+      LocalMusicRef() => MusicPlatform.local,
+      OnlineMusicRef(:final platform) => platform,
+    };
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    final foreground = widget.selected ? colors.primary : colors.onSurface;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Semantics(
+        button: true,
+        selected: widget.selected,
+        label: '${track.title}, ${track.artistName}',
+        child: Material(
+          color:
+              widget.selected
+                  ? colors.selectedBg
+                  : _hovered
+                  ? colors.surfaceContainerHigh
+                  : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onHover: (value) => setState(() => _hovered = value),
+            onTap: widget.onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  SizedBox.square(
+                    dimension: 40,
+                    child: MusicDeckArtwork(
+                      title: track.title,
+                      imageUrl: track.coverUrl,
+                      borderRadius: 5,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: foreground,
+                            fontSize: 14,
+                            fontWeight:
+                                widget.selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          track.artistName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colors.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (MediaQuery.sizeOf(context).width >= 900) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        track.albumTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (!mobile) ...[
+                    const SizedBox(width: 12),
+                    MusicDeckSourceBadge(platform: platform),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 42,
+                      child: Text(
+                        track.durationText,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ] else if (widget.selected) ...[
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.graphic_eq_rounded,
+                      size: 18,
+                      color: colors.primary,
+                    ),
+                  ],
+                  if (widget.onToggleFavorite != null) ...[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      tooltip:
+                          track.favorite
+                              ? AppLocalizations.of(context).musicUnfavorite
+                              : AppLocalizations.of(context).musicFavorite,
+                      onPressed: widget.onToggleFavorite,
+                      icon: Icon(
+                        track.favorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        size: 18,
+                        color:
+                            track.favorite
+                                ? const Color(0xFFF28C9A)
+                                : colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (widget.onDelete != null)
+                    PopupMenuButton<String>(
+                      tooltip: AppLocalizations.of(context).coreMore,
+                      icon: Icon(
+                        Icons.more_vert_rounded,
+                        size: 18,
+                        color: colors.onSurfaceVariant,
+                      ),
+                      onSelected: (_) => widget.onDelete?.call(),
+                      itemBuilder:
+                          (context) => [
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    ).musicDeleteLocalTrack,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MusicDeckEmptyState extends StatelessWidget {
+  const _MusicDeckEmptyState({required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.musicColors;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.library_music_outlined,
+              size: 42,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

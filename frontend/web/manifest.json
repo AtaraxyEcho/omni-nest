@@ -1,0 +1,35 @@
+{
+    "name": "OmniNest",
+    "short_name": "OmniNest",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#13121B",
+    "theme_color": "#4F46E5",
+    "description": "OmniNest self-hosted personal digital life center.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

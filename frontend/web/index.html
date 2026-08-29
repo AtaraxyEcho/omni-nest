@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="OmniNest self-hosted personal digital life center.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="OmniNest">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>OmniNest</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    // 防止 CanvasKit WebGL context lost 导致崩溃
+    // 当 GPU 资源被浏览器回收时，阻止默认行为并尝试恢复
+    window.addEventListener('webglcontextlost', function(e) {
+      e.preventDefault();
+      console.warn('[OmniNest] WebGL context lost, attempting recovery...');
+      setTimeout(function() {
+        var canvas = document.querySelector('canvas');
+        if (canvas) {
+          var gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+          if (gl && gl.isContextLost()) {
+            var ext = gl.getExtension('WEBGL_lose_context');
+            if (ext) ext.restoreContext();
+          }
+        }
+      }, 1000);
+    }, false);
+  </script>
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

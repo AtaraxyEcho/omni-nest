@@ -1,0 +1,198 @@
+package com.omninest.worker.tika;
+
+import com.omninest.common.storage.ObjectStorageClient;
+import com.omninest.common.storage.ObjectStorageKey;
+import com.omninest.modules.file.event.FileUploadedEvent;
+import com.omninest.modules.file.service.FileLifecycleGuard;
+import com.omninest.modules.search.service.FileSearchIndexService;
+import com.rabbitmq.client.Channel;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * TextExtractionConsumer 单元测试。
+ * 验证文本提取流程：从对象存储读取文件 → Tika 提取文本 → 写入索引。
+ */
+@ExtendWith(MockitoExtension.class)
+class TextExtractionConsumerTest {
+
+    @Mock
+    private ObjectStorageClient objectStorageClient;
+
+    @Mock
+    private FileSearchIndexService fileSearchIndexService;
+
+    @Mock
+    private FileLifecycleGuard fileLifecycleGuard;
+
+    @Mock
+    private Channel channel;
+
+    @InjectMocks
+    private TextExtractionConsumer textExtractionConsumer;
+
+    @Captor
+    private ArgumentCaptor<String> textCaptor;
+
+    @BeforeEach
+    void allowFileProcessing() {
+        when(fileLifecycleGuard.isOwnedProcessable(any(), any())).thenReturn(true);
+    }
+
+    /**
+     * 构造测试用的文件上传事件。
+     */
+    private FileUploadedEvent createEvent(String fileName, String mimeType) {
+        return new FileUploadedEvent(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "test-bucket",
+                "test-object-key",
+                fileName,
+                mimeType,
+                1024L,
+                Instant.now()
+        );
+    }
+
+    /**
+     * 构造测试用的 RabbitMQ 消息。
+     */
+    private Message createMessage() {
+        MessageProperties props = new MessageProperties();
+        props.setDeliveryTag(1L);
+        return new Message(new byte[0], props);
+    }
+
+    @Test
+    @DisplayName("成功提取文本后应调用索引服务写入")
+    void handle_withExtractableText_shouldCallIndexService() throws IOException {
+        FileUploadedEvent event = createEvent("readme.txt", "text/plain");
+        // 使用包含纯文本内容的输入流，Tika 可以直接提取
+        String fileContent = "这是一段可以提取的中文文本内容用于测试";
+        InputStream inputStream = new ByteArrayInputStream(fileContent.getBytes());
+        when(objectStorageClient.getObject(any(ObjectStorageKey.class))).thenReturn(inputStream);
+
+        textExtractionConsumer.handle(event, createMessage(), channel);
+
+        verify(fileSearchIndexService).indexFile(
+                eq(event.fileNodeId()),
+                eq(event.ownerUserId()),
+                eq(event.fileName()),
+                textCaptor.capture()
+        );
+        // Tika 的 BodyContentHandler 会在末尾追加换行符，使用 trim 比较
+        assertThat(textCaptor.getValue()).startsWith(fileContent);
+        verify(channel).basicAck(1L, false);
+    }
+
+    @Test
+    @DisplayName("对象存储抛出异常时不应调用索引服务")
+    void handle_whenStorageThrows_shouldNotCallIndexService() throws IOException {
+        FileUploadedEvent event = createEvent("broken.pdf", "application/pdf");
+        when(objectStorageClient.getObject(any(ObjectStorageKey.class)))
+                .thenThrow(new RuntimeException("MinIO 连接失败"));
+
+        textExtractionConsumer.handle(event, createMessage(), channel);
+
+        verify(fileSearchIndexService, never()).indexFile(
+                any(), any(), any(), any()
+        );
+        verify(channel).basicNack(1L, false, false);
+    }
+
+    @Test
+    @DisplayName("提取的文本为空白时不应调用索引服务")
+    void handle_withBlankExtractedText_shouldNotCallIndexService() throws IOException {
+        FileUploadedEvent event = createEvent("empty.pdf", "application/pdf");
+        // 空输入流导致 Tika 解析异常，触发 nack
+        InputStream emptyStream = new ByteArrayInputStream(new byte[0]);
+        when(objectStorageClient.getObject(any(ObjectStorageKey.class))).thenReturn(emptyStream);
+
+        textExtractionConsumer.handle(event, createMessage(), channel);
+
+        verify(fileSearchIndexService, never()).indexFile(
+                any(), any(), any(), any()
+        );
+        verify(channel).basicNack(1L, false, false);
+    }
+
+    @Test
+    @DisplayName("应使用事件中的 bucket 和 objectKey 构建存储键")
+    void handle_shouldConstructCorrectStorageKey() throws IOException {
+        String bucket = "user-files";
+        String objectKey = "2024/01/doc.txt";
+        FileUploadedEvent event = new FileUploadedEvent(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                bucket,
+                objectKey,
+                "doc.txt",
+                "text/plain",
+                512L,
+                Instant.now()
+        );
+        InputStream inputStream = new ByteArrayInputStream("文档内容".getBytes());
+        when(objectStorageClient.getObject(any(ObjectStorageKey.class))).thenReturn(inputStream);
+
+        textExtractionConsumer.handle(event, createMessage(), channel);
+
+        verify(objectStorageClient).getObject(any(ObjectStorageKey.class));
+        verify(channel).basicAck(1L, false);
+    }
+
+    @Test
+    @DisplayName("应正确传递 fileNodeId 和 ownerUserId 到索引服务")
+    void handle_shouldPassCorrectIdsToIndexService() throws IOException {
+        UUID fileNodeId = UUID.randomUUID();
+        UUID ownerUserId = UUID.randomUUID();
+        FileUploadedEvent event = new FileUploadedEvent(
+                fileNodeId,
+                UUID.randomUUID(),
+                ownerUserId,
+                "bucket",
+                "key",
+                "notes.txt",
+                "text/plain",
+                256L,
+                Instant.now()
+        );
+        InputStream inputStream = new ByteArrayInputStream("some text content".getBytes());
+        when(objectStorageClient.getObject(any(ObjectStorageKey.class))).thenReturn(inputStream);
+
+        textExtractionConsumer.handle(event, createMessage(), channel);
+
+        verify(fileSearchIndexService).indexFile(
+                eq(fileNodeId),
+                eq(ownerUserId),
+                eq("notes.txt"),
+                textCaptor.capture()
+        );
+        // Tika 的 BodyContentHandler 会在末尾追加换行符，使用 trim 比较
+        assertThat(textCaptor.getValue().trim()).isEqualTo("some text content");
+        verify(channel).basicAck(1L, false);
+    }
+}

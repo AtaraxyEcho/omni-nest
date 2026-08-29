@@ -1,0 +1,45 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:omninest/core/errors/app_exception.dart';
+import 'package:omninest/core/errors/error_message.dart';
+
+void main() {
+  test('formats app exception message with code', () {
+    final message = describeUserFacingError(
+      const AppException(code: 'FILE_QUOTA_EXCEEDED', message: '存储配额不足'),
+    );
+
+    expect(message.title, '操作失败');
+    expect(message.message, '存储配额不足');
+    expect(message.code, 'FILE_QUOTA_EXCEEDED');
+  });
+
+  test('formats dio response message from backend payload', () {
+    final message = describeUserFacingError(
+      DioException.badResponse(
+        statusCode: 400,
+        requestOptions: RequestOptions(path: '/files/123'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/files/123'),
+          statusCode: 400,
+          data: {'code': 400, 'message': '文件不存在'},
+        ),
+      ),
+    );
+
+    expect(message.message, '文件不存在');
+    expect(message.code, '400');
+  });
+
+  test('formats dio connection error as network guidance', () {
+    final message = describeUserFacingError(
+      DioException.connectionError(
+        requestOptions: RequestOptions(path: '/files'),
+        reason: 'SocketException: Failed host lookup',
+      ),
+    );
+
+    expect(message.message, contains('无法连接'));
+    expect(message.code, 'NETWORK_ERROR');
+  });
+}

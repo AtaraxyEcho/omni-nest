@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/core/widgets/app_fullscreen_control.dart';
+
+void main() {
+  testWidgets('F11 触发页面范围的全屏切换', (tester) async {
+    var toggleCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AppFullscreenShortcutScope(
+          onToggle: () => toggleCount += 1,
+          child: const Focus(autofocus: true, child: SizedBox.expand()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.f11);
+
+    expect(toggleCount, 1);
+  });
+
+  testWidgets('输入框获得焦点时 F11 仍触发全屏切换', (tester) async {
+    var toggleCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AppFullscreenShortcutScope(
+          onToggle: () => toggleCount += 1,
+          child: const Scaffold(body: TextField(autofocus: true)),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.f11);
+
+    expect(toggleCount, 1);
+  });
+
+  testWidgets('全屏按钮同步图标、提示和点击状态', (tester) async {
+    var isFullscreen = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: StatefulBuilder(
+          builder: (context, setState) {
+            return Center(
+              child: AppFullscreenButton(
+                isFullscreen: isFullscreen,
+                foregroundColor: Colors.white,
+                accentColor: Colors.cyan,
+                onPressed: () => setState(() => isFullscreen = !isFullscreen),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.fullscreen_rounded), findsOneWidget);
+    expect(find.byTooltip('全屏（F11）'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.fullscreen_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.fullscreen_exit_rounded), findsOneWidget);
+    expect(find.byTooltip('退出全屏（F11）'), findsOneWidget);
+  });
+}

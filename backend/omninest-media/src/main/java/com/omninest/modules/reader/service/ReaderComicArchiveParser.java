@@ -1,0 +1,243 @@
+package com.omninest.modules.reader.service;
+
+import com.omninest.common.enums.ErrorCode;
+import com.omninest.common.error.BusinessException;
+import com.omninest.modules.file.dto.FileContentStream;
+import com.omninest.modules.file.dto.FileDescriptor;
+import com.omninest.modules.file.service.FileQueryService;
+import com.omninest.modules.reader.service.ReaderArchiveSafetyPolicy.ArchiveReadSession;
+import com.omninest.modules.reader.service.ReaderArchiveSafetyPolicy.EntryReadGuard;
+import com.omninest.modules.reader.service.model.ReaderCoverDraft;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+/**
+ * 漫画 ZIP 归档解析器，负责安全扫描图片条目和提取封面。
+ *
+ * @author OmniNest
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ReaderComicArchiveParser {
+
+    private static final long MAX_PAGE_IMAGE_SIZE = 20L * 1024 * 1024;
+    private static final int IMAGE_HEADER_BYTES = 64 * 1024;
+    private static final Set<String> IMAGE_EXTENSIONS = Set.of(
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".tif", ".avif"
+    );
+    private static final Set<String> SYSTEM_PREFIXES = Set.of(
+            "__macosx/", ".ds_store", "thumbs.db", "desktop.ini"
+    );
+    private static final Pattern NATURAL_SPLITTER = Pattern.compile("(\\d+)|(\\D+)");
+
+    private final FileQueryService fileQueryService;
+    private final ReaderArchiveSafetyPolicy archiveSafetyPolicy;
+
+    /**
+     * 扫描 ZIP 中可阅读的图片条目。
+     *
+     * @param fileNode 已完成业务授权的文件节点
+     * @return 按文件名自然排序的图片条目
+     */
+    public List<ImageEntry> parseEntries(FileDescriptor fileNode) {
+        archiveSafetyPolicy.validateArchiveSize(fileNode.sizeBytes());
+        ArchiveReadSession session = archiveSafetyPolicy.newReadSession();
+        List<ImageEntry> imageEntries = new ArrayList<>();
+        try (FileContentStream content = fileQueryService.openOwnedFileContent(
+                fileNode.ownerUserId(), fileNode.id());
+             ZipInputStream input = new ZipInputStream(content.inputStream())) {
+            ZipEntry entry;
+            int entryIndex = 0;
+            while ((entry = input.getNextEntry()) != null) {
+                String normalizedName = entry.getName().toLowerCase(Locale.ROOT);
+                boolean imageEntry = !entry.isDirectory()
+                        && !isSystemFile(normalizedName)
+                        && isImageFile(normalizedName);
+                EntryReadGuard guard = session.beginEntry(
+                        entry,
+                        imageEntry ? MAX_PAGE_IMAGE_SIZE : Long.MAX_VALUE
+                );
+                if (entry.isDirectory()) {
+                    guard.complete(entry);
+                    entryIndex++;
+                    continue;
+                }
+                if (!imageEntry) {
+                    drainArchiveEntry(input, guard);
+                    guard.complete(entry);
+                    entryIndex++;
+                    continue;
+                }
+                byte[] header = new byte[IMAGE_HEADER_BYTES];
+                int totalRead = readHeaderAndDrain(input, guard, header);
+                int[] dimensions = totalRead > 24
+                        ? ComicPageAssetService.readImageDimensions(header)
+                        : new int[]{0, 0};
+                guard.complete(entry);
+                long entrySize = entry.getSize() >= 0 ? entry.getSize() : guard.bytesRead();
+                imageEntries.add(new ImageEntry(
+                        entry.getName(),
+                        entrySize,
+                        entryIndex,
+                        dimensions[0],
+                        dimensions[1]
+                ));
+                entryIndex++;
+            }
+        } catch (IOException exception) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "文件读取失败");
+        }
+        imageEntries.sort((left, right) -> naturalCompare(left.name(), right.name()));
+        return imageEntries;
+    }
+
+    /**
+     * 从 ZIP 中提取指定图片作为封面。
+     *
+     * @param fileNode 已完成业务授权的文件节点
+     * @param coverEntry 封面条目
+     * @return 封面草稿；读取失败时返回 null
+     */
+    public ReaderCoverDraft extractCover(FileDescriptor fileNode, ImageEntry coverEntry) {
+        ArchiveReadSession session = archiveSafetyPolicy.newReadSession();
+        try (FileContentStream content = fileQueryService.openOwnedFileContent(
+                fileNode.ownerUserId(), fileNode.id());
+             ZipInputStream input = new ZipInputStream(content.inputStream())) {
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                boolean targetEntry = !entry.isDirectory() && coverEntry.name().equals(entry.getName());
+                EntryReadGuard guard = session.beginEntry(
+                        entry,
+                        targetEntry ? MAX_PAGE_IMAGE_SIZE : Long.MAX_VALUE
+                );
+                if (targetEntry) {
+                    byte[] bytes = readArchiveEntryBytes(input, guard);
+                    guard.complete(entry);
+                    return new ReaderCoverDraft(
+                            bytes,
+                            ComicPageAssetService.detectMimeType(coverEntry.name()),
+                            coverEntry.name()
+                    );
+                }
+                drainArchiveEntry(input, guard);
+                guard.complete(entry);
+            }
+        } catch (RuntimeException | IOException exception) {
+            log.warn("漫画压缩包封面读取失败: errorType={}", exception.getClass().getSimpleName());
+        }
+        return null;
+    }
+
+    private boolean isSystemFile(String name) {
+        String normalized = name.toLowerCase(Locale.ROOT);
+        return SYSTEM_PREFIXES.stream().anyMatch(prefix ->
+                normalized.startsWith(prefix) || normalized.endsWith("/" + prefix));
+    }
+
+    private boolean isImageFile(String name) {
+        String normalized = name.toLowerCase(Locale.ROOT);
+        return IMAGE_EXTENSIONS.stream().anyMatch(normalized::endsWith);
+    }
+
+    static int naturalCompare(String left, String right) {
+        var leftMatcher = NATURAL_SPLITTER.matcher(left);
+        var rightMatcher = NATURAL_SPLITTER.matcher(right);
+        List<String> leftParts = new ArrayList<>();
+        List<String> rightParts = new ArrayList<>();
+        while (leftMatcher.find()) {
+            leftParts.add(leftMatcher.group());
+        }
+        while (rightMatcher.find()) {
+            rightParts.add(rightMatcher.group());
+        }
+        for (int index = 0; index < Math.min(leftParts.size(), rightParts.size()); index++) {
+            String leftPart = leftParts.get(index);
+            String rightPart = rightParts.get(index);
+            try {
+                int compared = Integer.compare(Integer.parseInt(leftPart), Integer.parseInt(rightPart));
+                if (compared != 0) {
+                    return compared;
+                }
+            } catch (NumberFormatException exception) {
+                int compared = leftPart.compareToIgnoreCase(rightPart);
+                if (compared != 0) {
+                    return compared;
+                }
+            }
+        }
+        return Integer.compare(leftParts.size(), rightParts.size());
+    }
+
+    private int readHeaderAndDrain(
+            ZipInputStream input,
+            EntryReadGuard guard,
+            byte[] header
+    ) throws IOException {
+        byte[] buffer = new byte[8192];
+        int headerSize = 0;
+        int read;
+        while ((read = input.read(buffer)) != -1) {
+            guard.recordBytes(read);
+            if (headerSize < header.length) {
+                int copied = Math.min(read, header.length - headerSize);
+                System.arraycopy(buffer, 0, header, headerSize, copied);
+                headerSize += copied;
+            }
+        }
+        return headerSize;
+    }
+
+    private byte[] readArchiveEntryBytes(
+            ZipInputStream input,
+            EntryReadGuard guard
+    ) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = input.read(buffer)) != -1) {
+            guard.recordBytes(read);
+            if (output.size() + read > MAX_PAGE_IMAGE_SIZE) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "漫画页面图片超过大小限制");
+            }
+            output.write(buffer, 0, read);
+        }
+        return output.toByteArray();
+    }
+
+    private void drainArchiveEntry(ZipInputStream input, EntryReadGuard guard) throws IOException {
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = input.read(buffer)) != -1) {
+            guard.recordBytes(read);
+        }
+    }
+
+    /**
+     * ZIP 图片条目。
+     *
+     * @param name 归档内路径
+     * @param size 解压后大小
+     * @param entryIndex 原始条目序号
+     * @param width 图片宽度
+     * @param height 图片高度
+     */
+    public record ImageEntry(
+            String name,
+            long size,
+            int entryIndex,
+            int width,
+            int height
+    ) {
+    }
+}

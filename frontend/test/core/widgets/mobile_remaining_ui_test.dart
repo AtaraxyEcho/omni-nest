@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/theme/app_theme.dart';
+import 'package:omninest/app/theme/app_theme_palette.dart';
+import 'package:omninest/features/admin/domain/admin_section.dart';
+import 'package:omninest/features/admin/presentation/widgets/admin_shell.dart';
+import 'package:omninest/features/files/domain/file_node.dart';
+import 'package:omninest/features/files/presentation/pages/file_preview_page.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_editor_toolbar.dart';
+import 'package:omninest/features/profile/presentation/widgets/profile_mobile_content.dart';
+import 'package:omninest/features/video/domain/movie_models.dart';
+import 'package:omninest/features/video/presentation/widgets/series_detail_hero.dart';
+
+void main() {
+  const targetSizes = <Size>[
+    Size(360, 800),
+    Size(412, 915),
+    Size(700, 400),
+    Size(840, 1180),
+  ];
+
+  testWidgets('个人中心在目标移动尺寸和放大字体下不溢出', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    for (final size in targetSizes) {
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpWidget(
+        _testApp(
+          ProfileMobileContent(
+            displayName: 'OmniNest User With A Long Display Name',
+            username: 'long-mobile-account-name',
+            email: 'mobile-user@example.com',
+            role: 'ADMIN',
+            unreadCount: 12,
+            weatherCity: 'Shanghai',
+            themeMode: ThemeMode.system,
+            languageCode: 'zh',
+            onThemeChanged: (_) {},
+            onLanguageChanged: (_) {},
+            onEditAvatar: _noop,
+            onEditWeatherCity: _noop,
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull, reason: '尺寸 $size 出现布局异常');
+    }
+  });
+
+  testWidgets('相片工具栏在 360 宽度和放大字体下保持五栏稳定', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      _testApp(
+        PhotoEditorToolbar(
+          selectedTool: EditTool.brightness,
+          onToolSelected: (_) {},
+          onRotate: _noop,
+          onCrop: _noop,
+          brightness: 0.2,
+          contrast: 1,
+          selectedFilter: FilterPreset.original,
+          onBrightnessChanged: (_) {},
+          onContrastChanged: (_) {},
+          onFilterSelected: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(PhotoEditorToolbar), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('剧集详情 Hero 在窄屏使用纵向内容层级', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    const series = MovieSeries(
+      id: 'series-1',
+      title: 'A Series Title That Is Deliberately Longer Than One Line',
+      metadataStatus: 'READY',
+      metadata: <String, dynamic>{},
+      genres: <String>['Drama', 'Science Fiction', 'Mystery'],
+      rating: 8.8,
+      voteCount: 1024,
+    );
+    await tester.pumpWidget(
+      _testApp(
+        const Scaffold(
+          body: SingleChildScrollView(
+            child: SeriesDetailHero(series: series, width: 360),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text(series.title), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('文件预览和管理壳层在窄屏不加载原生媒体插件', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final file = FileNode(
+      id: 'file-1',
+      parentId: null,
+      name: 'unsupported-file.bin',
+      isFolder: false,
+      nodeType: 'FILE',
+      normalizedPath: '/unsupported-file.bin',
+      sizeBytes: 1024,
+      updatedAt: DateTime(2026, 7, 14),
+      mimeType: 'application/x-omninest-test',
+    );
+    await tester.pumpWidget(_testApp(FilePreviewPage(file: file)));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(
+      _testApp(
+        const AdminShell(
+          section: AdminSection.overview,
+          child: Text('Admin content'),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Admin content'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+}
+
+void _noop() {}
+
+Widget _testApp(Widget child) {
+  return ProviderScope(
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('zh'),
+      theme: OmniNestTheme.from(AppThemePalette.dark),
+      builder:
+          (context, appChild) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: appChild!,
+          ),
+      home: Scaffold(body: child),
+    ),
+  );
+}

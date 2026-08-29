@@ -1,0 +1,113 @@
+package com.omninest.modules.music.service;
+
+import com.omninest.common.enums.ErrorCode;
+import com.omninest.common.error.BusinessException;
+import com.omninest.modules.music.dto.MusicDtos.MusicPlaybackQueueDto;
+import com.omninest.modules.music.dto.MusicDtos.MusicPlaybackQueueItemDto;
+import com.omninest.modules.music.dto.MusicDtos.SaveMusicPlaybackQueueRequest;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+/**
+ * 校验并管理用户可重建的播放队列快照。
+ *
+ * @author OmniNest
+ */
+@Service
+@RequiredArgsConstructor
+public class MusicPlaybackQueueService {
+
+    private static final long MAX_QUEUE_SIZE = 100L;
+    private static final Pattern LOCAL_KEY = Pattern.compile("local:[0-9a-fA-F-]{36}");
+    private static final Pattern ONLINE_KEY = Pattern.compile("online:(netease|qq):[A-Za-z0-9_-]{1,128}");
+    private static final Set<String> REPEAT_MODES = Set.of("off", "all", "one");
+
+    private final MusicPlaybackQueueStore queueStore;
+
+    /**
+     * 获取用户上次保存的播放队列。
+     *
+     * @param ownerUserId 当前用户标识
+     * @return 可重建播放队列，不存在时返回空队列
+     */
+    public MusicPlaybackQueueDto load(UUID ownerUserId) {
+        return queueStore.find(ownerUserId)
+                .map(this::normalize)
+                .orElseGet(this::emptySnapshot);
+    }
+
+    /**
+     * 校验并保存用户播放队列的稳定引用和展示快照。
+     *
+     * @param ownerUserId 当前用户标识
+     * @param request 队列保存请求
+     * @return 已规范化的队列快照
+     */
+    public MusicPlaybackQueueDto save(UUID ownerUserId, SaveMusicPlaybackQueueRequest request) {
+        validateKeys(request.items());
+        int currentIndex = normalizeIndex(request.currentIndex(), request.items().size());
+        MusicPlaybackQueueDto snapshot = new MusicPlaybackQueueDto(
+                List.copyOf(request.items()),
+                currentIndex,
+                normalizeRepeatMode(request.repeatMode()),
+                request.shuffleEnabled(),
+                Instant.now()
+        );
+        queueStore.save(ownerUserId, snapshot);
+        return snapshot;
+    }
+
+    private MusicPlaybackQueueDto normalize(MusicPlaybackQueueDto snapshot) {
+        if (snapshot == null || snapshot.items() == null) {
+            return emptySnapshot();
+        }
+        List<MusicPlaybackQueueItemDto> items = snapshot.items().stream()
+                .filter(this::isSupportedItem)
+                .limit(MAX_QUEUE_SIZE)
+                .toList();
+        return new MusicPlaybackQueueDto(
+                items,
+                normalizeIndex(snapshot.currentIndex(), items.size()),
+                normalizeRepeatMode(snapshot.repeatMode()),
+                snapshot.shuffleEnabled(),
+                snapshot.updatedAt() == null ? Instant.now() : snapshot.updatedAt()
+        );
+    }
+
+    private void validateKeys(List<MusicPlaybackQueueItemDto> items) {
+        for (MusicPlaybackQueueItemDto item : items) {
+            if (!isSupportedItem(item)) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR, "播放队列包含不支持的曲目标识");
+            }
+        }
+    }
+
+    private boolean isSupportedItem(MusicPlaybackQueueItemDto item) {
+        if (item == null || item.playableKey() == null) {
+            return false;
+        }
+        return LOCAL_KEY.matcher(item.playableKey()).matches()
+                || ONLINE_KEY.matcher(item.playableKey()).matches();
+    }
+
+    private int normalizeIndex(Integer currentIndex, int size) {
+        if (size == 0) {
+            return -1;
+        }
+        int index = currentIndex == null ? 0 : currentIndex;
+        return Math.max(0, Math.min(index, size - 1));
+    }
+
+    private String normalizeRepeatMode(String repeatMode) {
+        return REPEAT_MODES.contains(repeatMode) ? repeatMode : "off";
+    }
+
+    private MusicPlaybackQueueDto emptySnapshot() {
+        return new MusicPlaybackQueueDto(List.of(), -1, "off", false, Instant.EPOCH);
+    }
+}

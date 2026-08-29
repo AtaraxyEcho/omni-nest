@@ -1,0 +1,63 @@
+/// 空间类型枚举
+enum SpaceType {
+  personal('PERSONAL'),
+  shared('SHARED');
+
+  final String value;
+  const SpaceType(this.value);
+
+  static SpaceType fromValue(String value) {
+    return SpaceType.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => SpaceType.personal,
+    );
+  }
+}
+
+class FileNode {
+  const FileNode({
+    required this.id,
+    required this.parentId,
+    required this.name,
+    required this.isFolder,
+    required this.nodeType,
+    required this.normalizedPath,
+    required this.sizeBytes,
+    required this.updatedAt,
+    this.mimeType,
+    this.spaceType = SpaceType.personal,
+    this.uploadedBy,
+    this.mediaAutoImportTaskId,
+  });
+
+  final String id;
+  final String? parentId;
+  final String name;
+  final bool isFolder;
+  final String nodeType;
+  final String normalizedPath;
+  final String? mimeType;
+  final int sizeBytes;
+  final DateTime? updatedAt;
+  final SpaceType spaceType;
+  final String? uploadedBy;
+  final String? mediaAutoImportTaskId;
+}
+
+class FileNodePage {
+  const FileNodePage({
+    required this.items,
+    required this.page,
+    required this.size,
+    required this.totalElements,
+    required this.totalPages,
+  });
+
+  final List<FileNode> items;
+  final int page;
+  final int size;
+  final int totalElements;
+  final int totalPages;
+
+  bool get hasNextPage => page + 1 < totalPages;
+}

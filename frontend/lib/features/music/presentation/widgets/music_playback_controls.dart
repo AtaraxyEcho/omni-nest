@@ -1,0 +1,220 @@
+import 'package:flutter/material.dart';
+import 'package:omninest/core/widgets/app_slider.dart';
+
+/// Music 播放按钮的视觉层级。
+enum MusicPlaybackButtonSize { regular, compact, inline }
+
+/// Music 模块统一使用的播放与暂停按钮。
+class MusicPlaybackButton extends StatefulWidget {
+  const MusicPlaybackButton({
+    required this.isPlaying,
+    required this.tooltip,
+    required this.onPressed,
+    this.buttonSize = MusicPlaybackButtonSize.regular,
+    this.backgroundColor = const Color(0xFF28676B),
+    this.accentColor = const Color(0xFF79D6D2),
+    this.foregroundColor = const Color(0xFFF7FCFC),
+    super.key,
+  });
+
+  final bool isPlaying;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final MusicPlaybackButtonSize buttonSize;
+  final Color backgroundColor;
+  final Color accentColor;
+  final Color foregroundColor;
+
+  @override
+  State<MusicPlaybackButton> createState() => _MusicPlaybackButtonState();
+}
+
+class _MusicPlaybackButtonState extends State<MusicPlaybackButton> {
+  bool _hovered = false;
+  bool _pressed = false;
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null;
+    final viewport = MediaQuery.maybeSizeOf(context);
+    final constrainedViewport =
+        viewport != null && (viewport.width < 600 || viewport.height < 600);
+    final diameter = switch (widget.buttonSize) {
+      MusicPlaybackButtonSize.regular => constrainedViewport ? 38.0 : 40.0,
+      MusicPlaybackButtonSize.compact => constrainedViewport ? 34.0 : 36.0,
+      MusicPlaybackButtonSize.inline => constrainedViewport ? 26.0 : 28.0,
+    };
+    final scale = _pressed ? 0.95 : (_hovered && enabled ? 1.035 : 1.0);
+    final iconSize = (diameter * 0.5).clamp(13.0, 20.0);
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: widget.tooltip,
+      child: Tooltip(
+        message: widget.tooltip,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit:
+              (_) => setState(() {
+                _hovered = false;
+                _pressed = false;
+              }),
+          child: AnimatedScale(
+            scale: scale,
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOutCubic,
+            child: AnimatedContainer(
+              width: diameter,
+              height: diameter,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient:
+                    enabled
+                        ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: <Color>[
+                            Color.lerp(
+                              widget.backgroundColor,
+                              widget.accentColor,
+                              _hovered ? 0.34 : 0.20,
+                            )!,
+                            widget.backgroundColor,
+                          ],
+                        )
+                        : LinearGradient(
+                          colors: <Color>[
+                            Colors.white.withValues(alpha: 0.14),
+                            Colors.white.withValues(alpha: 0.08),
+                          ],
+                        ),
+                border: Border.all(
+                  color:
+                      _focused
+                          ? widget.foregroundColor.withValues(alpha: 0.90)
+                          : widget.accentColor.withValues(
+                            alpha: enabled ? (_hovered ? 0.68 : 0.42) : 0.10,
+                          ),
+                  width: _focused ? 1.8 : 1,
+                ),
+                boxShadow:
+                    enabled
+                        ? <BoxShadow>[
+                          BoxShadow(
+                            color: widget.accentColor.withValues(
+                              alpha: _hovered ? 0.24 : 0.12,
+                            ),
+                            blurRadius: _hovered ? 18 : 11,
+                            offset: const Offset(0, 4),
+                          ),
+                          BoxShadow(
+                            color: const Color(
+                              0xFF02070A,
+                            ).withValues(alpha: 0.34),
+                            blurRadius: 9,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                        : const <BoxShadow>[],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: widget.onPressed,
+                  onFocusChange: (value) => setState(() => _focused = value),
+                  onHighlightChanged:
+                      enabled
+                          ? (value) => setState(() => _pressed = value)
+                          : null,
+                  splashColor: widget.foregroundColor.withValues(alpha: 0.16),
+                  highlightColor: widget.foregroundColor.withValues(
+                    alpha: 0.08,
+                  ),
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      transitionBuilder:
+                          (child, animation) => FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.82,
+                                end: 1,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          ),
+                      child: Icon(
+                        widget.isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        key: ValueKey<bool>(widget.isPlaying),
+                        size: iconSize,
+                        color:
+                            enabled
+                                ? widget.foregroundColor
+                                : widget.foregroundColor.withValues(
+                                  alpha: 0.36,
+                                ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Music 模块统一使用的播放进度条。
+class MusicPlaybackProgressBar extends StatelessWidget {
+  const MusicPlaybackProgressBar({
+    required this.value,
+    required this.onChanged,
+    required this.semanticLabel,
+    this.activeColor = const Color(0xFF79D6D2),
+    this.inactiveColor = const Color(0x29FFFFFF),
+    this.thumbColor = const Color(0xFFF7FCFC),
+    super.key,
+  });
+
+  final double value;
+  final ValueChanged<double>? onChanged;
+  final String semanticLabel;
+  final Color activeColor;
+  final Color inactiveColor;
+  final Color thumbColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: semanticLabel,
+      slider: true,
+      child: SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 4,
+          activeTrackColor: activeColor,
+          inactiveTrackColor: inactiveColor,
+          disabledActiveTrackColor: activeColor.withValues(alpha: 0.32),
+          disabledInactiveTrackColor: inactiveColor.withValues(alpha: 0.54),
+          thumbColor: thumbColor,
+          disabledThumbColor: thumbColor.withValues(alpha: 0.42),
+          overlayColor: activeColor.withValues(alpha: 0.16),
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5.5),
+          overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+          trackShape: const RoundedRectSliderTrackShape(),
+          showValueIndicator: ShowValueIndicator.never,
+        ),
+        child: AppSlider(value: value.clamp(0.0, 1.0), onChanged: onChanged),
+      ),
+    );
+  }
+}

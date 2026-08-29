@@ -1,0 +1,300 @@
+package com.omninest.modules.photos.service;
+
+import com.omninest.common.enums.ErrorCode;
+import com.omninest.common.error.BusinessException;
+import com.omninest.common.sync.SyncAction;
+import com.omninest.common.sync.SyncScope;
+import com.omninest.modules.file.dto.ResourceShareLinkDto;
+import com.omninest.modules.file.dto.ShareAccessSessionDto;
+import com.omninest.modules.file.service.ResourceShareLinkService;
+import com.omninest.modules.media.service.MediaSyncEventService;
+import com.omninest.modules.photos.domain.PhotoAlbum;
+import com.omninest.modules.photos.domain.PhotoAlbumItem;
+import com.omninest.modules.photos.dto.PhotoDtos.CreateAlbumRequest;
+import com.omninest.modules.photos.dto.PhotoDtos.CreateAlbumShareRequest;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoAlbumDetailDto;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoAlbumDto;
+import com.omninest.modules.photos.domain.PhotoItem;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoItemDto;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoShareLinkDto;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoSharedAlbumDto;
+import com.omninest.modules.photos.repository.PhotoAlbumItemRepository;
+import com.omninest.modules.photos.repository.PhotoAlbumRepository;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * 照片相册服务，提供相册增删改查及照片管理功能。
+ *
+ * @author OmniNest
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class PhotoAlbumService {
+
+    private final PhotoAlbumRepository albumRepository;
+    private final PhotoAlbumItemRepository albumItemRepository;
+    private final PhotoLibraryService libraryService;
+    private final ResourceShareLinkService resourceShareLinkService;
+    private final MediaSyncEventService syncEventService;
+
+    /**
+     * 查询用户所有相册，按更新时间倒序
+     */
+    @Transactional(readOnly = true)
+    public List<PhotoAlbumDto> listAlbums(UUID ownerUserId) {
+        return albumRepository.findByOwnerUserIdOrderByUpdatedAtDesc(ownerUserId)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    /**
+     * 创建新相册
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public PhotoAlbumDto createAlbum(UUID ownerUserId, CreateAlbumRequest request) {
+        PhotoAlbum album = new PhotoAlbum();
+        album.setOwnerUserId(ownerUserId);
+        album.setName(request.name().trim());
+        album.setDescription(request.description());
+        PhotoAlbum saved = albumRepository.save(album);
+        recordAlbumEvent(ownerUserId, saved, SyncAction.CREATED);
+        return toDto(saved);
+    }
+
+    /**
+     * 更新相册名称和描述
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public PhotoAlbumDto updateAlbum(UUID ownerUserId, UUID albumId, CreateAlbumRequest request) {
+        PhotoAlbum album = requireAlbum(ownerUserId, albumId);
+        album.setName(request.name().trim());
+        album.setDescription(request.description());
+        PhotoAlbum saved = albumRepository.save(album);
+        recordAlbumEvent(ownerUserId, saved, SyncAction.UPDATED);
+        return toDto(saved);
+    }
+
+    /**
+     * 删除相册及其所有关联条目
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAlbum(UUID ownerUserId, UUID albumId) {
+        PhotoAlbum album = requireAlbum(ownerUserId, albumId);
+        List<PhotoAlbumItem> items = albumItemRepository.findByOwnerUserIdAndAlbumIdOrderBySortOrderAsc(ownerUserId, albumId);
+        albumItemRepository.deleteAll(items);
+        albumRepository.delete(album);
+        recordAlbumEvent(ownerUserId, album, SyncAction.DELETED);
+    }
+
+    /**
+     * 查询相册详情，包含相册中所有照片
+     */
+    @Transactional(readOnly = true)
+    public PhotoAlbumDetailDto albumDetail(UUID ownerUserId, UUID albumId) {
+        requireAlbum(ownerUserId, albumId);
+        List<UUID> photoIds = albumItemRepository.findPhotoIdsByAlbumId(albumId);
+        List<PhotoItemDto> photos = photoIds.stream()
+                .map(id -> libraryService.photo(ownerUserId, id))
+                .toList();
+        PhotoAlbumDto albumDto = toDto(requireAlbum(ownerUserId, albumId));
+        return new PhotoAlbumDetailDto(albumDto, photos);
+    }
+
+    /**
+     * 向相册添加照片，自动去重
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void addPhotos(UUID ownerUserId, UUID albumId, List<UUID> photoIds) {
+        PhotoAlbum album = requireAlbum(ownerUserId, albumId);
+        for (UUID photoId : photoIds) {
+            if (albumItemRepository.existsByAlbumIdAndPhotoId(albumId, photoId)) {
+                continue;
+            }
+            PhotoAlbumItem item = new PhotoAlbumItem();
+            item.setOwnerUserId(ownerUserId);
+            item.setAlbumId(albumId);
+            item.setPhotoId(photoId);
+            albumItemRepository.save(item);
+        }
+        refreshPhotoCount(albumId);
+        recordAlbumEvent(ownerUserId, album, SyncAction.UPDATED);
+    }
+
+    /**
+     * 从相册移除单张照片
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void removePhoto(UUID ownerUserId, UUID albumId, UUID photoId) {
+        PhotoAlbum album = requireAlbum(ownerUserId, albumId);
+        albumItemRepository.deleteByAlbumIdAndPhotoId(albumId, photoId);
+        refreshPhotoCount(albumId);
+        recordAlbumEvent(ownerUserId, album, SyncAction.UPDATED);
+    }
+
+    /**
+     * 刷新相册照片计数
+     */
+    private void refreshPhotoCount(UUID albumId) {
+        albumRepository.findById(albumId).ifPresent(album -> {
+            album.setPhotoCount((int) albumItemRepository.countByAlbumId(albumId));
+            albumRepository.save(album);
+        });
+    }
+
+    /**
+     * 查询相册并校验所有权，不存在则抛出异常
+     */
+    private PhotoAlbum requireAlbum(UUID ownerUserId, UUID albumId) {
+        return albumRepository.findByOwnerUserIdAndId(ownerUserId, albumId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "相册不存在"));
+    }
+
+    // ─── 相册分享 ───
+
+    /**
+     * 创建相册分享链接。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public PhotoShareLinkDto createAlbumShare(UUID ownerUserId, UUID albumId, CreateAlbumShareRequest request) {
+        requireAlbum(ownerUserId, albumId);
+        return toShareDto(resourceShareLinkService.create(
+                ownerUserId,
+                "PHOTO_ALBUM",
+                albumId,
+                request.password(),
+                request.expiresAt(),
+                request.maxAccessCount()
+        ));
+    }
+
+    /**
+     * 列出相册的所有分享链接。
+     */
+    @Transactional(readOnly = true)
+    public List<PhotoShareLinkDto> listAlbumShares(UUID ownerUserId, UUID albumId) {
+        requireAlbum(ownerUserId, albumId);
+        return resourceShareLinkService.list(ownerUserId, albumId)
+                .stream()
+                .map(this::toShareDto)
+                .toList();
+    }
+
+    /**
+     * 撤销分享链接。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void revokeAlbumShare(UUID ownerUserId, UUID shareId) {
+        resourceShareLinkService.revoke(ownerUserId, shareId);
+    }
+
+    /**
+     * 通过公开链接访问共享相册。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ShareAccessSessionDto issueSharedAlbumSession(
+            String rawToken,
+            String password,
+            String clientAddress
+    ) {
+        return resourceShareLinkService.issueConsumedSession(
+                rawToken, password, "PHOTO_ALBUM", clientAddress);
+    }
+
+    /** 分页访问公开相册，并在授权成功后消费一次分享访问次数。 */
+    @Transactional(rollbackFor = Exception.class)
+    public PhotoSharedAlbumDto accessSharedAlbum(
+            String rawToken,
+            String sessionToken,
+            int page,
+            int size
+    ) {
+        ResourceShareLinkDto link = resourceShareLinkService.requireSession(
+                rawToken, sessionToken, "PHOTO_ALBUM");
+        UUID albumId = link.resourceId();
+        PhotoAlbum album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "相册不存在"));
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(Math.max(1, size), 100);
+        List<UUID> photoIds = albumItemRepository.findPhotoIdsByAlbumId(
+                albumId, PageRequest.of(safePage, safeSize));
+        List<PhotoItemDto> photos = libraryService.listPhotosByIds(album.getOwnerUserId(), photoIds);
+        return new PhotoSharedAlbumDto(
+                album.getName(), album.getDescription(), photos,
+                safePage, safeSize, albumItemRepository.countByAlbumId(albumId));
+    }
+
+    private PhotoShareLinkDto toShareDto(ResourceShareLinkDto share) {
+        return new PhotoShareLinkDto(
+                share.id(),
+                share.token(),
+                share.resourceType(),
+                share.resourceId(),
+                share.expiresAt(),
+                share.maxAccessCount(),
+                share.accessCount(),
+                share.createdAt()
+        );
+    }
+
+    /**
+     * 将相册实体转换为DTO，自动解析封面图片URL
+     */
+    private PhotoAlbumDto toDto(PhotoAlbum album) {
+        String coverUrl = resolveAlbumCoverUrl(album);
+        return new PhotoAlbumDto(
+                album.getId(),
+                album.getName(),
+                album.getDescription(),
+                coverUrl,
+                album.getPhotoCount(),
+                album.getCreatedAt(),
+                album.getUpdatedAt()
+        );
+    }
+
+    /**
+     * 解析相册封面URL：优先使用相册自身封面，否则取第一张照片的缩略图
+     */
+    private String resolveAlbumCoverUrl(PhotoAlbum album) {
+        if (album.getCoverFileId() != null) {
+            try {
+                return libraryService.resolveCoverUrl(album.getOwnerUserId(), album.getCoverFileId());
+            } catch (Exception ex) {
+                log.warn("相册封面解析失败，尝试从第一张照片获取: albumId={}, error={}", album.getId(), ex.getMessage());
+            }
+        }
+        List<UUID> photoIds = albumItemRepository.findPhotoIdsByAlbumId(album.getId());
+        if (!photoIds.isEmpty()) {
+            try {
+                PhotoItem firstPhoto = libraryService.findPhotoById(photoIds.get(0));
+                if (firstPhoto != null && firstPhoto.getCoverFileId() != null) {
+                    return libraryService.resolveCoverUrl(firstPhoto.getOwnerUserId(), firstPhoto.getCoverFileId());
+                }
+            } catch (Exception ex) {
+                log.warn("相册第一张照片封面解析失败: albumId={}, error={}", album.getId(), ex.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private void recordAlbumEvent(UUID ownerUserId, PhotoAlbum album, SyncAction action) {
+        syncEventService.record(
+                ownerUserId,
+                SyncScope.PHOTOS,
+                "PHOTO_ALBUM",
+                album.getId() == null ? null : album.getId().toString(),
+                action,
+                album.getVersion(),
+                Map.of()
+        );
+    }
+}

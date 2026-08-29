@@ -1,0 +1,219 @@
+part of 'photo_controller.dart';
+
+/// 照片中心的选择、批量、编辑、分享与 AI 命令。
+mixin PhotoCenterControllerCommands on AsyncNotifier<PhotoCenterState> {
+  PhotoRepository get _repo;
+
+  Future<void> refresh();
+
+  void _setError(String message);
+
+  /// 切换选择模式
+  void toggleSelectionMode() {
+    final current = state.asData?.value;
+    if (current == null) return;
+    state = AsyncData(
+      current.copyWith(
+        isSelectionMode: !current.isSelectionMode,
+        selectedPhotoIds:
+            current.isSelectionMode ? const {} : current.selectedPhotoIds,
+      ),
+    );
+  }
+
+  /// 切换照片选中状态
+  void togglePhotoSelection(String photoId) {
+    final current = state.asData?.value;
+    if (current == null) return;
+    final ids = Set<String>.from(current.selectedPhotoIds);
+    if (ids.contains(photoId)) {
+      ids.remove(photoId);
+    } else {
+      ids.add(photoId);
+    }
+    state = AsyncData(current.copyWith(selectedPhotoIds: ids));
+  }
+
+  /// 创建批量任务
+  Future<PhotoBatchTask> createBatchTask({
+    required String taskType,
+    Map<String, dynamic>? params,
+  }) async {
+    final current = state.asData?.value;
+    if (current == null) {
+      throw StateError('状态未初始化');
+    }
+    return _repo.createBatchTask(
+      taskType: taskType,
+      photoIds: current.selectedPhotoIds.toList(),
+      params: params,
+    );
+  }
+
+  /// 添加标签
+  Future<void> addTag(String photoId, String tag) async {
+    try {
+      await _repo.addTag(photoId, tag);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 移除标签
+  Future<void> removeTag(String photoId, String tag) async {
+    try {
+      await _repo.removeTag(photoId, tag);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 查询所有标签
+  Future<List<String>> listTags() => _repo.listTags();
+
+  /// 查询批量任务状态
+  Future<PhotoBatchTask> getBatchTask(String taskId) =>
+      _repo.getBatchTask(taskId);
+
+  /// 获取照片批量 ZIP 的下载票据。
+  Future<PhotoBatchDownloadTicket> getBatchDownloadTicket(String taskId) =>
+      _repo.getBatchDownloadTicket(taskId);
+
+  /// 续传并保存照片批量 ZIP。
+  Future<void> downloadBatchArchive(
+    PhotoBatchDownloadTicket ticket,
+    String destinationPath,
+  ) => _repo.downloadBatchArchive(ticket, destinationPath);
+
+  /// 应用编辑操作
+  Future<PhotoEditVersion> applyEdit(
+    String photoId,
+    String editType,
+    Map<String, dynamic> editParams,
+  ) => _repo.applyEdit(photoId, editType, editParams);
+
+  /// 获取编辑版本列表
+  Future<List<PhotoEditVersion>> listVersions(String photoId) =>
+      _repo.listVersions(photoId);
+
+  /// 回滚到指定版本
+  Future<void> revertToVersion(String photoId, String versionId) async {
+    try {
+      await _repo.revertToVersion(photoId, versionId);
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 创建相册分享链接
+  Future<PhotoShareLink> createAlbumShare(
+    String albumId, {
+    String? password,
+    DateTime? expiresAt,
+    int? maxAccessCount,
+  }) => _repo.createAlbumShare(
+    albumId,
+    password: password,
+    expiresAt: expiresAt,
+    maxAccessCount: maxAccessCount,
+  );
+
+  /// 列出相册分享链接
+  Future<List<PhotoShareLink>> listAlbumShares(String albumId) =>
+      _repo.listAlbumShares(albumId);
+
+  /// 撤销分享链接
+  Future<void> revokeAlbumShare(String shareId) =>
+      _repo.revokeAlbumShare(shareId);
+
+  /// 访问共享相册
+  Future<String> authorizeSharedAlbum(String token, {String? password}) =>
+      _repo.authorizeSharedAlbum(token, password: password);
+
+  Future<PhotoSharedAlbum> accessSharedAlbum(
+    String token, {
+    required String sessionToken,
+    int page = 0,
+    int size = 50,
+  }) => _repo.accessSharedAlbum(
+    token,
+    sessionToken: sessionToken,
+    page: page,
+    size: size,
+  );
+
+  /// 加载人脸聚类数据
+  Future<void> loadFaceClusters({bool propagateError = false}) async {
+    final current = state.asData?.value;
+    if (current == null) return;
+    state = AsyncData(
+      current.copyWith(
+        isLoadingFaceClusters: true,
+        clearFaceClusterError: true,
+      ),
+    );
+    try {
+      final clusters = await _repo.listFaceClusters();
+      final latest = state.asData?.value ?? current;
+      state = AsyncData(
+        latest.copyWith(
+          faceClusters: clusters,
+          isLoadingFaceClusters: false,
+          clearFaceClusterError: true,
+        ),
+      );
+    } on Exception catch (error) {
+      final latest = state.asData?.value ?? current;
+      state = AsyncData(
+        latest.copyWith(
+          isLoadingFaceClusters: false,
+          faceClusterError: describeUserFacingError(error).message,
+        ),
+      );
+      if (propagateError) {
+        rethrow;
+      }
+    }
+  }
+
+  /// 获取聚类中的照片
+  Future<List<PhotoItem>> getPhotosByCluster(String clusterId) =>
+      _repo.getPhotosByCluster(clusterId);
+
+  /// 为聚类命名
+  Future<void> nameCluster(String clusterId, String name) async {
+    try {
+      await _repo.nameCluster(clusterId, name);
+      await loadFaceClusters();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 提交重新聚类任务
+  Future<String> reclusterFaces() async {
+    try {
+      return await _repo.reclusterFaces();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 提交照片库存量 AI 重分析任务
+  Future<String> reanalyzeLibrary() async {
+    try {
+      return await _repo.reanalyzeLibrary();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+}

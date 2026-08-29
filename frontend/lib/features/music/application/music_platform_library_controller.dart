@@ -1,0 +1,254 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:omninest/core/errors/error_message.dart';
+import 'package:omninest/features/music/application/music_controller.dart';
+import 'package:omninest/features/music/domain/music_models.dart';
+
+final musicPlatformLibraryProvider = AsyncNotifierProvider<
+  MusicPlatformLibraryController,
+  MusicPlatformLibraryState
+>(MusicPlatformLibraryController.new);
+
+/// 外部音乐平台账号曲库状态。
+class MusicPlatformLibraryState {
+  const MusicPlatformLibraryState({
+    this.statuses = const <MusicPlatformStatus>[],
+    this.playlistsByPlatform = const <String, List<OnlinePlaylist>>{},
+    this.likedTracksByPlatform = const <String, List<OnlineTrack>>{},
+    this.playlistTracks = const <String, List<OnlineTrack>>{},
+    this.loadingPlaylistKeys = const <String>{},
+    this.failures = const <String, String>{},
+  });
+
+  final List<MusicPlatformStatus> statuses;
+  final Map<String, List<OnlinePlaylist>> playlistsByPlatform;
+  final Map<String, List<OnlineTrack>> likedTracksByPlatform;
+  final Map<String, List<OnlineTrack>> playlistTracks;
+  final Set<String> loadingPlaylistKeys;
+  final Map<String, String> failures;
+
+  /// 返回已连接且可用的平台状态。
+  List<MusicPlatformStatus> get connectedStatuses => statuses
+      .where((status) => status.enabled && status.connected)
+      .toList(growable: false);
+
+  /// 返回所有已加载的账号歌单。
+  List<OnlinePlaylist> get playlists => playlistsByPlatform.values
+      .expand((items) => items)
+      .toList(growable: false);
+
+  /// 返回所有已加载的账号喜欢歌曲。
+  List<OnlineTrack> get likedTracks => likedTracksByPlatform.values
+      .expand((items) => items)
+      .toList(growable: false);
+
+  /// 返回歌单展示封面，已加载曲目时优先使用第一首歌曲封面。
+  String coverUrlForPlaylist(OnlinePlaylist playlist) {
+    final tracks =
+        playlistTracks['${playlist.platform}:${playlist.playlistId}'];
+    if (tracks != null && tracks.isNotEmpty) {
+      final firstTrackCover = tracks.first.coverUrl.trim();
+      if (firstTrackCover.isNotEmpty) {
+        return firstTrackCover;
+      }
+    }
+    return playlist.coverUrl.trim();
+  }
+
+  MusicPlatformLibraryState copyWith({
+    List<MusicPlatformStatus>? statuses,
+    Map<String, List<OnlinePlaylist>>? playlistsByPlatform,
+    Map<String, List<OnlineTrack>>? likedTracksByPlatform,
+    Map<String, List<OnlineTrack>>? playlistTracks,
+    Set<String>? loadingPlaylistKeys,
+    Map<String, String>? failures,
+  }) {
+    return MusicPlatformLibraryState(
+      statuses: statuses ?? this.statuses,
+      playlistsByPlatform: playlistsByPlatform ?? this.playlistsByPlatform,
+      likedTracksByPlatform:
+          likedTracksByPlatform ?? this.likedTracksByPlatform,
+      playlistTracks: playlistTracks ?? this.playlistTracks,
+      loadingPlaylistKeys: loadingPlaylistKeys ?? this.loadingPlaylistKeys,
+      failures: failures ?? this.failures,
+    );
+  }
+}
+
+/// 加载平台状态、账号歌单和喜欢歌曲，并隔离单来源失败。
+class MusicPlatformLibraryController
+    extends AsyncNotifier<MusicPlatformLibraryState> {
+  static const int _playlistPreloadConcurrency = 3;
+
+  int _preloadGeneration = 0;
+
+  @override
+  Future<MusicPlatformLibraryState> build() {
+    ref.onDispose(() => _preloadGeneration++);
+    return _load();
+  }
+
+  /// 重新加载全部平台账号内容。
+  Future<void> refresh() async {
+    state = const AsyncLoading<MusicPlatformLibraryState>();
+    state = await AsyncValue.guard(_load);
+  }
+
+  /// 严格刷新实时事件涉及的平台账号曲库。
+  Future<void> refreshForRealtime() async {
+    final refreshed = await _load();
+    state = AsyncData(refreshed);
+  }
+
+  /// 按需加载一个在线歌单的曲目。
+  Future<List<OnlineTrack>> loadPlaylistTracks(OnlinePlaylist playlist) async {
+    if (!ref.mounted) {
+      return const <OnlineTrack>[];
+    }
+    final current = state.asData?.value;
+    if (current == null) {
+      return const <OnlineTrack>[];
+    }
+    final key = _playlistKey(playlist.platform, playlist.playlistId);
+    final cached = current.playlistTracks[key];
+    if (cached != null) {
+      return cached;
+    }
+    state = AsyncData(
+      current.copyWith(
+        loadingPlaylistKeys: <String>{...current.loadingPlaylistKeys, key},
+      ),
+    );
+    try {
+      final tracks = await ref
+          .read(musicApiProvider)
+          .platformPlaylistTracks(playlist.platform, playlist.playlistId);
+      if (!ref.mounted) {
+        return const <OnlineTrack>[];
+      }
+      final latest = state.asData?.value ?? current;
+      state = AsyncData(
+        latest.copyWith(
+          playlistTracks: <String, List<OnlineTrack>>{
+            ...latest.playlistTracks,
+            key: List<OnlineTrack>.unmodifiable(tracks),
+          },
+          loadingPlaylistKeys: <String>{...latest.loadingPlaylistKeys}
+            ..remove(key),
+        ),
+      );
+      return tracks;
+    } on Object catch (error) {
+      if (!ref.mounted) {
+        return const <OnlineTrack>[];
+      }
+      final latest = state.asData?.value ?? current;
+      state = AsyncData(
+        latest.copyWith(
+          loadingPlaylistKeys: <String>{...latest.loadingPlaylistKeys}
+            ..remove(key),
+          failures: <String, String>{
+            ...latest.failures,
+            key: describeUserFacingError(error).message,
+          },
+        ),
+      );
+      return const <OnlineTrack>[];
+    }
+  }
+
+  Future<MusicPlatformLibraryState> _load() async {
+    final preloadGeneration = ++_preloadGeneration;
+    final api = ref.read(musicApiProvider);
+    final failures = <String, String>{};
+    List<MusicPlatformStatus> statuses;
+    try {
+      statuses = await api.musicPlatforms();
+    } on Object catch (error) {
+      return MusicPlatformLibraryState(
+        failures: <String, String>{
+          'platforms': describeUserFacingError(error).message,
+        },
+      );
+    }
+
+    final playlistsByPlatform = <String, List<OnlinePlaylist>>{};
+    final likedTracksByPlatform = <String, List<OnlineTrack>>{};
+    await Future.wait(
+      statuses.where((status) => status.enabled && status.connected).map((
+        status,
+      ) async {
+        if (status.capabilities.playlists) {
+          try {
+            playlistsByPlatform[status
+                .platform] = List<OnlinePlaylist>.unmodifiable(
+              await api.platformPlaylists(status.platform),
+            );
+          } on Object catch (error) {
+            failures['${status.platform}:playlists'] =
+                describeUserFacingError(error).message;
+          }
+        }
+        if (status.capabilities.likedTracks) {
+          try {
+            likedTracksByPlatform[status
+                .platform] = List<OnlineTrack>.unmodifiable(
+              await api.platformLikedTracks(status.platform),
+            );
+          } on Object catch (error) {
+            failures['${status.platform}:liked'] =
+                describeUserFacingError(error).message;
+          }
+        }
+      }),
+    );
+    final nextState = MusicPlatformLibraryState(
+      statuses: List<MusicPlatformStatus>.unmodifiable(statuses),
+      playlistsByPlatform: Map<String, List<OnlinePlaylist>>.unmodifiable(
+        playlistsByPlatform,
+      ),
+      likedTracksByPlatform: Map<String, List<OnlineTrack>>.unmodifiable(
+        likedTracksByPlatform,
+      ),
+      failures: Map<String, String>.unmodifiable(failures),
+    );
+    final playlists = playlistsByPlatform.values
+        .expand((items) => items)
+        .toList(growable: false);
+    unawaited(
+      Future<void>.delayed(
+        Duration.zero,
+        () => _preloadPlaylistTracks(playlists, preloadGeneration),
+      ),
+    );
+    return nextState;
+  }
+
+  Future<void> _preloadPlaylistTracks(
+    List<OnlinePlaylist> playlists,
+    int generation,
+  ) async {
+    if (playlists.isEmpty) {
+      return;
+    }
+    var nextIndex = 0;
+    Future<void> worker() async {
+      while (ref.mounted &&
+          generation == _preloadGeneration &&
+          nextIndex < playlists.length) {
+        final playlist = playlists[nextIndex++];
+        await loadPlaylistTracks(playlist);
+      }
+    }
+
+    final workerCount = playlists.length.clamp(1, _playlistPreloadConcurrency);
+    await Future.wait(
+      List<Future<void>>.generate(workerCount, (_) => worker()),
+    );
+  }
+
+  String _playlistKey(String platform, String playlistId) {
+    return '$platform:$playlistId';
+  }
+}

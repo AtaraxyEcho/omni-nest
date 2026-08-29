@@ -1,0 +1,251 @@
+import 'package:omninest/features/reader/presentation/widgets/reader_html_parser.dart';
+
+/// 按字符范围裁剪 ContentBlock 列表的静态工具类。
+///
+/// 所有方法为纯函数，不依赖任何实例状态。
+/// 从 reader_view_page.dart 提取，降低主文件行数。
+class BlockClipper {
+  BlockClipper._();
+
+  /// 按字符范围裁剪 blocks 列表。
+  ///
+  /// 只保留 [startCharOffset, endCharOffset) 范围内的内容。
+  /// 对首尾块做 span 级字符裁剪，中间块原样保留。
+  static List<ContentBlock> clipBlocksByCharRange(
+    List<ContentBlock> blocks,
+    int startCharOffset,
+    int endCharOffset,
+  ) {
+    if (blocks.isEmpty || startCharOffset >= endCharOffset) return [];
+
+    var blockStart = 0;
+    final result = <ContentBlock>[];
+
+    for (final block in blocks) {
+      final blockEnd = blockStart + blockCharCount(block);
+
+      if (blockEnd <= startCharOffset || blockStart >= endCharOffset) {
+        blockStart = blockEnd;
+        continue;
+      }
+
+      if (blockStart >= startCharOffset && blockEnd <= endCharOffset) {
+        result.add(block);
+        blockStart = blockEnd;
+        continue;
+      }
+
+      final clipStart = (startCharOffset - blockStart).clamp(
+        0,
+        blockEnd - blockStart,
+      );
+      final clipEnd = (endCharOffset - blockStart).clamp(
+        0,
+        blockEnd - blockStart,
+      );
+      final trimmed = trimBlockByCharRange(block, clipStart, clipEnd);
+      if (trimmed != null) result.add(trimmed);
+
+      blockStart = blockEnd;
+    }
+
+    return result;
+  }
+
+  /// 按字符范围裁剪单个块内的 span。
+  ///
+  /// [localStart] / [localEnd] 是相对于该块起始的字符偏移。
+  static ContentBlock? trimBlockByCharRange(
+    ContentBlock block,
+    int localStart,
+    int localEnd,
+  ) {
+    switch (block) {
+      case ParagraphBlock(:final lines, :final hasTrailingSpacing):
+        final trimmed = trimTextBlockByCharRange(lines, localStart, localEnd);
+        return trimmed != null
+            ? ParagraphBlock(
+              lines: trimmed,
+              hasTrailingSpacing: hasTrailingSpacing,
+            )
+            : null;
+      case BlockquoteBlock(:final lines, :final startOffset):
+        final trimmed = trimTextBlockByCharRange(lines, localStart, localEnd);
+        return trimmed != null
+            ? BlockquoteBlock(lines: trimmed, startOffset: startOffset)
+            : null;
+      case ListBlock(:final items, :final isOrdered, :final startOffset):
+        final trimmed = trimListBlockByCharRange(items, localStart, localEnd);
+        return trimmed != null
+            ? ListBlock(
+              items: trimmed,
+              isOrdered: isOrdered,
+              startOffset: startOffset,
+            )
+            : null;
+      case HeadingBlock():
+      case ImageBlock():
+      case DividerBlock():
+      case TableBlock():
+        return localStart == 0 ? block : null;
+    }
+  }
+
+  /// 按字符范围裁剪文本行列表。
+  static List<LineData>? trimTextBlockByCharRange(
+    List<LineData> lines,
+    int localStart,
+    int localEnd,
+  ) {
+    var offset = 0;
+    final result = <LineData>[];
+
+    for (final line in lines) {
+      final lineLen = line.spans.fold<int>(0, (s, sp) => s + sp.text.length);
+      final lineEnd = offset + lineLen;
+
+      if (lineEnd <= localStart || offset >= localEnd) {
+        offset = lineEnd;
+        continue;
+      }
+
+      if (offset >= localStart && lineEnd <= localEnd) {
+        result.add(line);
+        offset = lineEnd;
+        continue;
+      }
+
+      final clipStart = (localStart - offset).clamp(0, lineLen);
+      final clipEnd = (localEnd - offset).clamp(0, lineLen);
+      final trimmedSpans = trimSpansByCharRange(line.spans, clipStart, clipEnd);
+      if (trimmedSpans.isNotEmpty) {
+        result.add(
+          LineData(spans: trimmedSpans, isNewParagraph: line.isNewParagraph),
+        );
+      }
+
+      offset = lineEnd;
+    }
+
+    return result.isEmpty ? null : result;
+  }
+
+  /// 按字符范围裁剪列表项。
+  static List<ListItemData>? trimListBlockByCharRange(
+    List<ListItemData> items,
+    int localStart,
+    int localEnd,
+  ) {
+    var offset = 0;
+    final result = <ListItemData>[];
+
+    for (final item in items) {
+      final itemLen = item.spans.fold<int>(0, (s, sp) => s + sp.text.length);
+      final itemEnd = offset + itemLen;
+
+      if (itemEnd <= localStart || offset >= localEnd) {
+        offset = itemEnd;
+        continue;
+      }
+
+      if (offset >= localStart && itemEnd <= localEnd) {
+        result.add(item);
+        offset = itemEnd;
+        continue;
+      }
+
+      final clipStart = (localStart - offset).clamp(0, itemLen);
+      final clipEnd = (localEnd - offset).clamp(0, itemLen);
+      final trimmedSpans = trimSpansByCharRange(item.spans, clipStart, clipEnd);
+      if (trimmedSpans.isNotEmpty) {
+        result.add(ListItemData(spans: trimmedSpans));
+      }
+
+      offset = itemEnd;
+    }
+
+    return result.isEmpty ? null : result;
+  }
+
+  /// 按字符范围裁剪 span 列表。
+  static List<ReaderInlineSpan> trimSpansByCharRange(
+    List<ReaderInlineSpan> spans,
+    int start,
+    int end,
+  ) {
+    var offset = 0;
+    final result = <ReaderInlineSpan>[];
+
+    for (final span in spans) {
+      final spanEnd = offset + span.text.length;
+
+      if (spanEnd <= start || offset >= end) {
+        offset = spanEnd;
+        continue;
+      }
+
+      if (offset >= start && spanEnd <= end) {
+        result.add(span);
+        offset = spanEnd;
+        continue;
+      }
+
+      final clipStart = (start - offset).clamp(0, span.text.length);
+      final clipEnd = (end - offset).clamp(0, span.text.length);
+      final clippedText = span.text.substring(clipStart, clipEnd);
+      if (clippedText.isNotEmpty) {
+        result.add(
+          ReaderInlineSpan(
+            text: clippedText,
+            isBold: span.isBold,
+            isItalic: span.isItalic,
+            isHeading: span.isHeading,
+            href: span.href,
+            isCode: span.isCode,
+            startOffset: span.startOffset + clipStart,
+            backgroundColor: span.backgroundColor,
+            isSuperscript: span.isSuperscript,
+            isSubscript: span.isSubscript,
+            isMarked: span.isMarked,
+            isDeleted: span.isDeleted,
+            isUnderlined: span.isUnderlined,
+          ),
+        );
+      }
+
+      offset = spanEnd;
+    }
+
+    return result;
+  }
+
+  /// 计算块的总字符数。
+  static int blockCharCount(ContentBlock block) {
+    return switch (block) {
+      HeadingBlock(:final text) => text.length,
+      ParagraphBlock(:final lines) => lines.fold(
+        0,
+        (s, l) => s + l.spans.fold(0, (s2, sp) => s2 + sp.text.length),
+      ),
+      ImageBlock() => 0,
+      DividerBlock() => 0,
+      BlockquoteBlock(:final lines) => lines.fold(
+        0,
+        (s, l) => s + l.spans.fold(0, (s2, sp) => s2 + sp.text.length),
+      ),
+      ListBlock(:final items) => items.fold(
+        0,
+        (s, i) => s + i.spans.fold(0, (s2, sp) => s2 + sp.text.length),
+      ),
+      TableBlock(:final rows) => rows.fold(
+        0,
+        (s, r) =>
+            s +
+            r.cells.fold(
+              0,
+              (s2, c) => s2 + c.fold(0, (s3, sp) => s3 + sp.text.length),
+            ),
+      ),
+    };
+  }
+}

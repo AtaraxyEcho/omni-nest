@@ -1,0 +1,246 @@
+#include "flutter_window.h"
+
+#include <flutter/standard_method_codec.h>
+#include <optional>
+#include <variant>
+
+#include "flutter/generated_plugin_registrant.h"
+
+namespace {
+constexpr const char kWindowFrameChannel[] = "omninest/window_frame";
+constexpr const char kSetFrameHiddenMethod[] = "setFrameHidden";
+constexpr const char kSetWindowFullscreenMethod[] = "setWindowFullscreen";
+constexpr const char kSaveWindowPlacementMethod[] = "saveWindowPlacement";
+constexpr const char kRestoreWindowPlacementMethod[] = "restoreWindowPlacement";
+constexpr const char kHiddenArgument[] = "hidden";
+constexpr const char kFullscreenArgument[] = "fullscreen";
+}  // 命名空间
+
+FlutterWindow::FlutterWindow(const flutter::DartProject& project)
+    : project_(project) {}
+
+FlutterWindow::~FlutterWindow() {}
+
+bool FlutterWindow::OnCreate() {
+  if (!Win32Window::OnCreate()) {
+    return false;
+  }
+
+  RECT frame = GetClientArea();
+
+  // The size here must match the window dimensions to avoid unnecessary surface
+  // creation / destruction in the startup path.
+  flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
+      frame.right - frame.left, frame.bottom - frame.top, project_);
+  // Ensure that basic setup of the controller was successful.
+  if (!flutter_controller_->engine() || !flutter_controller_->view()) {
+    return false;
+  }
+  RegisterPlugins(flutter_controller_->engine());
+  window_frame_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), kWindowFrameChannel,
+          &flutter::StandardMethodCodec::GetInstance());
+  window_frame_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
+                 result) {
+        if (call.method_name() != kSetFrameHiddenMethod) {
+          if (call.method_name() == kSaveWindowPlacementMethod) {
+            SaveWindowPlacement();
+            result->Success(flutter::EncodableValue(true));
+            return;
+          }
+          if (call.method_name() == kRestoreWindowPlacementMethod) {
+            RestoreWindowPlacement();
+            result->Success(flutter::EncodableValue(true));
+            return;
+          }
+          if (call.method_name() == kSetWindowFullscreenMethod) {
+            const auto* arguments =
+                std::get_if<flutter::EncodableMap>(call.arguments());
+            if (arguments == nullptr) {
+              result->Error("bad_args", "fullscreen argument is required");
+              return;
+            }
+            const auto fullscreen_entry =
+                arguments->find(flutter::EncodableValue(kFullscreenArgument));
+            if (fullscreen_entry == arguments->end()) {
+              result->Error("bad_args", "fullscreen argument is required");
+              return;
+            }
+            const auto* fullscreen =
+                std::get_if<bool>(&fullscreen_entry->second);
+            if (fullscreen == nullptr) {
+              result->Error("bad_args", "fullscreen argument must be a bool");
+              return;
+            }
+            SetWindowFullscreen(*fullscreen);
+            result->Success(flutter::EncodableValue(true));
+            return;
+          }
+          result->NotImplemented();
+          return;
+        }
+        const auto* arguments =
+            std::get_if<flutter::EncodableMap>(call.arguments());
+        if (arguments == nullptr) {
+          result->Error("bad_args", "hidden argument is required");
+          return;
+        }
+        const auto hidden_entry =
+            arguments->find(flutter::EncodableValue(kHiddenArgument));
+        if (hidden_entry == arguments->end()) {
+          result->Error("bad_args", "hidden argument is required");
+          return;
+        }
+        const auto* hidden = std::get_if<bool>(&hidden_entry->second);
+        if (hidden == nullptr) {
+          result->Error("bad_args", "hidden argument must be a bool");
+          return;
+        }
+        SetWindowFrameHidden(*hidden);
+        result->Success(flutter::EncodableValue(true));
+      });
+  SetChildContent(flutter_controller_->view()->GetNativeWindow());
+
+  flutter_controller_->engine()->SetNextFrameCallback([&]() {
+    this->Show();
+  });
+
+  // Flutter can complete the first frame before the "show window" callback is
+  // registered. The following call ensures a frame is pending to ensure the
+  // window is shown. It is a no-op if the first frame hasn't completed yet.
+  flutter_controller_->ForceRedraw();
+
+  return true;
+}
+
+void FlutterWindow::OnDestroy() {
+  window_frame_channel_.reset();
+  if (flutter_controller_) {
+    flutter_controller_ = nullptr;
+  }
+
+  Win32Window::OnDestroy();
+}
+
+void FlutterWindow::SetWindowFrameHidden(bool hidden) {
+  HWND hwnd = GetHandle();
+  if (hwnd == nullptr) {
+    return;
+  }
+  if (!normal_window_style_captured_) {
+    normal_window_style_ = GetWindowLongPtr(hwnd, GWL_STYLE);
+    normal_window_ex_style_ = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+    normal_window_style_captured_ = true;
+  }
+
+  LONG_PTR style = normal_window_style_;
+  LONG_PTR ex_style = normal_window_ex_style_;
+  if (hidden) {
+    style &= ~(WS_CAPTION | WS_THICKFRAME);
+    ex_style &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+  }
+
+  SetWindowLongPtr(hwnd, GWL_STYLE, style);
+  SetWindowLongPtr(hwnd, GWL_EXSTYLE, ex_style);
+  SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER |
+                   SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  window_frame_hidden_ = hidden;
+}
+
+void FlutterWindow::SetWindowFullscreen(bool fullscreen) {
+  HWND hwnd = GetHandle();
+  if (hwnd == nullptr || window_fullscreen_ == fullscreen) {
+    return;
+  }
+  if (!normal_window_style_captured_) {
+    normal_window_style_ = GetWindowLongPtr(hwnd, GWL_STYLE);
+    normal_window_ex_style_ = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+    normal_window_style_captured_ = true;
+  }
+  if (fullscreen) {
+    if (!window_placement_saved_) {
+      SaveWindowPlacement();
+    }
+    MONITORINFO monitor_info = {};
+    monitor_info.cbSize = sizeof(MONITORINFO);
+    if (!GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST),
+                        &monitor_info)) {
+      return;
+    }
+    LONG_PTR style = normal_window_style_;
+    LONG_PTR ex_style = normal_window_ex_style_;
+    style &= ~(WS_CAPTION | WS_THICKFRAME);
+    style |= WS_POPUP;
+    ex_style &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+    SetWindowLongPtr(hwnd, GWL_STYLE, style);
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, ex_style);
+    const RECT monitor = monitor_info.rcMonitor;
+    SetWindowPos(hwnd, HWND_TOP, monitor.left, monitor.top,
+                 monitor.right - monitor.left, monitor.bottom - monitor.top,
+                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    window_fullscreen_ = true;
+    window_frame_hidden_ = true;
+    return;
+  }
+  SetWindowLongPtr(hwnd, GWL_STYLE, normal_window_style_);
+  SetWindowLongPtr(hwnd, GWL_EXSTYLE, normal_window_ex_style_);
+  RestoreWindowPlacement();
+  SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER |
+                   SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  window_fullscreen_ = false;
+  window_frame_hidden_ = false;
+}
+
+void FlutterWindow::SaveWindowPlacement() {
+  HWND hwnd = GetHandle();
+  if (hwnd == nullptr) {
+    return;
+  }
+  WINDOWPLACEMENT placement = {};
+  placement.length = sizeof(WINDOWPLACEMENT);
+  if (GetWindowPlacement(hwnd, &placement)) {
+    saved_window_placement_ = placement;
+    window_placement_saved_ = true;
+  }
+}
+
+void FlutterWindow::RestoreWindowPlacement() {
+  HWND hwnd = GetHandle();
+  if (hwnd == nullptr || !window_placement_saved_) {
+    return;
+  }
+  saved_window_placement_.length = sizeof(WINDOWPLACEMENT);
+  SetWindowPlacement(hwnd, &saved_window_placement_);
+  SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER |
+                   SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  window_placement_saved_ = false;
+}
+
+LRESULT
+FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
+                              WPARAM const wparam,
+                              LPARAM const lparam) noexcept {
+  // Give Flutter, including plugins, an opportunity to handle window messages.
+  if (flutter_controller_) {
+    std::optional<LRESULT> result =
+        flutter_controller_->HandleTopLevelWindowProc(hwnd, message, wparam,
+                                                      lparam);
+    if (result) {
+      return *result;
+    }
+  }
+
+  switch (message) {
+    case WM_FONTCHANGE:
+      flutter_controller_->engine()->ReloadSystemFonts();
+      break;
+  }
+
+  return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+}

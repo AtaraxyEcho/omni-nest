@@ -1,0 +1,242 @@
+package com.omninest.modules.reader.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.omninest.modules.reader.domain.ReaderCatalogNode;
+import com.omninest.modules.reader.domain.ReaderItemSource;
+import com.omninest.modules.reader.domain.ReaderPage;
+import com.omninest.modules.reader.repository.ReaderCatalogNodeRepository;
+import com.omninest.modules.reader.repository.ReaderItemRepository;
+import com.omninest.modules.reader.repository.ReaderItemSourceRepository;
+import com.omninest.modules.reader.repository.ReaderPageRepository;
+import com.omninest.modules.reader.service.model.ComicManifestDraft.ComicCatalogDraftNode;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+/**
+ * 漫画清单构建器单元测试：覆盖节点类型推断和 source-aware 目录构建。
+ */
+@ExtendWith(MockitoExtension.class)
+class ComicManifestBuilderTest {
+
+    @InjectMocks
+    private ComicManifestBuilder builder;
+
+    @Mock
+    private ReaderItemRepository itemRepository;
+    @Mock
+    private ReaderItemSourceRepository sourceRepository;
+    @Mock
+    private ReaderCatalogNodeRepository catalogRepository;
+    @Mock
+    private ReaderPageRepository pageRepository;
+
+    private Method detectNodeTypeMethod;
+    private Method buildDraftCatalogMethod;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        detectNodeTypeMethod = ComicManifestBuilder.class
+                .getDeclaredMethod("detectNodeType", String.class);
+        detectNodeTypeMethod.setAccessible(true);
+
+        buildDraftCatalogMethod = ComicManifestBuilder.class
+                .getDeclaredMethod("buildDraftCatalog", List.class, UUID.class);
+        buildDraftCatalogMethod.setAccessible(true);
+    }
+
+    // ==================== detectNodeType ====================
+
+    @Nested
+    @DisplayName("detectNodeType 节点类型推断")
+    class DetectNodeTypeTests {
+
+        @Test
+        @DisplayName("Season 01 → SEASON")
+        void seasonPattern_detectsSeason() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "Season 01");
+            assertThat(result).isEqualTo("SEASON");
+        }
+
+        @Test
+        @DisplayName("Vol.02 → VOLUME")
+        void volPattern_detectsVolume() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "Vol.02");
+            assertThat(result).isEqualTo("VOLUME");
+        }
+
+        @Test
+        @DisplayName("Ch.003 → CHAPTER")
+        void chapterPattern_detectsChapter() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "Ch.003");
+            assertThat(result).isEqualTo("CHAPTER");
+        }
+
+        @Test
+        @DisplayName("001-010 → COLLECTION")
+        void rangePattern_detectsCollection() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "001-010");
+            assertThat(result).isEqualTo("COLLECTION");
+        }
+
+        @Test
+        @DisplayName("Extra → EXTRA")
+        void extraPattern_detectsExtra() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "Extra");
+            assertThat(result).isEqualTo("EXTRA");
+        }
+
+        @Test
+        @DisplayName("SP → EXTRA")
+        void spPattern_detectsExtra() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "SP");
+            assertThat(result).isEqualTo("EXTRA");
+        }
+
+        @Test
+        @DisplayName("番外 → EXTRA")
+        void chineseExtraPattern_detectsExtra() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "番外");
+            assertThat(result).isEqualTo("EXTRA");
+        }
+
+        @Test
+        @DisplayName("第001话 → CHAPTER")
+        void chineseChapterPattern_detectsChapter() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "第001话");
+            assertThat(result).isEqualTo("CHAPTER");
+        }
+
+        @Test
+        @DisplayName("未知名称 → 默认 CHAPTER")
+        void unknownName_defaultsToChapter() throws Exception {
+            String result = (String) detectNodeTypeMethod.invoke(builder, "random_stuff");
+            assertThat(result).isEqualTo("CHAPTER");
+        }
+    }
+
+    @Test
+    @DisplayName("buildDraftCatalog 保留解析器目录父子结构")
+    void buildDraftCatalog_preservesParserHierarchy() throws Exception {
+        UUID itemId = UUID.fromString("20000000-0000-0000-0000-000000000001");
+        UUID sourceId = UUID.fromString("30000000-0000-0000-0000-000000000001");
+        List<ComicCatalogDraftNode> drafts = List.of(
+                new ComicCatalogDraftNode("toc:第1卷:0", null, "第1卷", "VOLUME", 0, null),
+                new ComicCatalogDraftNode("toc:第1卷:0/toc:第1话:0", "toc:第1卷:0", "第1话", "CHAPTER", 0, sourceId)
+        );
+
+        @SuppressWarnings("unchecked")
+        List<ReaderCatalogNode> nodes = new ArrayList<>((List<ReaderCatalogNode>)
+                buildDraftCatalogMethod.invoke(builder, drafts, itemId));
+
+        assertThat(nodes).hasSize(3);
+        ReaderCatalogNode root = nodes.stream()
+                .filter(node -> "ROOT".equals(node.getNodeType()))
+                .findFirst()
+                .orElseThrow();
+        ReaderCatalogNode volume = nodes.stream()
+                .filter(node -> "第1卷".equals(node.getTitle()))
+                .findFirst()
+                .orElseThrow();
+        ReaderCatalogNode chapter = nodes.stream()
+                .filter(node -> "第1话".equals(node.getTitle()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(volume.getParentId()).isEqualTo(root.getId());
+        assertThat(chapter.getParentId()).isEqualTo(volume.getId());
+        assertThat(chapter.getSourceId()).isEqualTo(sourceId);
+    }
+
+    @Test
+    @DisplayName("重建目录时显式保留非空创建时间")
+    void rebuildComicManifest_initializesCatalogCreatedAt() {
+        UUID itemId = UUID.fromString("20000000-0000-0000-0000-000000000002");
+        when(sourceRepository.findByReaderItemId(itemId)).thenReturn(new ArrayList<>());
+        when(catalogRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(itemRepository.findById(itemId)).thenReturn(Optional.empty());
+
+        builder.rebuildComicManifest(itemId);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<ReaderCatalogNode>> nodes = ArgumentCaptor.forClass(List.class);
+        verify(catalogRepository, times(2)).saveAll(nodes.capture());
+        assertThat(nodes.getAllValues()).allSatisfy(savedNodes ->
+                assertThat(savedNodes).allSatisfy(node -> assertThat(node.getCreatedAt()).isNotNull()));
+    }
+
+    @Test
+    @DisplayName("重建多分卷目录时按来源隔离同名章节并累计总页数")
+    void rebuildComicManifest_aggregatesPagesAcrossSources() {
+        UUID itemId = UUID.fromString("20000000-0000-0000-0000-000000000003");
+        UUID firstSourceId = UUID.fromString("30000000-0000-0000-0000-000000000011");
+        UUID secondSourceId = UUID.fromString("30000000-0000-0000-0000-000000000012");
+        ReaderItemSource firstSource = source(firstSourceId, itemId, "[Kmoe][紹宋]話001-010.epub", 1);
+        ReaderItemSource secondSource = source(secondSourceId, itemId, "[Kmoe][紹宋]話011-020.epub", 11);
+        List<ReaderPage> firstPages = pages(itemId, firstSourceId, 2);
+        List<ReaderPage> secondPages = pages(itemId, secondSourceId, 3);
+
+        when(sourceRepository.findByReaderItemId(itemId)).thenReturn(List.of(firstSource, secondSource));
+        when(pageRepository.findBySourceId(firstSourceId)).thenReturn(firstPages);
+        when(pageRepository.findBySourceId(secondSourceId)).thenReturn(secondPages);
+        when(pageRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(catalogRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(itemRepository.findById(itemId)).thenReturn(Optional.empty());
+
+        builder.rebuildComicManifest(itemId);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<ReaderCatalogNode>> nodes = ArgumentCaptor.forClass(List.class);
+        verify(catalogRepository, times(2)).saveAll(nodes.capture());
+        List<ReaderCatalogNode> savedNodes = nodes.getAllValues().getLast();
+        ReaderCatalogNode root = savedNodes.stream()
+                .filter(node -> "ROOT".equals(node.getNodeType()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(root.getPageCount()).isEqualTo(5);
+        assertThat(savedNodes)
+                .filteredOn(node -> "COLLECTION".equals(node.getNodeType()))
+                .extracting(ReaderCatalogNode::getPageCount)
+                .containsExactlyInAnyOrder(2, 3);
+    }
+
+    private ReaderItemSource source(UUID sourceId, UUID itemId, String name, int chapterStart) {
+        ReaderItemSource source = new ReaderItemSource();
+        source.setId(sourceId);
+        source.setReaderItemId(itemId);
+        source.setSourceName(name);
+        source.setChapterStart(chapterStart);
+        source.setSourceSortKey(String.format("%04d", chapterStart));
+        return source;
+    }
+
+    private List<ReaderPage> pages(UUID itemId, UUID sourceId, int count) {
+        List<ReaderPage> pages = new ArrayList<>();
+        for (int index = 0; index < count; index++) {
+            ReaderPage page = new ReaderPage();
+            page.setId(UUID.randomUUID());
+            page.setReaderItemId(itemId);
+            page.setSourceId(sourceId);
+            page.setSourcePageIndex(index);
+            page.setCatalogKey("source:" + sourceId + "/toc:第001页:0");
+            pages.add(page);
+        }
+        return pages;
+    }
+}

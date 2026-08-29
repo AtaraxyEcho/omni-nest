@@ -1,0 +1,267 @@
+import 'package:flutter/material.dart';
+import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/theme/feature/reader_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:omninest/features/reader/domain/reader_models.dart';
+import 'package:omninest/features/reader/presentation/reader_l10n_helpers.dart';
+import 'package:omninest/features/reader/presentation/widgets/reader_cover_image.dart';
+
+class MetadataSection extends StatelessWidget {
+  const MetadataSection({required this.items, super.key});
+
+  final List<ReaderItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              l10n.readerMetadataManagement,
+              style: TextStyle(
+                color: context.readerColors.onSurface,
+                fontSize: 22,
+                height: 28 / 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            SizedBox(width: 14),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: context.readerColors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                l10n.readerBookCount(items.length),
+                style: TextStyle(
+                  color: context.readerColors.onSurfaceVariant,
+                  fontSize: 11,
+                  height: 14 / 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8),
+        Text(
+          l10n.readerMetadataDesc,
+          style: TextStyle(
+            color: context.readerColors.onSurfaceVariant.withValues(alpha: 0.8),
+            fontSize: 13,
+            height: 18 / 13,
+          ),
+        ),
+        const SizedBox(height: 20),
+        if (items.isEmpty)
+          _buildEmptyState(context)
+        else
+          for (final item in items) _MetadataRow(item: item),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 48),
+      decoration: BoxDecoration(
+        color: context.readerColors.surfaceContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: context.readerColors.outlineVariant.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.edit_note_rounded,
+            size: 36,
+            color: context.readerColors.onSurfaceVariant.withValues(alpha: 0.4),
+          ),
+          SizedBox(height: 12),
+          Text(
+            l10n.readerNoBookEntries,
+            style: TextStyle(
+              color: context.readerColors.onSurfaceVariant,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            l10n.readerNoBookEntriesHint,
+            style: TextStyle(
+              color: context.readerColors.onSurfaceVariant.withValues(
+                alpha: 0.7,
+              ),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetadataRow extends StatefulWidget {
+  const _MetadataRow({required this.item});
+
+  final ReaderItem item;
+
+  @override
+  State<_MetadataRow> createState() => _MetadataRowState();
+}
+
+class _MetadataRowState extends State<_MetadataRow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final item = widget.item;
+    final statusLabel = switch (item.metadataStatus) {
+      'PENDING' => l10n.readerStatusPending,
+      'FAILED' => l10n.readerStatusFailed,
+      'MANUAL' => l10n.readerStatusManual,
+      'MATCHED' => l10n.readerStatusMatched,
+      _ => item.metadataStatus ?? l10n.readerStatusUnknown,
+    };
+    final statusColor = switch (item.metadataStatus) {
+      'FAILED' => context.readerColors.danger,
+      'MATCHED' => context.readerColors.success,
+      _ => context.readerColors.onSurfaceVariant,
+    };
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        margin: EdgeInsets.only(bottom: 10),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: context.readerColors.surfaceContainerHigh.withValues(
+            alpha: _hovered ? 0.88 : 0.72,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.readerColors.outlineVariant.withValues(
+              alpha: _hovered ? 0.35 : 0.18,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            // 封面缩略
+            Container(
+              width: 44,
+              height: 62,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: context.readerColors.surfaceContainerHighest,
+              ),
+              child:
+                  item.hasCover
+                      ? AuthCoverImage(
+                        itemId: item.id,
+                        fit: BoxFit.cover,
+                        fallback: _fallbackIcon(item),
+                      )
+                      : _fallbackIcon(item),
+            ),
+            SizedBox(width: 14),
+            // 文字信息
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color:
+                          _hovered
+                              ? context.readerColors.primary
+                              : context.readerColors.onSurface,
+                      fontSize: 14,
+                      height: 18 / 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${readerTypeLabel(l10n, item.itemType)} · ${item.authorName ?? l10n.readerUnknownAuthor} · $statusLabel',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: statusColor.withValues(alpha: 0.8),
+                      fontSize: 12,
+                      height: 16 / 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 12),
+            // 编辑按钮
+            GestureDetector(
+              onTap: () => context.push('/reader/items/${item.id}/metadata'),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: context.readerColors.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.edit_outlined,
+                      size: 15,
+                      color: context.readerColors.primary,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      l10n.readerEdit,
+                      style: TextStyle(
+                        color: context.readerColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _fallbackIcon(ReaderItem item) {
+    return Center(
+      child: Text(
+        item.title.trim().isEmpty
+            ? '?'
+            : item.title.trim().substring(0, 1).toUpperCase(),
+        style: TextStyle(
+          color: context.readerColors.onSurfaceVariant,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
