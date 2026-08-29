@@ -9,12 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ClassPathResource;
 
 /**
@@ -49,6 +52,28 @@ class ApplicationEnvironmentContractTest {
         assertThat(source.getProperty("springdoc.swagger-ui.enabled")).isEqualTo(false);
         assertThat(source.getProperty("omninest.security.allowed-origins"))
                 .isEqualTo("${OMNINEST_SECURITY_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}");
+        assertThat(source.getProperty("omninest.security.refresh-cookie-secure"))
+                .isEqualTo("${OMNINEST_HTTPS_ENABLED:false}");
+    }
+
+    @Test
+    void productionHttpsSwitchControlsRefreshCookieSecurity() throws IOException {
+        YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
+        PropertySource<?> source = loader.load(
+                "application-prod",
+                new ClassPathResource("application-prod.yml")
+        ).getFirst();
+        String expression = (String) source.getProperty("omninest.security.refresh-cookie-secure");
+
+        StandardEnvironment defaultEnvironment = new StandardEnvironment();
+        assertThat(defaultEnvironment.resolvePlaceholders(expression)).isEqualTo("false");
+
+        StandardEnvironment httpsEnvironment = new StandardEnvironment();
+        httpsEnvironment.getPropertySources().addFirst(new MapPropertySource(
+                "https-test",
+                Map.of("OMNINEST_HTTPS_ENABLED", "true")
+        ));
+        assertThat(httpsEnvironment.resolvePlaceholders(expression)).isEqualTo("true");
     }
 
     @Test

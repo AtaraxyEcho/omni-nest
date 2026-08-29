@@ -77,7 +77,8 @@ omninest:
   security:
     jwt-secret: ${OMNINEST_SECURITY_JWT_SECRET:change-me-omninest-local-jwt-secret-at-least-32-bytes}
     credential-encryption-key: ${OMNINEST_SECURITY_CREDENTIAL_ENCRYPTION_KEY:}
-    refresh-cookie-secure: ${OMNINEST_SECURITY_REFRESH_COOKIE_SECURE:true}
+    # HTTPS 由外部网关终止；该开关描述公开入口并同步约束安全 Cookie。
+    refresh-cookie-secure: ${OMNINEST_HTTPS_ENABLED:false}
     registration-enabled: ${OMNINEST_SECURITY_REGISTRATION_ENABLED:false}
     trusted-proxies: ${OMNINEST_SECURITY_TRUSTED_PROXIES:}
     allowed-origins: ${OMNINEST_SECURITY_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}

@@ -47,7 +47,7 @@ logo/
 
 # 本地运行数据、日志和临时目录
 **/.omninest/
-**/data/
+/data/
 **/logs/
 **/tmp/
 **/temp/
