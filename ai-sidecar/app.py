@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 # 全局模型引用（延迟加载）。InsightFace 使用 ONNX Runtime，不需要 PyTorch。
 face_app = None
+REQUIRED_FACE_MODULES = ("detection", "recognition")
 SIDECAR_TOKEN_HEADER = "X-OmniNest-Sidecar-Token"
 SIDECAR_SECRET = os.environ.get("OMNINEST_AI_SIDECAR_SECRET", "")
 MAX_IMAGE_BYTES = int(os.environ.get("AI_MAX_IMAGE_BYTES", str(32 * 1024 * 1024)))
@@ -36,6 +37,19 @@ CONTENT_ANALYSIS_PIPELINE_VERSION = os.environ.get(
 )
 UPLOAD_READ_CHUNK_SIZE = 1024 * 1024
 inference_slots = Semaphore(MAX_CONCURRENT_INFERENCES)
+
+
+def _has_required_face_models(candidate) -> bool:
+    """检查 InsightFace 是否同时加载了检测和识别模型。"""
+    if candidate is None:
+        return False
+    models = getattr(candidate, "models", None)
+    return models is not None and all(module in models for module in REQUIRED_FACE_MODULES)
+
+
+def _face_recognition_ready() -> bool:
+    """返回人脸检测与识别能力是否完整可用。"""
+    return _has_required_face_models(face_app)
 
 
 def _require_sidecar_token(
@@ -104,15 +118,19 @@ async def lifespan(app: FastAPI):
             "INSIGHTFACE_ROOT",
             "/app/models/insightface",
         )
-        face_app = FaceAnalysis(
+        loaded_face_app = FaceAnalysis(
             name="buffalo_l",
             root=insightface_root,
             allowed_modules=["detection", "recognition"],
             providers=["CPUExecutionProvider"],
         )
-        face_app.prepare(ctx_id=-1, det_size=(640, 640))
+        loaded_face_app.prepare(ctx_id=-1, det_size=(640, 640))
+        if not _has_required_face_models(loaded_face_app):
+            raise RuntimeError("InsightFace detection/recognition models are incomplete")
+        face_app = loaded_face_app
         logger.info("InsightFace 人脸检测模型加载完成")
     except Exception as exception:
+        face_app = None
         logger.warning("InsightFace 加载失败，人脸检测功能不可用: %s", exception)
 
     yield
@@ -207,7 +225,7 @@ def _legacy_scene_labels(content: ContentAnalysis) -> list[SceneLabel]:
 )
 async def detect_faces(image: UploadFile = File(...)):
     """检测图片中的人脸，返回位置和 512 维嵌入向量。"""
-    if face_app is None:
+    if not _face_recognition_ready():
         raise HTTPException(status_code=503, detail="人脸检测模型未加载")
 
     try:
@@ -256,7 +274,7 @@ async def detect_faces(image: UploadFile = File(...)):
 )
 async def analyze_content(image: UploadFile = File(...)):
     """保留后端契约，当前仅返回空观察项和人脸识别流水线版本。"""
-    if face_app is None:
+    if not _face_recognition_ready():
         raise HTTPException(status_code=503, detail="人脸识别模型未加载")
 
     try:
@@ -361,7 +379,7 @@ async def cluster_faces(request: ClusterRequest):
 @app.get("/health")
 async def health():
     """健康检查端点。"""
-    recognition_ready = face_app is not None
+    recognition_ready = _face_recognition_ready()
     return {
         "status": "ok",
         "image_recognition": recognition_ready,
@@ -374,7 +392,7 @@ async def health():
 @app.get("/ready")
 async def ready():
     """就绪检查端点，仅要求人脸识别模型加载完成。"""
-    recognition_ready = face_app is not None
+    recognition_ready = _face_recognition_ready()
     readiness = {
         "image_recognition": recognition_ready,
         "face_detection": recognition_ready,

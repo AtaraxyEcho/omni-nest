@@ -72,7 +72,7 @@ public class WorkerRuntimeReporter {
         }
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(healthUri(photosRuntimeConfigService.aiEndpoint()))
+                    .uri(readinessUri(photosRuntimeConfigService.aiEndpoint()))
                     .timeout(runtimeProperties.getProbeTimeout())
                     .GET()
                     .build();
@@ -89,12 +89,12 @@ public class WorkerRuntimeReporter {
         }
     }
 
-    private URI healthUri(String endpoint) {
+    private URI readinessUri(String endpoint) {
         String normalized = endpoint == null ? "" : endpoint.trim();
         if (normalized.isBlank()) {
             throw new IllegalArgumentException("照片 AI 地址为空");
         }
-        return URI.create(normalized.endsWith("/") ? normalized + "health" : normalized + "/health");
+        return URI.create(normalized.endsWith("/") ? normalized + "ready" : normalized + "/ready");
     }
 
 }

@@ -32,10 +32,21 @@ class FaceOnlyAnalysisTest(unittest.TestCase):
 
     def test_ready_requires_only_face_recognition_model(self):
         """就绪检查只依赖人脸模型，不要求已移除的内容模型。"""
-        with patch.object(app, "face_app", object()):
+        complete_face_app = type(
+            "CompleteFaceApp",
+            (),
+            {"models": {"detection": object(), "recognition": object()}},
+        )()
+        with patch.object(app, "face_app", complete_face_app):
             response = asyncio.run(app.ready())
         self.assertEqual("ready", response["status"])
         self.assertFalse(response["content_analysis"])
+
+        incomplete_face_app = type("IncompleteFaceApp", (), {"models": {"detection": object()}})()
+        with patch.object(app, "face_app", incomplete_face_app):
+            with self.assertRaises(HTTPException) as incomplete:
+                asyncio.run(app.ready())
+        self.assertEqual(503, incomplete.exception.status_code)
 
         with patch.object(app, "face_app", None):
             with self.assertRaises(HTTPException) as not_ready:
