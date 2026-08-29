@@ -53,7 +53,7 @@ class ApplicationEnvironmentContractTest {
         assertThat(source.getProperty("omninest.security.allowed-origins"))
                 .isEqualTo("${OMNINEST_SECURITY_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}");
         assertThat(source.getProperty("omninest.security.refresh-cookie-secure"))
-                .isEqualTo("${OMNINEST_HTTPS_ENABLED:false}");
+                .isEqualTo("${OMNINEST_HTTPS_ENABLED:true}");
     }
 
     @Test
@@ -66,7 +66,7 @@ class ApplicationEnvironmentContractTest {
         String expression = (String) source.getProperty("omninest.security.refresh-cookie-secure");
 
         StandardEnvironment defaultEnvironment = new StandardEnvironment();
-        assertThat(defaultEnvironment.resolvePlaceholders(expression)).isEqualTo("false");
+        assertThat(defaultEnvironment.resolvePlaceholders(expression)).isEqualTo("true");
 
         StandardEnvironment httpsEnvironment = new StandardEnvironment();
         httpsEnvironment.getPropertySources().addFirst(new MapPropertySource(
@@ -74,6 +74,13 @@ class ApplicationEnvironmentContractTest {
                 Map.of("OMNINEST_HTTPS_ENABLED", "true")
         ));
         assertThat(httpsEnvironment.resolvePlaceholders(expression)).isEqualTo("true");
+
+        StandardEnvironment httpEnvironment = new StandardEnvironment();
+        httpEnvironment.getPropertySources().addFirst(new MapPropertySource(
+                "http-test",
+                Map.of("OMNINEST_HTTPS_ENABLED", "false")
+        ));
+        assertThat(httpEnvironment.resolvePlaceholders(expression)).isEqualTo("false");
     }
 
     @Test

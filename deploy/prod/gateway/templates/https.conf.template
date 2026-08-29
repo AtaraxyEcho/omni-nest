@@ -28,6 +28,8 @@ server {
     http2 on;
     server_name ${OMNINEST_PUBLIC_HOST};
     client_max_body_size 0;
+    resolver 127.0.0.11 valid=30s ipv6=off;
+    set $omninest_backend backend-api:8080;
 
     ssl_certificate /etc/letsencrypt/live/${CERTBOT_CERT_NAME}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${CERTBOT_CERT_NAME}/privkey.pem;
@@ -43,7 +45,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://backend-api:8080;
+        proxy_pass http://$omninest_backend;
         proxy_http_version 1.1;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -55,7 +57,7 @@ server {
     }
 
     location /ws {
-        proxy_pass http://backend-api:8080;
+        proxy_pass http://$omninest_backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
@@ -76,6 +78,8 @@ server {
     http2 on;
     server_name ${OMNINEST_PUBLIC_HOST};
     client_max_body_size 0;
+    resolver 127.0.0.11 valid=30s ipv6=off;
+    set $omninest_minio minio:9000;
 
     ssl_certificate /etc/letsencrypt/live/${CERTBOT_CERT_NAME}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${CERTBOT_CERT_NAME}/privkey.pem;
@@ -85,7 +89,7 @@ server {
     ssl_session_tickets off;
 
     location / {
-        proxy_pass http://minio:9000;
+        proxy_pass http://$omninest_minio;
         proxy_http_version 1.1;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;

@@ -3,6 +3,7 @@ set -eu
 
 https_enabled="${OMNINEST_HTTPS_ENABLED:-false}"
 public_host="${OMNINEST_PUBLIC_HOST:-localhost}"
+http_port="${OMNINEST_PUBLIC_HTTP_PORT:-80}"
 identifier_type="${CERTBOT_IDENTIFIER_TYPE:-domain}"
 certificate_name="${CERTBOT_CERT_NAME:-omninest}"
 email="${CERTBOT_EMAIL:-}"
@@ -42,6 +43,21 @@ validate_boolean OMNINEST_HTTPS_ENABLED "$https_enabled"
 validate_boolean CERTBOT_STAGING "$staging"
 validate_interval CERTBOT_RENEW_INTERVAL_SECONDS "$renew_interval"
 validate_interval CERTBOT_RETRY_INTERVAL_SECONDS "$retry_interval"
+
+case "$http_port" in
+    ''|*[!0-9]*)
+        echo "OMNINEST_PUBLIC_HTTP_PORT 必须是有效端口" >&2
+        exit 1
+        ;;
+esac
+if [ "$http_port" -lt 1 ] || [ "$http_port" -gt 65535 ]; then
+    echo "OMNINEST_PUBLIC_HTTP_PORT 必须位于 1 到 65535" >&2
+    exit 1
+fi
+if [ "$https_enabled" = "true" ] && [ "$http_port" != "80" ]; then
+    echo "HTTPS 模式使用 HTTP-01 时，OMNINEST_PUBLIC_HTTP_PORT 必须为 80" >&2
+    exit 1
+fi
 
 case "$identifier_type" in
     domain|ipv4)
@@ -159,10 +175,14 @@ while true; do
         continue
     fi
 
-    certbot renew \
+    if certbot renew \
         --cert-name "$certificate_name" \
         --webroot \
         --webroot-path /var/www/certbot \
-        --quiet || true
-    sleep "$renew_interval"
+        --quiet; then
+        sleep "$renew_interval"
+    else
+        echo "Certbot 续期失败，将在 ${retry_interval} 秒后重试" >&2
+        sleep "$retry_interval"
+    fi
 done

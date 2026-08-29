@@ -6,11 +6,27 @@ if [ "${OMNINEST_HTTPS_ENABLED:-false}" != "true" ]; then
 fi
 
 public_host="${OMNINEST_PUBLIC_HOST:-localhost}"
+http_port="${OMNINEST_PUBLIC_HTTP_PORT:-80}"
 https_port="${OMNINEST_PUBLIC_HTTPS_PORT:-443}"
 minio_port="${OMNINEST_PUBLIC_MINIO_PORT:-9000}"
 allowed_origins="${OMNINEST_SECURITY_ALLOWED_ORIGINS:-}"
 setup_web_base_url="${OMNINEST_SETUP_WEB_BASE_URL:-}"
 minio_public_endpoint="${OMNINEST_MINIO_PUBLIC_ENDPOINT:-}"
+
+case "$http_port" in
+    ''|*[!0-9]*)
+        echo "OMNINEST_PUBLIC_HTTP_PORT 必须是有效端口" >&2
+        exit 1
+        ;;
+esac
+if [ "$http_port" -lt 1 ] || [ "$http_port" -gt 65535 ]; then
+    echo "OMNINEST_PUBLIC_HTTP_PORT 必须位于 1 到 65535" >&2
+    exit 1
+fi
+if [ "$http_port" != "80" ]; then
+    echo "HTTPS 模式使用 HTTP-01 时，OMNINEST_PUBLIC_HTTP_PORT 必须为 80" >&2
+    exit 1
+fi
 
 if [ "$https_port" = "443" ]; then
     public_origin="https://${public_host}"

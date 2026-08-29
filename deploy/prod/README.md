@@ -27,9 +27,14 @@ Compose 的 required 语法阻止启动。
 
 ## 公开入口和 HTTPS
 
-`OMNINEST_HTTPS_ENABLED=false` 时，Gateway 在 80 端口提供 Web/API，在 9000
+`OMNINEST_HTTPS_ENABLED=false` 时，Gateway 在配置的 HTTP 端口提供 Web/API，在 9000
 端口代理 MinIO。Spring Boot 和 MinIO 只通过 Docker 内部网络通信；后端调试端口
 仅绑定 `127.0.0.1`。
+
+启用当前 Certbot Webroot/HTTP-01 方案时，宿主机 HTTP 入口必须使用 TCP 80，不能将
+`OMNINEST_PUBLIC_HTTP_PORT` 改为其他端口。若 80 已被其他服务占用，应让现有公网
+Nginx 负责 80/443，并将 ACME 挑战和反向代理按共存方案接入；不要仅修改这个变量
+绕过校验。
 
 启用域名 HTTPS 前设置：
 
