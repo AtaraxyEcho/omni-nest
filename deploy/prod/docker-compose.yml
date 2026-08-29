@@ -262,10 +262,7 @@ services:
     environment:
       INSIGHTFACE_ROOT: /app/models/insightface
       OMNINEST_AI_SIDECAR_SECRET: ${OMNINEST_AI_SIDECAR_SECRET:-change-me-ai-sidecar-random-secret}
-      MODEL_DOWNLOAD_TIMEOUT_SECONDS: ${AI_MODEL_DOWNLOAD_TIMEOUT_SECONDS:-30}
       OMP_NUM_THREADS: ${AI_CPU_THREADS:-2}
-      PLACES365_HOME: /app/models/places365
-      TORCH_HOME: /app/models/torch
       TZ: Asia/Shanghai
     volumes:
       - omninest-ai-models:/app/models

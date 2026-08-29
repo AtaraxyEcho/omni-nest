@@ -1,37 +1,44 @@
 # OmniNest AI Sidecar
 
-该容器为照片模块提供人脸检测、人脸聚类和场景分类接口。
+该容器为照片模块提供人脸检测、人脸嵌入和人脸聚类能力。当前镜像是人脸识别专用构建，仅使用 InsightFace `buffalo_l` 和 CPU 版 ONNX Runtime，不包含 PyTorch、torchvision、Places365 或 COCO 主体检测模型。
+
+## API
+
+除健康检查外的接口都需要 `X-OmniNest-Sidecar-Token` 请求头。
+
+| 接口 | 用途 |
+| --- | --- |
+| `POST /detect-faces` | 检测人脸并返回边界框与 512 维嵌入向量 |
+| `POST /cluster-faces` | 使用人脸嵌入进行聚类，返回逐向量聚类 ID |
+| `POST /analyze-content` | 保留后端结构化分析契约；当前返回空 `observations`，不再生成场景或主体标签 |
+| `POST /classify-scene` | 兼容旧客户端；当前校验图片后返回空 `labels` |
+| `GET /health` | 返回进程和人脸识别能力状态 |
+| `GET /ready` | 仅在人脸识别模型加载完成后返回 HTTP 200 |
+
+`/detect-faces`、`/analyze-content` 和 `/classify-scene` 会限制上传字节数、尺寸和像素数。具体上限通过环境变量调整。
 
 ## 模型缓存
 
-Compose 将 `/app/models` 挂载到 `omninest-ai-models` 命名卷。首次启动会下载模型，后续重建容器继续使用缓存：
+Compose 将 `/app/models` 挂载到 `omninest-ai-models` 卷。首次启动时 InsightFace 将 `buffalo_l` 模型写入 `/app/models/insightface`，后续重建容器复用该卷。镜像本身不再下载或缓存其他推理模型，因此不会产生 Places365、Torch 或 torchvision 的体积和启动开销。
 
-- InsightFace `buffalo_l`：由 InsightFace 下载到 `/app/models/insightface`。
-- Places365 ResNet50：从 CSAIL 官方地址下载到 `/app/models/places365`，写入缓存前校验固定 SHA-256。官方模型端点仅提供 HTTP，摘要校验用于阻止传输损坏或内容替换进入缓存。
-- ImageNet ResNet50：仅在 Places365 不可用时下载到 `/app/models/torch` 作为降级能力。
-
-首次启动需要下载数百 MB 模型，Compose 就绪检查为此保留 15 分钟启动窗口。`/health` 只报告进程和模型状态，`/ready` 只有在人脸检测与场景分类模型均可用时返回 HTTP 200。
-
-Places365 下载单次等待时间默认 30 秒，最多重试三次，可通过 `AI_MODEL_DOWNLOAD_TIMEOUT_SECONDS` 调整。下载失败时会回退到 ImageNet，避免外部模型站点不可用时阻塞整个环境启动。
+模型首次加载可能需要一段时间，健康检查为此保留 10 分钟启动窗口。若模型下载或加载失败，`/ready` 返回 HTTP 503，容器不会被误报为可用。
 
 ## 环境变量
 
-Compose 会注入 `OMNINEST_AI_SIDECAR_SECRET`；未设置时本地 Compose 使用开发默认值，生产环境必须替换。以下变量为可选调优项，未设置时使用程序默认值：
-
 | 变量 | 默认值 | 作用 |
 | --- | --- | --- |
-| `MODEL_DOWNLOAD_TIMEOUT_SECONDS` | `30` | 模型单次下载等待时间 |
+| `OMNINEST_AI_SIDECAR_SECRET` | 空 | 侧车接口共享密钥；生产环境必须显式设置 |
+| `INSIGHTFACE_ROOT` | `/app/models/insightface` | InsightFace 模型目录 |
 | `AI_MAX_IMAGE_BYTES` | `33554432` | 单张图片最大字节数 |
 | `AI_MAX_IMAGE_WIDTH` | `30000` | 图片最大宽度 |
 | `AI_MAX_IMAGE_HEIGHT` | `30000` | 图片最大高度 |
 | `AI_MAX_IMAGE_PIXELS` | `100000000` | 图片最大像素数 |
-| `AI_MAX_CONCURRENT_INFERENCES` | `2` | 并行推理数量 |
-| `IMAGE_ANALYSIS_SCENE_MIN_CONFIDENCE` | `0.35` | 场景候选最低置信度 |
-| `IMAGE_ANALYSIS_SUBJECT_MIN_CONFIDENCE` | `0.65` | 主体候选最低置信度 |
-| `IMAGE_ANALYSIS_SUBJECT_MIN_AREA_RATIO` | `0.01` | 主体最小面积比例 |
-
-模型目录由容器固定为 `/app/models`，不要将宿主机绝对路径写入业务配置。
+| `AI_MAX_CLUSTER_FACES` | `10000` | 单次聚类允许的人脸向量数 |
+| `AI_FACE_EMBEDDING_DIMENSION` | `512` | 人脸嵌入维度校验值 |
+| `AI_MAX_CONCURRENT_INFERENCES` | `2` | 并行推理槽位数 |
+| `OMP_NUM_THREADS` | `2`（Compose） | ONNX Runtime CPU 线程数 |
+| `IMAGE_ANALYSIS_PIPELINE_VERSION` | `face-recognition-v1` | 结构化兼容响应中的流水线版本 |
 
 ## 模型许可
 
-Places365 模型采用 Creative Commons Attribution 许可。InsightFace 预训练模型的使用受其官方模型许可约束，部署前需要根据实际用途确认授权范围。
+InsightFace 代码和预训练模型分别受其上游项目及模型许可约束。部署前请根据实际用途核对 InsightFace、ONNX Runtime、OpenCV、NumPy、scikit-learn 等依赖的许可和再分发条件。

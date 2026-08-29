@@ -1,6 +1,6 @@
-"""AI 侧车模型缓存辅助逻辑测试。"""
+"""AI 侧车人脸识别与边界逻辑测试。"""
 
-import io
+import asyncio
 import unittest
 from unittest.mock import patch
 
@@ -9,36 +9,38 @@ from fastapi import HTTPException
 from pydantic import Field, ValidationError, create_model
 
 
-class ModelDownloadTest(unittest.TestCase):
-    """验证模型下载的总耗时边界。"""
+class FaceOnlyAnalysisTest(unittest.TestCase):
+    """验证人脸专用镜像的结构化兼容行为。"""
 
-    def test_copy_with_deadline_stops_continuous_slow_response(self):
-        """持续返回数据的响应也必须受到总耗时限制。"""
-        source = io.BytesIO(b"first-chunk" + b"second-chunk")
-        output = io.BytesIO()
+    def test_content_analysis_keeps_contract_without_scene_or_subject_models(self):
+        """精简模式保留响应结构，但不生成场景或主体观察项。"""
+        result = app._analyze_content_sync(b"unused")
 
-        with patch.object(app, "MODEL_DOWNLOAD_CHUNK_SIZE", 11):
-            with patch.object(app.time, "monotonic", side_effect=[0.0, 31.0]):
-                with self.assertRaises(TimeoutError):
-                    app._copy_with_deadline(source, output, 30.0)
+        self.assertEqual(2, result.schema_version)
+        self.assertEqual("face-recognition-v1", result.pipeline_version)
+        self.assertEqual([], result.observations)
 
-        self.assertEqual(b"first-chunk", output.getvalue())
+    def test_legacy_scene_labels_are_empty_for_face_only_analysis(self):
+        """旧场景接口转换精简模式响应时返回空标签。"""
+        result = app.ContentAnalysis(
+            schemaVersion=2,
+            pipelineVersion="face-recognition-v1",
+            observations=[],
+        )
 
-    def test_copy_with_deadline_copies_complete_response(self):
-        """截止时间内的完整响应必须全部写入目标。"""
-        source = io.BytesIO(b"complete-model")
-        output = io.BytesIO()
+        self.assertEqual([], app._legacy_scene_labels(result))
 
-        with patch.object(app.time, "monotonic", return_value=0.0):
-            app._copy_with_deadline(source, output, 30.0)
+    def test_ready_requires_only_face_recognition_model(self):
+        """就绪检查只依赖人脸模型，不要求已移除的内容模型。"""
+        with patch.object(app, "face_app", object()):
+            response = asyncio.run(app.ready())
+        self.assertEqual("ready", response["status"])
+        self.assertFalse(response["content_analysis"])
 
-        self.assertEqual(b"complete-model", output.getvalue())
-
-    def test_subject_mapping_does_not_create_generic_animal_label(self):
-        """主体映射只返回受控的具体编码，不通过概率区间生成动物标签。"""
-        self.assertEqual("cat", app.COCO_SUBJECT_CODES["cat"])
-        self.assertEqual("dog", app.COCO_SUBJECT_CODES["dog"])
-        self.assertNotIn("animal", app.COCO_SUBJECT_CODES.values())
+        with patch.object(app, "face_app", None):
+            with self.assertRaises(HTTPException) as not_ready:
+                asyncio.run(app.ready())
+        self.assertEqual(503, not_ready.exception.status_code)
 
     def test_content_observation_keeps_namespaces_separate(self):
         """结构化观察项必须分别表达主体和场景。"""
@@ -54,9 +56,9 @@ class ModelDownloadTest(unittest.TestCase):
                 ),
                 app.ContentObservation(
                     namespace="SCENE",
-                    code="places365_12",
+                    code="scene_test",
                     confidence=0.8,
-                    source="places365",
+                    source="test-classifier",
                 ),
             ],
         )
@@ -64,10 +66,6 @@ class ModelDownloadTest(unittest.TestCase):
         self.assertEqual(2, len(result.observations))
         self.assertEqual("SUBJECT", result.observations[0].namespace)
         self.assertEqual("SCENE", result.observations[1].namespace)
-
-    def test_scene_classifier_default_is_conservative(self):
-        """场景分类默认阈值应过滤低置信度候选。"""
-        self.assertGreaterEqual(app.SCENE_MIN_CONFIDENCE, 0.35)
 
 
 class SidecarBoundaryTest(unittest.TestCase):
