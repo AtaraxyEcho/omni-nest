@@ -1,3 +1,5 @@
+name: omninest-dev
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -90,7 +92,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./.omninest/aria2:/downloads
+      - ../../.omninest/aria2:/downloads
     restart: unless-stopped
 
   clamav:
@@ -116,7 +118,7 @@ services:
     restart: unless-stopped
 
   netease-music-api:
-    build: ./backend/omninest-netease-api
+    build: ./netease-api
     container_name: omninest-netease-music-api
     environment:
       TZ: Asia/Shanghai
@@ -151,7 +153,7 @@ services:
     volumes:
       - omninest-probe-tmp:/tmp/probe
       - omninest-transcode-tmp:/tmp/transcode
-      - ${OMNINEST_LOCAL_MEDIA_ROOT:-./.omninest/local-media}:/mnt/local-media:ro
+      - ${OMNINEST_LOCAL_MEDIA_ROOT:-../../.omninest/local-media}:/mnt/local-media:ro
     restart: unless-stopped
 
   rclone:
@@ -179,23 +181,23 @@ services:
         - >-
           rclone rc core/version
           --url http://127.0.0.1:5572
-          --user "${RCLONE_RC_USER:-admin}"
-          --pass "${RCLONE_RC_PASS:-secret}" >/dev/null
+          --user "$${RCLONE_RC_USER}"
+          --pass "$${RCLONE_RC_PASS}" >/dev/null
       interval: 15s
       timeout: 5s
       start_period: 10s
       retries: 3
     volumes:
       - omninest-rclone:/config/rclone
-      - ./.omninest/local-files:/mnt/local
-      - ./.omninest/rclone-imports:/mnt/imports
+      - ../../.omninest/local-files:/mnt/local
+      - ../../.omninest/rclone-imports:/mnt/imports
     restart: unless-stopped
 
   ai-sidecar:
-    build: ./ai-sidecar
+    build:
+      context: ../../ai-sidecar
+      dockerfile: ../deploy/dev/ai-sidecar/Dockerfile
     container_name: omninest-ai-sidecar
-    entrypoint: ["uvicorn"]
-    command: ["app:app", "--host", "0.0.0.0", "--port", "8090"]
     environment:
       INSIGHTFACE_ROOT: /app/models/insightface
       OMNINEST_AI_SIDECAR_SECRET: ${OMNINEST_AI_SIDECAR_SECRET:-change-me-ai-sidecar-random-secret}
@@ -206,18 +208,6 @@ services:
       TZ: Asia/Shanghai
     ports:
       - "127.0.0.1:8090:8090"
-    healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - >-
-          import urllib.request;
-          urllib.request.urlopen('http://127.0.0.1:8090/ready', timeout=5)
-      interval: 30s
-      timeout: 10s
-      start_period: 15m
-      retries: 3
     volumes:
       - omninest-ai-models:/app/models
     restart: unless-stopped

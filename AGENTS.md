@@ -26,7 +26,7 @@ docs 中最新实施方案与验收记录
 
 根目录设计文档是项目事实来源，不得因普通实现任务随意重写。发现真实冲突时必须说明取舍和影响，不得静默改变方向。
 
-开始实现前必须阅读相关模块现有代码和 `docs` 中的最新实施记录。`docs/2026-08-11/005-影视库多Provider与MinIO职责拆分方案.md` 与 `006-影视库多Provider与本地磁盘直读实施总结.md` 是当前存储架构的重要依据。
+开始实现前必须阅读相关模块现有代码。若本机存在未纳入版本控制的 `docs/` 设计资料，还必须检查其中与当前模块相关的最新实施记录；公开仓库中的实现不得依赖只有本机文档才能解释的隐含约束。
 
 ## 仓库与提交
 
@@ -34,14 +34,15 @@ docs 中最新实施方案与验收记录
 backend/      Spring Boot API、Worker、Scheduler、Flyway 与后端测试
 frontend/     Flutter Web、Android、Desktop 与前端测试
 ai-sidecar/   图片分析侧车服务、模型适配与容器定义
-docs/         方案、过程记录与验收报告
-logo/         品牌源文件与导出资产
+deploy/       dev/prod Docker Compose、环境模板与共享镜像定义
+docs/         本地方案、过程记录与验收报告，不纳入 Git
+logo/         本地品牌源文件与导出资产，不纳入 Git
 ```
 
-- 项目根目录是唯一 Git 仓库，统一追踪后端、前端、图片分析侧车、文档和部署配置。
+- 项目根目录是唯一 Git 仓库，统一追踪后端、前端、图片分析侧车和部署配置；`docs/` 与 `logo/` 仅保留在本机。
 - 不得在 `backend/`、`frontend/`、`ai-sidecar/` 或其他子目录创建嵌套 `.git`、Git submodule 或独立仓库；调整仓库边界前必须获得用户明确同意。
 - 每项任务完成后必须在根仓库创建 commit，默认不 push；用户明确要求推送时再推送到当前根仓库远端。
-- 每次任务完成后，在 `docs/<当天日期>/` 新建顺序编号的报告文件，记录完成项、原因、验证、总体完成百分比和剩余百分比。
+- 每次任务完成后，在本机 `docs/<当天日期>/` 新建顺序编号的报告文件，记录完成项、原因、验证、总体完成百分比和剩余百分比；`docs/` 保持 Git 忽略状态，不得推送。
 - Windows 环境执行仓库命令时优先使用 Git Bash；不要因方便混用 PowerShell 与 Git Bash 进行跨 shell 的文件删除或移动。
 
 ## 通用工作方式
@@ -157,7 +158,7 @@ showReaderSnackBar(context, l10n.readerImportSuccess(fileName));
 - `build()` 必须无业务副作用。禁止在 build 内发网络请求、写状态、启动 Timer、注册长期 Listener、导航、弹 Dialog/BottomSheet 或创建后台任务。
 - 禁止在 LayoutBuilder、build、dispose、元素停用或 Navigator 锁定阶段同步调用会触发树重建或路由变化的方法。必要操作使用 post-frame 回调，并在回调中再次检查 `mounted`。
 - 路由退出只能有一个幂等入口。不要在选择区域、Overlay、动画或手势清理过程中重复 `pop`，避免 Duplicate GlobalKey、Navigator lock、deactivated Element 与 GoRouter 生命周期断言。
-- 路由、Overlay、文本选择、FocusNode 和 GlobalKey 操作必须遵守 Flutter Widget 生命周期；不得在复杂手势或清理流程中同步销毁仍在处理事件的树。具体已知问题与回归检查见 `docs/development/flutter_known_pitfalls.md`。
+- 路由、Overlay、文本选择、FocusNode 和 GlobalKey 操作必须遵守 Flutter Widget 生命周期；不得在复杂手势或清理流程中同步销毁仍在处理事件的树。本机存在 Flutter 稳定性专项文档时，应同时执行其中的回归检查。
 - `GlobalKey` 只能在同一时刻对应一个 Widget；不得把瞬时尺寸或频繁变动状态写入会导致整棵子树反复重挂载的 Key。
 - 出现 `setState() called after dispose()`、`Looking up a deactivated widget's ancestor is unsafe`、`Using ref when a widget is about to or has been unmounted is unsafe`、`Duplicate GlobalKey`、`Navigator _debugLocked` 或生命周期相关 `Bad state` 时，必须修复根因，禁止 catch 后忽略。
 

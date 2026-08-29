@@ -12,6 +12,8 @@
 .codex-tmp/
 .impeccable/
 .localappdata/
+docs/
+logo/
 
 # 本地环境变量和凭据
 .env

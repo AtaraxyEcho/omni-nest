@@ -1,0 +1,285 @@
+name: omninest
+
+x-backend-environment: &backend-environment
+  OMNINEST_PROFILE: prod
+  OMNINEST_SERVER_PORT: "8080"
+  OMNINEST_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-omninest}
+  OMNINEST_DB_USER: ${POSTGRES_USER:-omninest}
+  OMNINEST_DB_PASSWORD: ${POSTGRES_PASSWORD:-omninest}
+  OMNINEST_REDIS_HOST: redis
+  OMNINEST_REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  OMNINEST_RABBITMQ_HOST: rabbitmq
+  OMNINEST_RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER:-omninest}
+  OMNINEST_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-omninest}
+  OMNINEST_SECURITY_JWT_SECRET: ${OMNINEST_SECURITY_JWT_SECRET:-change-me-omninest-local-jwt-secret-at-least-32-bytes}
+  OMNINEST_SECURITY_CREDENTIAL_ENCRYPTION_KEY: ${OMNINEST_SECURITY_CREDENTIAL_ENCRYPTION_KEY:-}
+  OMNINEST_SECURITY_REFRESH_COOKIE_SECURE: ${OMNINEST_SECURITY_REFRESH_COOKIE_SECURE:-true}
+  OMNINEST_SECURITY_REGISTRATION_ENABLED: ${OMNINEST_SECURITY_REGISTRATION_ENABLED:-false}
+  OMNINEST_SECURITY_TRUSTED_PROXIES: ${OMNINEST_SECURITY_TRUSTED_PROXIES:-}
+  OMNINEST_SECURITY_ALLOWED_ORIGINS: ${OMNINEST_SECURITY_ALLOWED_ORIGINS:-http://localhost:3000}
+  OMNINEST_SETUP_ENABLED: ${OMNINEST_SETUP_ENABLED:-true}
+  OMNINEST_SETUP_PERSISTENT_STATE_ENABLED: ${OMNINEST_SETUP_PERSISTENT_STATE_ENABLED:-true}
+  OMNINEST_SETUP_TOKEN: ${OMNINEST_SETUP_TOKEN:-}
+  OMNINEST_SETUP_WEB_BASE_URL: ${OMNINEST_SETUP_WEB_BASE_URL:-}
+  OMNINEST_MINIO_ENDPOINT: http://minio:9000
+  OMNINEST_MINIO_PUBLIC_ENDPOINT: ${OMNINEST_MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
+  OMNINEST_MINIO_DOCKER_ENDPOINT: http://minio:9000
+  OMNINEST_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+  OMNINEST_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+  OMNINEST_LOCAL_MEDIA_ENABLED: ${OMNINEST_LOCAL_MEDIA_ENABLED:-true}
+  OMNINEST_LOCAL_MEDIA_ROOT: /mnt/local-media
+  OMNINEST_LOCAL_MEDIA_PROCESS_ROOT: /mnt/local-media
+  OMNINEST_CLAMAV_ENABLED: ${OMNINEST_CLAMAV_ENABLED:-true}
+  OMNINEST_CLAMAV_HOST: clamav
+  OMNINEST_CLAMAV_PORT: "3310"
+  OMNINEST_RCLONE_ENDPOINT: http://rclone:5572
+  OMNINEST_RCLONE_RC_USER: ${RCLONE_RC_USER:-admin}
+  OMNINEST_RCLONE_RC_PASS: ${RCLONE_RC_PASS:-secret}
+  OMNINEST_RCLONE_LOCAL_HOST_PATH: /mnt/local
+  OMNINEST_RCLONE_IMPORT_HOST_PATH: /mnt/imports
+  OMNINEST_RCLONE_IMPORT_CONTAINER_PATH: /mnt/imports
+  OMNINEST_ARIA2_RPC_URL: http://aria2:6800/jsonrpc
+  OMNINEST_ARIA2_RPC_SECRET: ${RPC_SECRET:-omninest}
+  OMNINEST_ARIA2_DOWNLOAD_ROOT: /downloads
+  OMNINEST_SEARCH_INDEX_PATH: /var/lib/omninest/lucene
+  OMNINEST_NETEASE_API_BASE_URL: http://netease-music-api:3000
+  OMNINEST_PHOTO_AI_ENDPOINT: http://ai-sidecar:8090
+  OMNINEST_PHOTO_AI_TIMEOUT_SECONDS: ${OMNINEST_PHOTO_AI_TIMEOUT_SECONDS:-30}
+  OMNINEST_PHOTO_AI_MAX_IMAGE_BYTES: ${OMNINEST_PHOTO_AI_MAX_IMAGE_BYTES:-67108864}
+  OMNINEST_PHOTO_AI_MAX_RESPONSE_BYTES: ${OMNINEST_PHOTO_AI_MAX_RESPONSE_BYTES:-1048576}
+  OMNINEST_AI_SIDECAR_SECRET: ${OMNINEST_AI_SIDECAR_SECRET:-change-me-ai-sidecar-random-secret}
+  OMNINEST_MUSICBRAINZ_USER_AGENT: ${OMNINEST_MUSICBRAINZ_USER_AGENT:-OmniNest/0.1.0 (contact@example.com)}
+  OMNINEST_READER_COMIC_CONSUME_IN_API: "false"
+  TZ: Asia/Shanghai
+
+x-backend-service: &backend-service
+  image: ${OMNINEST_BACKEND_IMAGE:-omninest/backend}:${OMNINEST_IMAGE_TAG:-latest}
+  build:
+    context: ../../backend
+    dockerfile: ../deploy/prod/backend/Dockerfile
+  environment: *backend-environment
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+    clamav:
+      condition: service_healthy
+  volumes:
+    - omninest-search:/var/lib/omninest/lucene
+    - omninest-rclone-local:/mnt/local
+    - omninest-rclone-imports:/mnt/imports
+    - omninest-aria2:/downloads
+    - ${OMNINEST_LOCAL_MEDIA_ROOT:-../../.omninest/local-media}:/mnt/local-media:ro
+  restart: unless-stopped
+  stop_grace_period: 30s
+
+services:
+  backend-api:
+    <<: *backend-service
+    environment:
+      <<: *backend-environment
+      OMNINEST_ROLE: api
+    ports:
+      - "${OMNINEST_SERVER_PORT:-8080}:8080"
+
+  backend-worker:
+    <<: *backend-service
+    environment:
+      <<: *backend-environment
+      OMNINEST_ROLE: worker
+
+  backend-scheduler:
+    <<: *backend-service
+    environment:
+      <<: *backend-environment
+      OMNINEST_ROLE: scheduler
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-omninest}
+      POSTGRES_USER: ${POSTGRES_USER:-omninest}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-omninest}
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - omninest-postgres:/var/lib/postgresql
+    restart: unless-stopped
+
+  redis:
+    image: redis:8
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      TZ: Asia/Shanghai
+    command:
+      - sh
+      - -c
+      - |
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+        fi
+        exec redis-server --appendonly yes
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          if [ -n "$$REDIS_PASSWORD" ]; then
+            redis-cli -a "$$REDIS_PASSWORD" ping;
+          else
+            redis-cli ping;
+          fi
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - omninest-redis:/data
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4.3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-omninest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-omninest}
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      start_period: 20s
+      retries: 10
+    volumes:
+      - omninest-rabbitmq:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - omninest-minio:/data
+    restart: unless-stopped
+
+  aria2:
+    image: p3terx/aria2-pro:latest
+    environment:
+      RPC_SECRET: ${RPC_SECRET:-omninest}
+      RPC_PORT: 6800
+      LISTEN_PORT: 6888
+      TZ: Asia/Shanghai
+    ports:
+      - "${ARIA2_LISTEN_PORT:-6888}:6888"
+      - "${ARIA2_LISTEN_PORT:-6888}:6888/udp"
+    volumes:
+      - omninest-aria2:/downloads
+    restart: unless-stopped
+
+  clamav:
+    image: clamav/clamav:stable
+    environment:
+      CLAMD_CONF_StreamMaxLength: ${CLAMD_CONF_StreamMaxLength:-2047M}
+      CLAMD_CONF_MaxScanSize: ${CLAMD_CONF_MaxScanSize:-2047M}
+      CLAMD_CONF_MaxFileSize: ${CLAMD_CONF_MaxFileSize:-2047M}
+      CLAMD_CONF_MaxScanTime: ${CLAMD_CONF_MaxScanTime:-1800000}
+      CLAMD_CONF_ReadTimeout: ${CLAMD_CONF_ReadTimeout:-1800}
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD-SHELL", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      start_period: 6m
+      retries: 10
+    volumes:
+      - omninest-clamav-db:/var/lib/clamav
+    restart: unless-stopped
+
+  netease-music-api:
+    build: ./netease-api
+    environment:
+      TZ: Asia/Shanghai
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:3000').then(response => {
+            if (!response.ok) process.exit(1);
+          }).catch(() => process.exit(1));
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+
+  rclone:
+    image: rclone/rclone:1.74.2
+    environment:
+      RCLONE_RC_PASS: ${RCLONE_RC_PASS:-secret}
+      RCLONE_RC_USER: ${RCLONE_RC_USER:-admin}
+      TZ: Asia/Shanghai
+    command: >
+      rcd
+      --rc-addr 0.0.0.0:5572
+      --rc-user ${RCLONE_RC_USER:-admin}
+      --rc-pass ${RCLONE_RC_PASS:-secret}
+      --rc-job-expire-duration 5m
+      --rc-server-read-timeout 1h
+      --rc-server-write-timeout 1h
+      --rc-enable-metrics
+      --log-level INFO
+    volumes:
+      - omninest-rclone:/config/rclone
+      - omninest-rclone-local:/mnt/local
+      - omninest-rclone-imports:/mnt/imports
+    restart: unless-stopped
+
+  ai-sidecar:
+    build:
+      context: ../../ai-sidecar
+      dockerfile: ../deploy/prod/ai-sidecar/Dockerfile
+    environment:
+      INSIGHTFACE_ROOT: /app/models/insightface
+      OMNINEST_AI_SIDECAR_SECRET: ${OMNINEST_AI_SIDECAR_SECRET:-change-me-ai-sidecar-random-secret}
+      MODEL_DOWNLOAD_TIMEOUT_SECONDS: ${AI_MODEL_DOWNLOAD_TIMEOUT_SECONDS:-30}
+      OMP_NUM_THREADS: ${AI_CPU_THREADS:-2}
+      PLACES365_HOME: /app/models/places365
+      TORCH_HOME: /app/models/torch
+      TZ: Asia/Shanghai
+    volumes:
+      - omninest-ai-models:/app/models
+    restart: unless-stopped
+
+volumes:
+  omninest-postgres:
+  omninest-redis:
+  omninest-rabbitmq:
+  omninest-minio:
+  omninest-clamav-db:
+  omninest-rclone:
+  omninest-rclone-local:
+  omninest-rclone-imports:
+  omninest-aria2:
+  omninest-ai-models:
+  omninest-search:

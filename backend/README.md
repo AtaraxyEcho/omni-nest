@@ -108,8 +108,10 @@ Supported values are `api`, `worker`, and `scheduler`. API endpoints are active 
 
 Start local infrastructure from the repository root:
 
-```powershell
-docker compose -f docker-compose.dev.yml up -d
+```bash
+cd deploy/dev
+cp .env.example .env
+docker compose up -d
 ```
 
 Default ports:

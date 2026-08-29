@@ -8,17 +8,18 @@ OmniNest 是一个自托管的个人数字生活中心，用于统一管理文�
 backend/      Spring Boot API、Worker、Scheduler、Flyway 与测试
 frontend/     Flutter Web、Android、Windows 与测试
 ai-sidecar/   Photos 图片分析侧车服务
-docs/         设计方案、实施记录与验收报告
-logo/         品牌源文件与导出资产
+deploy/       开发与生产 Docker 部署配置
 ```
 
 ## 本地基础设施
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d
+cd deploy/dev
+cp .env.example .env
+docker compose up -d
 ```
 
-根目录 `.env.example` 只描述 Docker Compose 变量；后端裸进程变量见 `backend/.env.example`。开发环境默认端口包括 PostgreSQL `5432`、Redis `6379`、RabbitMQ `5672/15672`、MinIO `9000/9001`、Rclone `5572`、ClamAV `3310` 和图片分析侧车 `8090`。
+`deploy/dev/.env.example` 只描述开发 Compose 变量；后端裸进程变量见 `backend/.env.example`。生产部署见 `deploy/prod/README.md`。
 
 ## 后端
 

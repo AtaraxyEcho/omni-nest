@@ -7,7 +7,7 @@ RUN apt-get update && \
 WORKDIR /app
 COPY omninest-app/target/omninest-app-*.jar app.jar
 
-ENV OMNINEST_PROFILE=prod \
+ENV OMNINEST_PROFILE=dev \
     OMNINEST_ROLE=api
 EXPOSE 8080
 

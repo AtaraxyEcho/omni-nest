@@ -21,6 +21,10 @@ ehthumbs.db
 /.impeccable/
 /.localappdata/
 
+# 本地设计资料和品牌源文件
+/docs/
+/logo/
+
 # 本地环境变量和凭据
 .env
 .env.*
