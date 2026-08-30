@@ -28,6 +28,7 @@ import com.omninest.modules.file.domain.FileObject;
 import com.omninest.modules.file.domain.FileUploadPart;
 import com.omninest.modules.file.domain.FileUploadSession;
 import com.omninest.modules.file.domain.SpaceType;
+import com.omninest.modules.file.domain.UploadStatus;
 import com.omninest.modules.file.dto.CompleteFileUploadPartRequest;
 import com.omninest.modules.file.dto.CompleteFileUploadRequest;
 import com.omninest.modules.file.dto.CreateFileUploadSessionRequest;
@@ -256,6 +257,8 @@ class FileUploadSessionServiceTest {
         FileUploadPart part = part(1, "PENDING", null);
         when(uploadSessionRepository.findByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
                 .thenReturn(Optional.of(session));
+        when(uploadSessionRepository.findForUpdateByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
+                .thenReturn(Optional.of(session));
         when(uploadPartRepository.findByUploadSessionIdAndPartNumber(SESSION_ID, 1)).thenReturn(Optional.of(part));
         when(uploadPartRepository.findByUploadSessionIdOrderByPartNumber(SESSION_ID)).thenReturn(List.of(part));
         when(uploadPartRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -278,6 +281,8 @@ class FileUploadSessionServiceTest {
         FileUploadSession session = session();
         FileUploadPart part = part(1, "COMPLETED", "etag-1");
         when(uploadSessionRepository.findByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
+                .thenReturn(Optional.of(session));
+        when(uploadSessionRepository.findForUpdateByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
                 .thenReturn(Optional.of(session));
         when(uploadPartRepository.findByUploadSessionIdOrderByPartNumber(SESSION_ID)).thenReturn(List.of(part));
         when(fileNodeRepository.existsByOwnerUserIdAndParentIdIsNullAndNameAndDeletedFalse(OWNER_ID, "demo.pdf"))
@@ -394,6 +399,8 @@ class FileUploadSessionServiceTest {
 
         when(uploadSessionRepository.findByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
                 .thenReturn(Optional.of(session));
+        when(uploadSessionRepository.findForUpdateByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
+                .thenReturn(Optional.of(session));
         when(uploadPartRepository.findByUploadSessionIdOrderByPartNumber(SESSION_ID))
                 .thenReturn(List.of(completedPart, pendingPart));
 
@@ -404,6 +411,22 @@ class FileUploadSessionServiceTest {
 
         // 不应调用对象存储完成操作
         verify(objectStorageClient, Mockito.never()).completeMultipartUpload(any(), any(), any());
+    }
+
+    @Test
+    void cancelCompletedSessionIsIdempotent() {
+        FileUploadSession session = session();
+        session.setStatus(UploadStatus.COMPLETED.getValue());
+        when(uploadSessionRepository.findForUpdateByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
+                .thenReturn(Optional.of(session));
+
+        service.cancelSession(OWNER_ID, "upload-123");
+
+        verify(uploadPartRepository, Mockito.never()).deleteByUploadSessionId(SESSION_ID);
+        verify(uploadSessionRepository, Mockito.never()).delete(session);
+        verify(objectStorageClient, Mockito.never()).objectExists(any());
+        verify(objectStorageClient, Mockito.never()).removeObject(any());
+        verify(objectStorageClient, Mockito.never()).abortMultipartUpload(any(), any());
     }
 
     private FileUploadSession session() {

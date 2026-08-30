@@ -254,7 +254,7 @@ public class FileUploadSessionService {
 
     @Transactional(rollbackFor = Exception.class)
     public FileNodeDto completeSession(UUID ownerUserId, String uploadId, CompleteFileUploadRequest request) {
-        FileUploadSession session = findSession(ownerUserId, uploadId);
+        FileUploadSession session = findSessionForUpdate(ownerUserId, uploadId);
         if (UploadStatus.COMPLETED.getValue().equals(session.getStatus())) {
             return completedResult(ownerUserId, session);
         }
@@ -322,16 +322,17 @@ public class FileUploadSessionService {
 
     @Transactional(rollbackFor = Exception.class)
     public void cancelSession(UUID ownerUserId, String uploadId) {
-        FileUploadSession session = findSession(ownerUserId, uploadId);
-        if (!UploadStatus.COMPLETED.getValue().equals(session.getStatus())) {
-            ObjectStorageKey key = new ObjectStorageKey(session.getTargetBucket(), session.getTargetObjectKey());
-            if (isDirectUpload(session)) {
-                if (objectStorageClient.objectExists(key)) {
-                    objectStorageClient.removeObject(key);
-                }
-            } else {
-                objectStorageClient.abortMultipartUpload(key, session.getUploadId());
+        FileUploadSession session = findSessionForUpdate(ownerUserId, uploadId);
+        if (UploadStatus.COMPLETED.getValue().equals(session.getStatus())) {
+            return;
+        }
+        ObjectStorageKey key = new ObjectStorageKey(session.getTargetBucket(), session.getTargetObjectKey());
+        if (isDirectUpload(session)) {
+            if (objectStorageClient.objectExists(key)) {
+                objectStorageClient.removeObject(key);
             }
+        } else {
+            objectStorageClient.abortMultipartUpload(key, session.getUploadId());
         }
         fileUploadPartRepository.deleteByUploadSessionId(session.getId());
         if (session.getQuotaReservationId() != null) {
@@ -403,7 +404,7 @@ public class FileUploadSessionService {
 
     @Transactional(rollbackFor = Exception.class)
     public FileUploadSessionDto extendSession(UUID ownerUserId, String uploadId) {
-        FileUploadSession session = findSession(ownerUserId, uploadId);
+        FileUploadSession session = findSessionForUpdate(ownerUserId, uploadId);
         if (UploadStatus.COMPLETED.getValue().equals(session.getStatus())) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "上传会话已完成，无需延期");
         }
@@ -418,13 +419,19 @@ public class FileUploadSessionService {
         return toSessionDto(saved, List.of(), false);
     }
 
+    private FileUploadSession findSessionForUpdate(UUID ownerUserId, String uploadId) {
+        return fileUploadSessionRepository
+                .findForUpdateByUploadIdAndOwnerUserId(uploadId, ownerUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND, "上传会话不存在"));
+    }
+
     private FileUploadSession findSession(UUID ownerUserId, String uploadId) {
         return fileUploadSessionRepository.findByUploadIdAndOwnerUserId(uploadId, ownerUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND, "上传会话不存在"));
     }
 
     private FileUploadSession findCompletableSession(UUID ownerUserId, String uploadId) {
-        FileUploadSession session = findSession(ownerUserId, uploadId);
+        FileUploadSession session = findSessionForUpdate(ownerUserId, uploadId);
         ensureCompletable(session);
         return session;
     }

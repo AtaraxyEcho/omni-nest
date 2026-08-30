@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -46,6 +47,15 @@ public class GlobalExceptionHandler {
         Object details = exception.details().isEmpty() ? null : exception.details();
         return ResponseEntity.status(status)
                 .body(ApiResponse.error(exception.errorCode(), exception.getMessage(), details));
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailure(
+            ObjectOptimisticLockingFailureException exception
+    ) {
+        log.warn("并发更新冲突: errorType={}", exception.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ErrorCode.CONFLICT, "资源正在被其他请求更新，请稍后重试"));
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
