@@ -8,6 +8,7 @@ import 'package:omninest/app/providers.dart';
 import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/core/widgets/responsive_breakpoints.dart';
 import 'package:omninest/core/widgets/space_selector_sheet.dart';
+import 'package:omninest/features/files/application/media_import_file_picker.dart';
 import 'package:omninest/features/files/application/media_import_service.dart';
 
 /// 导入按钮样式。
@@ -19,8 +20,7 @@ typedef MediaImportFilePicker =
 
 /// 提供可替换的文件选择入口，便于隔离原生选择器并覆盖测试场景。
 final mediaImportFilePickerProvider = Provider<MediaImportFilePicker>((ref) {
-  return (acceptedTypeGroups) =>
-      openFiles(acceptedTypeGroups: acceptedTypeGroups);
+  return pickMediaImportFiles;
 });
 
 /// 可复用的媒体导入按钮。
