@@ -47,8 +47,6 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context);
-    final setupController = ref.read(initialSetupProvider.notifier);
-    final authController = ref.read(authSessionProvider.notifier);
     final setupToken = _setupTokenController.text;
     final username = _usernameController.text.trim();
     final displayName = _displayNameController.text.trim();
@@ -62,27 +60,32 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
       _errorMessage = null;
     });
     try {
-      await setupController.createSuperAdmin(
-        setupToken: setupToken,
-        username: username,
-        displayName: displayName,
-        email: email,
-        password: password,
-        instanceName: instanceName,
-        defaultLocale: defaultLocale,
-        defaultTimezone: defaultTimezone,
-      );
-      await authController.signInWithCredentials(
-        username: username,
-        password: password,
-      );
-      await setupController.refresh();
+      await ref
+          .read(initialSetupProvider.notifier)
+          .createSuperAdmin(
+            setupToken: setupToken,
+            username: username,
+            displayName: displayName,
+            email: email,
+            password: password,
+            instanceName: instanceName,
+            defaultLocale: defaultLocale,
+            defaultTimezone: defaultTimezone,
+          );
+      if (!mounted) return;
+      await ref
+          .read(authSessionProvider.notifier)
+          .signInWithCredentials(username: username, password: password);
+      if (!mounted) return;
+      await ref.read(initialSetupProvider.notifier).refresh();
     } on AppException catch (error) {
-      if (mounted) setState(() => _errorMessage = error.message);
-      await setupController.refresh();
+      if (!mounted) return;
+      setState(() => _errorMessage = error.message);
+      await ref.read(initialSetupProvider.notifier).refresh();
     } catch (_) {
-      if (mounted) setState(() => _errorMessage = l10n.setupCreateFailed);
-      await setupController.refresh();
+      if (!mounted) return;
+      setState(() => _errorMessage = l10n.setupCreateFailed);
+      await ref.read(initialSetupProvider.notifier).refresh();
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

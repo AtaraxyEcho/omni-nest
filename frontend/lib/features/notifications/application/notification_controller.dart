@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/app/providers.dart';
 import 'package:omninest/app/realtime_providers.dart';
+import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/features/notifications/data/notification_api.dart';
 import 'package:omninest/features/notifications/domain/notification_models.dart';
 
@@ -41,12 +43,24 @@ final unreadCountProvider = NotifierProvider<UnreadCountNotifier, int>(
 class UnreadCountNotifier extends Notifier<int> {
   @override
   int build() {
-    ref.watch(notificationApiProvider).unreadCount().then((count) {
+    final auth = ref.watch(authSessionProvider).asData?.value;
+    if (auth?.isAuthenticated == true) {
+      unawaited(_loadInitialCount());
+    }
+    return 0;
+  }
+
+  Future<void> _loadInitialCount() async {
+    try {
+      final count = await ref.read(notificationApiProvider).unreadCount();
       if (ref.mounted) {
         state = count;
       }
-    });
-    return 0;
+    } on Exception catch (error) {
+      if (kDebugMode) {
+        debugPrint('通知未读数初始化失败: ${error.runtimeType}');
+      }
+    }
   }
 
   void increment() => state++;

@@ -18,7 +18,10 @@ void registerMusicQueueTests() {
       shuffleEnabled: true,
     );
     final container = ProviderContainer.test(
-      overrides: [musicApiProvider.overrideWithValue(api)],
+      overrides: [
+        musicApiProvider.overrideWithValue(api),
+        musicPlaybackQueueOwnerIdProvider.overrideWith((ref) async => 'user-a'),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -76,10 +79,33 @@ void registerMusicQueueTests() {
     },
   );
 
+  test(
+    'unauthenticated startup does not access playback queue storage',
+    () async {
+      final api = _FakeMusicApi();
+      final container = ProviderContainer.test(
+        overrides: [musicApiProvider.overrideWithValue(api)],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(musicCenterControllerProvider.future);
+      container
+          .read(musicCenterControllerProvider.notifier)
+          .enqueue(MusicPlayableItem.local(api.secondTrack));
+      await Future<void>.delayed(const Duration(milliseconds: 220));
+
+      expect(api.playbackQueueLoadAttempts, 0);
+      expect(api.savedPlaybackQueues, isEmpty);
+    },
+  );
+
   test('queue mutation persists a rebuildable snapshot', () async {
     final api = _FakeMusicApi();
     final container = ProviderContainer.test(
-      overrides: [musicApiProvider.overrideWithValue(api)],
+      overrides: [
+        musicApiProvider.overrideWithValue(api),
+        musicPlaybackQueueOwnerIdProvider.overrideWith((ref) async => 'user-a'),
+      ],
     );
     addTearDown(container.dispose);
     await container.read(musicCenterControllerProvider.future);
@@ -99,7 +125,10 @@ void registerMusicQueueTests() {
   test('playback queue persistence keeps at most one hundred items', () async {
     final api = _FakeMusicApi();
     final container = ProviderContainer.test(
-      overrides: [musicApiProvider.overrideWithValue(api)],
+      overrides: [
+        musicApiProvider.overrideWithValue(api),
+        musicPlaybackQueueOwnerIdProvider.overrideWith((ref) async => 'user-a'),
+      ],
     );
     addTearDown(container.dispose);
     await container.read(musicCenterControllerProvider.future);
@@ -131,7 +160,10 @@ void registerMusicQueueTests() {
   test('playback queue retries transient remote save failures', () async {
     final api = _FakeMusicApi()..queueSaveFailuresRemaining = 2;
     final container = ProviderContainer.test(
-      overrides: [musicApiProvider.overrideWithValue(api)],
+      overrides: [
+        musicApiProvider.overrideWithValue(api),
+        musicPlaybackQueueOwnerIdProvider.overrideWith((ref) async => 'user-a'),
+      ],
     );
     addTearDown(container.dispose);
     await container.read(musicCenterControllerProvider.future);
@@ -148,7 +180,10 @@ void registerMusicQueueTests() {
   test('disposing music center flushes the latest queue immediately', () async {
     final api = _FakeMusicApi();
     final container = ProviderContainer.test(
-      overrides: [musicApiProvider.overrideWithValue(api)],
+      overrides: [
+        musicApiProvider.overrideWithValue(api),
+        musicPlaybackQueueOwnerIdProvider.overrideWith((ref) async => 'user-a'),
+      ],
     );
     await container.read(musicCenterControllerProvider.future);
 

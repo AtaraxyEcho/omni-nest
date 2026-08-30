@@ -62,24 +62,25 @@ class _MusicQueuePersistenceCoordinator {
 
   Future<MusicPlaybackQueueSnapshot> load() async {
     restoreRequiresRemoteSync = false;
+    final currentOwnerId = ownerId;
+    if (currentOwnerId == null) {
+      return const MusicPlaybackQueueSnapshot();
+    }
     MusicPlaybackQueueSnapshot? remote;
     try {
       remote = await api.playbackQueue();
     } on Exception catch (error) {
       _logFailure('读取远端播放队列失败', error);
     }
-    final currentOwnerId = ownerId;
     MusicPlaybackQueueSnapshot? local;
-    if (currentOwnerId != null) {
-      try {
-        local = await store.load(currentOwnerId);
-      } on Exception catch (error) {
-        _logFailure('读取本地播放队列失败', error);
-      }
+    try {
+      local = await store.load(currentOwnerId);
+    } on Exception catch (error) {
+      _logFailure('读取本地播放队列失败', error);
     }
     if (local == null) {
       final resolved = remote ?? const MusicPlaybackQueueSnapshot();
-      if (currentOwnerId != null && remote != null) {
+      if (remote != null) {
         unawaited(_saveLocal(currentOwnerId, remote));
       }
       return resolved;
@@ -88,9 +89,7 @@ class _MusicQueuePersistenceCoordinator {
       restoreRequiresRemoteSync = true;
       return local;
     }
-    if (currentOwnerId != null) {
-      unawaited(_saveLocal(currentOwnerId, remote));
-    }
+    unawaited(_saveLocal(currentOwnerId, remote));
     return remote;
   }
 
@@ -121,9 +120,11 @@ class _MusicQueuePersistenceCoordinator {
     _latestSnapshot = snapshot;
     _pendingSnapshot = snapshot;
     final currentOwnerId = ownerId;
-    if (currentOwnerId != null) {
-      unawaited(_saveLocal(currentOwnerId, snapshot));
+    if (currentOwnerId == null) {
+      _pendingSnapshot = null;
+      return;
     }
+    unawaited(_saveLocal(currentOwnerId, snapshot));
     _timer = Timer(delay, () {
       unawaited(_flushPending());
     });
@@ -133,11 +134,13 @@ class _MusicQueuePersistenceCoordinator {
     _timer?.cancel();
     final snapshot = _latestSnapshot;
     final currentOwnerId = ownerId;
+    if (currentOwnerId == null) {
+      _pendingSnapshot = null;
+      return;
+    }
     if (snapshot != null) {
       _pendingSnapshot = snapshot;
-      if (currentOwnerId != null) {
-        await _saveLocal(currentOwnerId, snapshot);
-      }
+      await _saveLocal(currentOwnerId, snapshot);
     }
     await _flushPending();
   }
@@ -153,9 +156,10 @@ class _MusicQueuePersistenceCoordinator {
       return;
     }
     final currentOwnerId = ownerId;
-    if (currentOwnerId != null) {
-      unawaited(_saveLocal(currentOwnerId, snapshot));
+    if (currentOwnerId == null) {
+      return;
     }
+    unawaited(_saveLocal(currentOwnerId, snapshot));
     unawaited(_persistOnDispose(snapshot));
   }
 

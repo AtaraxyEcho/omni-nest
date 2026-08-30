@@ -588,6 +588,7 @@ class _FakeMusicApi implements MusicApi {
   MusicPlaybackQueueSnapshot restoredPlaybackQueue =
       const MusicPlaybackQueueSnapshot();
   final savedPlaybackQueues = <MusicPlaybackQueueSnapshot>[];
+  int playbackQueueLoadAttempts = 0;
   int queueSaveAttempts = 0;
   int queueSaveFailuresRemaining = 0;
   List<MusicRecentEntry> recentEntries = <MusicRecentEntry>[];
@@ -741,8 +742,10 @@ class _FakeMusicApi implements MusicApi {
   }
 
   @override
-  Future<MusicPlaybackQueueSnapshot> playbackQueue() async =>
-      restoredPlaybackQueue;
+  Future<MusicPlaybackQueueSnapshot> playbackQueue() async {
+    playbackQueueLoadAttempts++;
+    return restoredPlaybackQueue;
+  }
 
   @override
   Future<void> savePlaybackQueue(MusicPlaybackQueueSnapshot snapshot) async {

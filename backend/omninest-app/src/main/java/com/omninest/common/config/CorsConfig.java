@@ -32,7 +32,8 @@ public class CorsConfig {
                 "X-Device-Name",
                 "X-Internal-Token",
                 "X-Request-Id",
-                "X-Requested-With"
+                "X-Requested-With",
+                "X-Setup-Token"
         ));
         corsConfiguration.setExposedHeaders(List.of("Authorization", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"));
         corsConfiguration.setAllowCredentials(securityProperties.isAllowCredentials());
