@@ -15,7 +15,7 @@ x-backend-environment: &backend-environment
   OMNINEST_SECURITY_CREDENTIAL_ENCRYPTION_KEY: ${OMNINEST_SECURITY_CREDENTIAL_ENCRYPTION_KEY:-}
   OMNINEST_HTTPS_ENABLED: ${OMNINEST_HTTPS_ENABLED:-false}
   OMNINEST_SECURITY_REGISTRATION_ENABLED: ${OMNINEST_SECURITY_REGISTRATION_ENABLED:-false}
-  OMNINEST_SECURITY_TRUSTED_PROXIES: ${OMNINEST_SECURITY_TRUSTED_PROXIES:-${OMNINEST_GATEWAY_INTERNAL_IP:-172.30.0.10}}
+  OMNINEST_SECURITY_TRUSTED_PROXIES: ${OMNINEST_SECURITY_TRUSTED_PROXIES:-${OMNINEST_NGINX_INTERNAL_IP:-172.30.0.10}}
   OMNINEST_SECURITY_ALLOWED_ORIGINS: ${OMNINEST_SECURITY_ALLOWED_ORIGINS:-http://localhost:3000}
   OMNINEST_SETUP_ENABLED: ${OMNINEST_SETUP_ENABLED:-true}
   OMNINEST_SETUP_PERSISTENT_STATE_ENABLED: ${OMNINEST_SETUP_PERSISTENT_STATE_ENABLED:-true}
@@ -79,11 +79,11 @@ x-backend-service: &backend-service
   stop_grace_period: 30s
 
 services:
-  gateway:
-    image: ${OMNINEST_GATEWAY_IMAGE:-omninest/gateway}:${OMNINEST_IMAGE_TAG:-latest}
+  nginx:
+    image: ${OMNINEST_NGINX_IMAGE:-omninest/nginx}:${OMNINEST_IMAGE_TAG:-latest}
     build:
       context: ../..
-      dockerfile: deploy/prod/gateway/Dockerfile
+      dockerfile: deploy/prod/nginx/Dockerfile
     environment:
       OMNINEST_HTTPS_ENABLED: ${OMNINEST_HTTPS_ENABLED:-false}
       OMNINEST_PUBLIC_HOST: ${OMNINEST_PUBLIC_HOST:-localhost}
@@ -110,7 +110,7 @@ services:
       - omninest-certbot-challenges:/var/www/certbot:ro
     networks:
       default:
-        ipv4_address: ${OMNINEST_GATEWAY_INTERNAL_IP:-172.30.0.10}
+        ipv4_address: ${OMNINEST_NGINX_INTERNAL_IP:-172.30.0.10}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/health"]
       interval: 15s
@@ -133,7 +133,7 @@ services:
       CERTBOT_RETRY_INTERVAL_SECONDS: ${CERTBOT_RETRY_INTERVAL_SECONDS:-900}
       TZ: Asia/Shanghai
     depends_on:
-      gateway:
+      nginx:
         condition: service_healthy
     volumes:
       - ./certbot/entrypoint.sh:/opt/omninest/entrypoint.sh:ro
@@ -349,3 +349,4 @@ networks:
     ipam:
       config:
         - subnet: ${OMNINEST_DOCKER_SUBNET:-172.30.0.0/24}
+          ip_range: ${OMNINEST_DOCKER_DYNAMIC_IP_RANGE:-172.30.0.128/25}

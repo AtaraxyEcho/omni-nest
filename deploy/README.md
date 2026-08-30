@@ -3,7 +3,7 @@
 部署配置按运行环境分开维护：
 
 - `dev/` 只启动本地开发依赖，后端和 Flutter 由开发工具直接运行。
-- `prod/` 启动 Gateway、API、Worker、Scheduler、Certbot 和生产依赖。
+- `prod/` 启动 Nginx、API、Worker、Scheduler、Certbot 和生产依赖。
 - 每个环境内的组件目录保存对应镜像定义或运行脚本，打开目录即可查看全部 Docker 配置。
 
 组件源码及其直接构建入口仍保留在组件目录中。dev/prod Compose 使用各自环境目录下的

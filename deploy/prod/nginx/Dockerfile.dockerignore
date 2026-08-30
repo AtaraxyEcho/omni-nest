@@ -17,5 +17,5 @@ frontend/*
 deploy/*
 !deploy/prod/
 deploy/prod/*
-!deploy/prod/gateway/
-!deploy/prod/gateway/**
+!deploy/prod/nginx/
+!deploy/prod/nginx/**

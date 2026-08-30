@@ -1,10 +1,10 @@
 # 生产环境
 
-生产编排使用同一 backend 镜像启动 API、Worker 和 Scheduler。Gateway 构建并
+生产编排使用同一 backend 镜像启动 API、Worker 和 Scheduler。Nginx 构建并
 托管 Flutter Web，统一代理 API、WebSocket 和 MinIO。网易云 API 与图片分析侧车
 只在 Compose 内部网络提供服务，不直接暴露宿主机端口。
 
-`backend/`、`gateway/`、`ai-sidecar/`、`netease-api/` 包含生产环境使用的完整
+`backend/`、`nginx/`、`ai-sidecar/`、`netease-api/` 包含生产环境使用的完整
 Dockerfile 或运行脚本。Compose 从项目源码构建镜像，不复制业务源码到部署目录。
 
 ## 构建与启动
@@ -27,7 +27,7 @@ Compose 的 required 语法阻止启动。
 
 ## 公开入口和 HTTPS
 
-`OMNINEST_HTTPS_ENABLED=false` 时，Gateway 在配置的 HTTP 端口提供 Web/API，在 9000
+`OMNINEST_HTTPS_ENABLED=false` 时，Nginx 在配置的 HTTP 端口提供 Web/API，在 9000
 端口代理 MinIO。Spring Boot 和 MinIO 只通过 Docker 内部网络通信；后端调试端口
 仅绑定 `127.0.0.1`。
 
@@ -49,9 +49,9 @@ OMNINEST_SETUP_WEB_BASE_URL=https://omni.example.com
 OMNINEST_MINIO_PUBLIC_ENDPOINT=https://omni.example.com:9000
 ```
 
-域名的 A 记录必须指向部署服务器，80、443 和 9000 端口必须可达。Gateway 在证书
+域名的 A 记录必须指向部署服务器，80、443 和 9000 端口必须可达。Nginx 在证书
 尚未签发时只提供 ACME 验证和健康检查，其他请求返回 503；Certbot 签发成功后，
-Gateway 会检测证书变化并自动切换到 TLS。Spring Boot 不直接加载证书。
+Nginx 会检测证书变化并自动切换到 TLS。Spring Boot 不直接加载证书。
 
 公网 IPv4 证书使用：
 
@@ -75,7 +75,7 @@ IPv4 模式使用 Certbot 5.4 的 `shortlived` Profile，证书有效期很短�
 查看签发状态：
 
 ```bash
-docker compose logs --follow gateway certbot
+docker compose logs --follow nginx certbot
 ```
 
 ## 从 IPv4 切换到域名
@@ -94,7 +94,7 @@ docker compose run --rm \
 URL 和 MinIO 公开地址，并执行：
 
 ```bash
-docker compose up -d --force-recreate gateway certbot backend-api backend-worker backend-scheduler
+docker compose up -d --force-recreate nginx certbot backend-api backend-worker backend-scheduler
 ```
 
 旧 IP 证书仍保留在 Certbot 命名卷中，不会阻塞回滚。短期签名 URL 等待自然过期，
@@ -103,3 +103,7 @@ docker compose up -d --force-recreate gateway certbot backend-api backend-worker
 本地影视目录以只读方式同时挂载给 backend 三种运行角色。Rclone、Aria2 和
 Lucene 使用命名卷在容器间共享所需内容；PostgreSQL、Redis、RabbitMQ 和 MinIO
 数据分别使用独立命名卷。
+
+Nginx 使用固定内部地址作为后端可信代理身份。`OMNINEST_DOCKER_DYNAMIC_IP_RANGE`
+必须位于 `OMNINEST_DOCKER_SUBNET` 内，并且不能包含 `OMNINEST_NGINX_INTERNAL_IP`；
+默认动态地址池为 `172.30.0.128/25`，因此不会与默认 Nginx 地址 `172.30.0.10` 冲突。

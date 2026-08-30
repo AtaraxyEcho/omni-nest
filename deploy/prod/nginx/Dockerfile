@@ -30,11 +30,11 @@ FROM nginx:1.28-alpine
 RUN apk add --no-cache gettext
 
 COPY --from=web-builder /workspace/frontend/build/web /usr/share/nginx/html
-COPY deploy/prod/gateway/templates/ /opt/omninest/templates/
-COPY deploy/prod/gateway/validate-config.sh /opt/omninest/validate-config.sh
-COPY deploy/prod/gateway/render-config.sh /opt/omninest/render-config.sh
-COPY deploy/prod/gateway/watch-certificates.sh /opt/omninest/watch-certificates.sh
-COPY deploy/prod/gateway/entrypoint.sh /opt/omninest/entrypoint.sh
+COPY deploy/prod/nginx/templates/ /opt/omninest/templates/
+COPY deploy/prod/nginx/validate-config.sh /opt/omninest/validate-config.sh
+COPY deploy/prod/nginx/render-config.sh /opt/omninest/render-config.sh
+COPY deploy/prod/nginx/watch-certificates.sh /opt/omninest/watch-certificates.sh
+COPY deploy/prod/nginx/entrypoint.sh /opt/omninest/entrypoint.sh
 
 RUN chmod 0755 /opt/omninest/*.sh \
     && rm -f /etc/nginx/conf.d/default.conf
