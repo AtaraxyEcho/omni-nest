@@ -3,6 +3,6 @@
 
 _flutter.loader.load({
   config: {
-    canvasKitBaseUrl: '/canvaskit/chromium/',
+    canvasKitBaseUrl: '/canvaskit/',
   },
 });
