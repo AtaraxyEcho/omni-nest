@@ -1,208 +1,84 @@
 # OmniNest Frontend
 
-OmniNest Frontend is the Flutter client for the OmniNest self-hosted personal digital life center. It targets Web, Android, Windows, macOS, and Linux from one feature-first codebase, with platform differences isolated behind adapters.
+前端是基于 Flutter 的统一客户端，目标平台包括 Web、Android、Windows 和 macOS。各平台保持相同的信息架构，根据窗口尺寸和输入方式调整布局、导航和交互密度。
 
-## Project Goals
+## 功能模块
 
-The frontend provides one unified entry point for personal files, video, music, reading, external storage, task management, and admin operations. It is designed to solve the client-side problem of switching between separate tools for file browsing, media playback, metadata management, and progress tracking.
+| 模块 | 主要职责 |
+| --- | --- |
+| `portal` | 工作台、动态背景、最近内容、通知和模块入口 |
+| `files` | 文件列表、目录、上传下载、搜索、预览和生命周期操作 |
+| `photos` | 相册、图片导入、详情、元数据和图像分析结果 |
+| `video` | 影视库、影片详情、播放、字幕和播放进度 |
+| `music` | 本地/外部音乐、搜索、队列、歌词、封面和播放控制 |
+| `reader` | 书籍与漫画导入、目录、阅读、书签、批注和阅读进度 |
+| `admin` | 系统管理、权限、配置、任务、审计和监控 |
+| `profile` / `settings` | 个人资料、主题、账号安全和客户端偏好 |
+| `setup` | 首次安装和实例初始化向导 |
 
-The current UI follows the HTML prototypes in `../html` and uses a dark-first Adaptive Tech-Minimalism style:
+## 技术与分层
 
-- fixed top bar on large screens;
-- left navigation rail on Web/Desktop;
-- bottom navigation on mobile widths;
-- stable poster, book, and file card aspect ratios;
-- module-specific dense management views where repeated operations matter.
+- Riverpod 负责业务状态；go_router 负责路由；Dio 负责 HTTP；drift 和安全存储分别负责本地数据与敏感凭据。
+- 功能目录采用 `domain`、`data`、`application`、`presentation` 分层。
+- `domain` 不依赖 Flutter 或网络实现；`data` 负责 DTO、API、缓存和 Repository；`application` 负责 Notifier、Controller 和业务流程；`presentation` 只负责展示、输入、导航和反馈。
+- 页面不直接访问 Dio、数据库、MinIO 或宿主机文件系统。上传、导入、删除、解析、轮询和同步等长流程由 application/Repository 持有，页面销毁不会隐式取消已提交的后台任务。
+- 所有异步操作都必须处理 `mounted`、Provider 生命周期、请求竞态、重复提交、路由退出和资源释放，避免 `ref` 越界、Navigator 锁定、Duplicate GlobalKey 等 Flutter 框架异常。
 
-## Tech Stack
+## 环境配置
 
-- Flutter / Dart
-- Riverpod for application state
-- GoRouter for declarative routing and auth redirects
-- Dio for HTTP API calls
-- media_kit for video playback
-- cached_network_image for remote artwork and thumbnails
-- flutter_secure_storage for native secure session storage
-- file_picker and file_selector for local file selection
-
-## Directory Layout
-
-```text
-frontend/
-  lib/
-    main.dart
-    app/                 # bootstrap, app widget, router, theme, environment, l10n
-    core/                # auth, network, errors, security, storage, shared widgets, utilities
-    platform/            # Web, Android, Desktop capability adapters
-    features/
-      portal/            # landing dashboard after login
-      files/             # file browser, uploads, shares, recycle bin
-      video/             # movie center, detail pages, player, metadata, series views
-      music/             # music dashboard, library, playlists, player UI
-      reader/            # reader center, book cards, item detail
-      admin/             # admin dashboard, users, roles, config, tasks, monitoring
-  test/                  # unit and widget tests
-  integration_test/      # end-to-end app smoke tests
-  web/                   # Web entry, manifest, icons, PDF.js assets
-  android/               # Android host project
-  windows/               # Windows host project
-  macos/                 # macOS host project
-  linux/                 # Linux host project
-  tool/                  # local development scripts
-```
-
-## Main Features
-
-### Authentication
-
-- Login page
-- Session restoration
-- Access token injection
-- Refresh handling through the shared auth/network layer
-- Route guard that redirects unauthenticated users to `/login`
-
-### Portal
-
-- Main entry dashboard
-- Navigation to files, video, music, reader, and admin sections
-- Shared responsive shell behavior
-
-### File Management
-
-- File browser views
-- Grid/list components
-- Upload panel
-- Favorites, recent files, recycle bin, share-related views
-- File size and MIME helpers
-- Download integration through platform adapters
-
-### Video Center
-
-- Movie dashboard and poster library
-- Movies, TV shows, anime, collections, recent, continue watching, favorites, history
-- Movie detail page
-- Series detail and season/episode views
-- Playback page with `media_kit`
-- Metadata management
-- Subtitle, NFO, scraping, scan, probe, and transcode task entry points
-
-### Music Center
-
-- Music dashboard
-- Songs, albums, artists, playlists
-- Queue and player bar
-- Metadata and lyrics widgets
-- Playback and favorite flows
-
-### Reader Center
-
-- Reader dashboard
-- Book cards and library views
-- Item detail page
-- Progress and favorite-related state
-
-### Admin
-
-- Overview dashboard
-- User management
-- Role and permission operations
-- Config management
-- Task management
-- Logs, monitoring, storage, and external storage views
-
-## Configuration
-
-Flutter reads API and WebSocket addresses at build time through `--dart-define`.
-Copy the development template when local endpoints need to be changed:
+开发环境模板位于 `frontend/env/dev.example.json`。首次运行可在 Git Bash 中创建本地配置：
 
 ```bash
-cp env/dev.example.json env/dev.json
-flutter run -d chrome --dart-define-from-file=env/dev.json --web-port 3000
+cd frontend
+test -f env/dev.json || cp env/dev.example.json env/dev.json
 ```
 
-The supported fields are `OMNINEST_API_BASE_URL`, `OMNINEST_WS_BASE_URL` and
-`OMNINEST_WEB_BASE_URL`. The JSON file is local-only and must not contain tokens
-or other secrets.
+常用地址包括 API、WebSocket 和 Web 公网地址。真实凭据和生产配置不得提交。
 
-The default Web development URL is:
+## 本地开发
 
-```text
-http://localhost:3000
-```
-
-This origin is included in the backend CORS defaults.
-
-## Commands
-
-Install dependencies:
-
-```powershell
+```bash
+cd frontend
 flutter pub get
+flutter devices
+flutter run -d windows
 ```
 
-Run tests:
+也可以将设备 ID 替换为 Android 设备，或使用 Chrome 启动 Web：
 
-```powershell
+```bash
+flutter run -d <device-id>
+flutter run -d chrome
+```
+
+## 构建
+
+```bash
+flutter build web --release
+flutter build apk --release
+flutter build appbundle --release
+flutter build windows --release
+flutter build macos --release
+```
+
+生产 Web 构建由 `deploy/prod/nginx/Dockerfile` 完成并由 Nginx 托管，同时代理 API、WebSocket 和 MinIO。部署入口见 [../deploy/prod/README.md](../deploy/prod/README.md)。
+
+Windows 和 macOS 当前命令生成 Flutter 平台构建产物，仓库没有默认集成 Inno Setup、MSIX 或 macOS DMG/PKG 的安装包流水线。若需要向终端用户分发，应在构建产物验证通过后单独增加对应平台的签名、安装包和更新策略。
+
+## 代码与验证
+
+```bash
+dart format lib test
+flutter analyze
 flutter test
+git diff --check
 ```
 
-Run Flutter Web with the local helper script:
+涉及导入、上传、删除、阅读器、播放器、路由或窗口尺寸时，应补充相应的 Widget、集成或响应式回归测试，至少覆盖页面中途退出、重复点击、请求竞态和主题切换。
 
-```powershell
-.\tool\run_web.ps1
-```
+## 相关入口
 
-Run Web manually:
-
-```powershell
-flutter run -d chrome --web-port 3000
-```
-
-## Routing
-
-Key routes are defined in `lib/app/router.dart`:
-
-| Route | Page |
-| --- | --- |
-| `/login` | Login |
-| `/portal` | Portal |
-| `/files` | File browser |
-| `/video` | Movie center |
-| `/video/:videoId` | Movie or episode detail |
-| `/video/series/:seriesId` | Series detail |
-| `/video/:videoId/play` | Player |
-| `/video/:videoId/metadata` | Metadata editor |
-| `/music` | Music center |
-| `/reader` | Reader center |
-| `/admin/:section` | Admin dashboard sections |
-
-Unauthenticated users are redirected to `/login?redirect=<target>`.
-
-## API Integration
-
-Feature APIs live close to their modules:
-
-```text
-lib/features/files/data/file_api.dart
-lib/features/video/data/movie_api.dart
-lib/features/music/data/music_api.dart
-lib/features/reader/data/reader_api.dart
-lib/features/admin/data/
-```
-
-Shared network behavior lives in:
-
-```text
-lib/core/network/api_client.dart
-lib/core/network/auth_interceptor.dart
-lib/core/network/retry_interceptor.dart
-```
-
-## Development Notes
-
-- Keep business state in Riverpod controllers under each feature's `application/` directory.
-- Keep DTO and domain parsing close to each feature.
-- Put cross-feature widgets in `lib/core/widgets` only when they are genuinely reusable.
-- Platform-specific behavior should go through `lib/platform` rather than direct platform checks in feature pages.
-- Match existing module styles before adding new UI patterns.
-- Add focused tests for auth, network, controllers, and high-risk parsing logic.
+- [根目录项目总览](../README.md)
+- [英文前端指南](README.en.md)
+- [后端开发指南](../backend/README.md)
+- [开发环境部署](../deploy/dev/README.md)
