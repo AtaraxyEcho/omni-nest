@@ -216,12 +216,14 @@ public final class PhotoDtos {
     ) {}
 
     public record CreateAlbumRequest(
-            String name,
-            String description
+            @NotBlank
+            @Size(max = 200) String name,
+            @Size(max = 2000) String description
     ) {}
 
     public record AddPhotosToAlbumRequest(
-            List<UUID> photoIds
+            @NotEmpty
+            @Size(max = 1000) List<@NotNull UUID> photoIds
     ) {}
 
     public record PhotoScanJobDto(
@@ -273,7 +275,8 @@ public final class PhotoDtos {
     // ─── 标签 DTO ───
 
     public record AddTagRequest(
-            String tag
+            @NotBlank
+            @Size(max = 100) String tag
     ) {}
 
     // ─── 批量任务 DTO ───
@@ -332,7 +335,7 @@ public final class PhotoDtos {
     ) {}
 
     public record EditRequest(
-            String editType,
+            @NotBlank String editType,
             Map<String, Object> editParams
     ) {}
 
@@ -374,7 +377,8 @@ public final class PhotoDtos {
     ) {}
 
     public record NameClusterRequest(
-            String name
+            @NotBlank
+            @Size(max = 200) String name
     ) {}
 
     /**
@@ -400,7 +404,8 @@ public final class PhotoDtos {
     ) {}
 
     public record BackupStatusRequest(
-            String deviceId
+            @NotBlank
+            @Size(max = 200) String deviceId
     ) {}
 
     public record BackupReportRequest(
