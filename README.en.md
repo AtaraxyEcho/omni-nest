@@ -5,25 +5,22 @@ OmniNest is a self-hosted digital life center for personal and family use. It br
 The project is under active development. This root README focuses on product capabilities and project entry points. Implementation details, development commands, and runtime constraints are maintained in the backend and frontend guides.
 
 ## System preview
-
-The images below come from the frontend Workbench's repeatable UI test baseline. They show the current desktop and mobile layouts in light and dark themes and are intended to communicate the visual direction and cross-platform information architecture. Complete business-module screens should be evaluated from the built application.
-
 <table>
   <tr>
-    <th>Desktop · Dark</th>
-    <th>Desktop · Light</th>
+    <th>Portal workspace</th>
+    <th>Music player</th>
   </tr>
   <tr>
-    <td><img src="frontend/test/theme/goldens/workbench_desktop_dark.png" alt="OmniNest desktop Workbench in dark theme" width="600"></td>
-    <td><img src="frontend/test/theme/goldens/workbench_desktop_light.png" alt="OmniNest desktop Workbench in light theme" width="600"></td>
+    <td><img src="imgs/portal_page.png" alt="OmniNest Portal workspace page" width="600"></td>
+    <td><img src="imgs/music_player_page.png" alt="OmniNest music player page" width="600"></td>
   </tr>
   <tr>
-    <th>Mobile · Dark</th>
-    <th>Mobile · Light</th>
+    <th>Reader</th>
+    <th>Setup wizard</th>
   </tr>
   <tr>
-    <td><img src="frontend/test/theme/goldens/workbench_mobile_dark.png" alt="OmniNest mobile Workbench in dark theme" width="300"></td>
-    <td><img src="frontend/test/theme/goldens/workbench_mobile_light.png" alt="OmniNest mobile Workbench in light theme" width="300"></td>
+    <td><img src="imgs/reader_view_page.png" alt="OmniNest reader page" width="600"></td>
+    <td><img src="imgs/setup_page.png" alt="OmniNest setup wizard page" width="600"></td>
   </tr>
 </table>
 
