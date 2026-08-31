@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
@@ -108,6 +109,10 @@ class ChapterData {
   void updateCumulativeHeights(List<double> newHeights) =>
       _cumulativeHeights = newHeights;
 }
+
+/// 滚动模式测高分批参数：头部精确测量块数与每批测量块数。
+const _metricsPhaseOneBlocks = 12;
+const _metricsBatchBlocks = 40;
 
 /// 翻页模式的懒分页导航器。
 ///
@@ -361,6 +366,7 @@ class ReaderContentLoader {
 
   final List<ReaderChapter> allChapters;
   final Map<_CacheKey, ChapterData> _cache = {};
+  int _heightsGeneration = 0;
   final Map<_CacheKey, Future<ChapterData>> _inflight = {};
   final Map<String, ReaderChapterContent> _contentCache = {};
   String? _activeChapterId;
@@ -484,9 +490,74 @@ class ReaderContentLoader {
     if (!prepareScrollLayout || data.cumulativeHeights.isNotEmpty) {
       return;
     }
-    data.updateCumulativeHeights(
-      _computeCumulativeHeights(data.blocks, pageWidth, settings, textScale),
+    // 第一阶段：精确测量头部若干块，以平均块高估算整章，立即填充
+    // cumulative 数组，保证滚动映射从首帧起无空洞。
+    final blocks = data.blocks;
+    final headCount = math.min(_metricsPhaseOneBlocks, blocks.length);
+    final headHeights = <double>[];
+    var headCumulative = 0.0;
+    for (var i = 0; i < headCount; i++) {
+      headCumulative += ReaderPaginationEngine.measureBlockHeight(
+        blocks[i],
+        pageWidth,
+        settings,
+        textScale: textScale,
+      );
+      headHeights.add(headCumulative);
+    }
+    final estimateBase =
+        headHeights.isEmpty ? 0.0 : headHeights.last / headCount;
+    final estimated = List<double>.filled(blocks.length, 0);
+    var running = 0.0;
+    for (var i = 0; i < blocks.length; i++) {
+      running +=
+          i < headCount
+              ? headHeights[i] - (i == 0 ? 0.0 : headHeights[i - 1])
+              : estimateBase;
+      estimated[i] = running;
+    }
+    data.updateCumulativeHeights(estimated);
+    unawaited(
+      _schedulePreciseHeights(
+        data,
+        pageWidth: pageWidth,
+        settings: settings,
+        textScale: textScale,
+      ),
     );
+  }
+
+  /// 第二阶段：分批精确测量并替换估算值。
+  ///
+  /// 每批让出一帧；代次或 heights 数组身份变化（切章、设置重算、
+  /// rekey 替换）即中止，避免旧任务覆盖新状态。
+  Future<void> _schedulePreciseHeights(
+    ChapterData data, {
+    required double pageWidth,
+    required ReaderViewSettings settings,
+    required double textScale,
+  }) async {
+    final generation = ++_heightsGeneration;
+    final blocks = data.blocks;
+    final heights = List<double>.filled(blocks.length, 0);
+    var cumulative = 0.0;
+    for (var i = 0; i < blocks.length; i++) {
+      cumulative += ReaderPaginationEngine.measureBlockHeight(
+        blocks[i],
+        pageWidth,
+        settings,
+        textScale: textScale,
+      );
+      heights[i] = cumulative;
+      if ((i + 1) % _metricsBatchBlocks == 0 || i == blocks.length - 1) {
+        data.updateCumulativeHeights(heights);
+        await Future<void>.delayed(Duration.zero);
+        if (generation != _heightsGeneration ||
+            !identical(data.cumulativeHeights, heights)) {
+          return;
+        }
+      }
+    }
   }
 
   bool _shouldRetainChapter(String chapterId) {
