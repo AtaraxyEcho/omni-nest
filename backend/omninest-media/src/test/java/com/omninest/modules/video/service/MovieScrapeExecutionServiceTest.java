@@ -165,7 +165,9 @@ class MovieScrapeExecutionServiceTest {
                 8.5,
                 null,
                 List.of("剧情"),
-                List.of(new CastMemberDto("演员一", "角色一", "https://image.tmdb.org/t/p/w185/cast.jpg", 0)),
+                List.of(
+                        new CastMemberDto("演员一", "角色一", "https://image.tmdb.org/t/p/w185/cast-1.jpg", 0),
+                        new CastMemberDto("演员二", "角色二", "https://image.tmdb.org/t/p/w185/cast-2.jpg", 1)),
                 List.of(new CrewMemberDto("导演一", "Director", "Directing", "https://image.tmdb.org/t/p/w185/crew.jpg")),
                 100,
                 "TV-MA",
@@ -193,15 +195,26 @@ class MovieScrapeExecutionServiceTest {
         ArgumentCaptor<MediaTvSeries> seriesCaptor = ArgumentCaptor.forClass(MediaTvSeries.class);
         verify(tvSeriesRepository, atLeast(2)).save(seriesCaptor.capture());
         MediaTvSeries saved = seriesCaptor.getValue();
-        assertThat(saved.getCastMembers()).hasSize(1);
-        assertThat(saved.getCastMembers().get(0))
-                .containsEntry("name", "演员一")
-                .containsEntry("profileFileId", profileFileNodeId.toString());
+        assertThat(saved.getCastMembers()).hasSize(2);
+        assertThat(saved.getCastMembers()).allSatisfy(member ->
+                assertThat(member)
+                        .containsEntry("profileFileId", profileFileNodeId.toString()));
         assertThat(saved.getCrewMembers()).hasSize(1);
         assertThat(saved.getCrewMembers().get(0))
                 .containsEntry("name", "导演一")
                 .containsEntry("profileFileId", profileFileNodeId.toString());
-        verify(derivedAssetStorageService, times(2)).storeRemote(any(DerivedAssetRequest.class));
+        // 旧实现按显示名命名：等长中文名折叠为同一路径，导致多名演员共用一张头像。
+        ArgumentCaptor<DerivedAssetRequest> requestCaptor = ArgumentCaptor.forClass(DerivedAssetRequest.class);
+        verify(derivedAssetStorageService, times(3)).storeRemote(requestCaptor.capture());
+        List<String> profileFileNames = requestCaptor.getAllValues().stream()
+                .map(DerivedAssetRequest::fileName)
+                .toList();
+        assertThat(profileFileNames).doesNotHaveDuplicates();
+        assertThat(profileFileNames).anySatisfy(name ->
+                assertThat(name).matches("[0-9a-f]{8}_演员一\\.jpg"));
+        assertThat(profileFileNames).anySatisfy(name ->
+                assertThat(name).matches("[0-9a-f]{8}_演员二\\.jpg"));
+        verify(derivedAssetStorageService, times(3)).storeRemote(any(DerivedAssetRequest.class));
         assertThat(item.getMetadataStatus()).isEqualTo("MATCHED");
     }
 

@@ -28,7 +28,11 @@ import com.omninest.modules.notification.port.NotificationPublisher;
 import com.omninest.modules.task.service.TaskRecordService;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -650,6 +654,9 @@ public class MovieScrapeExecutionService {
 
     /**
      * 下载演员头像到 MinIO，返回 FileNode UUID。失败时返回 null（保留 TMDB URL 降级）。
+     *
+     * <p>文件名以头像 URL 摘要为前缀：TMDB 的 profile_path 按人唯一，哈希保证同一资源内
+     * 不同演员、同名演员不会共用同一个派生文件；显示名仅用于可读性，不参与唯一性。</p>
      */
     private UUID storeProfileImage(
             UUID ownerUserId, UUID resourceId, String resourceType, String profileUrl, String personName) {
@@ -657,20 +664,35 @@ public class MovieScrapeExecutionService {
             return null;
         }
         try {
-            String safeName = (personName == null || personName.isBlank()) ? "profile" : personName.replaceAll("[^\\w\\-]", "_");
+            String safeName = (personName == null || personName.isBlank())
+                    ? "profile"
+                    : personName.replaceAll("[^\\p{L}\\p{N}\\-_]", "_").trim();
             return derivedAssetStorageService.storeRemote(new DerivedAssetRequest(
                     ownerUserId,
                     profileUrl,
                     resourceType,
                     resourceId,
                     "PROFILE",
-                    safeName + ".jpg",
+                    profileUrlHash(profileUrl) + "_" + safeName + ".jpg",
                     "image/jpeg",
                     SpaceType.PERSONAL
             ));
         } catch (RuntimeException ex) {
             log.debug("演员头像下载失败，保留外部 URL: name={}, message={}", personName, ex.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * 计算头像 URL 的短摘要作为文件名前缀。
+     */
+    private String profileUrlHash(String profileUrl) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(profileUrl.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest).substring(0, 8);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 algorithm is unavailable", ex);
         }
     }
 }
