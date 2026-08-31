@@ -107,6 +107,7 @@ class PhotoRepositoryImpl implements PhotoRepository {
   @override
   Future<PhotoRelationGraph> getRelationGraph() => _api.getRelationGraph();
 
+  @override
   Future<PhotoGroupPage> getGroups(String by, {int page = 0, int size = 50}) =>
       _api.getGroups(by, page: page, size: size);
 
