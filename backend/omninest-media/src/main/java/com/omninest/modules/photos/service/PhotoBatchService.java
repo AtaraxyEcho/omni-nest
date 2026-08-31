@@ -6,12 +6,11 @@ import com.omninest.common.enums.ErrorCode;
 import com.omninest.common.error.BusinessException;
 import com.omninest.common.messaging.DomainEventPublisher;
 import com.omninest.common.messaging.QueueNames;
-import com.omninest.common.storage.ObjectStorageClient;
-import com.omninest.common.storage.ObjectStorageKey;
 import com.omninest.modules.file.dto.FileDownloadUrlDto;
 import com.omninest.modules.file.dto.FileDescriptor;
 import com.omninest.modules.file.dto.FileObjectDescriptor;
 import com.omninest.modules.file.service.DerivedAssetStorageService;
+import com.omninest.modules.file.dto.FileContentStream;
 import com.omninest.modules.file.service.FileMetadataQueryService;
 import com.omninest.modules.file.service.FileQueryService;
 import com.omninest.modules.photos.config.PhotoBatchDownloadProperties;
@@ -71,7 +70,6 @@ public class PhotoBatchService {
     private final PhotoAlbumService albumService;
     private final DomainEventPublisher eventPublisher;
     private final FileMetadataQueryService fileMetadataQueryService;
-    private final ObjectStorageClient objectStorageClient;
     private final DerivedAssetStorageService derivedAssetStorageService;
     private final FileQueryService fileQueryService;
     private final TaskRecordService taskRecordService;
@@ -366,7 +364,7 @@ public class PhotoBatchService {
             );
             String entryName = uniqueEntryName(proposedName, entryNames);
             sources.add(new PhotoArchiveSource(
-                    new ObjectStorageKey(fileObject.bucketName(), fileObject.objectKey()),
+                    photo.getFileNodeId(),
                     entryName,
                     fileObject.sizeBytes(),
                     fileObject.sha256()
@@ -384,8 +382,10 @@ public class PhotoBatchService {
             for (int index = 0; index < sources.size(); index++) {
                 PhotoArchiveSource source = sources.get(index);
                 zipOutputStream.putNextEntry(new ZipEntry(source.entryName()));
-                try (InputStream inputStream = objectStorageClient.getObject(source.storageKey())) {
-                    copySource(inputStream, zipOutputStream, source);
+                // 内容读取统一走 File 模块接口，避免业务模块直接访问对象存储。
+                try (FileContentStream contentStream = fileQueryService.openReadableFileContent(
+                        task.getOwnerUserId(), source.fileNodeId())) {
+                    copySource(contentStream.inputStream(), zipOutputStream, source);
                 } catch (RuntimeException exception) {
                     throw new IOException("照片源读取失败: " + source.entryName(), exception);
                 } finally {
@@ -533,7 +533,7 @@ public class PhotoBatchService {
     }
 
     private record PhotoArchiveSource(
-            ObjectStorageKey storageKey,
+            UUID fileNodeId,
             String entryName,
             long sizeBytes,
             String sha256

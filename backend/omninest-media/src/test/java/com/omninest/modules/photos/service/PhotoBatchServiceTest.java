@@ -12,13 +12,12 @@ import static org.mockito.Mockito.when;
 
 import com.alibaba.fastjson2.JSON;
 import com.omninest.common.messaging.DomainEventPublisher;
-import com.omninest.common.storage.ObjectStorageClient;
-import com.omninest.common.storage.ObjectStorageKey;
 import com.omninest.modules.file.domain.SpaceType;
 import com.omninest.modules.file.dto.FileDescriptor;
 import com.omninest.modules.file.dto.FileDownloadUrlDto;
 import com.omninest.modules.file.dto.FileObjectDescriptor;
 import com.omninest.modules.file.service.DerivedAssetStorageService;
+import com.omninest.modules.file.dto.FileContentStream;
 import com.omninest.modules.file.service.FileMetadataQueryService;
 import com.omninest.modules.file.service.FileQueryService;
 import com.omninest.modules.photos.config.PhotoBatchDownloadProperties;
@@ -69,7 +68,6 @@ class PhotoBatchServiceTest {
     private final PhotoAlbumService albumService = mock(PhotoAlbumService.class);
     private final DomainEventPublisher eventPublisher = mock(DomainEventPublisher.class);
     private final FileMetadataQueryService fileMetadataQueryService = mock(FileMetadataQueryService.class);
-    private final ObjectStorageClient objectStorageClient = mock(ObjectStorageClient.class);
     private final DerivedAssetStorageService derivedAssetStorageService = mock(DerivedAssetStorageService.class);
     private final FileQueryService fileQueryService = mock(FileQueryService.class);
     private final TaskRecordService taskRecordService = mock(TaskRecordService.class);
@@ -82,7 +80,6 @@ class PhotoBatchServiceTest {
             albumService,
             eventPublisher,
             fileMetadataQueryService,
-            objectStorageClient,
             derivedAssetStorageService,
             fileQueryService,
             taskRecordService,
@@ -108,8 +105,8 @@ class PhotoBatchServiceTest {
         when(photoItemRepository.findByOwnerUserIdAndId(OWNER_ID, PHOTO_ID)).thenReturn(Optional.of(photo));
         when(fileMetadataQueryService.findById(FILE_NODE_ID)).thenReturn(Optional.of(fileNode));
         when(fileMetadataQueryService.findObjectById(FILE_OBJECT_ID)).thenReturn(Optional.of(fileObject));
-        when(objectStorageClient.getObject(new ObjectStorageKey("user-files", "photos/photo.jpg")))
-                .thenReturn(new ByteArrayInputStream(image));
+        when(fileQueryService.openReadableFileContent(OWNER_ID, FILE_NODE_ID))
+                .thenReturn(contentStream(image));
         doAnswer(invocation -> {
             Path zipFile = invocation.getArgument(6);
             uploadedPath.set(zipFile);
@@ -158,8 +155,9 @@ class PhotoBatchServiceTest {
         when(photoItemRepository.findByOwnerUserIdAndId(OWNER_ID, PHOTO_ID)).thenReturn(Optional.of(photo()));
         when(fileMetadataQueryService.findById(FILE_NODE_ID)).thenReturn(Optional.of(fileNode()));
         when(fileMetadataQueryService.findObjectById(FILE_OBJECT_ID)).thenReturn(Optional.of(fileObject));
-        when(objectStorageClient.getObject(new ObjectStorageKey("user-files", "photos/photo.jpg")))
-                .thenReturn(source);
+        when(fileQueryService.openReadableFileContent(OWNER_ID, FILE_NODE_ID))
+                .thenReturn(
+                        new FileContentStream(source, "photo.jpg", sourceBytes, "image/jpeg"));
         when(derivedAssetStorageService.store(
                 eq(OWNER_ID),
                 eq("PHOTO_BATCH"),
@@ -191,8 +189,8 @@ class PhotoBatchServiceTest {
         when(photoItemRepository.findByOwnerUserIdAndId(OWNER_ID, PHOTO_ID)).thenReturn(Optional.of(photo()));
         when(fileMetadataQueryService.findById(FILE_NODE_ID)).thenReturn(Optional.of(fileNode()));
         when(fileMetadataQueryService.findObjectById(FILE_OBJECT_ID)).thenReturn(Optional.of(fileObject()));
-        when(objectStorageClient.getObject(new ObjectStorageKey("user-files", "photos/photo.jpg")))
-                .thenReturn(new ByteArrayInputStream(new byte[]{1, 2, 3}));
+        when(fileQueryService.openReadableFileContent(OWNER_ID, FILE_NODE_ID))
+                .thenReturn(contentStream(new byte[]{1, 2, 3}));
 
         service.executeBatchTask(TASK_ID, OWNER_ID);
 
@@ -224,7 +222,7 @@ class PhotoBatchServiceTest {
 
         assertThat(task.getStatus()).isEqualTo("FAILED");
         assertThat(task.getErrorMessage()).contains("临时磁盘空间不足");
-        verify(objectStorageClient, never()).getObject(any(ObjectStorageKey.class));
+        verify(fileQueryService, never()).openReadableFileContent(any(UUID.class), any(UUID.class));
         verify(derivedAssetStorageService, never()).store(
                 eq(OWNER_ID),
                 eq("PHOTO_BATCH"),
@@ -331,7 +329,6 @@ class PhotoBatchServiceTest {
                 albumService,
                 eventPublisher,
                 fileMetadataQueryService,
-                objectStorageClient,
                 derivedAssetStorageService,
                 fileQueryService,
                 taskRecordService,
@@ -426,5 +423,14 @@ class PhotoBatchServiceTest {
         private int maxRequestedBytes() {
             return maxRequestedBytes;
         }
+    }
+
+    private FileContentStream contentStream(byte[] data) {
+        return new FileContentStream(
+                new ByteArrayInputStream(data),
+                "photo.jpg",
+                data.length,
+                "image/jpeg"
+        );
     }
 }
