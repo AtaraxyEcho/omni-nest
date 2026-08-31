@@ -35,6 +35,7 @@ import com.omninest.modules.photos.search.PhotoSearchIndexService;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -245,13 +246,15 @@ class PhotoLibraryServiceTest {
                 .thenReturn(List.of(PHOTO_ID_1));
         when(photoTagRepository.findByOwnerUserIdAndPhotoIdIn(OWNER_ID, List.of(PHOTO_ID_1)))
                 .thenReturn(List.of());
-        when(fileQueryService.createDownloadUrl(OWNER_ID, COVER_FILE_ID_1))
-                .thenReturn(new FileDownloadUrlDto(
+        when(fileQueryService.createDownloadUrls(eq(OWNER_ID), any()))
+                .thenReturn(Map.of(
                         COVER_FILE_ID_1,
-                        "photo1.jpg",
-                        "http://minio/photo1",
-                        Instant.now().plusSeconds(900)
-                ));
+                        new FileDownloadUrlDto(
+                                COVER_FILE_ID_1,
+                                "photo1.jpg",
+                                "http://minio/photo1",
+                                Instant.now().plusSeconds(900)
+                        )));
 
         Page<PhotoListItemDto> result = service.listPhotosPage(
                 OWNER_ID,

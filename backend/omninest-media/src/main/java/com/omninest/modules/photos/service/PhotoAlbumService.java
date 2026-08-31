@@ -100,12 +100,10 @@ public class PhotoAlbumService {
      */
     @Transactional(readOnly = true)
     public PhotoAlbumDetailDto albumDetail(UUID ownerUserId, UUID albumId) {
-        requireAlbum(ownerUserId, albumId);
+        PhotoAlbum album = requireAlbum(ownerUserId, albumId);
         List<UUID> photoIds = albumItemRepository.findPhotoIdsByAlbumId(albumId);
-        List<PhotoItemDto> photos = photoIds.stream()
-                .map(id -> libraryService.photo(ownerUserId, id))
-                .toList();
-        PhotoAlbumDto albumDto = toDto(requireAlbum(ownerUserId, albumId));
+        List<PhotoItemDto> photos = libraryService.listPhotosByIds(ownerUserId, photoIds);
+        PhotoAlbumDto albumDto = toDto(album);
         return new PhotoAlbumDetailDto(albumDto, photos);
     }
 

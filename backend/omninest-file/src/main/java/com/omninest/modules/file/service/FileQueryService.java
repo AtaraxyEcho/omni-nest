@@ -380,6 +380,28 @@ public class FileQueryService {
     }
 
     /**
+     * 批量为当前用户拥有的文件创建短期下载地址。
+     *
+     * <p>缺失、已删除、非 FILE 节点或解析失败的文件不会出现在结果中。</p>
+     *
+     * @param ownerUserId 所有者用户 ID
+     * @param fileIds 文件节点 ID 集合
+     * @return 文件节点 ID 到下载地址的映射
+     */
+    @Transactional(readOnly = true)
+    public Map<UUID, FileDownloadUrlDto> createDownloadUrls(UUID ownerUserId, Collection<UUID> fileIds) {
+        if (fileIds == null || fileIds.isEmpty()) {
+            return Map.of();
+        }
+        List<FileNode> nodes = fileNodeRepository.findAllById(fileIds).stream()
+                .filter(node -> !node.isDeleted()
+                        && NodeType.FILE.getValue().equals(node.getNodeType())
+                        && ownerUserId.equals(node.getOwnerUserId()))
+                .toList();
+        return fileContentAccessService.createDownloadUrls(nodes);
+    }
+
+    /**
      * 为当前用户拥有或被授予查看权限的文件创建短期下载地址。
      *
      * @param userId 当前用户 ID

@@ -37,6 +37,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -257,12 +258,18 @@ public class PhotoLibraryService {
                 .findActiveByOwnerUserIdAndIdIn(ownerUserId, photoIds)
                 .stream()
                 .collect(Collectors.toMap(PhotoItem::getId, item -> item));
+        Map<UUID, String> coverUrls = resolveCoverUrls(
+                ownerUserId,
+                itemsById.values().stream()
+                        .map(PhotoItem::getCoverFileId)
+                        .filter(Objects::nonNull)
+                        .toList());
         return photoIds.stream()
                 .map(itemsById::get)
                 .filter(Objects::nonNull)
                 .map(item -> PhotoItemDto.fromEntity(
                         item,
-                        resolveCoverUrl(ownerUserId, item.getId(), item.getCoverFileId()),
+                        coverUrls.get(item.getCoverFileId()),
                         favoriteIds.contains(item.getId()),
                         tagsByPhoto.getOrDefault(item.getId(), List.of())
                 ))
@@ -619,6 +626,12 @@ public class PhotoLibraryService {
                                 PhotoTag::getPhotoId,
                                 Collectors.mapping(PhotoTag::getTag, Collectors.toList())
                         ));
+        Map<UUID, String> coverUrls = resolveCoverUrls(
+                ownerUserId,
+                projections.stream()
+                        .map(PhotoListItemProjection::getCoverFileId)
+                        .filter(Objects::nonNull)
+                        .toList());
         return projections.stream().map(item -> new PhotoListItemDto(
                 item.getId(),
                 item.getFileNodeId(),
@@ -632,7 +645,7 @@ public class PhotoLibraryService {
                 item.getGpsLongitude() == null ? null : item.getGpsLongitude().doubleValue(),
                 item.getFormat(),
                 item.getFileSize(),
-                resolveCoverUrl(ownerUserId, item.getId(), item.getCoverFileId()),
+                coverUrls.get(item.getCoverFileId()),
                 item.getMetadataStatus(),
                 favoriteIds.contains(item.getId()),
                 item.getCreatedAt(),
@@ -750,6 +763,20 @@ public class PhotoLibraryService {
             log.warn("解析封面 URL 失败: photoId={}, coverFileId={}", photoId, coverFileId, ex);
             return null;
         }
+    }
+
+    /**
+     * 批量解析封面下载地址，避免列表场景逐行回查文件节点。
+     */
+    private Map<UUID, String> resolveCoverUrls(UUID ownerUserId, Collection<UUID> coverFileIds) {
+        if (coverFileIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, String> result = new LinkedHashMap<>();
+        fileQueryService
+                .createDownloadUrls(ownerUserId, coverFileIds)
+                .forEach((fileId, dto) -> result.put(fileId, dto.downloadUrl()));
+        return result;
     }
 
     private void invalidateDashboardCache(UUID ownerUserId) {

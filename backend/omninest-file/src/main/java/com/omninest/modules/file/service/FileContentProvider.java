@@ -1,6 +1,7 @@
 package com.omninest.modules.file.service;
 
 import com.omninest.modules.file.domain.FileNode;
+import com.omninest.modules.file.domain.FileObject;
 import com.omninest.modules.file.dto.FileContentResource;
 import com.omninest.modules.file.dto.FileContentStream;
 import com.omninest.modules.file.dto.FileDownloadUrlDto;
@@ -44,6 +45,17 @@ public interface FileContentProvider {
      * @return 下载地址
      */
     FileDownloadUrlDto createDownloadUrl(FileNode node);
+    /**
+     * 基于已加载的对象元数据创建下载地址，批量场景避免逐节点回查对象记录。
+     * 默认退化为单节点查询实现。
+     *
+     * @param node 文件节点
+     * @param object 节点当前对象元数据
+     * @return 下载地址
+     */
+    default FileDownloadUrlDto createDownloadUrl(FileNode node, FileObject object) {
+        return createDownloadUrl(node);
+    }
 
     /**
      * 创建受信任媒体进程输入。

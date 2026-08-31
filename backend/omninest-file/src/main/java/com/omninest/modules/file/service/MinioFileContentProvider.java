@@ -63,6 +63,15 @@ public class MinioFileContentProvider implements FileContentProvider {
     }
 
     @Override
+    public FileDownloadUrlDto createDownloadUrl(FileNode node, FileObject object) {
+        String url = objectStorageClient.createDownloadUrl(
+                new ObjectStorageKey(object.getBucketName(), object.getObjectKey()),
+                DOWNLOAD_URL_TTL
+        ).toString();
+        return new FileDownloadUrlDto(node.getId(), node.getName(), url, Instant.now().plus(DOWNLOAD_URL_TTL));
+    }
+
+    @Override
     public FileProcessInput createProcessInput(FileNode node) {
         return new FileProcessInput(node.getId(), PROVIDER_TYPE, createDownloadUrl(node).downloadUrl());
     }

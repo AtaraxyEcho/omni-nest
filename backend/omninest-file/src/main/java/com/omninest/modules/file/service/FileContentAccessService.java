@@ -3,15 +3,23 @@ package com.omninest.modules.file.service;
 import com.omninest.common.enums.ErrorCode;
 import com.omninest.common.error.BusinessException;
 import com.omninest.modules.file.domain.FileNode;
+import com.omninest.modules.file.domain.FileObject;
 import com.omninest.modules.file.domain.MediaContentPurpose;
 import com.omninest.modules.file.dto.FileContentResource;
 import com.omninest.modules.file.dto.FileContentStream;
 import com.omninest.modules.file.dto.FileDownloadUrlDto;
 import com.omninest.modules.file.dto.FileProcessInput;
 import com.omninest.modules.file.repository.FileNodeRepository;
+import com.omninest.modules.file.repository.FileObjectRepository;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,12 +27,14 @@ import org.springframework.stereotype.Service;
  *
  * @author OmniNest
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FileContentAccessService {
 
     private final List<FileContentProvider> providers;
     private final FileNodeRepository fileNodeRepository;
+    private final FileObjectRepository fileObjectRepository;
     private final LocalContentAccessTokenService tokenService;
 
     /**
@@ -122,5 +132,39 @@ public class FileContentAccessService {
                 .filter(provider -> provider.supports(node))
                 .findFirst()
                 .orElseThrow(() -> new BusinessException(ErrorCode.FILE_NOT_FOUND, "文件节点没有可读取内容"));
+    }
+
+    /**
+     * 批量创建下载地址：预先加载对象元数据，避免逐节点回查。
+     * 缺失对象、文件夹节点或提供器解析失败的节点会被跳过。
+     *
+     * @param nodes 已完成归属校验的文件节点
+     * @return 文件节点 ID 到下载地址的映射
+     */
+    public Map<UUID, FileDownloadUrlDto> createDownloadUrls(Collection<FileNode> nodes) {
+        List<UUID> objectIds = nodes.stream()
+                .map(FileNode::getCurrentObjectId)
+                .filter(Objects::nonNull)
+                .toList();
+        Map<UUID, FileObject> objectsById = objectIds.isEmpty()
+                ? Map.of()
+                : fileObjectRepository.findAllById(objectIds).stream()
+                        .collect(Collectors.toMap(FileObject::getId, object -> object));
+        Map<UUID, FileDownloadUrlDto> result = new LinkedHashMap<>();
+        for (FileNode node : nodes) {
+            if (node.getCurrentObjectId() == null) {
+                continue;
+            }
+            FileObject object = objectsById.get(node.getCurrentObjectId());
+            if (object == null) {
+                continue;
+            }
+            try {
+                result.put(node.getId(), requireProvider(node).createDownloadUrl(node, object));
+            } catch (RuntimeException ex) {
+                log.warn("批量下载地址解析失败，跳过: fileId={}", node.getId(), ex);
+            }
+        }
+        return result;
     }
 }
