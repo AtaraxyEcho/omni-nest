@@ -109,6 +109,8 @@ flutter run -d chrome --web-port=3000 --dart-define-from-file=env/dev.json
 
 ## 界面预览
 
+### 主题与布局
+
 下列图片来自前端 Workbench 的可重复 UI 测试基线，展示桌面端和移动端在浅色、深色主题下的实际布局，用于说明当前系统的视觉方向和跨平台信息架构。
 
 <table>
@@ -127,6 +129,27 @@ flutter run -d chrome --web-port=3000 --dart-define-from-file=env/dev.json
   <tr>
     <td><img src="frontend/test/theme/goldens/workbench_mobile_dark.png" alt="OmniNest 移动端深色主题工作台" width="300"></td>
     <td><img src="frontend/test/theme/goldens/workbench_mobile_light.png" alt="OmniNest 移动端浅色主题工作台" width="300"></td>
+  </tr>
+</table>
+
+### 模块页面
+
+<table>
+  <tr>
+    <th>Portal 工作台</th>
+    <th>音乐播放</th>
+  </tr>
+  <tr>
+    <td><img src="imgs/portal_page.png" alt="OmniNest Portal 工作台页面" width="600"></td>
+    <td><img src="imgs/music_player_page.png" alt="OmniNest 音乐播放器页面" width="600"></td>
+  </tr>
+  <tr>
+    <th>阅读器</th>
+    <th>安装向导</th>
+  </tr>
+  <tr>
+    <td><img src="imgs/reader_view_page.png" alt="OmniNest 阅读器页面" width="600"></td>
+    <td><img src="imgs/setup_page.png" alt="OmniNest 安装向导页面" width="600"></td>
   </tr>
 </table>
 
