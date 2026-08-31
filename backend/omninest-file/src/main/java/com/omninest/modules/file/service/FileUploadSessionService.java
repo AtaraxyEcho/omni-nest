@@ -259,20 +259,6 @@ public class FileUploadSessionService {
             return completedResult(ownerUserId, session);
         }
         ensureCompletable(session);
-        String claimedStatus = isDirectUpload(session)
-                ? UploadStatus.SCANNING.getValue()
-                : UploadStatus.FINALIZING.getValue();
-        int claimed = fileUploadSessionRepository.claimForCompletion(
-                uploadId,
-                ownerUserId,
-                List.of(UploadStatus.CREATED.getValue(), UploadStatus.UPLOADING.getValue()),
-                claimedStatus,
-                Instant.now()
-        );
-        if (claimed == 0) {
-            return resolveConcurrentCompletion(ownerUserId, uploadId);
-        }
-        session = findSession(ownerUserId, uploadId);
         if (isDirectUpload(session)) {
             return completeDirectSession(ownerUserId, session, request);
         }
@@ -295,7 +281,7 @@ public class FileUploadSessionService {
         }
 
         ObjectStorageKey key = new ObjectStorageKey(session.getTargetBucket(), session.getTargetObjectKey());
-        session.setStatus(UploadStatus.FINALIZING.getValue());
+session.setStatus(UploadStatus.FINALIZING.getValue());
         fileUploadSessionRepository.save(session);
         objectStorageClient.completeMultipartUpload(key, session.getUploadId(), toCompletedParts(parts));
 
@@ -306,18 +292,14 @@ public class FileUploadSessionService {
         session.setIngressItemId(publishedObject.ingressId());
         session.setResultFileNodeId(savedFile.getId());
         registerObjectFinalization(publishedObject, savedFile.getId());
-
         settleUploadQuota(session);
 
         session.setUploadedParts(session.getTotalParts());
         session.setStatus(UploadStatus.COMPLETED.getValue());
+        session.setCompletionTaskId(publishFileUploadedAfterCommit(savedFile, savedObject, ownerUserId));
         fileUploadSessionRepository.save(session);
-
         recordFileCreated(ownerUserId, savedFile);
-        UUID mediaAutoImportTaskId = publishFileUploadedAfterCommit(savedFile, savedObject, ownerUserId);
-        session.setCompletionTaskId(mediaAutoImportTaskId);
-        fileUploadSessionRepository.save(session);
-        return toFileNodeDto(savedFile, mediaAutoImportTaskId);
+        return toFileNodeDto(savedFile, session.getCompletionTaskId());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -473,12 +455,10 @@ public class FileUploadSessionService {
 
         session.setUploadedParts(1);
         session.setStatus(UploadStatus.COMPLETED.getValue());
-        fileUploadSessionRepository.save(session);
-
-        recordFileCreated(ownerUserId, savedFile);
         UUID mediaAutoImportTaskId = publishFileUploadedAfterCommit(savedFile, savedObject, ownerUserId);
         session.setCompletionTaskId(mediaAutoImportTaskId);
         fileUploadSessionRepository.save(session);
+        recordFileCreated(ownerUserId, savedFile);
         return toFileNodeDto(savedFile, mediaAutoImportTaskId);
     }
 
@@ -839,19 +819,6 @@ public class FileUploadSessionService {
                 removeObjectQuietly(publishedObject.publishedKey());
             }
         });
-    }
-
-    private FileNodeDto resolveConcurrentCompletion(UUID ownerUserId, String uploadId) {
-        FileUploadSession current = findSession(ownerUserId, uploadId);
-        if (UploadStatus.COMPLETED.getValue().equals(current.getStatus())) {
-            return completedResult(ownerUserId, current);
-        }
-        if (UploadStatus.FINALIZING.getValue().equals(current.getStatus())
-                || UploadStatus.SCANNING.getValue().equals(current.getStatus())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "上传会话正在完成，请稍后重试查询结果");
-        }
-        ensureCompletable(current);
-        throw new BusinessException(ErrorCode.CONFLICT, "上传会话完成操作未能领取，请稍后重试");
     }
 
     private FileNodeDto completedResult(UUID ownerUserId, FileUploadSession session) {

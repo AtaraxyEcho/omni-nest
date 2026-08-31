@@ -57,6 +57,9 @@ class ScrollRestore {
   /// 使用 [addPostFrameCallback] 自循环，每帧检查偏移量与目标的偏差。
   /// 恢复完成或取消后自动停止调度，不会积累永久回调。
   ///
+  /// 等待布局超时放弃时也会触发 [onSettled]，调用方依赖它结束恢复态；
+  /// [cancel] 不触发回调，由调用方自行清理。
+  ///
   /// 恢复完成后进入监控期（[_monitorDuration]），期间如果 maxScrollExtent
   /// 再次显著变化，会重新激活恢复。
   void start({
@@ -88,6 +91,7 @@ class ScrollRestore {
           if (kDebugMode) {
             readerDebugLog('ScrollRestore: timed out waiting for layout');
           }
+          onSettled();
           return;
         }
         SchedulerBinding.instance.addPostFrameCallback((_) => tick());
@@ -102,6 +106,7 @@ class ScrollRestore {
           if (kDebugMode) {
             readerDebugLog('ScrollRestore: timed out, maxScrollExtent <= 0');
           }
+          onSettled();
           return;
         }
         SchedulerBinding.instance.addPostFrameCallback((_) => tick());

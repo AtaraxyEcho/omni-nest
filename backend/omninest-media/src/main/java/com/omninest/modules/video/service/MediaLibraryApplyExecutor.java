@@ -184,28 +184,31 @@ public class MediaLibraryApplyExecutor {
         }
         try {
             candidate.setApplyStatus("APPLYING");
-            candidateRepository.save(candidate);
+            MediaScanCandidate working = candidateRepository.save(candidate);
             LocalMediaScanEntry entry = localMediaIndexService.registerSelected(
                     ownerUserId,
                     source.getStorageLocationId(),
-                    candidate.getRelativePath()
+                    working.getRelativePath()
             );
             LocalMediaLibraryClassifier.ClassificationOutcome outcome = classifier.classify(ownerUserId, source, entry);
             if (outcome == LocalMediaLibraryClassifier.ClassificationOutcome.UNMATCHED) {
-                candidate.setApplyStatus("FAILED");
-                candidate.setErrorSummary("媒体分类器无法确认该候选项");
-                candidateRepository.save(candidate);
+                working.setApplyStatus("FAILED");
+                working.setErrorSummary("媒体分类器无法确认该候选项");
+                candidateRepository.save(working);
                 return false;
             }
-            candidate.setAppliedFileNodeId(entry.fileNodeId());
-            candidate.setApplyStatus("APPLIED");
-            candidate.setErrorSummary(null);
-            candidateRepository.save(candidate);
+            working.setAppliedFileNodeId(entry.fileNodeId());
+            working.setApplyStatus("APPLIED");
+            working.setErrorSummary(null);
+            candidateRepository.save(working);
             return true;
         } catch (RuntimeException exception) {
-            candidate.setApplyStatus("FAILED");
-            candidate.setErrorSummary(errorSummary(exception));
-            candidateRepository.save(candidate);
+            MediaScanCandidate failed = candidateRepository
+                    .findById(candidate.getId())
+                    .orElse(candidate);
+            failed.setApplyStatus("FAILED");
+            failed.setErrorSummary(errorSummary(exception));
+            candidateRepository.save(failed);
             return false;
         }
     }

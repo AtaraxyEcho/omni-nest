@@ -39,39 +39,66 @@ final cachedBookHandleProvider = FutureProvider.autoDispose
 
 /// 阅读条目解析进度：按内容类型轮询文本或漫画清单中的后台任务。
 ///
-/// 条目非 PARSING 或任务终态时立即返回当前值，由调用方决定停止轮询。
-final textParseProgressProvider = FutureProvider.autoDispose
-    .family<({int progress, bool finished, String? errorMessage}), String>((
-      ref,
-      itemId,
-    ) async {
-      final api = ref.watch(readerApiProvider);
-      final detail = await ref.watch(readerItemDetailProvider(itemId).future);
-      if (detail.item.isComic) {
-        final manifest = await api.getComicManifest(itemId);
-        final failedSource =
-            manifest.sources
-                .where((source) => source.status == ReaderSourceStatus.failed)
-                .firstOrNull;
-        final finished =
-            manifest.importStatus != ReaderImportStatus.pending &&
-            manifest.importStatus != ReaderImportStatus.parsing;
-        return (
-          progress: manifest.parseTask?.progress ?? 0,
-          finished: finished,
-          errorMessage:
-              manifest.parseTask?.errorMessage ?? failedSource?.errorMessage,
-        );
+/// 使用 Stream 以固定间隔多次发出进度，书架卡片不依赖全局导入监控器
+/// 的 invalidate 也能前进；终态、失败或达到最大轮询次数后结束，
+/// 卡片不可见时由 autoDispose 取消订阅停止轮询。
+final textParseProgressProvider = StreamProvider.autoDispose.family<
+  ({int progress, bool finished, String? errorMessage}),
+  String
+>((ref, itemId) async* {
+  final api = ref.watch(readerApiProvider);
+  final detail = await ref.watch(readerItemDetailProvider(itemId).future);
+  final isComic = detail.item.isComic;
+  const pollInterval = Duration(seconds: 3);
+  const maximumPolls = 100;
+  for (var attempt = 0; attempt < maximumPolls; attempt++) {
+    if (!ref.mounted) {
+      return;
+    }
+    ({int progress, bool finished, String? errorMessage}) result;
+    try {
+      result = await _queryParseProgress(api, itemId, isComic);
+    } on Object catch (error) {
+      if (kDebugMode) {
+        readerDebugLog('Reader parse progress poll failed for $itemId: $error');
       }
-      final manifest = await api.getTextManifest(itemId);
-      final parseTask = manifest.parseTask;
-      final finished = manifest.importStatus != ReaderImportStatus.parsing;
-      return (
-        progress: parseTask?.progress ?? 0,
-        finished: finished,
-        errorMessage: manifest.errorMessage,
-      );
-    });
+      result = (progress: 0, finished: false, errorMessage: null);
+    }
+    yield result;
+    if (result.finished) {
+      return;
+    }
+    await Future<void>.delayed(pollInterval);
+  }
+});
+
+Future<({int progress, bool finished, String? errorMessage})>
+_queryParseProgress(ReaderApi api, String itemId, bool isComic) async {
+  if (isComic) {
+    final manifest = await api.getComicManifest(itemId);
+    final failedSource =
+        manifest.sources
+            .where((source) => source.status == ReaderSourceStatus.failed)
+            .firstOrNull;
+    final finished =
+        manifest.importStatus != ReaderImportStatus.pending &&
+        manifest.importStatus != ReaderImportStatus.parsing;
+    return (
+      progress: manifest.parseTask?.progress ?? 0,
+      finished: finished,
+      errorMessage:
+          manifest.parseTask?.errorMessage ?? failedSource?.errorMessage,
+    );
+  }
+  final manifest = await api.getTextManifest(itemId);
+  final parseTask = manifest.parseTask;
+  final finished = manifest.importStatus != ReaderImportStatus.parsing;
+  return (
+    progress: parseTask?.progress ?? 0,
+    finished: finished,
+    errorMessage: manifest.errorMessage,
+  );
+}
 
 /// 书架解析任务监控器。请求严格串行，页面退出后停止客户端监控但不取消后端任务。
 final readerImportMonitorProvider = Provider.autoDispose<void>((ref) {

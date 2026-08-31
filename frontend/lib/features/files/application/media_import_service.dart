@@ -50,6 +50,12 @@ class MediaImportBatchResult {
 
 enum MediaImportCompletionState { completed, processing, failed }
 
+
+const List<Duration> _completionConflictRetryDelays = <Duration>[
+  Duration(milliseconds: 250),
+  Duration(milliseconds: 600),
+  Duration(milliseconds: 1200),
+];
 /// 媒体导入取消信号。取消会同时终止当前 HTTP 上传并清理服务端会话。
 class MediaImportCancellationToken {
   final List<VoidCallback> _listeners = <VoidCallback>[];
@@ -387,8 +393,9 @@ class MediaImportService {
       cancellationToken: cancellationToken,
     );
     mediaCancellationToken?.throwIfCancelled();
-    final node = await _fileApi.completeUploadSession(
+    final node = await _completeUploadSessionWithRetry(
       sessionId: session.uploadId,
+      cancellationToken: mediaCancellationToken,
     );
     onProgress?.call(file.name, sizeBytes, sizeBytes);
     return node;
@@ -428,7 +435,31 @@ class MediaImportService {
       onProgress?.call(file.name, uploadedBytes, sizeBytes);
     }
     cancellationToken?.throwIfCancelled();
-    return _fileApi.completeUploadSession(sessionId: session.uploadId);
+    return _completeUploadSessionWithRetry(
+      sessionId: session.uploadId,
+      cancellationToken: cancellationToken,
+    );
+  }
+
+  Future<FileNode> _completeUploadSessionWithRetry({
+    required String sessionId,
+    MediaImportCancellationToken? cancellationToken,
+  }) async {
+    var retryIndex = 0;
+    while (true) {
+      cancellationToken?.throwIfCancelled();
+      try {
+        return await _fileApi.completeUploadSession(sessionId: sessionId);
+      } on AppException catch (error) {
+        if (error.code != '409' ||
+            retryIndex >= _completionConflictRetryDelays.length) {
+          rethrow;
+        }
+        await Future<void>.delayed(_completionConflictRetryDelays[retryIndex]);
+        retryIndex++;
+        cancellationToken?.throwIfCancelled();
+      }
+    }
   }
 
   Future<void> _cancelUploadSession(String uploadId) async {

@@ -204,6 +204,20 @@ void main() {
     expect(fileApi.completeCalled, isTrue);
     expect(fileApi.cancelledUploadIds, isEmpty);
   });
+
+  test('retries upload completion after a transient conflict', () async {
+    final fileApi = _RetryingCompleteFileApi();
+    final service = MediaImportService(fileApi);
+
+    final imported = await service.importFile(
+      file: await _photoFile(),
+      parentId: 'photos',
+      reuseExistingFiles: false,
+    );
+
+    expect(imported.fileNodeId, 'photo-id');
+    expect(fileApi.completeAttempts, 3);
+  });
 }
 
 Future<XFile> _photoFile() async {
@@ -449,5 +463,35 @@ class _PostUploadCancellationFileApi extends FileApi {
   @override
   Future<void> cancelUploadSession(String uploadId) async {
     cancelledUploadIds.add(uploadId);
+  }
+}
+
+class _RetryingCompleteFileApi extends _PostUploadCancellationFileApi {
+  int completeAttempts = 0;
+
+  @override
+  Future<FileNode> completeUploadSession({
+    required String sessionId,
+    String? sha256,
+  }) async {
+    completeAttempts++;
+    if (completeAttempts < 3) {
+      throw const AppException(
+        code: '409',
+        message: 'transient conflict',
+        details: <String, Object?>{'retryable': true},
+      );
+    }
+    return FileNode(
+      id: 'photo-id',
+      parentId: 'photos',
+      name: 'photo.jpg',
+      isFolder: false,
+      nodeType: 'FILE',
+      normalizedPath: '/Photos/photo.jpg',
+      sizeBytes: 4,
+      updatedAt: null,
+      mimeType: 'image/jpeg',
+    );
   }
 }

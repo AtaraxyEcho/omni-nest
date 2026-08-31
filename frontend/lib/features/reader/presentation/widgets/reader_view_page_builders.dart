@@ -797,27 +797,44 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
     int restoreCharOffset,
   ) async {
     final requestedChapterId = currentChapterId;
-    final targetPage = await findPageByCharOffset(
-      chapterData,
-      restoreCharOffset,
-    );
-    if (!mounted ||
-        targetPage == null ||
-        requestedChapterId != currentChapterId) {
-      return;
+    try {
+      final targetPage = await findPageByCharOffset(
+        chapterData,
+        restoreCharOffset,
+      );
+      if (!mounted) {
+        return;
+      }
+      if (targetPage == null || requestedChapterId != currentChapterId) {
+        // 定位被取消或章节已切换：当前章节请求结束时必须退出恢复态，避免遮罩滞留
+        if (requestedChapterId == currentChapterId) {
+          setState(() {
+            isRestoringProgress = false;
+            modeSwitchInProgress = false;
+          });
+        }
+        return;
+      }
+      final totalChars = chapterData.totalChars;
+      final capturedProgress =
+          totalChars <= 0
+              ? 0.0
+              : (restoreCharOffset / totalChars).clamp(0.0, 1.0).toDouble();
+      scrollProgress = capturedProgress;
+      positionTracker.setCharOffset(restoreCharOffset, currentChapterId);
+      setState(() {
+        pageModePage = targetPage;
+        modeSwitchInProgress = false;
+        isRestoringProgress = false;
+      });
+    } catch (e) {
+      if (mounted && requestedChapterId == currentChapterId) {
+        setState(() {
+          isRestoringProgress = false;
+          modeSwitchInProgress = false;
+        });
+      }
     }
-    final totalChars = chapterData.totalChars;
-    final capturedProgress =
-        totalChars <= 0
-            ? 0.0
-            : (restoreCharOffset / totalChars).clamp(0.0, 1.0).toDouble();
-    scrollProgress = capturedProgress;
-    positionTracker.setCharOffset(restoreCharOffset, currentChapterId);
-    setState(() {
-      pageModePage = targetPage;
-      modeSwitchInProgress = false;
-      isRestoringProgress = false;
-    });
   }
 
   void _handlePendingProgressRestore() {

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/app/providers.dart';
 import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/features/files/application/media_import_service.dart';
+import 'package:omninest/features/reader/application/reader_book_provider.dart';
 import 'package:omninest/features/reader/application/reader_controller.dart';
 
 enum ReaderImportJobStatus { queued, uploading, registering, failed, cancelled }
@@ -184,13 +185,14 @@ class ReaderImportQueueController extends Notifier<List<ReaderImportJob>> {
           progress: 1,
         ),
       );
-      await ref
+      final importedItem = await ref
           .read(readerApiProvider)
           .importFile(
             fileNodeId: uploaded.fileNodeId,
             contentKindOverride: _contentKind(file.name),
           );
       if (!ref.mounted) return;
+      ref.invalidate(textParseProgressProvider(importedItem.id));
       await ref.read(readerCenterControllerProvider.notifier).refresh();
       if (!ref.mounted) return;
       _remove(jobId);

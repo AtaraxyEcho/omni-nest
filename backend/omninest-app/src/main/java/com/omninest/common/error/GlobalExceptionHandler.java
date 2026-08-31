@@ -53,7 +53,12 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailure(
             ObjectOptimisticLockingFailureException exception
     ) {
-        log.warn("并发更新冲突: errorType={}", exception.getClass().getSimpleName());
+        log.warn("并发更新冲突: errorType={}, entity={}, entityId={}, detail={}",
+                exception.getClass().getSimpleName(),
+                exception.getPersistentClassName(),
+                exception.getIdentifier(),
+                exception.getMessage(),
+                exception);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(ErrorCode.CONFLICT, "资源正在被其他请求更新，请稍后重试"));
     }

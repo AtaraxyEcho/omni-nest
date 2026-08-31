@@ -104,13 +104,6 @@ class FileUploadSessionServiceTest {
         when(ingressLifecycleService.open(any())).thenReturn(UUID.randomUUID());
         when(ingressSafetyService.inspect(any(ObjectStorageKey.class), anyLong(), anyString(), any(UUID.class)))
                 .thenReturn(new InspectionResult(Status.CLEAN, "文件安全", "0".repeat(64)));
-        when(uploadSessionRepository.claimForCompletion(
-                anyString(),
-                any(UUID.class),
-                any(),
-                anyString(),
-                any(Instant.class)
-        )).thenReturn(1);
         when(storageQuotaService.reserve(
                 eq(OWNER_ID),
                 eq("UPLOAD"),
@@ -429,7 +422,32 @@ class FileUploadSessionServiceTest {
         verify(objectStorageClient, Mockito.never()).abortMultipartUpload(any(), any());
     }
 
+    @Test
+    void completeCompletedSessionReturnsExistingFileWithoutMutatingSession() {
+        FileUploadSession session = session();
+        session.setStatus(UploadStatus.COMPLETED.getValue());
+        session.setResultFileNodeId(FILE_NODE_ID);
+        session.setCompletionTaskId(MEDIA_TASK_ID);
+        FileNode file = fileNode("demo.pdf", "application/pdf", 512L);
+        when(uploadSessionRepository.findForUpdateByUploadIdAndOwnerUserId("upload-123", OWNER_ID))
+                .thenReturn(Optional.of(session));
+        when(fileNodeRepository.findByIdAndOwnerUserIdAndDeletedFalse(FILE_NODE_ID, OWNER_ID))
+                .thenReturn(Optional.of(file));
+
+        var result = service.completeSession(
+                OWNER_ID,
+                "upload-123",
+                new CompleteFileUploadRequest(null, List.of())
+        );
+
+        assertThat(result.id()).isEqualTo(FILE_NODE_ID);
+        assertThat(result.mediaAutoImportTaskId()).isEqualTo(MEDIA_TASK_ID);
+        verify(uploadSessionRepository, Mockito.never()).save(any());
+        verify(objectStorageClient, Mockito.never()).copyObject(any(), any());
+    }
+
     private FileUploadSession session() {
+
         FileUploadSession session = new FileUploadSession();
         session.setId(SESSION_ID);
         session.setOwnerUserId(OWNER_ID);
