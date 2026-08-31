@@ -463,7 +463,10 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
       },
       onLinkTap: handleReaderLinkTap,
       onSelectionActive: onReaderSelectionActive,
-      onTap: toggleControls,
+      // 翻页模式的点击热区由 ReaderPageView 顶层交互层统一分发，
+      // 内容层再响应会与顶层各触发一次 toggleControls，两次取反导致
+      // 点击中间无法弹出控制栏。
+      onTap: null,
     );
 
     if (settings.immersiveMode ||
