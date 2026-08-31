@@ -45,14 +45,12 @@ class TranscodeTasksSection extends ConsumerWidget {
         TaskBoardSection(
           title: AppLocalizations.of(context).videoAudioExtractRecords,
           subtitle: AppLocalizations.of(context).videoAudioExtractSubtitle,
-          icon: Icons.audio_file_rounded,
           tasks: audioTasks,
         ),
         const SizedBox(height: 24),
         TaskBoardSection(
           title: AppLocalizations.of(context).videoTranscodeRecords,
           subtitle: AppLocalizations.of(context).videoTranscodeRecordsSubtitle,
-          icon: Icons.video_settings_rounded,
           tasks: transcodeTasks,
         ),
       ],
@@ -254,41 +252,25 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: loading ? null : onPressed,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: context.videoColors.primary.withValues(
-            alpha: loading ? 0.06 : 0.12,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (loading)
-              SizedBox(
-                width: 14,
-                height: 14,
+    return FilledButton.tonalIcon(
+      onPressed: loading ? null : () => onPressed(),
+      style: FilledButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      icon:
+          loading
+              ? SizedBox.square(
+                dimension: 14,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: context.videoColors.primary,
                 ),
               )
-            else
-              Icon(icon, size: 14, color: context.videoColors.primary),
-            SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: context.videoColors.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
+              : Icon(icon, size: 14),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -298,14 +280,12 @@ class TaskBoardSection extends StatelessWidget {
   const TaskBoardSection({
     required this.title,
     required this.subtitle,
-    required this.icon,
     required this.tasks,
     super.key,
   });
 
   final String title;
   final String subtitle;
-  final IconData icon;
   final List<MovieTask> tasks;
 
   @override
@@ -317,7 +297,7 @@ class TaskBoardSection extends StatelessWidget {
         SizedBox(height: 22),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: context.videoColors.surfaceContainerHigh.withValues(
               alpha: 0.78,
@@ -330,8 +310,6 @@ class TaskBoardSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: context.videoColors.primary, size: 36),
-              const SizedBox(height: 18),
               if (tasks.isEmpty)
                 EmptyMovieState(
                   message: AppLocalizations.of(context).videoNoTasks,
@@ -401,7 +379,6 @@ class LibraryScanSection extends ConsumerWidget {
                     title: AppLocalizations.of(context).videoRecentScanRecords,
                     subtitle:
                         AppLocalizations.of(context).videoRecentScanSubtitle,
-                    icon: Icons.sync_rounded,
                     tasks: scanTasks,
                   ),
                 ),

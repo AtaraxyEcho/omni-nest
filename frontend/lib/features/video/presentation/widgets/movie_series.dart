@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
@@ -11,6 +9,7 @@ import 'package:omninest/core/theme/motion_token.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_category_bars.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_common_widgets.dart';
+import 'package:omninest/features/video/presentation/widgets/movie_hero_carousel.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_filters.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_poster_grid.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_responsive_layout.dart';
@@ -119,293 +118,36 @@ class SeriesSection extends ConsumerWidget {
 // 剧集 3D 轮播
 // ──────────────────────────────────────────────
 
-class SeriesHeroCarousel extends StatefulWidget {
+/// 剧集 Hero 轮播：基于通用 [MediaHeroCarousel] 的剧集侧封装。
+class SeriesHeroCarousel extends StatelessWidget {
   const SeriesHeroCarousel({required this.items, super.key});
 
   final List<MovieSeries> items;
 
   @override
-  State<SeriesHeroCarousel> createState() => _SeriesHeroCarouselState();
-}
-
-class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
-    with SingleTickerProviderStateMixin {
-  static const _switchInterval = Duration(seconds: 30);
-  static const _crossfadeDuration = Duration(milliseconds: 500);
-  static const _cardFraction = 0.52;
-  static const _centerScale = 1.05;
-  static const _sideScale = 0.80;
-  static const _sideAngle = 0.42;
-  static const _perspective = 0.0012;
-  static const _sideShiftFraction = 0.32;
-
-  late final AnimationController _animCtrl;
-  Timer? _timer;
-  int _index = 0;
-  bool _hovering = false;
-
-  List<MovieSeries> get _items => widget.items;
-
-  @override
-  void initState() {
-    super.initState();
-    _animCtrl = AnimationController(vsync: this, duration: _crossfadeDuration);
-    _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(covariant SeriesHeroCarousel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_items.length != oldWidget.items.length) {
-      _index = 0;
-      _animCtrl.reset();
-      _restartTimer();
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _animCtrl.dispose();
-    super.dispose();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    if (_items.length < 2) return;
-    _timer = Timer.periodic(_switchInterval, (_) {
-      if (!mounted || _hovering || _items.length < 2) return;
-      _animateTo(1);
-    });
-  }
-
-  void _restartTimer() => _startTimer();
-
-  void _animateTo(int delta) {
-    if (_items.length < 2 || _animCtrl.isAnimating) return;
-    _animCtrl.reset();
-    _animCtrl.forward().then((_) {
-      if (!mounted || _items.length < 2) return;
-      setState(() {
-        _index = (_index + delta) % _items.length;
-        if (_index < 0) _index += _items.length;
-      });
-    });
-  }
-
-  void _goToPage(int target) {
-    if (_items.length < 2 || _animCtrl.isAnimating) return;
-    final delta = target - _index;
-    if (delta == 0) return;
-    _animateTo(delta);
-  }
-
-  int _sideIndex(int offset) {
-    final raw = (_index + offset) % _items.length;
-    return raw < 0 ? raw + _items.length : raw;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final item = _items.isEmpty ? null : _items[_index % _items.length];
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final heroHeight = seriesHeroHeight(constraints.maxWidth);
-        final w = constraints.maxWidth;
-        final cardWidth = w * _cardFraction;
-        final centerLeft = (w - cardWidth * _centerScale) / 2;
-        final sideShift = cardWidth * _sideShiftFraction;
-        return MouseRegion(
-          cursor: SystemMouseCursors.basic,
-          onEnter: (_) => _hovering = true,
-          onExit: (_) => _hovering = false,
-          child: Container(
-            height: heroHeight,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: context.videoColors.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: context.videoColors.outlineVariant.withValues(
-                  alpha: 0.18,
-                ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: 32,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (_items.isEmpty)
-                  const Positioned.fill(child: _SeriesHeroPlaceholder())
-                else ...[
-                  if (_items.length >= 2)
-                    _build3DCard(
-                      left: centerLeft - sideShift,
-                      cardWidth: cardWidth,
-                      heroHeight: heroHeight,
-                      angle: _sideAngle,
-                      scale: _sideScale,
-                      backdropUrl: _items[_sideIndex(-1)].backdropImageUrl,
-                      posterUrl: _items[_sideIndex(-1)].posterUrl,
-                      overlayOpacity: 0.60,
-                      onTap: () => _animateTo(-1),
-                    ),
-                  if (_items.length >= 2)
-                    _build3DCard(
-                      left: centerLeft + sideShift,
-                      cardWidth: cardWidth,
-                      heroHeight: heroHeight,
-                      angle: -_sideAngle,
-                      scale: _sideScale,
-                      backdropUrl: _items[_sideIndex(1)].backdropImageUrl,
-                      posterUrl: _items[_sideIndex(1)].posterUrl,
-                      overlayOpacity: 0.60,
-                      onTap: () => _animateTo(1),
-                    ),
-                  _build3DCard(
-                    left: centerLeft,
-                    cardWidth: cardWidth,
-                    heroHeight: heroHeight,
-                    angle: 0,
-                    scale: _centerScale,
-                    backdropUrl: _items[_index].backdropImageUrl,
-                    posterUrl: _items[_index].posterUrl,
-                    overlayOpacity: 0,
-                    key: ValueKey(_index),
-                    onTap:
-                        item == null || item.id.isEmpty
-                            ? null
-                            : () => context.push('/video/series/${item.id}'),
-                  ),
-                  const Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0x00000000),
-                              Color(0x14000000),
-                              Color(0x44000000),
-                              Color(0xAA000000),
-                            ],
-                            stops: [0.0, 0.3, 0.65, 1.0],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 48,
-                    right: 48,
-                    bottom: 36,
-                    child: _SeriesHeroOverlay(item: item),
-                  ),
-                ],
-                if (_items.isNotEmpty)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 14,
-                    child: _SeriesCarouselIndicators(
-                      count: _items.length,
-                      current: _index % _items.length,
-                      onTap: _goToPage,
-                    ),
-                  ),
-                if (_hovering && _items.length >= 2) ...[
-                  Positioned(
-                    left: 16,
-                    top: 0,
-                    bottom: 0,
-                    child: _SeriesCarouselArrow(
-                      icon: Icons.chevron_left_rounded,
-                      onTap: () => _animateTo(-1),
-                    ),
-                  ),
-                  Positioned(
-                    right: 16,
-                    top: 0,
-                    bottom: 0,
-                    child: _SeriesCarouselArrow(
-                      icon: Icons.chevron_right_rounded,
-                      onTap: () => _animateTo(1),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _build3DCard({
-    required double left,
-    required double cardWidth,
-    required double heroHeight,
-    required double angle,
-    required double scale,
-    required String? backdropUrl,
-    required String? posterUrl,
-    double overlayOpacity = 0,
-    VoidCallback? onTap,
-    Key? key,
-  }) {
-    final scaledW = cardWidth * scale;
-    final scaledH = heroHeight * scale;
-    return Positioned(
-      left: left,
-      top: (heroHeight - scaledH) / 2,
-      width: scaledW,
-      height: scaledH,
-      child: Transform(
-        alignment: Alignment.center,
-        transform:
-            Matrix4.identity()
-              ..setEntry(3, 2, _perspective)
-              ..rotateY(angle),
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            key: key,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(
-                    alpha: angle == 0 ? 0.40 : 0.22,
-                  ),
-                  blurRadius: angle == 0 ? 32 : 18,
-                  offset: Offset(0, angle == 0 ? 16 : 8),
-                ),
-              ],
-            ),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _SeriesCardImage(
-                  backdropUrl: backdropUrl,
-                  posterUrl: posterUrl,
-                ),
-                if (overlayOpacity > 0)
-                  ColoredBox(
-                    color: Colors.black.withValues(alpha: overlayOpacity),
-                  ),
-              ],
-            ),
-          ),
+    final entries = [
+      for (final s in items)
+        MediaHeroEntry(
+          id: s.id,
+          backdropUrl: s.backdropImageUrl,
+          posterUrl: s.posterImageUrl,
+          overlay: _SeriesHeroOverlay(item: s),
         ),
+    ];
+    return MediaHeroCarousel(
+      entries: entries,
+      onOpen: (id) => context.push('/video/series/$id'),
+      heightFor: seriesHeroHeight,
+      compactLayout: false,
+      sideDim: 0.60,
+      scrimGradient: true,
+      overlayWithinCenterCard: false,
+      activeIndicatorColor: context.videoColors.primary,
+      inactiveIndicatorColor: context.videoColors.onSurface.withValues(
+        alpha: 0.36,
       ),
+      emptyPlaceholder: const _SeriesHeroPlaceholder(),
     );
   }
 }
@@ -426,120 +168,6 @@ class _SeriesHeroPlaceholder extends StatelessWidget {
           ],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-        ),
-      ),
-    );
-  }
-}
-
-class _SeriesCardImage extends StatelessWidget {
-  const _SeriesCardImage({required this.backdropUrl, required this.posterUrl});
-
-  final String? backdropUrl;
-  final String? posterUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    if (backdropUrl != null) {
-      return Image.network(
-        backdropUrl!,
-        fit: BoxFit.cover,
-        alignment: Alignment.center,
-        filterQuality: FilterQuality.high,
-        gaplessPlayback: true,
-        cacheWidth: 800,
-        errorBuilder:
-            (context, error, stackTrace) => const _SeriesCardFallback(),
-      );
-    }
-    if (posterUrl != null) {
-      return PosterHeroImage(
-        url: posterUrl!,
-        errorFallback: const _SeriesCardFallback(),
-      );
-    }
-    return const _SeriesCardFallback();
-  }
-}
-
-class _SeriesCardFallback extends StatelessWidget {
-  const _SeriesCardFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF201F3B), Color(0xFF35213B)],
-        ),
-      ),
-    );
-  }
-}
-
-class _SeriesCarouselIndicators extends StatelessWidget {
-  const _SeriesCarouselIndicators({
-    required this.count,
-    required this.current,
-    required this.onTap,
-  });
-
-  final int count;
-  final int current;
-  final ValueChanged<int> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (int i = 0; i < count; i++)
-          GestureDetector(
-            onTap: () => onTap(i),
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: 260),
-              curve: Curves.easeOutCubic,
-              width: i == current ? 24 : 8,
-              height: 8,
-              margin: EdgeInsets.symmetric(horizontal: 3),
-              decoration: BoxDecoration(
-                color:
-                    i == current
-                        ? context.videoColors.primary
-                        : context.videoColors.onSurface.withValues(alpha: 0.36),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _SeriesCarouselArrow extends StatelessWidget {
-  const _SeriesCarouselArrow({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.40),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
         ),
       ),
     );

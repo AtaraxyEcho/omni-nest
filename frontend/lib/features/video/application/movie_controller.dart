@@ -840,115 +840,91 @@ class MovieCenterController extends AsyncNotifier<MovieCenterState> {
       return;
     }
     if (current.section == MovieSection.movies) {
-      await _loadNextMovies();
+      await _loadPage(movies: true);
       return;
     }
     if (current.section == MovieSection.tvShows ||
         current.section == MovieSection.anime) {
-      await _loadNextEpisodes();
+      await _loadPage(movies: false);
     }
   }
 
-  Future<void> _loadNextMovies() async {
+  /// 按类型加载媒体库下一页；[movies] 为 true 加载电影分页，否则加载分集分页。
+  /// [firstPage] 为 true 时忽略 hasMore 并从第 0 页开始（分集首次加载）。
+  Future<bool> _loadPage({required bool movies, bool firstPage = false}) async {
     final current = state.asData?.value;
-    if (current == null || current.movieLoadingMore || !current.movieHasMore) {
-      return;
-    }
-    final generation = _moviePageGeneration;
-    final nextPage = current.moviePage + 1;
-    state = AsyncData(current.copyWith(movieLoadingMore: true));
-    try {
-      final result = await _api.libraryPage(page: nextPage);
-      if (!ref.mounted || generation != _moviePageGeneration) {
-        return;
-      }
-      final latest = state.asData?.value;
-      if (latest == null) {
-        return;
-      }
-      final itemsById = {
-        for (final item in latest.movies) item.id: item,
-        for (final item in result.items) item.id: item,
-      };
-      state = AsyncData(
-        latest.copyWith(
-          movies: itemsById.values.toList(growable: false),
-          moviePage: result.page,
-          movieHasMore: result.page + 1 < result.totalPages,
-          movieLoadingMore: false,
-          clearError: true,
-        ),
-      );
-    } on Exception catch (error) {
-      if (!ref.mounted || generation != _moviePageGeneration) {
-        return;
-      }
-      final latest = state.asData?.value;
-      if (latest != null) {
-        state = AsyncData(
-          latest.copyWith(
-            movieLoadingMore: false,
-            errorMessage: describeUserFacingError(error).message,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<bool> _loadNextEpisodes({bool firstPage = false}) async {
-    final current = state.asData?.value;
-    if (current == null || current.episodeLoadingMore) {
+    if (current == null) {
       return false;
     }
-    if (!firstPage && !current.episodeHasMore) {
-      return true;
+    if (movies) {
+      if (current.movieLoadingMore || (!firstPage && !current.movieHasMore)) {
+        return false;
+      }
+    } else {
+      if (current.episodeLoadingMore ||
+          (!firstPage && !current.episodeHasMore)) {
+        return true;
+      }
     }
-    final generation = _episodePageGeneration;
-    final nextPage = firstPage ? 0 : current.episodePage + 1;
-    state = AsyncData(current.copyWith(episodeLoadingMore: true));
+    final generation =
+        movies ? ++_moviePageGeneration : ++_episodePageGeneration;
+    final currentPage = movies ? current.moviePage : current.episodePage;
+    final nextPage = firstPage || currentPage < 0 ? 0 : currentPage + 1;
+    state = AsyncData(
+      current.copyWith(
+        movieLoadingMore: movies ? true : null,
+        episodeLoadingMore: movies ? null : true,
+      ),
+    );
     try {
       final result = await _api.libraryPage(
-        mediaType: 'EPISODE',
         page: nextPage,
+        mediaType: movies ? 'MOVIE' : 'EPISODE',
       );
-      if (!ref.mounted || generation != _episodePageGeneration) {
+      if (!ref.mounted ||
+          generation !=
+              (movies ? _moviePageGeneration : _episodePageGeneration)) {
         return false;
       }
       final latest = state.asData?.value;
       if (latest == null) {
         return false;
       }
-      final retainedMovies = latest.movies.where(
-        (item) => item.mediaType == 'MOVIE',
-      );
-      final existingEpisodes =
-          firstPage
-              ? const <MovieVideoItem>[]
-              : latest.movies.where((item) => item.mediaType != 'MOVIE');
+      // 分集首次加载时丢弃旧分集，仅保留电影；其余场景全量合并去重。
+      final baseItems =
+          (!movies && firstPage)
+              ? latest.movies.where((item) => item.mediaType == 'MOVIE')
+              : latest.movies;
       final itemsById = {
-        for (final item in retainedMovies) item.id: item,
-        for (final item in existingEpisodes) item.id: item,
+        for (final item in baseItems) item.id: item,
         for (final item in result.items) item.id: item,
       };
+      final hasMore = result.page + 1 < result.totalPages;
       state = AsyncData(
         latest.copyWith(
           movies: itemsById.values.toList(growable: false),
-          episodePage: result.page,
-          episodeHasMore: result.page + 1 < result.totalPages,
-          episodeLoadingMore: false,
+          moviePage: movies ? result.page : null,
+          movieHasMore: movies ? hasMore : null,
+          movieLoadingMore: movies ? false : null,
+          episodePage: movies ? null : result.page,
+          episodeHasMore: movies ? null : hasMore,
+          episodeLoadingMore: movies ? null : false,
           clearError: true,
         ),
       );
       return true;
     } on Exception catch (error) {
-      if (!ref.mounted || generation != _episodePageGeneration) {
+      if (!ref.mounted ||
+          generation !=
+              (movies ? _moviePageGeneration : _episodePageGeneration)) {
         return false;
       }
       final latest = state.asData?.value;
       if (latest != null) {
         state = AsyncData(
           latest.copyWith(
-            episodeLoadingMore: false,
+            movieLoadingMore: movies ? false : null,
+            episodeLoadingMore: movies ? null : false,
             errorMessage: describeUserFacingError(error).message,
           ),
         );
@@ -1080,7 +1056,7 @@ class MovieCenterController extends AsyncNotifier<MovieCenterState> {
       final beforeEpisodes = state.asData?.value;
       var episodesLoaded = true;
       if (beforeEpisodes != null && (force || beforeEpisodes.episodePage < 0)) {
-        episodesLoaded = await _loadNextEpisodes(firstPage: true);
+        episodesLoaded = await _loadPage(movies: false, firstPage: true);
       }
       if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
         return;

@@ -3,6 +3,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
+import 'package:omninest/features/video/presentation/widgets/movie_common_widgets.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_shell.dart';
 
 class MovieDetailHero extends StatelessWidget {
@@ -47,10 +48,11 @@ class MovieDetailHero extends StatelessWidget {
                 fit: BoxFit.cover,
                 alignment: Alignment.topCenter,
                 memCacheWidth: 1920,
-                errorWidget: (context, url, error) => const _BackdropFallback(),
+                errorWidget:
+                    (context, url, error) => const DetailBackdropFallback(),
               )
             else
-              const _BackdropFallback(),
+              const DetailBackdropFallback(),
             if (Theme.of(context).brightness == Brightness.dark)
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -104,7 +106,11 @@ class _HeroContentRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
-            child: _HeroPoster(posterUrl: posterUrl, screenWidth: screenWidth),
+            child: DetailHeroPoster(
+              posterUrl: posterUrl,
+              screenWidth: screenWidth,
+              placeholderIcon: Icons.movie_rounded,
+            ),
           ),
           const SizedBox(height: 12),
           _HeroInfo(item: item, width: screenWidth),
@@ -114,7 +120,11 @@ class _HeroContentRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        _HeroPoster(posterUrl: posterUrl, screenWidth: screenWidth),
+        DetailHeroPoster(
+          posterUrl: posterUrl,
+          screenWidth: screenWidth,
+          placeholderIcon: Icons.movie_rounded,
+        ),
         const SizedBox(width: 24),
         // 不使用内嵌 SingleChildScrollView：内嵌可滚动区域会抢占页面滚轮事件，
         // 导致鼠标悬停 Hero 时详情页无法滚动。信息区高度低于 Hero 最小高度。
@@ -153,9 +163,9 @@ class _MobileDetailHero extends StatelessWidget {
                       width: double.infinity,
                       fit: BoxFit.cover,
                       alignment: Alignment.topCenter,
-                      errorBuilder: (_, _, _) => const _BackdropFallback(),
+                      errorBuilder: (_, _, _) => const DetailBackdropFallback(),
                     )
-                    : const _BackdropFallback(),
+                    : const DetailBackdropFallback(),
           ),
         ),
         const SizedBox(height: 12),
@@ -171,16 +181,16 @@ class _MobileDetailHero extends StatelessWidget {
                 runSpacing: 6,
                 children: [
                   if (item.contentRating != null)
-                    _HeroPill(label: item.contentRating!),
-                  _HeroPill(
+                    DetailHeroPill(label: item.contentRating!),
+                  DetailHeroPill(
                     label:
                         item.mediaType == 'MOVIE'
                             ? AppLocalizations.of(context).videoSectionMovies
                             : AppLocalizations.of(context).videoSectionTvShows,
                   ),
-                  _HeroPill(label: item.year),
+                  DetailHeroPill(label: item.year),
                   if (item.runtimeSeconds != null && item.runtimeSeconds! > 0)
-                    _HeroPill(label: item.runtimeText),
+                    DetailHeroPill(label: item.runtimeText),
                 ],
               ),
               const SizedBox(height: 10),
@@ -245,7 +255,8 @@ class _MobileDetailHero extends StatelessWidget {
                           ),
                         ),
                     ],
-                    for (final genre in item.genres) _GenreChip(label: genre),
+                    for (final genre in item.genres)
+                      DetailGenreChip(label: genre),
                   ],
                 ),
               ],
@@ -253,92 +264,6 @@ class _MobileDetailHero extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _BackdropFallback extends StatelessWidget {
-  const _BackdropFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            context.videoColors.surfaceContainerHigh,
-            context.videoColors.surfaceContainer,
-            context.videoColors.surface,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: const SizedBox.expand(),
-    );
-  }
-}
-
-class _HeroPoster extends StatelessWidget {
-  const _HeroPoster({required this.posterUrl, required this.screenWidth});
-
-  final String? posterUrl;
-  final double screenWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final posterWidth =
-        screenWidth >= 1920
-            ? 200.0
-            : screenWidth >= 1280
-            ? 160.0
-            : screenWidth >= 720
-            ? 140.0
-            : 120.0;
-    final posterHeight = posterWidth * 1.4375;
-    return Container(
-      width: posterWidth,
-      height: posterHeight,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.40),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child:
-          posterUrl != null
-              ? CachedNetworkImage(
-                imageUrl: posterUrl!,
-                fit: BoxFit.cover,
-                memCacheWidth: 400,
-                errorWidget:
-                    (context, url, error) => const _PosterPlaceholder(),
-              )
-              : const _PosterPlaceholder(),
-    );
-  }
-}
-
-class _PosterPlaceholder extends StatelessWidget {
-  const _PosterPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: context.videoColors.surfaceContainerHighest,
-      child: Center(
-        child: Icon(
-          Icons.movie_rounded,
-          color: context.videoColors.onSurfaceVariant,
-          size: 42,
-        ),
-      ),
     );
   }
 }
@@ -366,16 +291,16 @@ class _HeroInfo extends StatelessWidget {
           runSpacing: 8,
           children: [
             if (item.contentRating != null)
-              _HeroPill(label: item.contentRating!),
-            _HeroPill(
+              DetailHeroPill(label: item.contentRating!),
+            DetailHeroPill(
               label:
                   item.mediaType == 'MOVIE'
                       ? AppLocalizations.of(context).videoSectionMovies
                       : AppLocalizations.of(context).videoSectionTvShows,
             ),
-            _HeroPill(label: item.year),
+            DetailHeroPill(label: item.year),
             if (item.runtimeSeconds != null && item.runtimeSeconds! > 0)
-              _HeroPill(label: item.runtimeText),
+              DetailHeroPill(label: item.runtimeText),
           ],
         ),
         SizedBox(height: 14),
@@ -429,7 +354,7 @@ class _HeroInfo extends StatelessWidget {
             spacing: 8,
             runSpacing: 6,
             children: [
-              for (final genre in item.genres) _GenreChip(label: genre),
+              for (final genre in item.genres) DetailGenreChip(label: genre),
             ],
           ),
         ],
@@ -491,7 +416,7 @@ class _HeroInfo extends StatelessWidget {
       Wrap(
         spacing: 8,
         runSpacing: 6,
-        children: [for (final c in countries) _GenreChip(label: c)],
+        children: [for (final c in countries) DetailGenreChip(label: c)],
       ),
     ];
   }
@@ -527,64 +452,5 @@ class _HeroInfo extends StatelessWidget {
     final m = date.month.toString().padLeft(2, '0');
     final d = date.day.toString().padLeft(2, '0');
     return '${date.year}-$m-$d';
-  }
-}
-
-class _HeroPill extends StatelessWidget {
-  const _HeroPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.videoColors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: c.surfaceContainerHigh.withValues(alpha: 0.70),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: c.outlineVariant.withValues(alpha: 0.30)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: c.onSurface,
-          fontSize: 12,
-          height: 16 / 12,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _GenreChip extends StatelessWidget {
-  const _GenreChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: context.videoColors.surfaceContainerHighest.withValues(
-          alpha: 0.50,
-        ),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: context.videoColors.outlineVariant.withValues(alpha: 0.20),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: context.videoColors.onSurfaceVariant,
-          fontSize: 12,
-          height: 16 / 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
   }
 }

@@ -1,5 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
@@ -273,6 +275,161 @@ class PosterHeroImage extends StatelessWidget {
           errorBuilder: (context, error, stackTrace) => fallback,
         ),
       ],
+    );
+  }
+}
+
+class DetailBackdropFallback extends StatelessWidget {
+  const DetailBackdropFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            context.videoColors.surfaceContainerHigh,
+            context.videoColors.surfaceContainer,
+            context.videoColors.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class DetailPosterPlaceholder extends StatelessWidget {
+  const DetailPosterPlaceholder({required this.icon, super.key});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: context.videoColors.surfaceContainerHighest,
+      child: Center(
+        child: Icon(
+          icon,
+          color: context.videoColors.onSurfaceVariant,
+          size: 42,
+        ),
+      ),
+    );
+  }
+}
+
+class DetailHeroPoster extends StatelessWidget {
+  const DetailHeroPoster({
+    required this.posterUrl,
+    required this.screenWidth,
+    required this.placeholderIcon,
+  });
+
+  final String? posterUrl;
+
+  /// 占位图标：电影/剧集各自传入。
+  final IconData placeholderIcon;
+  final double screenWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final posterWidth =
+        screenWidth >= 1920
+            ? 200.0
+            : screenWidth >= 1280
+            ? 160.0
+            : screenWidth >= 720
+            ? 140.0
+            : 120.0;
+    final posterHeight = posterWidth * 1.4375;
+    return Container(
+      width: posterWidth,
+      height: posterHeight,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.40),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child:
+          posterUrl != null
+              ? CachedNetworkImage(
+                imageUrl: posterUrl!,
+                fit: BoxFit.cover,
+                memCacheWidth: 400,
+                errorWidget:
+                    (context, url, error) =>
+                        DetailPosterPlaceholder(icon: placeholderIcon),
+              )
+              : DetailPosterPlaceholder(icon: placeholderIcon),
+    );
+  }
+}
+
+class DetailHeroPill extends StatelessWidget {
+  const DetailHeroPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.videoColors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: c.surfaceContainerHigh.withValues(alpha: 0.70),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: c.outlineVariant.withValues(alpha: 0.30)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: c.onSurface,
+          fontSize: 12,
+          height: 16 / 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class DetailGenreChip extends StatelessWidget {
+  const DetailGenreChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: context.videoColors.surfaceContainerHighest.withValues(
+          alpha: 0.50,
+        ),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: context.videoColors.outlineVariant.withValues(alpha: 0.20),
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: context.videoColors.onSurfaceVariant,
+          fontSize: 12,
+          height: 16 / 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
