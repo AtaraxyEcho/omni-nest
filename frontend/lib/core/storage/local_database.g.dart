@@ -3774,6 +3774,18 @@ class $CachedReaderBooksTable extends CachedReaderBooks
     requiredDuringInsert: false,
     defaultValue: const Constant('EPUB'),
   );
+  static const VerificationMeta _cacheVersionMeta = const VerificationMeta(
+    'cacheVersion',
+  );
+  @override
+  late final GeneratedColumn<String> cacheVersion = GeneratedColumn<String>(
+    'cache_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _cachedAtMeta = const VerificationMeta(
     'cachedAt',
   );
@@ -3796,6 +3808,7 @@ class $CachedReaderBooksTable extends CachedReaderBooks
     chaptersJson,
     totalChars,
     itemType,
+    cacheVersion,
     cachedAt,
   ];
   @override
@@ -3872,6 +3885,15 @@ class $CachedReaderBooksTable extends CachedReaderBooks
         itemType.isAcceptableOrUnknown(data['item_type']!, _itemTypeMeta),
       );
     }
+    if (data.containsKey('cache_version')) {
+      context.handle(
+        _cacheVersionMeta,
+        cacheVersion.isAcceptableOrUnknown(
+          data['cache_version']!,
+          _cacheVersionMeta,
+        ),
+      );
+    }
     if (data.containsKey('cached_at')) {
       context.handle(
         _cachedAtMeta,
@@ -3929,6 +3951,11 @@ class $CachedReaderBooksTable extends CachedReaderBooks
             DriftSqlType.string,
             data['${effectivePrefix}item_type'],
           )!,
+      cacheVersion:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}cache_version'],
+          )!,
       cachedAt:
           attachedDatabase.typeMapping.read(
             DriftSqlType.dateTime,
@@ -3972,6 +3999,12 @@ class CachedReaderBook extends DataClass
   /// 文件类型（EPUB/TXT/PDF）
   final String itemType;
 
+  /// 缓存版本指纹（条目 updatedAt）。
+  ///
+  /// 服务端重新解析会更新条目 updatedAt；版本不符时丢弃元数据与章节
+  /// 切片缓存，避免 TXT 字符偏移变化后继续命中错位的旧章节内容。
+  final String cacheVersion;
+
   /// 缓存创建时间
   final DateTime cachedAt;
   const CachedReaderBook({
@@ -3984,6 +4017,7 @@ class CachedReaderBook extends DataClass
     required this.chaptersJson,
     required this.totalChars,
     required this.itemType,
+    required this.cacheVersion,
     required this.cachedAt,
   });
   @override
@@ -4008,6 +4042,7 @@ class CachedReaderBook extends DataClass
     map['chapters_json'] = Variable<String>(chaptersJson);
     map['total_chars'] = Variable<int>(totalChars);
     map['item_type'] = Variable<String>(itemType);
+    map['cache_version'] = Variable<String>(cacheVersion);
     map['cached_at'] = Variable<DateTime>(cachedAt);
     return map;
   }
@@ -4034,6 +4069,7 @@ class CachedReaderBook extends DataClass
       chaptersJson: Value(chaptersJson),
       totalChars: Value(totalChars),
       itemType: Value(itemType),
+      cacheVersion: Value(cacheVersion),
       cachedAt: Value(cachedAt),
     );
   }
@@ -4053,6 +4089,7 @@ class CachedReaderBook extends DataClass
       chaptersJson: serializer.fromJson<String>(json['chaptersJson']),
       totalChars: serializer.fromJson<int>(json['totalChars']),
       itemType: serializer.fromJson<String>(json['itemType']),
+      cacheVersion: serializer.fromJson<String>(json['cacheVersion']),
       cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
     );
   }
@@ -4069,6 +4106,7 @@ class CachedReaderBook extends DataClass
       'chaptersJson': serializer.toJson<String>(chaptersJson),
       'totalChars': serializer.toJson<int>(totalChars),
       'itemType': serializer.toJson<String>(itemType),
+      'cacheVersion': serializer.toJson<String>(cacheVersion),
       'cachedAt': serializer.toJson<DateTime>(cachedAt),
     };
   }
@@ -4083,6 +4121,7 @@ class CachedReaderBook extends DataClass
     String? chaptersJson,
     int? totalChars,
     String? itemType,
+    String? cacheVersion,
     DateTime? cachedAt,
   }) => CachedReaderBook(
     itemId: itemId ?? this.itemId,
@@ -4094,6 +4133,7 @@ class CachedReaderBook extends DataClass
     chaptersJson: chaptersJson ?? this.chaptersJson,
     totalChars: totalChars ?? this.totalChars,
     itemType: itemType ?? this.itemType,
+    cacheVersion: cacheVersion ?? this.cacheVersion,
     cachedAt: cachedAt ?? this.cachedAt,
   );
   CachedReaderBook copyWithCompanion(CachedReaderBooksCompanion data) {
@@ -4112,6 +4152,10 @@ class CachedReaderBook extends DataClass
       totalChars:
           data.totalChars.present ? data.totalChars.value : this.totalChars,
       itemType: data.itemType.present ? data.itemType.value : this.itemType,
+      cacheVersion:
+          data.cacheVersion.present
+              ? data.cacheVersion.value
+              : this.cacheVersion,
       cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
     );
   }
@@ -4128,6 +4172,7 @@ class CachedReaderBook extends DataClass
           ..write('chaptersJson: $chaptersJson, ')
           ..write('totalChars: $totalChars, ')
           ..write('itemType: $itemType, ')
+          ..write('cacheVersion: $cacheVersion, ')
           ..write('cachedAt: $cachedAt')
           ..write(')'))
         .toString();
@@ -4144,6 +4189,7 @@ class CachedReaderBook extends DataClass
     chaptersJson,
     totalChars,
     itemType,
+    cacheVersion,
     cachedAt,
   );
   @override
@@ -4159,6 +4205,7 @@ class CachedReaderBook extends DataClass
           other.chaptersJson == this.chaptersJson &&
           other.totalChars == this.totalChars &&
           other.itemType == this.itemType &&
+          other.cacheVersion == this.cacheVersion &&
           other.cachedAt == this.cachedAt);
 }
 
@@ -4172,6 +4219,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
   final Value<String> chaptersJson;
   final Value<int> totalChars;
   final Value<String> itemType;
+  final Value<String> cacheVersion;
   final Value<DateTime> cachedAt;
   final Value<int> rowid;
   const CachedReaderBooksCompanion({
@@ -4184,6 +4232,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
     this.chaptersJson = const Value.absent(),
     this.totalChars = const Value.absent(),
     this.itemType = const Value.absent(),
+    this.cacheVersion = const Value.absent(),
     this.cachedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4197,6 +4246,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
     this.chaptersJson = const Value.absent(),
     this.totalChars = const Value.absent(),
     this.itemType = const Value.absent(),
+    this.cacheVersion = const Value.absent(),
     required DateTime cachedAt,
     this.rowid = const Value.absent(),
   }) : itemId = Value(itemId),
@@ -4211,6 +4261,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
     Expression<String>? chaptersJson,
     Expression<int>? totalChars,
     Expression<String>? itemType,
+    Expression<String>? cacheVersion,
     Expression<DateTime>? cachedAt,
     Expression<int>? rowid,
   }) {
@@ -4224,6 +4275,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
       if (chaptersJson != null) 'chapters_json': chaptersJson,
       if (totalChars != null) 'total_chars': totalChars,
       if (itemType != null) 'item_type': itemType,
+      if (cacheVersion != null) 'cache_version': cacheVersion,
       if (cachedAt != null) 'cached_at': cachedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4239,6 +4291,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
     Value<String>? chaptersJson,
     Value<int>? totalChars,
     Value<String>? itemType,
+    Value<String>? cacheVersion,
     Value<DateTime>? cachedAt,
     Value<int>? rowid,
   }) {
@@ -4252,6 +4305,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
       chaptersJson: chaptersJson ?? this.chaptersJson,
       totalChars: totalChars ?? this.totalChars,
       itemType: itemType ?? this.itemType,
+      cacheVersion: cacheVersion ?? this.cacheVersion,
       cachedAt: cachedAt ?? this.cachedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -4287,6 +4341,9 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
     if (itemType.present) {
       map['item_type'] = Variable<String>(itemType.value);
     }
+    if (cacheVersion.present) {
+      map['cache_version'] = Variable<String>(cacheVersion.value);
+    }
     if (cachedAt.present) {
       map['cached_at'] = Variable<DateTime>(cachedAt.value);
     }
@@ -4308,6 +4365,7 @@ class CachedReaderBooksCompanion extends UpdateCompanion<CachedReaderBook> {
           ..write('chaptersJson: $chaptersJson, ')
           ..write('totalChars: $totalChars, ')
           ..write('itemType: $itemType, ')
+          ..write('cacheVersion: $cacheVersion, ')
           ..write('cachedAt: $cachedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -10663,6 +10721,7 @@ typedef $$CachedReaderBooksTableCreateCompanionBuilder =
       Value<String> chaptersJson,
       Value<int> totalChars,
       Value<String> itemType,
+      Value<String> cacheVersion,
       required DateTime cachedAt,
       Value<int> rowid,
     });
@@ -10677,6 +10736,7 @@ typedef $$CachedReaderBooksTableUpdateCompanionBuilder =
       Value<String> chaptersJson,
       Value<int> totalChars,
       Value<String> itemType,
+      Value<String> cacheVersion,
       Value<DateTime> cachedAt,
       Value<int> rowid,
     });
@@ -10732,6 +10792,11 @@ class $$CachedReaderBooksTableFilterComposer
 
   ColumnFilters<String> get itemType => $composableBuilder(
     column: $table.itemType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cacheVersion => $composableBuilder(
+    column: $table.cacheVersion,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10795,6 +10860,11 @@ class $$CachedReaderBooksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cacheVersion => $composableBuilder(
+    column: $table.cacheVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
     column: $table.cachedAt,
     builder: (column) => ColumnOrderings(column),
@@ -10842,6 +10912,11 @@ class $$CachedReaderBooksTableAnnotationComposer
 
   GeneratedColumn<String> get itemType =>
       $composableBuilder(column: $table.itemType, builder: (column) => column);
+
+  GeneratedColumn<String> get cacheVersion => $composableBuilder(
+    column: $table.cacheVersion,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get cachedAt =>
       $composableBuilder(column: $table.cachedAt, builder: (column) => column);
@@ -10902,6 +10977,7 @@ class $$CachedReaderBooksTableTableManager
                 Value<String> chaptersJson = const Value.absent(),
                 Value<int> totalChars = const Value.absent(),
                 Value<String> itemType = const Value.absent(),
+                Value<String> cacheVersion = const Value.absent(),
                 Value<DateTime> cachedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CachedReaderBooksCompanion(
@@ -10914,6 +10990,7 @@ class $$CachedReaderBooksTableTableManager
                 chaptersJson: chaptersJson,
                 totalChars: totalChars,
                 itemType: itemType,
+                cacheVersion: cacheVersion,
                 cachedAt: cachedAt,
                 rowid: rowid,
               ),
@@ -10928,6 +11005,7 @@ class $$CachedReaderBooksTableTableManager
                 Value<String> chaptersJson = const Value.absent(),
                 Value<int> totalChars = const Value.absent(),
                 Value<String> itemType = const Value.absent(),
+                Value<String> cacheVersion = const Value.absent(),
                 required DateTime cachedAt,
                 Value<int> rowid = const Value.absent(),
               }) => CachedReaderBooksCompanion.insert(
@@ -10940,6 +11018,7 @@ class $$CachedReaderBooksTableTableManager
                 chaptersJson: chaptersJson,
                 totalChars: totalChars,
                 itemType: itemType,
+                cacheVersion: cacheVersion,
                 cachedAt: cachedAt,
                 rowid: rowid,
               ),

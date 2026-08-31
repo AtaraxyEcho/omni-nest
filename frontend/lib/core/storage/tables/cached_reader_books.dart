@@ -32,6 +32,12 @@ class CachedReaderBooks extends Table {
   /// 文件类型（EPUB/TXT/PDF）
   TextColumn get itemType => text().withDefault(const Constant('EPUB'))();
 
+  /// 缓存版本指纹（条目 updatedAt）。
+  ///
+  /// 服务端重新解析会更新条目 updatedAt；版本不符时丢弃元数据与章节
+  /// 切片缓存，避免 TXT 字符偏移变化后继续命中错位的旧章节内容。
+  TextColumn get cacheVersion => text().withDefault(const Constant(''))();
+
   /// 缓存创建时间
   DateTimeColumn get cachedAt => dateTime()();
 

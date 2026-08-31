@@ -616,15 +616,14 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
       }
     }
     if (chapterMatch != null) return chapterMatch;
-    final chapterData = contentLoader?.getByChapterId(currentChapterId);
-    final maxChars = chapterData?.totalChars ?? 0;
-    ReaderProgressSnapshot? generic;
-    for (final s in all) {
-      if (s.chapterId.isEmpty && (maxChars <= 0 || s.charOffset < maxChars)) {
-        generic = ReaderProgressSnapshot.latest(generic, s);
-      }
+    // chapterId 为空的 generic 快照无法证明属于当前章节，施加会把
+    // 服务端旧数据错映射到任意打开的章节；只记录观测日志不再回退。
+    if (all.any((s) => s.chapterId.isEmpty) && kDebugMode) {
+      readerDebugLog(
+        'ProgressLoad: generic snapshot ignored for $currentChapterId',
+      );
     }
-    return generic;
+    return null;
   }
 
   /// 构建当前阅读进度快照。

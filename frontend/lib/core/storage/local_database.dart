@@ -52,7 +52,7 @@ class LocalDatabase extends _$LocalDatabase {
     : super(executor ?? connection.openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration {
@@ -182,6 +182,21 @@ class LocalDatabase extends _$LocalDatabase {
           if (annotationColumns.isNotEmpty && !hasChapterId) {
             await migrator.database.customStatement(
               'ALTER TABLE cached_reader_annotations ADD COLUMN chapter_id TEXT',
+            );
+          }
+        }
+        // Schema v18：书籍元数据缓存增加版本指纹，服务端重解析后失效旧缓存。
+        if (from < 18) {
+          final bookColumns =
+              await migrator.database
+                  .customSelect("PRAGMA table_info('cached_reader_books')")
+                  .get();
+          final hasCacheVersion = bookColumns.any(
+            (row) => row.read<String>('name') == 'cache_version',
+          );
+          if (bookColumns.isNotEmpty && !hasCacheVersion) {
+            await migrator.database.customStatement(
+              "ALTER TABLE cached_reader_books ADD COLUMN cache_version TEXT NOT NULL DEFAULT ''",
             );
           }
         }

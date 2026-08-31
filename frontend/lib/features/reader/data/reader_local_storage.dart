@@ -317,6 +317,7 @@ class ReaderLocalStorage {
     required String chaptersJson,
     required int totalChars,
     required String itemType,
+    String cacheVersion = '',
   }) async {
     await _db
         .into(_db.cachedReaderBooks)
@@ -331,6 +332,7 @@ class ReaderLocalStorage {
             chaptersJson: Value(chaptersJson),
             totalChars: Value(totalChars),
             itemType: Value(itemType),
+            cacheVersion: Value(cacheVersion),
             cachedAt: DateTime.now(),
           ),
         );
@@ -351,6 +353,7 @@ class ReaderLocalStorage {
       'chaptersJson': row.chaptersJson,
       'totalChars': row.totalChars,
       'itemType': row.itemType,
+      'cacheVersion': row.cacheVersion,
       'cachedAt': row.cachedAt.toIso8601String(),
     };
   }
@@ -401,6 +404,13 @@ class ReaderLocalStorage {
   Future<void> deleteChaptersForItem(String itemId) async {
     await (_db.delete(_db.cachedReaderChapters)
       ..where((t) => t.itemId.equals(itemId))).go();
+  }
+
+  /// 删除单个章节的缓存内容，损坏章节精准清理时避免整本书失效。
+  Future<void> deleteChapter(String itemId, String contentPath) async {
+    await (_db.delete(_db.cachedReaderChapters)..where(
+      (t) => t.itemId.equals(itemId) & t.contentPath.equals(contentPath),
+    )).go();
   }
 
   /// 清理超过指定天数的章节缓存

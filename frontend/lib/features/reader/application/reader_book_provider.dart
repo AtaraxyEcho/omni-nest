@@ -260,7 +260,21 @@ final parsedBookProvider = FutureProvider.autoDispose.family<
 
     // ── Layer 2: SQLite 持久化缓存命中 ──
     final localStorage = ref.read(readerLocalStorageProvider);
-    final cachedMeta = await localStorage.loadBookMeta(itemId);
+    var cachedMeta = await localStorage.loadBookMeta(itemId);
+    // 服务端重解析会更新条目 updatedAt；版本不符说明章节偏移/目录可能
+    // 已变化，元数据与章节切片缓存一并失效，避免继续命中错位内容。
+    final cacheVersion = detail.item.updatedAt?.toIso8601String() ?? '';
+    if (cachedMeta != null &&
+        (cachedMeta['cacheVersion']?.toString() ?? '') != cacheVersion) {
+      if (kDebugMode) {
+        readerDebugLog(
+          'parsedBookProvider: cache version mismatch for $itemId, purging',
+        );
+      }
+      await localStorage.deleteBookMeta(itemId);
+      await localStorage.deleteChaptersForItem(itemId);
+      cachedMeta = null;
+    }
     if (cachedMeta != null && (itemType == 'EPUB' || itemType == 'TXT')) {
       if (kDebugMode) {
         readerDebugLog('parsedBookProvider: SQLite cache hit for $itemId');
@@ -292,7 +306,13 @@ final parsedBookProvider = FutureProvider.autoDispose.family<
     final book = await _awaitServerTextManifest(api, itemId);
 
     // 写入 SQLite 持久化缓存
-    await _saveBookMetaToSqlite(localStorage, itemId, book, itemType: itemType);
+    await _saveBookMetaToSqlite(
+      localStorage,
+      itemId,
+      book,
+      itemType: itemType,
+      cacheVersion: cacheVersion,
+    );
 
     // 写入内存 LRU
     memoryCache.write(itemId, book);
@@ -484,15 +504,19 @@ Future<ReaderChapterContent?> getChapterContent(
     contentPath: cacheKey,
   );
   if (cachedHtml != null && cachedHtml.isNotEmpty) {
-    // 缓存有效性检查：内容过短说明缓存损坏（旧版 bug），清除后重新加载
-    if (cachedHtml.length < 200 && matched.charCount > 200) {
+    // 缓存有效性检查：正文长度与解析字符数占比过低说明缓存损坏
+    //（截断、乱码、错章），精准删除该章后重新加载，不清空整本书。
+    final expectedChars = matched.charCount;
+    final isCorrupted =
+        expectedChars > 500 && cachedHtml.length < expectedChars * 0.5;
+    if (isCorrupted) {
       if (kDebugMode) {
         readerDebugLog(
           'BookProvider: cache invalid — "${matched.title}" '
-          'cached=${cachedHtml.length} chars, expected=${matched.charCount}. Clearing.',
+          'cached=${cachedHtml.length} chars, expected=$expectedChars. Purging chapter.',
         );
       }
-      await localStorage.deleteChaptersForItem(itemId);
+      await localStorage.deleteChapter(itemId, cacheKey);
     } else {
       if (kDebugMode) {
         readerDebugLog(
@@ -611,6 +635,7 @@ Future<void> _saveBookMetaToSqlite(
   String itemId,
   ParsedBook book, {
   String itemType = 'EPUB',
+  String cacheVersion = '',
 }) async {
   try {
     final chaptersJson = jsonEncode(
@@ -638,6 +663,7 @@ Future<void> _saveBookMetaToSqlite(
       chaptersJson: chaptersJson,
       totalChars: book.chapters.fold<int>(0, (s, c) => s + c.charCount),
       itemType: itemType,
+      cacheVersion: cacheVersion,
     );
     if (kDebugMode) {
       readerDebugLog('BookProvider: saved book meta to SQLite for $itemId');
