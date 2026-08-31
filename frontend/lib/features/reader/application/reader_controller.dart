@@ -8,7 +8,7 @@ import 'package:omninest/core/storage/local_database_provider.dart';
 import 'package:omninest/features/reader/application/reader_cache_providers.dart';
 import 'package:omninest/features/reader/application/reader_data_manager.dart';
 import 'package:omninest/features/reader/application/reader_parsed_book_cache.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 import 'package:omninest/features/reader/data/reader_api.dart';
 import 'package:omninest/features/reader/data/reader_image_cache.dart';
 import 'package:omninest/features/reader/data/reader_local_storage.dart';
@@ -199,10 +199,11 @@ class ReaderCenterController extends AsyncNotifier<ReaderCenterState> {
     ReaderSortBy sortBy = ReaderSortBy.recent,
     bool loadBookmarks = true,
   }) async {
-    _partialErrors.clear();
+    // 错误随本次加载局部收集，实例字段会被并发 refresh 互相污染
+    final partialErrors = <String>[];
     final results = await Future.wait([
-      _safe(_api.dashboard, ReaderDashboard.empty()),
-      _safe(() => _api.items(), <ReaderItem>[]),
+      _safe(_api.dashboard, ReaderDashboard.empty(), partialErrors),
+      _safe(() => _api.items(), <ReaderItem>[], partialErrors),
     ]);
     final dashboard = results[0] as ReaderDashboard;
     final items = results[1] as List<ReaderItem>;
@@ -210,7 +211,7 @@ class ReaderCenterController extends AsyncNotifier<ReaderCenterState> {
     // 书签按条目加载（API 仅支持单条目查询）；实时刷新复用现有列表
     final bookmarks =
         loadBookmarks
-            ? await _loadAllBookmarks(items)
+            ? await _loadAllBookmarks(items, partialErrors)
             : state.asData?.value.bookmarks ?? const <ReaderBookmark>[];
 
     return ReaderCenterState(
@@ -220,28 +221,37 @@ class ReaderCenterController extends AsyncNotifier<ReaderCenterState> {
       searchQuery: searchQuery,
       sortBy: sortBy,
       bookmarks: bookmarks,
-      errorMessage: _partialErrors.isEmpty ? null : _partialErrors.join('；'),
+      errorMessage: partialErrors.isEmpty ? null : partialErrors.join('；'),
     );
   }
 
   /// 批量加载所有条目的书签
-  Future<List<ReaderBookmark>> _loadAllBookmarks(List<ReaderItem> items) async {
+  Future<List<ReaderBookmark>> _loadAllBookmarks(
+    List<ReaderItem> items,
+    List<String> partialErrors,
+  ) async {
     if (items.isEmpty) return const [];
     final futures = items.map(
-      (item) => _safe(() => _api.bookmarks(item.id), <ReaderBookmark>[]),
+      (item) => _safe(
+        () => _api.bookmarks(item.id),
+        <ReaderBookmark>[],
+        partialErrors,
+      ),
     );
     final results = await Future.wait(futures);
     return results.expand((list) => list).toList();
   }
 
-  final List<String> _partialErrors = [];
-
-  /// 安全执行异步调用，失败时返回 fallback 值
-  Future<T> _safe<T>(Future<T> Function() call, T fallback) async {
+  /// 安全执行异步调用，失败时记录到调用方传入的错误列表并返回 fallback
+  Future<T> _safe<T>(
+    Future<T> Function() call,
+    T fallback,
+    List<String> partialErrors,
+  ) async {
     try {
       return await call();
     } on Exception catch (e) {
-      _partialErrors.add(describeUserFacingError(e).message);
+      partialErrors.add(describeUserFacingError(e).message);
       return fallback;
     }
   }

@@ -569,6 +569,14 @@ class _SearchIconButton extends StatelessWidget {
   void _showSearchDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
+    // dispose 兜底标记：dialog future 异常中断时控制器也不会重复释放
+    var controllerDisposed = false;
+    void disposeController() {
+      if (controllerDisposed) return;
+      controllerDisposed = true;
+      controller.dispose();
+    }
+
     showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -602,7 +610,7 @@ class _SearchIconButton extends StatelessWidget {
           ),
         );
       },
-    ).then((_) => controller.dispose());
+    ).whenComplete(disposeController);
   }
 }
 

@@ -1,3 +1,5 @@
+import 'dart:collection';
+import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -135,7 +137,10 @@ class ReaderContentImage extends StatelessWidget {
         }
         return _buildError();
       }
-      final bytes = base64Decode(block.src.substring(commaIndex + 1));
+      final bytes = _dataUriDecodeCache.decode(
+        block.src,
+        () => base64Decode(block.src.substring(commaIndex + 1)),
+      );
       if (kDebugMode) {
         readerDebugLog(
           'ViewContent: rendering data URI image — '
@@ -237,3 +242,34 @@ class _CachedReaderImage extends ConsumerWidget {
     );
   }
 }
+
+/// data URI 解码结果缓存。
+///
+/// 遗留缓存数据里的内嵌图片会在滚动重渲染时反复 build；按字节预算
+/// 缓存解码结果，避免同一张大图每帧重新 base64 解码。
+class _DataUriDecodeCache {
+  static final _DataUriDecodeCache instance = _DataUriDecodeCache._();
+
+  _DataUriDecodeCache._();
+
+  static const _maxCacheBytes = 32 * 1024 * 1024;
+  final LinkedHashMap<String, Uint8List> _entries = LinkedHashMap();
+
+  Uint8List decode(String dataUri, Uint8List Function() decode) {
+    final cached = _entries.remove(dataUri);
+    if (cached != null) {
+      _entries[dataUri] = cached; // 重新插入尾部维持 LRU 顺序
+      return cached;
+    }
+    final bytes = decode();
+    _entries[dataUri] = bytes;
+    var totalBytes = _entries.values.fold<int>(0, (sum, v) => sum + v.length);
+    while (totalBytes > _maxCacheBytes && _entries.isNotEmpty) {
+      final oldest = _entries.keys.first;
+      totalBytes -= _entries.remove(oldest)!.length;
+    }
+    return bytes;
+  }
+}
+
+final _dataUriDecodeCache = _DataUriDecodeCache.instance;

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/features/reader/application/reader_controller.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 import 'package:omninest/features/reader/data/reader_api.dart';
 
 /// 阅读进度远端同步与离线降级服务。

@@ -4,7 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:omninest/core/storage/local_database.dart';
 import 'package:omninest/features/reader/application/reader_comic_service.dart';
 import 'package:omninest/features/reader/application/reader_progress_sync_service.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 import 'package:omninest/features/reader/data/reader_api.dart';
 import 'package:omninest/features/reader/domain/reader_models.dart';
 

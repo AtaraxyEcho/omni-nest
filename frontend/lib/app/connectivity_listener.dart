@@ -9,7 +9,7 @@ import 'package:omninest/features/files/data/file_api.dart';
 import 'package:omninest/features/music/data/music_api.dart';
 import 'package:omninest/features/music/data/music_progress_repository.dart';
 import 'package:omninest/features/reader/data/reader_api.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 
 /// 网络状态监听器：网络恢复时触发同步队列重放。
 class ConnectivityListener {

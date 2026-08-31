@@ -12,7 +12,7 @@ import 'package:omninest/features/music/data/music_api.dart';
 import 'package:omninest/features/music/data/music_progress_repository.dart';
 import 'package:omninest/features/music/domain/music_models.dart';
 import 'package:omninest/features/reader/data/reader_api.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 
 class MockReaderApi extends Mock implements ReaderApi {}
 

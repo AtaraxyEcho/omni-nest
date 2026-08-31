@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:omninest/features/reader/data/reader_api.dart';
 import 'package:omninest/features/reader/data/reader_local_storage.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 import 'package:omninest/features/reader/domain/reader_annotation.dart';
 import 'package:omninest/features/reader/domain/reader_bookmark.dart';
 import 'package:omninest/features/reader/domain/reader_note.dart';

@@ -5,7 +5,7 @@ import 'package:omninest/core/storage/local_database.dart';
 import 'package:omninest/features/reader/data/reader_api.dart';
 import 'package:omninest/features/reader/application/reader_data_manager.dart';
 import 'package:omninest/features/reader/data/reader_local_storage.dart';
-import 'package:omninest/features/reader/application/reader_sync_queue.dart';
+import 'package:omninest/features/reader/data/reader_sync_queue.dart';
 import 'package:omninest/features/reader/domain/reader_models.dart';
 
 class MockReaderApi extends Mock implements ReaderApi {}
