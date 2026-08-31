@@ -17,7 +17,7 @@ class _PhotoMobileSectionBar extends StatelessWidget {
       PhotoTab.timeline,
       PhotoTab.albums,
       PhotoTab.people,
-      PhotoTab.galaxy,
+      PhotoTab.graph,
     ];
     return SizedBox(
       height: 60,
@@ -37,7 +37,7 @@ class _PhotoMobileSectionBar extends StatelessWidget {
               PhotoTab.timeline => l10n.photosTabTimeline,
               PhotoTab.albums => l10n.photosTabAlbums,
               PhotoTab.people => l10n.photosTabPeople,
-              PhotoTab.galaxy => l10n.photosTabGalaxy,
+              PhotoTab.graph => l10n.photosTabGraph,
               _ => l10n.photosAll,
             }),
           );
@@ -86,7 +86,7 @@ class _PhotoTopBar extends StatelessWidget {
                   AppLocalizations.of(context).photosTabFavorites,
                 PhotoTab.timeline =>
                   AppLocalizations.of(context).photosTabTimeline,
-                PhotoTab.galaxy => AppLocalizations.of(context).photosTabGalaxy,
+                PhotoTab.graph => AppLocalizations.of(context).photosTabGraph,
                 PhotoTab.albums => AppLocalizations.of(context).photosTabAlbums,
                 _ => 'Photos',
               },

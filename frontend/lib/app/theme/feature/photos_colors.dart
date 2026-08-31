@@ -27,13 +27,6 @@ class PhotosColors extends ThemeExtension<PhotosColors> {
     required this.slideshowBg,
     required this.slideshowText,
     required this.slideshowMuted,
-    required this.galaxyCanvas,
-    required this.galaxyCanvasRaised,
-    required this.galaxyOnCanvas,
-    required this.galaxyMuted,
-    required this.galaxyLine,
-    required this.galaxyGlow,
-    required this.galaxyPlaceholder,
   });
 
   final Color surface;
@@ -59,18 +52,9 @@ class PhotosColors extends ThemeExtension<PhotosColors> {
   final Color slideshowBg;
   final Color slideshowText;
   final Color slideshowMuted;
-  final Color galaxyCanvas;
-  final Color galaxyCanvasRaised;
-  final Color galaxyOnCanvas;
-  final Color galaxyMuted;
-  final Color galaxyLine;
-  final Color galaxyGlow;
-  final Color galaxyPlaceholder;
 
   /// 从全局主题色派生 Photos 模块专属色
   factory PhotosColors.fromGlobal(GlobalThemeColors base) {
-    final isDark =
-        ThemeData.estimateBrightnessForColor(base.surface) == Brightness.dark;
     return PhotosColors(
       surface: base.surface,
       surfaceContainerLow: base.surfaceContainerLow,
@@ -99,21 +83,6 @@ class PhotosColors extends ThemeExtension<PhotosColors> {
       slideshowBg: const Color(0xFF000000),
       slideshowText: const Color(0xFFFFFFFF),
       slideshowMuted: const Color(0xB3FFFFFF),
-      galaxyCanvas:
-          isDark ? base.surfaceContainerLowest : base.surfaceContainerLow,
-      galaxyCanvasRaised:
-          isDark ? base.surfaceContainer : base.surfaceContainerLowest,
-      galaxyOnCanvas: base.onSurface,
-      galaxyMuted: base.onSurfaceVariant,
-      galaxyLine: Color.alphaBlend(
-        base.accentCool.withValues(alpha: isDark ? 0.34 : 0.22),
-        isDark ? base.surfaceContainerLowest : base.surfaceContainerLow,
-      ),
-      galaxyGlow: base.accentCool.withValues(alpha: isDark ? 0.52 : 0.34),
-      galaxyPlaceholder: Color.alphaBlend(
-        base.accentCool.withValues(alpha: isDark ? 0.14 : 0.10),
-        isDark ? base.surfaceContainer : base.surfaceContainerHighest,
-      ),
     );
   }
 
@@ -144,13 +113,6 @@ class PhotosColors extends ThemeExtension<PhotosColors> {
     Color? slideshowBg,
     Color? slideshowText,
     Color? slideshowMuted,
-    Color? galaxyCanvas,
-    Color? galaxyCanvasRaised,
-    Color? galaxyOnCanvas,
-    Color? galaxyMuted,
-    Color? galaxyLine,
-    Color? galaxyGlow,
-    Color? galaxyPlaceholder,
   }) {
     return PhotosColors(
       surface: surface ?? this.surface,
@@ -177,13 +139,6 @@ class PhotosColors extends ThemeExtension<PhotosColors> {
       slideshowBg: slideshowBg ?? this.slideshowBg,
       slideshowText: slideshowText ?? this.slideshowText,
       slideshowMuted: slideshowMuted ?? this.slideshowMuted,
-      galaxyCanvas: galaxyCanvas ?? this.galaxyCanvas,
-      galaxyCanvasRaised: galaxyCanvasRaised ?? this.galaxyCanvasRaised,
-      galaxyOnCanvas: galaxyOnCanvas ?? this.galaxyOnCanvas,
-      galaxyMuted: galaxyMuted ?? this.galaxyMuted,
-      galaxyLine: galaxyLine ?? this.galaxyLine,
-      galaxyGlow: galaxyGlow ?? this.galaxyGlow,
-      galaxyPlaceholder: galaxyPlaceholder ?? this.galaxyPlaceholder,
     );
   }
 
@@ -226,15 +181,6 @@ class PhotosColors extends ThemeExtension<PhotosColors> {
       slideshowBg: Color.lerp(slideshowBg, other.slideshowBg, t)!,
       slideshowText: Color.lerp(slideshowText, other.slideshowText, t)!,
       slideshowMuted: Color.lerp(slideshowMuted, other.slideshowMuted, t)!,
-      galaxyCanvas: Color.lerp(galaxyCanvas, other.galaxyCanvas, t)!,
-      galaxyCanvasRaised:
-          Color.lerp(galaxyCanvasRaised, other.galaxyCanvasRaised, t)!,
-      galaxyOnCanvas: Color.lerp(galaxyOnCanvas, other.galaxyOnCanvas, t)!,
-      galaxyMuted: Color.lerp(galaxyMuted, other.galaxyMuted, t)!,
-      galaxyLine: Color.lerp(galaxyLine, other.galaxyLine, t)!,
-      galaxyGlow: Color.lerp(galaxyGlow, other.galaxyGlow, t)!,
-      galaxyPlaceholder:
-          Color.lerp(galaxyPlaceholder, other.galaxyPlaceholder, t)!,
     );
   }
 }

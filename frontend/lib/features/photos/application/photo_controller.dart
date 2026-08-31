@@ -1053,6 +1053,42 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     return merged.take(targetLength).toList(growable: false);
   }
 
+  /// 加载关系图谱节点与边（自洽数据，不依赖分页列表）。
+  Future<void> loadRelationGraph({bool force = false}) async {
+    final current = state.asData?.value;
+    if (current == null) return;
+    if (!force && current.relationGraph.nodes.isNotEmpty) return;
+    if (current.isLoadingRelationGraph) return;
+    state = AsyncData(
+      current.copyWith(
+        isLoadingRelationGraph: true,
+        clearRelationGraphError: true,
+      ),
+    );
+    try {
+      final graph = await _repo.getRelationGraph();
+      final latest = state.asData?.value;
+      if (latest == null) return;
+      state = AsyncData(
+        latest.copyWith(
+          relationGraph: graph,
+          isLoadingRelationGraph: false,
+          clearRelationGraphError: true,
+        ),
+      );
+    } on Exception catch (e) {
+      final latest = state.asData?.value;
+      if (latest != null) {
+        state = AsyncData(
+          latest.copyWith(
+            isLoadingRelationGraph: false,
+            relationGraphError: describeUserFacingError(e).message,
+          ),
+        );
+      }
+    }
+  }
+
   /// 加载指定维度的首个分组页。
   Future<void> loadGroups(GroupBy by, {bool force = false}) async {
     final current = state.asData?.value;

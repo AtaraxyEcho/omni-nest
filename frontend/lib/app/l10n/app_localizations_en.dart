@@ -5806,9 +5806,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosTabTimeline => 'Timeline';
 
   @override
-  String get photosTabGalaxy => 'Galaxy';
-
-  @override
   String get photosTabAlbums => 'Albums';
 
   @override
@@ -5818,69 +5815,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosTabGroups => 'Groups';
 
   @override
-  String get photosTabMemories => 'Memories';
+  String get photosTabGraph => 'Graph';
 
   @override
-  String get photosGalaxyFilter => 'Filter galaxy relations';
+  String get photosGraphFilter => 'Filter nodes';
 
   @override
-  String photosGalaxySearchActive(Object query) {
+  String photosGraphSearchActive(Object query) {
     return 'Filtering for \"$query\"';
   }
 
   @override
-  String get photosGalaxyModeAll => 'All';
+  String get photosGraphKindAlbum => 'Albums';
 
   @override
-  String get photosGalaxyModeTime => 'Time';
+  String get photosGraphKindTime => 'Time';
 
   @override
-  String get photosGalaxyModeLocation => 'Places';
+  String get photosGraphKindLocation => 'Places';
 
   @override
-  String get photosGalaxyModePeople => 'People';
+  String get photosGraphKindPerson => 'People';
 
   @override
-  String get photosGalaxyEmpty => 'No photo relationships are available yet.';
+  String get photosGraphEmpty => 'No photo relationships are available yet.';
 
   @override
-  String get photosGalaxyNoSearchResults => 'No galaxies match your search.';
+  String get photosGraphNoSearchResults => 'No nodes match your search.';
 
   @override
-  String get photosGalaxyUnnamedAlbum => 'Untitled album';
+  String get photosGraphUnnamedAlbum => 'Untitled album';
 
   @override
-  String get photosGalaxyUnnamedGroup => 'Untitled group';
+  String get photosGraphUnnamedPerson => 'Unknown person';
 
   @override
-  String get photosGalaxyUnnamedPerson => 'Unknown person';
+  String get photosGraphBack => 'Back to graph';
 
   @override
-  String get photosGalaxyUnsorted => 'Unsorted memories';
+  String get photosGraphOpenAlbum => 'Open album';
 
   @override
-  String get photosGalaxyBack => 'Back to universe';
+  String get photosGraphViewPhoto => 'View photo';
 
   @override
-  String get photosGalaxyOpenAlbum => 'Open album';
-
-  @override
-  String get photosGalaxyViewPhoto => 'View photo';
-
-  @override
-  String photosGalaxyPhotoCount(Object count) {
+  String photosGraphPhotoCount(Object count) {
     return '$count photos';
   }
 
   @override
-  String photosGalaxyFaceCount(Object count) {
+  String photosGraphFaceCount(Object count) {
     return '$count faces';
   }
 
   @override
-  String photosGalaxyShowing(Object shown, Object total) {
+  String photosGraphShowing(Object shown, Object total) {
     return 'Showing $shown of $total';
   }
+
+  @override
+  String get photosGraphLoadMore => 'Load more';
+
+  @override
+  String get photosGraphTruncated =>
+      'Large graph: showing a subset of nodes and links.';
+
+  @override
+  String get photosTabMemories => 'Memories';
 
   @override
   String get photosClose => 'Close';

@@ -6,6 +6,7 @@ import 'package:omninest/features/photos/domain/photo_batch_download_ticket.dart
 import 'package:omninest/features/photos/domain/photo_edit_version.dart';
 import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
+import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_repository.dart';
 import 'package:omninest/features/photos/domain/photo_share_link.dart';
 import 'package:omninest/features/photos/domain/photo_timeline.dart';
@@ -104,6 +105,8 @@ class PhotoRepositoryImpl implements PhotoRepository {
       _api.getTimeline(page: page, size: size);
 
   @override
+  Future<PhotoRelationGraph> getRelationGraph() => _api.getRelationGraph();
+
   Future<PhotoGroupPage> getGroups(String by, {int page = 0, int size = 50}) =>
       _api.getGroups(by, page: page, size: size);
 

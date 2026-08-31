@@ -11,6 +11,7 @@ import 'package:omninest/features/photos/domain/photo_batch_download_ticket.dart
 import 'package:omninest/features/photos/domain/photo_edit_version.dart';
 import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
+import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_share_link.dart';
 import 'package:omninest/features/photos/domain/photo_timeline.dart';
 import 'package:omninest/features/tasks/domain/task_record.dart';
@@ -224,6 +225,14 @@ class PhotoApi {
   }
 
   /// 按维度分页查询照片分组。
+  /// 获取关系图谱节点与边。
+  Future<PhotoRelationGraph> getRelationGraph() async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/photos/relations',
+    );
+    return PhotoRelationGraph.fromJson(parseData(response.data));
+  }
+
   Future<PhotoGroupPage> getGroups(
     String by, {
     int page = 0,

@@ -89,7 +89,7 @@ class _PhotoContent extends ConsumerWidget {
                   onOpenPhoto: onOpenPhoto,
                   state: state,
                 ),
-                PhotoTab.galaxy => PhotoGalaxyView(
+                PhotoTab.graph => PhotoGraphView(
                   state: state,
                   onOpenPhoto: onOpenPhoto,
                   onOpenAlbum: onOpenAlbum,

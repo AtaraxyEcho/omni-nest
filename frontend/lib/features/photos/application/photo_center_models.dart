@@ -2,12 +2,13 @@ import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
+import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_timeline.dart';
 
 // -- 状态管理 --
 
 /// 照片中心的内容页签。
-enum PhotoTab { all, favorites, albums, timeline, groups, galaxy, people }
+enum PhotoTab { all, favorites, albums, timeline, groups, graph, people }
 
 /// 照片中心状态
 class PhotoCenterState {
@@ -25,6 +26,9 @@ class PhotoCenterState {
     this.isSelectionMode = false,
     this.faceClusters = const [],
     this.isLoadingFaceClusters = false,
+    this.relationGraph = PhotoRelationGraph.empty,
+    this.isLoadingRelationGraph = false,
+    this.relationGraphError,
     this.faceClusterError,
     this.photoPage = 0,
     this.favoritePage = 0,
@@ -71,6 +75,9 @@ class PhotoCenterState {
   final bool isSelectionMode;
   final List<PhotoFaceCluster> faceClusters;
   final bool isLoadingFaceClusters;
+  final PhotoRelationGraph relationGraph;
+  final bool isLoadingRelationGraph;
+  final String? relationGraphError;
   final String? faceClusterError;
   final int photoPage;
   final int favoritePage;
@@ -129,7 +136,7 @@ class PhotoCenterState {
       PhotoTab.albums => const <PhotoItem>[],
       PhotoTab.timeline => photos,
       PhotoTab.groups => photos,
-      PhotoTab.galaxy => photos,
+      PhotoTab.graph => photos,
       PhotoTab.people => const <PhotoItem>[],
     };
     final query = searchQuery.trim().toLowerCase();
@@ -156,6 +163,10 @@ class PhotoCenterState {
     Set<String>? selectedPhotoIds,
     bool? isSelectionMode,
     List<PhotoFaceCluster>? faceClusters,
+    PhotoRelationGraph? relationGraph,
+    bool? isLoadingRelationGraph,
+    String? relationGraphError,
+    bool clearRelationGraphError = false,
     bool? isLoadingFaceClusters,
     String? faceClusterError,
     int? photoPage,
@@ -198,6 +209,13 @@ class PhotoCenterState {
       selectedPhotoIds: selectedPhotoIds ?? this.selectedPhotoIds,
       isSelectionMode: isSelectionMode ?? this.isSelectionMode,
       faceClusters: faceClusters ?? this.faceClusters,
+      relationGraph: relationGraph ?? this.relationGraph,
+      isLoadingRelationGraph:
+          isLoadingRelationGraph ?? this.isLoadingRelationGraph,
+      relationGraphError:
+          clearRelationGraphError
+              ? null
+              : (relationGraphError ?? this.relationGraphError),
       isLoadingFaceClusters:
           isLoadingFaceClusters ?? this.isLoadingFaceClusters,
       faceClusterError:

@@ -65,7 +65,7 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
                     enabled:
                         currentTab == PhotoTab.all ||
                         currentTab == PhotoTab.favorites ||
-                        currentTab == PhotoTab.galaxy,
+                        currentTab == PhotoTab.graph,
                     onChanged: onSearchChanged,
                     style: TextStyle(color: colors.onSurface, fontSize: 13),
                     decoration: InputDecoration(
@@ -177,7 +177,7 @@ const List<(IconData, PhotoTab)> _desktopNavEntries = [
   (Icons.auto_awesome_outlined, PhotoTab.timeline),
   (Icons.category_outlined, PhotoTab.groups),
   (Icons.people_outline, PhotoTab.people),
-  (Icons.auto_awesome_outlined, PhotoTab.galaxy),
+  (Icons.auto_awesome_outlined, PhotoTab.graph),
 ];
 
 String _desktopNavLabel(BuildContext context, PhotoTab tab) {
@@ -188,7 +188,7 @@ String _desktopNavLabel(BuildContext context, PhotoTab tab) {
     PhotoTab.favorites => l10n.photosTabFavorites,
     PhotoTab.timeline => l10n.photosTabMemories,
     PhotoTab.people => l10n.photosTabPeople,
-    PhotoTab.galaxy => l10n.photosTabGalaxy,
+    PhotoTab.graph => l10n.photosTabGraph,
     PhotoTab.groups => l10n.photosTabGroups,
   };
 }

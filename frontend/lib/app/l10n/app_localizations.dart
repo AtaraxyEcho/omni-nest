@@ -10639,12 +10639,6 @@ abstract class AppLocalizations {
   /// **'Timeline'**
   String get photosTabTimeline;
 
-  /// No description provided for @photosTabGalaxy.
-  ///
-  /// In en, this message translates to:
-  /// **'Galaxy'**
-  String get photosTabGalaxy;
-
   /// No description provided for @photosTabAlbums.
   ///
   /// In en, this message translates to:
@@ -10663,119 +10657,125 @@ abstract class AppLocalizations {
   /// **'Groups'**
   String get photosTabGroups;
 
+  /// No description provided for @photosTabGraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Graph'**
+  String get photosTabGraph;
+
+  /// No description provided for @photosGraphFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter nodes'**
+  String get photosGraphFilter;
+
+  /// No description provided for @photosGraphSearchActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Filtering for \"{query}\"'**
+  String photosGraphSearchActive(Object query);
+
+  /// No description provided for @photosGraphKindAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Albums'**
+  String get photosGraphKindAlbum;
+
+  /// No description provided for @photosGraphKindTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get photosGraphKindTime;
+
+  /// No description provided for @photosGraphKindLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get photosGraphKindLocation;
+
+  /// No description provided for @photosGraphKindPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get photosGraphKindPerson;
+
+  /// No description provided for @photosGraphEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo relationships are available yet.'**
+  String get photosGraphEmpty;
+
+  /// No description provided for @photosGraphNoSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No nodes match your search.'**
+  String get photosGraphNoSearchResults;
+
+  /// No description provided for @photosGraphUnnamedAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Untitled album'**
+  String get photosGraphUnnamedAlbum;
+
+  /// No description provided for @photosGraphUnnamedPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown person'**
+  String get photosGraphUnnamedPerson;
+
+  /// No description provided for @photosGraphBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to graph'**
+  String get photosGraphBack;
+
+  /// No description provided for @photosGraphOpenAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Open album'**
+  String get photosGraphOpenAlbum;
+
+  /// No description provided for @photosGraphViewPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'View photo'**
+  String get photosGraphViewPhoto;
+
+  /// No description provided for @photosGraphPhotoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} photos'**
+  String photosGraphPhotoCount(Object count);
+
+  /// No description provided for @photosGraphFaceCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} faces'**
+  String photosGraphFaceCount(Object count);
+
+  /// No description provided for @photosGraphShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {shown} of {total}'**
+  String photosGraphShowing(Object shown, Object total);
+
+  /// No description provided for @photosGraphLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get photosGraphLoadMore;
+
+  /// No description provided for @photosGraphTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Large graph: showing a subset of nodes and links.'**
+  String get photosGraphTruncated;
+
   /// No description provided for @photosTabMemories.
   ///
   /// In en, this message translates to:
   /// **'Memories'**
   String get photosTabMemories;
-
-  /// No description provided for @photosGalaxyFilter.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter galaxy relations'**
-  String get photosGalaxyFilter;
-
-  /// No description provided for @photosGalaxySearchActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Filtering for \"{query}\"'**
-  String photosGalaxySearchActive(Object query);
-
-  /// No description provided for @photosGalaxyModeAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get photosGalaxyModeAll;
-
-  /// No description provided for @photosGalaxyModeTime.
-  ///
-  /// In en, this message translates to:
-  /// **'Time'**
-  String get photosGalaxyModeTime;
-
-  /// No description provided for @photosGalaxyModeLocation.
-  ///
-  /// In en, this message translates to:
-  /// **'Places'**
-  String get photosGalaxyModeLocation;
-
-  /// No description provided for @photosGalaxyModePeople.
-  ///
-  /// In en, this message translates to:
-  /// **'People'**
-  String get photosGalaxyModePeople;
-
-  /// No description provided for @photosGalaxyEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No photo relationships are available yet.'**
-  String get photosGalaxyEmpty;
-
-  /// No description provided for @photosGalaxyNoSearchResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No galaxies match your search.'**
-  String get photosGalaxyNoSearchResults;
-
-  /// No description provided for @photosGalaxyUnnamedAlbum.
-  ///
-  /// In en, this message translates to:
-  /// **'Untitled album'**
-  String get photosGalaxyUnnamedAlbum;
-
-  /// No description provided for @photosGalaxyUnnamedGroup.
-  ///
-  /// In en, this message translates to:
-  /// **'Untitled group'**
-  String get photosGalaxyUnnamedGroup;
-
-  /// No description provided for @photosGalaxyUnnamedPerson.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown person'**
-  String get photosGalaxyUnnamedPerson;
-
-  /// No description provided for @photosGalaxyUnsorted.
-  ///
-  /// In en, this message translates to:
-  /// **'Unsorted memories'**
-  String get photosGalaxyUnsorted;
-
-  /// No description provided for @photosGalaxyBack.
-  ///
-  /// In en, this message translates to:
-  /// **'Back to universe'**
-  String get photosGalaxyBack;
-
-  /// No description provided for @photosGalaxyOpenAlbum.
-  ///
-  /// In en, this message translates to:
-  /// **'Open album'**
-  String get photosGalaxyOpenAlbum;
-
-  /// No description provided for @photosGalaxyViewPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'View photo'**
-  String get photosGalaxyViewPhoto;
-
-  /// No description provided for @photosGalaxyPhotoCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} photos'**
-  String photosGalaxyPhotoCount(Object count);
-
-  /// No description provided for @photosGalaxyFaceCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} faces'**
-  String photosGalaxyFaceCount(Object count);
-
-  /// No description provided for @photosGalaxyShowing.
-  ///
-  /// In en, this message translates to:
-  /// **'Showing {shown} of {total}'**
-  String photosGalaxyShowing(Object shown, Object total);
 
   /// No description provided for @photosClose.
   ///

@@ -29,7 +29,7 @@ import 'package:omninest/features/photos/presentation/widgets/photo_album_card.d
 import 'package:omninest/features/photos/presentation/widgets/photo_grid_tile.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_group_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_galaxy_view.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_graph_view.dart';
 import 'package:omninest/features/photos/presentation/pages/photo_faces_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -52,7 +52,7 @@ enum _PhotosNavDestination {
   home(Icons.home_outlined, Icons.home),
   favorites(Icons.favorite_outline, Icons.favorite),
   timeline(Icons.timeline_outlined, Icons.timeline),
-  galaxy(Icons.auto_awesome_outlined, Icons.auto_awesome);
+  graph(Icons.hub_outlined, Icons.hub_rounded);
 
   const _PhotosNavDestination(this.icon, this.selectedIcon);
 
@@ -65,7 +65,7 @@ enum _PhotosNavDestination {
       home => l10n.photosTabHome,
       favorites => l10n.photosTabFavorites,
       timeline => l10n.photosTabTimeline,
-      galaxy => l10n.photosTabGalaxy,
+      graph => l10n.photosTabGraph,
     };
   }
 }
@@ -76,7 +76,7 @@ PhotoTab _photoTabForDestination(_PhotosNavDestination dest) {
     _PhotosNavDestination.home => PhotoTab.all,
     _PhotosNavDestination.favorites => PhotoTab.favorites,
     _PhotosNavDestination.timeline => PhotoTab.timeline,
-    _PhotosNavDestination.galaxy => PhotoTab.galaxy,
+    _PhotosNavDestination.graph => PhotoTab.graph,
   };
 }
 
@@ -85,7 +85,7 @@ _PhotosNavDestination _destinationForPhotoTab(PhotoTab tab) {
   return switch (tab) {
     PhotoTab.favorites => _PhotosNavDestination.favorites,
     PhotoTab.timeline => _PhotosNavDestination.timeline,
-    PhotoTab.galaxy => _PhotosNavDestination.galaxy,
+    PhotoTab.graph => _PhotosNavDestination.graph,
     _ => _PhotosNavDestination.home,
   };
 }
@@ -375,7 +375,7 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                       }
                       // 时间线/星系：独立滚动内容 + 下拉刷新
                       if (data.tab == PhotoTab.timeline ||
-                          data.tab == PhotoTab.galaxy) {
+                          data.tab == PhotoTab.graph) {
                         return RefreshIndicator(
                           displacement: 40,
                           strokeWidth: 2.5,

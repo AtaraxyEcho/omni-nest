@@ -5620,9 +5620,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosTabTimeline => '时间线';
 
   @override
-  String get photosTabGalaxy => '星系';
-
-  @override
   String get photosTabAlbums => '相册';
 
   @override
@@ -5632,69 +5629,72 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosTabGroups => '分组';
 
   @override
-  String get photosTabMemories => '回忆';
+  String get photosTabGraph => '关系图谱';
 
   @override
-  String get photosGalaxyFilter => '筛选星系关系';
+  String get photosGraphFilter => '筛选节点类型';
 
   @override
-  String photosGalaxySearchActive(Object query) {
+  String photosGraphSearchActive(Object query) {
     return '正在筛选“$query”';
   }
 
   @override
-  String get photosGalaxyModeAll => '全部';
+  String get photosGraphKindAlbum => '相册';
 
   @override
-  String get photosGalaxyModeTime => '时间';
+  String get photosGraphKindTime => '时间';
 
   @override
-  String get photosGalaxyModeLocation => '地点';
+  String get photosGraphKindLocation => '地点';
 
   @override
-  String get photosGalaxyModePeople => '人物';
+  String get photosGraphKindPerson => '人物';
 
   @override
-  String get photosGalaxyEmpty => '暂时没有可用的照片关系。';
+  String get photosGraphEmpty => '暂时没有可展示的照片关系。';
 
   @override
-  String get photosGalaxyNoSearchResults => '没有匹配搜索条件的星系。';
+  String get photosGraphNoSearchResults => '没有匹配搜索条件的节点。';
 
   @override
-  String get photosGalaxyUnnamedAlbum => '未命名相册';
+  String get photosGraphUnnamedAlbum => '未命名相册';
 
   @override
-  String get photosGalaxyUnnamedGroup => '未命名分组';
+  String get photosGraphUnnamedPerson => '未知人物';
 
   @override
-  String get photosGalaxyUnnamedPerson => '未知人物';
+  String get photosGraphBack => '返回图谱';
 
   @override
-  String get photosGalaxyUnsorted => '未整理记忆';
+  String get photosGraphOpenAlbum => '打开相册';
 
   @override
-  String get photosGalaxyBack => '返回宇宙总览';
+  String get photosGraphViewPhoto => '查看照片';
 
   @override
-  String get photosGalaxyOpenAlbum => '打开相册';
-
-  @override
-  String get photosGalaxyViewPhoto => '查看照片';
-
-  @override
-  String photosGalaxyPhotoCount(Object count) {
+  String photosGraphPhotoCount(Object count) {
     return '$count 张照片';
   }
 
   @override
-  String photosGalaxyFaceCount(Object count) {
+  String photosGraphFaceCount(Object count) {
     return '$count 张人脸';
   }
 
   @override
-  String photosGalaxyShowing(Object shown, Object total) {
-    return '显示 $shown / $total';
+  String photosGraphShowing(Object shown, Object total) {
+    return '显示 $shown / $total 张';
   }
+
+  @override
+  String get photosGraphLoadMore => '加载更多';
+
+  @override
+  String get photosGraphTruncated => '关系较多，仅展示部分节点与连线。';
+
+  @override
+  String get photosTabMemories => '回忆';
 
   @override
   String get photosClose => '关闭';

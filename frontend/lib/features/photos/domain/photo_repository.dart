@@ -5,6 +5,7 @@ import 'package:omninest/features/photos/domain/photo_batch_download_ticket.dart
 import 'package:omninest/features/photos/domain/photo_edit_version.dart';
 import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
+import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_share_link.dart';
 import 'package:omninest/features/photos/domain/photo_timeline.dart';
 import 'package:omninest/features/tasks/domain/task_record.dart';
@@ -166,6 +167,9 @@ abstract interface class PhotoRepository {
 
   /// 获取聚类中的照片
   Future<List<PhotoItem>> getPhotosByCluster(String clusterId);
+
+  /// 获取关系图谱节点与边。
+  Future<PhotoRelationGraph> getRelationGraph();
 
   /// 为聚类命名
   Future<void> nameCluster(String clusterId, String name);

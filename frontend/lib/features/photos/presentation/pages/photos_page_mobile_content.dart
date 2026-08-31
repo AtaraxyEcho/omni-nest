@@ -70,7 +70,7 @@ class _PhotoIndependentContent extends StatelessWidget {
         state: state,
       ),
       PhotoTab.groups => PhotoGroupView(onOpenPhoto: onOpenPhoto, state: state),
-      PhotoTab.galaxy => PhotoGalaxyView(
+      PhotoTab.graph => PhotoGraphView(
         state: state,
         onOpenPhoto: onOpenPhoto,
         onOpenAlbum: onOpenAlbum,
