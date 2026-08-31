@@ -77,6 +77,7 @@ public class MovieLibraryService {
     private final MediaPlaybackProgressService progressService;
     private final FileDeletionService fileDeletionService;
     private final FileQueryService fileQueryService;
+    private final VideoCatalogMappers catalogMappers;
     private final ContentAssetService contentAssetService;
     private final MediaMovieRepository movieRepository;
     private final MediaTvEpisodeRepository episodeRepository;
@@ -495,63 +496,8 @@ public class MovieLibraryService {
         };
     }
 
-    private String resolveFileUrl(UUID ownerUserId, UUID fileId) {
-        try {
-            return fileQueryService.createDownloadUrl(ownerUserId, fileId).downloadUrl();
-        } catch (RuntimeException ex) {
-            log.debug("MinIO 资源 URL 解析失败，降级到外部 URL: fileId={}, message={}", fileId, ex.getMessage());
-            return null;
-        }
-    }
 
-    @SuppressWarnings("unchecked")
-    private List<String> extractGenreNames(List<Map<String, Object>> genres) {
-        if (genres == null || genres.isEmpty()) return List.of();
-        return genres.stream()
-                .map(g -> (String) g.get("name"))
-                .filter(name -> name != null && !name.isBlank())
-                .toList();
-    }
 
-    @SuppressWarnings("unchecked")
-    private List<CastMemberDto> toCastDtos(UUID ownerUserId, List<Map<String, Object>> castMembers) {
-        if (castMembers == null || castMembers.isEmpty()) return List.of();
-        return castMembers.stream()
-                .map(m -> new CastMemberDto(
-                        (String) m.get("name"),
-                        (String) m.get("character"),
-                        resolveProfileUrl(ownerUserId, m),
-                        m.get("order") instanceof Number n ? n.intValue() : null
-                ))
-                .toList();
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<CrewMemberDto> toCrewDtos(UUID ownerUserId, List<Map<String, Object>> crewMembers) {
-        if (crewMembers == null || crewMembers.isEmpty()) return List.of();
-        return crewMembers.stream()
-                .map(m -> new CrewMemberDto(
-                        (String) m.get("name"),
-                        (String) m.get("job"),
-                        (String) m.get("department"),
-                        resolveProfileUrl(ownerUserId, m)
-                ))
-                .toList();
-    }
-
-    private String resolveProfileUrl(UUID ownerUserId, Map<String, Object> memberMap) {
-        Object fileIdObj = memberMap.get("profileFileId");
-        if (fileIdObj instanceof String fileIdStr && !fileIdStr.isBlank()) {
-            try {
-                UUID fileId = UUID.fromString(fileIdStr);
-                String url = resolveFileUrl(ownerUserId, fileId);
-                if (url != null) return url;
-            } catch (IllegalArgumentException ignored) {
-                // profileFileId 格式异常，降级到 profilePath
-            }
-        }
-        return (String) memberMap.get("profilePath");
-    }
 
     private List<MovieSeriesDto> toSeriesDtos(UUID ownerUserId, List<MediaTvSeries> items) {
         if (items.isEmpty()) {
@@ -605,9 +551,9 @@ public class MovieLibraryService {
                 resolvedPosterUrl,
                 resolvedBackdropUrl,
                 safeAssets,
-                extractGenreNames(item.getGenres()),
-                toCastDtos(catalogOwnerUserId, item.getCastMembers()),
-                toCrewDtos(catalogOwnerUserId, item.getCrewMembers()),
+                catalogMappers.extractGenreNames(item.getGenres()),
+                catalogMappers.toCastDtos(catalogOwnerUserId, item.getCastMembers()),
+                catalogMappers.toCrewDtos(catalogOwnerUserId, item.getCrewMembers()),
                 item.getRating(),
                 item.getVoteCount(),
                 item.getContentRating(),
@@ -619,7 +565,7 @@ public class MovieLibraryService {
     private MovieSeasonDto toSeasonDto(UUID ownerUserId, MediaTvSeason season) {
         String posterUrl = null;
         if (season.getPosterFileId() != null) {
-            posterUrl = resolveFileUrl(ownerUserId, season.getPosterFileId());
+            posterUrl = catalogMappers.resolveFileUrl(ownerUserId, season.getPosterFileId());
         }
         return new MovieSeasonDto(
                 season.getId(),

@@ -79,12 +79,15 @@ class MovieLibraryServiceTest {
         return null;
     });
     // 使用真实 converter 配合 mock 的底层依赖，避免 spy 在具体类上的兼容问题
+    private final VideoCatalogMappers catalogMappers =
+            new VideoCatalogMappers(fileQueryService);
     private final VideoItemDtoConverter videoItemDtoConverter =
             new VideoItemDtoConverter(
                     movieRepository,
                     episodeRepository,
                     tvSeriesRepository,
                     fileQueryService,
+                    new VideoCatalogMappers(fileQueryService),
                     fileContentAvailabilityQueryService,
                     contentAssetRepository,
                     mediaPlaybackTokenService
@@ -97,6 +100,7 @@ class MovieLibraryServiceTest {
                     progressService,
                     fileDeletionService,
                     fileQueryService,
+                    catalogMappers,
                     contentAssetService,
                     movieRepository,
                     episodeRepository,

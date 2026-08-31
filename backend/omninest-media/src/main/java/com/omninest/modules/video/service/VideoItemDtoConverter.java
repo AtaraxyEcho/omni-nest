@@ -40,6 +40,7 @@ public class VideoItemDtoConverter {
     private final MediaTvEpisodeRepository episodeRepository;
     private final MediaTvSeriesRepository tvSeriesRepository;
     private final FileQueryService fileQueryService;
+    private final VideoCatalogMappers catalogMappers;
     private final FileContentAvailabilityQueryService fileContentAvailabilityQueryService;
     private final ContentAssetRepository contentAssetRepository;
     private final MediaPlaybackTokenService mediaPlaybackTokenService;
@@ -290,9 +291,9 @@ public class VideoItemDtoConverter {
             voteCount = movie.getVoteCount();
             contentRating = movie.getContentRating();
             tagline = movie.getTagline();
-            genres = extractGenreNames(movie.getGenres());
-            castMembers = toCastDtos(catalogOwnerUserId, movie.getCastMembers());
-            crewMembers = toCrewDtos(catalogOwnerUserId, movie.getCrewMembers());
+            genres = catalogMappers.extractGenreNames(movie.getGenres());
+            castMembers = catalogMappers.toCastDtos(catalogOwnerUserId, movie.getCastMembers());
+            crewMembers = catalogMappers.toCrewDtos(catalogOwnerUserId, movie.getCrewMembers());
             posterFileId = index.moviePosterAssetMap().get(movie.getId());
             backdropFileId = index.movieBackdropAssetMap().get(movie.getId());
             if (posterFileId == null) {
@@ -322,12 +323,12 @@ public class VideoItemDtoConverter {
                         backdropFileId = series.getBackdropFileId();
                     }
                     if (title == null || title.isBlank()) title = series.getTitle();
-                    if (genres.isEmpty()) genres = extractGenreNames(series.getGenres());
+                    if (genres.isEmpty()) genres = catalogMappers.extractGenreNames(series.getGenres());
                     if (castMembers.isEmpty()) {
-                        castMembers = toCastDtos(catalogOwnerUserId, series.getCastMembers());
+                        castMembers = catalogMappers.toCastDtos(catalogOwnerUserId, series.getCastMembers());
                     }
                     if (crewMembers.isEmpty()) {
-                        crewMembers = toCrewDtos(catalogOwnerUserId, series.getCrewMembers());
+                        crewMembers = catalogMappers.toCrewDtos(catalogOwnerUserId, series.getCrewMembers());
                     }
                     if (contentRating == null) contentRating = series.getContentRating();
                 }
@@ -404,7 +405,7 @@ public class VideoItemDtoConverter {
             originalTitle = movie.getOriginalTitle();
             releaseDate = movie.getReleaseDate();
             runtimeSeconds = movie.getRuntimeSeconds();
-            genres = extractGenreNames(movie.getGenres());
+            genres = catalogMappers.extractGenreNames(movie.getGenres());
             rating = movie.getRating();
             posterFileId = index.moviePosterAssetMap().get(movie.getId());
             if (posterFileId == null) {
@@ -419,7 +420,7 @@ public class VideoItemDtoConverter {
                 if (title == null || title.isBlank()) {
                     title = series.getTitle();
                 }
-                genres = extractGenreNames(series.getGenres());
+                genres = catalogMappers.extractGenreNames(series.getGenres());
                 posterFileId = index.seriesPosterAssetMap().get(series.getId());
                 if (posterFileId == null) {
                     posterFileId = series.getPosterFileId();
@@ -460,14 +461,6 @@ public class VideoItemDtoConverter {
         return fileContentAvailabilityQueryService.findAvailabilityByFileNodeIds(distinctIds);
     }
 
-    private String resolveFileUrl(UUID ownerUserId, UUID fileId) {
-        try {
-            return fileQueryService.createDownloadUrl(ownerUserId, fileId).downloadUrl();
-        } catch (RuntimeException ex) {
-            log.debug("MinIO 资源 URL 解析失败，降级到外部 URL: fileId={}, message={}", fileId, ex.getMessage());
-            return null;
-        }
-    }
 
     private String resolveAssetUrl(
             MediaVideoItem item,
@@ -478,61 +471,16 @@ public class VideoItemDtoConverter {
             return null;
         }
         if (item.getLibrarySourceId() == null) {
-            return resolveFileUrl(item.getOwnerUserId(), fileNodeId);
+            return catalogMappers.resolveFileUrl(item.getOwnerUserId(), fileNodeId);
         }
         return "/api/v1/public/video/items/" + item.getId()
                 + "/assets/" + fileNodeId + "?token=" + token.token();
     }
 
-    @SuppressWarnings("unchecked")
-    private List<String> extractGenreNames(List<Map<String, Object>> genres) {
-        if (genres == null || genres.isEmpty()) return List.of();
-        return genres.stream()
-                .map(g -> (String) g.get("name"))
-                .filter(name -> name != null && !name.isBlank())
-                .toList();
-    }
 
-    @SuppressWarnings("unchecked")
-    private List<CastMemberDto> toCastDtos(UUID ownerUserId, List<Map<String, Object>> castMembers) {
-        if (castMembers == null || castMembers.isEmpty()) return List.of();
-        return castMembers.stream()
-                .map(m -> new CastMemberDto(
-                        (String) m.get("name"),
-                        (String) m.get("character"),
-                        resolveProfileUrl(ownerUserId, m),
-                        m.get("order") instanceof Number n ? n.intValue() : null
-                ))
-                .toList();
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<CrewMemberDto> toCrewDtos(UUID ownerUserId, List<Map<String, Object>> crewMembers) {
-        if (crewMembers == null || crewMembers.isEmpty()) return List.of();
-        return crewMembers.stream()
-                .map(m -> new CrewMemberDto(
-                        (String) m.get("name"),
-                        (String) m.get("job"),
-                        (String) m.get("department"),
-                        resolveProfileUrl(ownerUserId, m)
-                ))
-                .toList();
-    }
 
     /**
      * 解析演员头像 URL：优先使用 MinIO（profileFileId），降级到 TMDB（profilePath）。
      */
-    private String resolveProfileUrl(UUID ownerUserId, Map<String, Object> memberMap) {
-        Object fileIdObj = memberMap.get("profileFileId");
-        if (fileIdObj instanceof String fileIdStr && !fileIdStr.isBlank()) {
-            try {
-                UUID fileId = UUID.fromString(fileIdStr);
-                String url = resolveFileUrl(ownerUserId, fileId);
-                if (url != null) return url;
-            } catch (IllegalArgumentException ignored) {
-                // profileFileId 格式异常，降级到 profilePath
-            }
-        }
-        return (String) memberMap.get("profilePath");
-    }
+
 }
