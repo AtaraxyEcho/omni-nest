@@ -39,6 +39,10 @@ class LocalBookCache {
   /// Web 与 TXT 整包解析上限。
   static const maxInMemoryParseBytes = 32 * 1024 * 1024;
 
+  /// 原生平台 TXT 会话级解码上限（整本解码一次并缓存，峰值内存约为
+  /// 文件体积的 2-3 倍，桌面端可承受；Web 保持整包内存上限不变）。
+  static const maxNativeParseBytes = 64 * 1024 * 1024;
+
   /// 确保文件已缓存，并返回会话级解析句柄。
   Future<CachedBookHandle> ensureCachedHandle(
     String itemId, {

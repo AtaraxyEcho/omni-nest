@@ -235,9 +235,21 @@ class ReaderContentPreprocessor {
   }
 
   /// 解析相对路径。
+  ///
+  /// EPUB 规范允许 src 携带百分号编码（空格、非 ASCII 字符），而归档
+  /// 条目名通常为解码形式；先解码再拼接，否则归档内定位失败导致图片
+  /// 破图并被写入章节缓存。
   static String _resolvePath(String base, String relative) {
-    if (relative.startsWith('/')) return relative.substring(1);
-    final parts = (base + relative).split('/');
+    var decoded = relative;
+    if (decoded.contains('%')) {
+      try {
+        decoded = Uri.decodeComponent(decoded);
+      } on FormatException {
+        // 非法百分号序列保持原文
+      }
+    }
+    if (decoded.startsWith('/')) return decoded.substring(1);
+    final parts = (base + decoded).split('/');
     final resolved = <String>[];
     for (final part in parts) {
       if (part == '..') {

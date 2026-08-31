@@ -2,11 +2,41 @@ import 'dart:convert';
 
 import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gbk_codec/gbk_codec.dart';
 import 'package:omninest/features/reader/data/epub_archive_loader.dart';
 import 'package:omninest/features/reader/data/epub_archive_source.dart';
 import 'package:omninest/features/reader/domain/parsed_book.dart';
 import 'package:omninest/features/reader/reader_debug_log.dart';
 import 'package:xml/xml.dart';
+
+/// 按条目声明解码 EPUB 内部文本。
+///
+/// 中文圈常见旧制 EPUB 的内部 XHTML/OPF 为 GBK 编码；严格 utf8 解码会
+/// 抛异常导致章节静默空白。优先读取 XML 声明的 encoding，声明为 GBK
+/// 系列时用 GBK 解码，其余按宽松 utf8 处理避免坏字节毁掉整章。
+String decodeEpubText(List<int> bytes) {
+  final declared = _declaredEncoding(bytes);
+  if (declared != null && _isGbkFamily(declared)) {
+    return gbk.decode(bytes);
+  }
+  return utf8.decode(bytes, allowMalformed: true);
+}
+
+String? _declaredEncoding(List<int> bytes) {
+  final head = utf8.decode(bytes.take(200).toList(), allowMalformed: true);
+  final match = RegExp(
+    r'''encoding\s*=\s*["']([^"']+)["']''',
+    caseSensitive: false,
+  ).firstMatch(head);
+  return match?.group(1)?.trim();
+}
+
+bool _isGbkFamily(String name) {
+  final normalized = name.replaceAll('-', '').toLowerCase();
+  return normalized == 'gbk' ||
+      normalized == 'gb2312' ||
+      normalized == 'gb18030';
+}
 
 /// EPUB 归档超过安全解析边界。
 class EpubParseLimitException implements Exception {
@@ -156,7 +186,7 @@ class EpubParserService {
         }
         return const ParsedBook(chapters: []);
       }
-      final opfContent = utf8.decode(_entryBytes(opfEntry));
+      final opfContent = decodeEpubText(_entryBytes(opfEntry));
       final opfDoc = XmlDocument.parse(opfContent);
 
       // 3. 提取元数据
@@ -189,7 +219,7 @@ class EpubParserService {
         int charCount = 0;
         if (fileEntry != null) {
           try {
-            final xhtml = utf8.decode(_entryBytes(fileEntry));
+            final xhtml = decodeEpubText(_entryBytes(fileEntry));
             chapterTitle = _extractTitleFromHtml(xhtml);
             charCount = _stripHtml(xhtml).length;
           } on EpubParseLimitException {
@@ -276,7 +306,7 @@ class EpubParserService {
       final opfEntry = _findEntry(archive, opfPath);
       if (opfEntry == null) return false;
 
-      final opfContent = utf8.decode(_entryBytes(opfEntry));
+      final opfContent = decodeEpubText(_entryBytes(opfEntry));
       final opfXml = XmlDocument.parse(opfContent);
 
       // 检查 rendition:layout
@@ -339,7 +369,7 @@ class EpubParserService {
         return null;
       }
 
-      return utf8.decode(_entryBytes(fileEntry));
+      return decodeEpubText(_entryBytes(fileEntry));
     } on EpubParseLimitException {
       rethrow;
     } catch (e) {
@@ -443,7 +473,7 @@ class EpubParserService {
   /// 解析 container.xml 获取 OPF 路径
   String? _parseContainerXml(Uint8List bytes) {
     try {
-      final doc = XmlDocument.parse(utf8.decode(bytes));
+      final doc = XmlDocument.parse(decodeEpubText(bytes));
       final rootfile = doc.findAllElements('rootfile').firstOrNull;
       return rootfile?.getAttribute('full-path');
     } on EpubParseLimitException {
@@ -625,7 +655,7 @@ class EpubParserService {
       // nav 文件所在目录（用于解析 TOC 中的相对路径）
       final navDir = _parentDir(navPath);
 
-      final navContent = utf8.decode(_entryBytes(navEntry));
+      final navContent = decodeEpubText(_entryBytes(navEntry));
       final navDoc = XmlDocument.parse(navContent);
 
       // 找到 <nav epub:type="toc">
@@ -708,7 +738,7 @@ class EpubParserService {
       // ncx 文件所在目录（用于解析 TOC 中的相对路径）
       final ncxDir = _parentDir(ncxPath);
 
-      final ncxContent = utf8.decode(_entryBytes(ncxEntry));
+      final ncxContent = decodeEpubText(_entryBytes(ncxEntry));
       final ncxDoc = XmlDocument.parse(ncxContent);
 
       final rawLevels = <String, int>{};

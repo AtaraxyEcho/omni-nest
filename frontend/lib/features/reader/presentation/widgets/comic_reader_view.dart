@@ -97,6 +97,7 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
   DateTime? _tapStartAt;
   bool _imageZoomed = false;
   bool _exitRequested = false;
+  late ReaderProgressSyncService _progressSync;
   final ReaderPanelCoordinator _panelCoordinator = ReaderPanelCoordinator();
   final ReaderCommandGate _commandGate = ReaderCommandGate();
 
@@ -110,6 +111,7 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
   @override
   void initState() {
     super.initState();
+    _progressSync = ref.read(readerProgressSyncServiceProvider);
     final defaultMode = kIsWeb ? 'scroll' : 'page';
     _displaySettings = ComicReaderDisplaySettings(readingMode: defaultMode);
     _readingMode = _modeFromName(defaultMode);
@@ -142,6 +144,9 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
 
   @override
   void dispose() {
+    // 退出前补一次最终落库：滚动进度走 500ms 防抖，直接 cancel 会丢
+    // 最近一次未落盘的位置；持久化不依赖 ref，可在 dispose 中执行。
+    _persistProgress();
     _pageController.dispose();
     _scrollController.dispose();
     _transformationController.dispose();
@@ -395,6 +400,14 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
 
   /// 保存阅读进度到本地和服务器。
   void _saveProgress() {
+    _persistProgress();
+
+    // 预加载前后页
+    _preloadAdjacent();
+  }
+
+  /// 将当前锚点写入本地与服务端；不依赖 ref，dispose 时也可安全调用。
+  void _persistProgress() {
     if (_pages.isEmpty || _anchor.pageIndex >= _pages.length) return;
     final progress =
         _totalPages > 0
@@ -431,23 +444,21 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
 
     // 服务端同步（漫画锚点）
     unawaited(
-      ref
-          .read(readerProgressSyncServiceProvider)
-          .sync(
-            itemId: widget.itemId,
-            charOffset: _anchor.pageIndex,
-            progressPercent: progress,
-            readingMode: mode,
-            chapterId: chapterId,
-            pageId: _anchor.pageId,
-            pageIndex: _anchor.pageIndex,
-            pageFingerprint: _anchor.pageFingerprint,
-            sourceId: _anchor.sourceId,
-            sourcePageIndex: _anchor.sourcePageIndex,
-            catalogKey: _anchor.catalogKey,
-            manifestVersion: _anchor.manifestVersion,
-            intraPageOffset: intraPageOffset,
-          ),
+      _progressSync.sync(
+        itemId: widget.itemId,
+        charOffset: _anchor.pageIndex,
+        progressPercent: progress,
+        readingMode: mode,
+        chapterId: chapterId,
+        pageId: _anchor.pageId,
+        pageIndex: _anchor.pageIndex,
+        pageFingerprint: _anchor.pageFingerprint,
+        sourceId: _anchor.sourceId,
+        sourcePageIndex: _anchor.sourcePageIndex,
+        catalogKey: _anchor.catalogKey,
+        manifestVersion: _anchor.manifestVersion,
+        intraPageOffset: intraPageOffset,
+      ),
     );
 
     if (kDebugMode) {
@@ -455,9 +466,6 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
         'ComicReader: saved $_anchor progress=${(progress * 100).toStringAsFixed(1)}%',
       );
     }
-
-    // 预加载前后页
-    _preloadAdjacent();
   }
 
   /// 预加载当前页前后的图片。

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show compute, kIsWeb;
 import 'package:gbk_codec/gbk_codec.dart';
 import 'package:omninest/features/reader/domain/parsed_book.dart';
 
@@ -91,6 +92,43 @@ class TxtParserService {
   /// 解码并规范化 TXT 文本，偏移规则与服务端章节清单保持一致。
   String decodeText(Uint8List bytes) {
     return _decodeText(bytes).replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  }
+
+  /// 供 isolate 调用的纯函数解码入口。
+  static String decodeTxtBytes(Uint8List bytes) {
+    return TxtParserService().decodeText(bytes);
+  }
+
+  static const int _decodeIsolateThresholdBytes = 2 * 1024 * 1024;
+
+  String? _decodedItemId;
+  String? _decodedCacheText;
+
+  /// 解码整本 TXT 并按条目缓存。
+  ///
+  /// 章节按字符偏移切自整本解码文本；大文件的 GBK 转码与全文换行
+  /// 规范化在 isolate 中执行并只做一次，避免每次切章卡顿 UI 线程。
+  Future<String> ensureDecodedText({
+    required String itemId,
+    required Uint8List bytes,
+  }) async {
+    if (_decodedItemId == itemId && _decodedCacheText != null) {
+      return _decodedCacheText!;
+    }
+    final text =
+        (kIsWeb || bytes.length < _decodeIsolateThresholdBytes)
+            ? decodeText(bytes)
+            : await compute(decodeTxtBytes, bytes);
+    _decodedItemId = itemId;
+    _decodedCacheText = text;
+    return text;
+  }
+
+  /// 从已解码文本中按字符偏移取单章并转换为 XHTML。
+  String chapterFromText(String text, int startOffset, int endOffset) {
+    final safeStart = startOffset.clamp(0, text.length);
+    final safeEnd = endOffset.clamp(safeStart, text.length);
+    return _textToXhtml(text.substring(safeStart, safeEnd));
   }
 
   /// 按服务端记录的字符偏移读取单章并转换为 XHTML。

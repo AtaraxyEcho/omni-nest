@@ -332,10 +332,17 @@ Future<String?> loadChapterContent(
     final end = chapter.sourceEndOffset;
     if (start == null || end == null || end < start) return null;
     final source = await ref.read(cachedBookHandleProvider(itemId).future);
+    final parser = ref.read(txtParserServiceProvider);
+    // Web 受整包内存上限约束；原生放宽到会话级解码上限，超限给出
+    // 明确错误而非静默失败。整本解码按条目缓存，切章不再重复解码。
     final bytes = await source.readBytes(
-      maxBytes: LocalBookCache.maxInMemoryParseBytes,
+      maxBytes:
+          source.isMemory
+              ? LocalBookCache.maxInMemoryParseBytes
+              : LocalBookCache.maxNativeParseBytes,
     );
-    return ref.read(txtParserServiceProvider).chapterToXhtml(bytes, start, end);
+    final text = await parser.ensureDecodedText(itemId: itemId, bytes: bytes);
+    return parser.chapterFromText(text, start, end);
   }
   if (detail.item.itemType != 'EPUB') return chapter.xhtmlContent;
 

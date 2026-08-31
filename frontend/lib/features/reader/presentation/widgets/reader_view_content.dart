@@ -141,6 +141,18 @@ class _ReaderViewContentState extends State<ReaderViewContent> {
     });
   }
 
+  /// 释放并清空链接手势识别器。
+  ///
+  /// 识别器按 startOffset 缓存且闭包捕获创建时的 href；切章后新内容的
+  /// 偏移与旧缓存冲突，复用会点击跳转到上一章的链接目标，必须先清空
+  /// 再随下一次 build 重建。
+  void _clearRecognizers() {
+    for (final recognizer in _recognizers.values) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -163,19 +175,18 @@ class _ReaderViewContentState extends State<ReaderViewContent> {
       // 分页模式：visibleBlocks 变化时重新应用
       if (!identical(oldWidget.visibleBlocks, widget.visibleBlocks) ||
           !identical(oldWidget.annotations, widget.annotations)) {
+        _clearRecognizers();
         _applyVisibleBlocks(notify: false);
       }
     } else if (!identical(oldWidget.rawBlocks, widget.rawBlocks) &&
         widget.rawBlocks != null &&
         widget.rawBlocks!.isNotEmpty) {
       // 滚动模式：rawBlocks 变化时直接使用
+      _clearRecognizers();
       _applyRawBlocks(notify: false);
     } else if (oldWidget.htmlContent != widget.htmlContent) {
-      // 清理旧内容的手势识别器，防止内存泄漏
-      for (final recognizer in _recognizers.values) {
-        recognizer.dispose();
-      }
-      _recognizers.clear();
+      // 清理旧内容的手势识别器，防止内存泄漏与旧 href 复用
+      _clearRecognizers();
       _isLoading = true;
       _blocks = [];
       _paragraphIndices = [];
@@ -192,10 +203,7 @@ class _ReaderViewContentState extends State<ReaderViewContent> {
 
   @override
   void dispose() {
-    for (final recognizer in _recognizers.values) {
-      recognizer.dispose();
-    }
-    _recognizers.clear();
+    _clearRecognizers();
     _selectionFocusNode.dispose();
     super.dispose();
   }

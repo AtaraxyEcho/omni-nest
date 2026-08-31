@@ -197,6 +197,7 @@ class ReaderCenterController extends AsyncNotifier<ReaderCenterState> {
     ReaderSection section = ReaderSection.bookshelf,
     String searchQuery = '',
     ReaderSortBy sortBy = ReaderSortBy.recent,
+    bool loadBookmarks = true,
   }) async {
     _partialErrors.clear();
     final results = await Future.wait([
@@ -206,8 +207,11 @@ class ReaderCenterController extends AsyncNotifier<ReaderCenterState> {
     final dashboard = results[0] as ReaderDashboard;
     final items = results[1] as List<ReaderItem>;
 
-    // 书签按条目加载（API 仅支持单条目查询）
-    final bookmarks = await _loadAllBookmarks(items);
+    // 书签按条目加载（API 仅支持单条目查询）；实时刷新复用现有列表
+    final bookmarks =
+        loadBookmarks
+            ? await _loadAllBookmarks(items)
+            : state.asData?.value.bookmarks ?? const <ReaderBookmark>[];
 
     return ReaderCenterState(
       dashboard: dashboard,
@@ -260,20 +264,27 @@ class ReaderCenterController extends AsyncNotifier<ReaderCenterState> {
 
   /// 刷新全部数据
   Future<void> refresh() async {
-    await _refreshState(strict: false);
+    await _refreshState(strict: false, loadBookmarks: true);
   }
 
   /// 严格刷新实时事件涉及的阅读数据并保留当前分区与筛选。
+  ///
+  /// 由导入监控循环周期调用；书签不会因解析变化，复用现有列表，
+  /// 避免每轮触发按条目的书签 N+1 请求风暴。
   Future<void> refreshForRealtime() async {
-    await _refreshState(strict: true);
+    await _refreshState(strict: true, loadBookmarks: false);
   }
 
-  Future<void> _refreshState({required bool strict}) async {
+  Future<void> _refreshState({
+    required bool strict,
+    bool loadBookmarks = true,
+  }) async {
     final current = state.asData?.value;
     final next = await _loadState(
       section: current?.section ?? ReaderSection.bookshelf,
       searchQuery: current?.searchQuery ?? '',
       sortBy: current?.sortBy ?? ReaderSortBy.recent,
+      loadBookmarks: loadBookmarks,
     );
     if (strict && next.errorMessage != null) {
       throw StateError(next.errorMessage!);
