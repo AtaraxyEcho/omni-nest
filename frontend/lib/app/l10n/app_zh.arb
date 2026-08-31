@@ -10,7 +10,6 @@
   "mobileOfflineBanner": "当前处于离线状态，部分操作暂不可用",
   "fullscreenEnterShortcut": "全屏（F11）",
   "fullscreenExitShortcut": "退出全屏（F11）",
-
   "searchTitle": "搜索",
   "searchHint": "搜索文件、书籍、视频…",
   "searchEmptyQuery": "输入关键词开始搜索",
@@ -22,7 +21,6 @@
   "searchGroupVideo": "视频",
   "searchGroupMusic": "音乐",
   "searchGroupPhoto": "照片",
-
   "tasksTitle": "任务",
   "tasksEmpty": "暂无任务",
   "tasksEmptyHint": "系统任务会显示在这里",
@@ -38,7 +36,12 @@
   "tasksStatusFailed": "失败",
   "tasksRetryCount": "重试",
   "tasksRetryProgress": "重试 {current}/{maximum}",
-  "@tasksRetryProgress": { "placeholders": { "current": {}, "maximum": {} } },
+  "@tasksRetryProgress": {
+    "placeholders": {
+      "current": {},
+      "maximum": {}
+    }
+  },
   "tasksStatusRetryWait": "等待重试",
   "tasksStatusNeedsAttention": "需处理",
   "tasksStatusCancelled": "已取消",
@@ -49,12 +52,23 @@
   "tasksPhaseWaiting": "等待任务进度",
   "tasksTimeJustNow": "刚刚",
   "tasksTimeMinutesAgo": "{count} 分钟前",
-  "@tasksTimeMinutesAgo": { "placeholders": { "count": {} } },
+  "@tasksTimeMinutesAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "tasksTimeHoursAgo": "{count} 小时前",
-  "@tasksTimeHoursAgo": { "placeholders": { "count": {} } },
+  "@tasksTimeHoursAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "tasksTimeDaysAgo": "{count} 天前",
-  "@tasksTimeDaysAgo": { "placeholders": { "count": {} } },
-
+  "@tasksTimeDaysAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "settingsTitle": "设置",
   "settingsLoadFailed": "加载失败：{error}",
   "settingsAppearance": "外观",
@@ -75,7 +89,6 @@
   "settingsSecurityHint": "管理密码和当前登录会话",
   "settingsAbout": "关于 OmniNest",
   "settingsAboutHint": "版本 0.1.0",
-
   "setupTitle": "首次安装",
   "setupSubtitle": "创建此 OmniNest 实例的超级管理员账户。",
   "setupUnavailableTitle": "安装向导尚未就绪",
@@ -98,13 +111,15 @@
   "setupStatusFailed": "无法读取安装状态",
   "setupCreateFailed": "创建超级管理员失败",
   "setupSecureNotice": "安装令牌仅用于本次初始化，不会保存在客户端。",
-
   "adminSearchHint": "搜索管理数据…",
   "adminNoMatch": "未找到匹配数据。",
-
   "notificationTitle": "通知",
   "notificationTitleWithCount": "通知 ({count})",
-  "@notificationTitleWithCount": { "placeholders": { "count": {} } },
+  "@notificationTitleWithCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "notificationNoTitle": "无标题",
   "notificationEmpty": "暂无通知",
   "notificationEmptyHint": "新通知会实时推送到这里",
@@ -139,12 +154,23 @@
   "notificationTypesHeader": "通知类型",
   "notificationTimeNow": "刚刚",
   "notificationTimeMinutes": "{n}分钟前",
-  "@notificationTimeMinutes": { "placeholders": { "n": {} } },
+  "@notificationTimeMinutes": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "notificationTimeHours": "{n}小时前",
-  "@notificationTimeHours": { "placeholders": { "n": {} } },
+  "@notificationTimeHours": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "notificationTimeDays": "{n}天前",
-  "@notificationTimeDays": { "placeholders": { "n": {} } },
-
+  "@notificationTimeDays": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "profileTitle": "个人中心",
   "profileBackTooltip": "返回 Portal",
   "profileAvatarFormatError": "仅支持 JPG、PNG、WebP 格式",
@@ -192,7 +218,6 @@
   "profileNotificationPreviewHint": "在通知中显示消息内容",
   "profileNotificationTypes": "通知类型 ({count})",
   "profileLoadFailed": "加载失败：{error}",
-
   "profileSessionManagement": "会话管理",
   "profileSessionManagementSubtitle": "查看和管理当前登录的设备会话",
   "profileActiveSessions": "活跃会话",
@@ -208,7 +233,6 @@
   "profileSessionRevokeFailed": "撤销失败，请重试",
   "profileSessionsLoadFailed": "加载会话失败",
   "profileSessionCurrentDevice": "当前设备",
-
   "changePasswordOldPassword": "原密码",
   "changePasswordNewPassword": "新密码",
   "changePasswordEnterNew": "请输入新密码",
@@ -222,7 +246,6 @@
   "changePasswordWrongOld": "原密码错误",
   "changePasswordFailed": "密码修改失败，请重试",
   "changePasswordEnterField": "请输入{field}",
-
   "loginWelcome": "欢迎回来",
   "loginDescription": "使用 OmniNest 内置账号登录。",
   "loginSubtitle": "把家庭媒体、阅读、文件与自动化任务收拢到一个稳定的个人空间。",
@@ -241,7 +264,6 @@
   "loginFailed": "登录失败，请稍后重试",
   "loginConnectionError": "无法连接后端服务，请确认服务已启动",
   "loginRequestFailed": "登录请求失败，请检查账号或网络",
-
   "coreRetry": "重试",
   "coreStartupFailed": "启动失败",
   "coreStartupFailedHint": "运行依赖初始化失败，请重试。若问题持续，请检查本机媒体组件和应用日志。",
@@ -273,7 +295,6 @@
   "coreRoleSuperAdmin": "管理员",
   "coreRoleAdmin": "管理",
   "coreRoleMember": "成员",
-
   "filesAllFiles": "全部文件",
   "filesRecent": "最近使用",
   "filesFavorites": "我的收藏",
@@ -298,7 +319,6 @@
   "filesOfflineDownloadsDesc": "管理 HTTP、BT 和磁力链离线下载任务。",
   "filesExternalStorageDesc": "管理 OneDrive、WebDAV 等第三方存储挂载。",
   "filesImportTasksDesc": "查看外部存储文件导入进度，支持取消排队中的任务。",
-
   "filesSharedSpace": "共享空间",
   "filesSharedSpaceDesc": "所有用户共享的文件空间",
   "filesSharedSpaceUsage": "共享空间用量",
@@ -310,8 +330,16 @@
   "filesMoveToPersonalConfirm": "移回个人空间",
   "filesMoveToPersonalMessage": "将 \"{name}\" 移回个人空间？",
   "filesMoveToPersonalLabel": "移回",
-  "@filesMoveToSharedMessage": { "placeholders": { "name": {} } },
-  "@filesMoveToPersonalMessage": { "placeholders": { "name": {} } },
+  "@filesMoveToSharedMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@filesMoveToPersonalMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesCount": "个文件",
   "filesCategoryAll": "全部",
   "filesCategoryImage": "图片",
@@ -352,7 +380,12 @@
   "filesRecycleBinEmpty": "回收站为空",
   "filesUploadFile": "上传文件",
   "filesLoadMore": "加载更多（已加载 {loaded} / {total}）",
-  "@filesLoadMore": { "placeholders": { "loaded": {}, "total": {} } },
+  "@filesLoadMore": {
+    "placeholders": {
+      "loaded": {},
+      "total": {}
+    }
+  },
   "filesDropToUpload": "拖放文件到此处上传",
   "filesUploadProcessing": "正在处理 {count} 个文件 · 总进度 {progress}",
   "filesViewAll": "查看全部",
@@ -405,7 +438,14 @@
   "filesMovedCount": "已移动 {count} 个文件",
   "filesUploadComplete": "已完成 {count} 个文件上传",
   "filesUploadBatchSummary": "上传完成 {completed} 个，冲突 {conflicts} 个，失败 {failed} 个，暂停 {paused} 个",
-  "@filesUploadBatchSummary": { "placeholders": { "completed": {}, "conflicts": {}, "failed": {}, "paused": {} } },
+  "@filesUploadBatchSummary": {
+    "placeholders": {
+      "completed": {},
+      "conflicts": {},
+      "failed": {},
+      "paused": {}
+    }
+  },
   "filesSelectTargetFolder": "选择目标文件夹",
   "filesRootDirectory": "根目录",
   "filesGoToParent": "返回上级目录",
@@ -492,7 +532,12 @@
   "externalRenameFile": "重命名",
   "externalDeleteConfirm": "确定要删除远程文件吗？此操作不可撤销。",
   "externalSpaceUsedOf": "{used} / {total}",
-  "@externalSpaceUsedOf": { "placeholders": { "used": {}, "total": {} } },
+  "@externalSpaceUsedOf": {
+    "placeholders": {
+      "used": {},
+      "total": {}
+    }
+  },
   "filesStorageType": "存储类型",
   "filesDisplayName": "显示名称",
   "filesDisplayNameHint": "如：我的坚果云",
@@ -529,7 +574,11 @@
   "filesCopiedClipboard": "已复制到剪贴板",
   "filesPasswordLabel": "密码",
   "filesSharePasswordLabel": "密码: {password}",
-  "@filesSharePasswordLabel": { "placeholders": { "password": {} } },
+  "@filesSharePasswordLabel": {
+    "placeholders": {
+      "password": {}
+    }
+  },
   "filesCopyLinkWithPassword": "复制链接（含密码）",
   "filesCopyLinkOnly": "仅复制链接",
   "filesCopyLink": "复制链接",
@@ -583,16 +632,28 @@
   "filesImportWriting": "正在写入文件库",
   "filesImportWaitingWorker": "等待后台 Worker 处理",
   "filesImportFileProgress": "已完成 {completed}/{total} 个文件",
-  "@filesImportFileProgress": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
+  "@filesImportFileProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "filesImportCurrentFile": "当前：{name}",
-  "@filesImportCurrentFile": { "placeholders": { "name": {} } },
+  "@filesImportCurrentFile": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesImportRunning": "导入中",
   "filesImportCancelling": "取消中",
   "filesImportCancelled": "已取消",
   "filesS3Compatible": "S3 兼容存储",
   "filesAliyunDrive": "阿里云盘",
   "filesLocalStorage": "本地目录",
-
   "portalSearch": "搜索",
   "portalOpenReadingItem": "打开阅读",
   "portalOpenPhoto": "查看照片",
@@ -623,40 +684,84 @@
   "portalNoReadingHistory": "暂无阅读记录",
   "portalNoPhotos": "暂无照片",
   "portalPhotoCount": "{count} 张照片",
-  "@portalPhotoCount": { "placeholders": { "count": {} } },
+  "@portalPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalAlbumCount": "{count} 个相册",
-  "@portalAlbumCount": { "placeholders": { "count": {} } },
+  "@portalAlbumCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalMovieBadge": "{count} 部",
-  "@portalMovieBadge": { "placeholders": { "count": {} } },
+  "@portalMovieBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalReaderBadge": "{count} 续读",
-  "@portalReaderBadge": { "placeholders": { "count": {} } },
+  "@portalReaderBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalMusicBadge": "{count} 首",
-  "@portalMusicBadge": { "placeholders": { "count": {} } },
+  "@portalMusicBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalPhotoBadge": "{count} 张",
-  "@portalPhotoBadge": { "placeholders": { "count": {} } },
-
+  "@portalPhotoBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalRelativeNow": "刚刚",
   "portalRelativeMinutes": "{n} 分钟前",
-  "@portalRelativeMinutes": { "placeholders": { "n": {} } },
+  "@portalRelativeMinutes": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeHours": "{n} 小时前",
-  "@portalRelativeHours": { "placeholders": { "n": {} } },
+  "@portalRelativeHours": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeYesterday": "昨天",
   "portalRelativeDays": "{n} 天前",
-  "@portalRelativeDays": { "placeholders": { "n": {} } },
+  "@portalRelativeDays": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeMonths": "{n} 个月前",
-  "@portalRelativeMonths": { "placeholders": { "n": {} } },
+  "@portalRelativeMonths": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeYears": "{n} 年前",
-  "@portalRelativeYears": { "placeholders": { "n": {} } },
-
+  "@portalRelativeYears": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalStorageTitle": "存储空间",
   "portalStorageUnlimited": "{used} GiB / 无限制",
-  "@portalStorageUnlimited": { "placeholders": { "used": {} } },
-
+  "@portalStorageUnlimited": {
+    "placeholders": {
+      "used": {}
+    }
+  },
   "portalTaskTitle": "任务",
   "portalTaskRunning": "运行中",
   "portalTaskQueued": "队列中",
   "portalTaskFailed": "失败",
-
   "portalNowPlaying": "正在播放",
   "portalNoPlayRecord": "暂无播放记录",
   "portalImmersivePlayback": "沉浸播放",
@@ -704,14 +809,15 @@
   "musicVisualizerCoverRadius": "封面圆角",
   "musicVisualizerCoverTilt": "封面倾斜角度",
   "musicVisualizerHeroCoverOpacity": "Hero 封面不透明度",
-
   "portalReading": "在读",
   "portalNoReadingBook": "暂无在读书籍",
-
   "portalRecentPhotos": "最近照片",
   "portalNewPhotoCount": "{count} 张新照片",
-  "@portalNewPhotoCount": { "placeholders": { "count": {} } },
-
+  "@portalNewPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalQuickUpload": "上传",
   "portalQuickDownload": "下载",
   "portalQuickNew": "新建",
@@ -728,14 +834,21 @@
   "portalMobileSyncOnline": "同步服务在线",
   "portalMobileSyncOffline": "离线，等待恢复同步",
   "portalMobileTaskSummary": "{active} 项运行中，{failed} 项失败",
-  "@portalMobileTaskSummary": { "placeholders": { "active": {}, "failed": {} } },
+  "@portalMobileTaskSummary": {
+    "placeholders": {
+      "active": {},
+      "failed": {}
+    }
+  },
   "portalMobileStorageUsed": "已使用 {used}",
-  "@portalMobileStorageUsed": { "placeholders": { "used": {} } },
+  "@portalMobileStorageUsed": {
+    "placeholders": {
+      "used": {}
+    }
+  },
   "portalMobileViewAll": "查看全部",
-
   "portalContinueWatching": "最近观看",
   "portalNoWatchingContent": "暂无在看内容",
-
   "portalPressBackAgain": "再按一次退出",
   "portalLoadMovieFailed": "加载媒体库信息失败",
   "portalLoadMusicFailed": "加载音乐信息失败",
@@ -747,26 +860,36 @@
   "portalDockMusic": "音乐",
   "portalDockPhotos": "照片",
   "portalDockReading": "阅读",
-
   "portalWeatherTitle": "天气",
   "portalWeatherUpdated": "已更新",
   "portalWeatherDisconnected": "未连接",
   "portalWeatherFeelsLike": "{text} · 体感{feelsLike}°",
-  "@portalWeatherFeelsLike": { "placeholders": { "text": {}, "feelsLike": {} } },
+  "@portalWeatherFeelsLike": {
+    "placeholders": {
+      "text": {},
+      "feelsLike": {}
+    }
+  },
   "portalWeatherSunrise": "日出 {time}",
-  "@portalWeatherSunrise": { "placeholders": { "time": {} } },
+  "@portalWeatherSunrise": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "portalWeatherSunset": "日落 {time}",
-  "@portalWeatherSunset": { "placeholders": { "time": {} } },
+  "@portalWeatherSunset": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "portalWeatherConfigApiKey": "请配置 API Key",
   "portalWeatherWeeklyStats": "本周统计",
   "portalWeatherStatReading": "在读",
   "portalWeatherStatPlaying": "播放",
   "portalWeatherStatPhotos": "照片",
-
   "portalWeatherUnknown": "未知",
   "portalWeatherLoading": "加载中",
   "portalWeatherDefaultLocation": "北京",
-
   "portalWeatherTipMask": "空气质量较差，建议佩戴口罩",
   "portalWeatherTipRain": "有雨，出门记得带伞",
   "portalWeatherTipIce": "路面可能湿滑，注意防滑",
@@ -775,7 +898,6 @@
   "portalWeatherTipHot": "天气炎热，注意防暑补水",
   "portalWeatherTipFog": "有雾，出行注意安全",
   "portalWeatherTipNice": "天气不错，适合户外活动",
-
   "portalWeatherHumidity": "湿度",
   "portalWeatherWind": "风向",
   "portalWeatherVisibility": "能见度",
@@ -824,7 +946,11 @@
   "portalLocalBackdropClearAllMessage": "只会清理当前设备 SQLite 中的背景索引，不会删除你原目录中的本机文件。",
   "portalLocalBackdropClearAllConfirm": "清理",
   "portalLocalBackdropCount": "{count} 个背景",
-  "@portalLocalBackdropCount": { "placeholders": { "count": {} } },
+  "@portalLocalBackdropCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalLocalBackdropEmpty": "还没有本机背景。你可以添加视频壁纸、GIF、图片，或扫描它们所在目录。",
   "portalLocalBackdropFilterEmpty": "当前分类没有可用背景",
   "portalLocalBackdropEmptyScan": "未发现可用背景文件。当前支持 MP4、WEBM、MOV、M4V、GIF、JPG、PNG、WEBP。",
@@ -854,19 +980,30 @@
   "portalLocalBackdropVideoMuted": "视频静音",
   "portalLocalBackdropRetryPlayback": "重试播放",
   "portalLocalBackdropLocalOnly": "背景路径只保存在当前设备的 SQLite 中。动态背景建议使用短循环和常见编码；系统会在页面隐藏或进入后台时暂停播放。Web 使用默认主题背景。",
-
   "adminOpenMenu": "打开管理菜单",
   "adminStorageOverview": "存储概览",
   "adminPercentUsed": "{percent}% 已使用",
-  "@adminPercentUsed": { "placeholders": { "percent": {} } },
+  "@adminPercentUsed": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "adminSystemMonitoring": "系统监控",
   "adminMonitoringSubtitle": "查看服务状态、资源使用率、组件健康、告警和管理员操作记录。",
   "adminRunning": "运行正常",
   "adminAttentionItems": "{count} 个关注项",
-  "@adminAttentionItems": { "placeholders": { "count": {} } },
+  "@adminAttentionItems": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminServiceStatus": "服务状态",
   "adminUptime": "运行时长 {uptime}",
-  "@adminUptime": { "placeholders": { "uptime": {} } },
+  "@adminUptime": {
+    "placeholders": {
+      "uptime": {}
+    }
+  },
   "adminComponents": "组件",
   "adminAlerts": "告警",
   "adminSystemCpu": "系统 CPU",
@@ -891,7 +1028,11 @@
   "adminLogCenter": "日志中心",
   "adminLogCenterSubtitle": "统一查看操作审计和登录日志。",
   "adminAuditCount": "{count} 条审计",
-  "@adminAuditCount": { "placeholders": { "count": {} } },
+  "@adminAuditCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminTabAudit": "操作审计",
   "adminTabLoginLog": "登录日志",
   "adminRecentAudit": "最近审计",
@@ -899,7 +1040,11 @@
   "adminNoAuditLogs": "当前没有审计日志。",
   "adminNoLoginLogs": "当前没有登录日志。",
   "adminLoadFailed": "加载失败: {error}",
-  "@adminLoadFailed": { "placeholders": { "error": {} } },
+  "@adminLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "adminLoginLog": "登录日志",
   "adminLoginLogSubtitle": "来自 auth_login_audit，记录所有登录尝试。",
   "adminLoginSuccess": "成功",
@@ -909,11 +1054,19 @@
   "adminFilterPlatform": "平台",
   "adminCleanup": "清理",
   "adminRetentionDays": "保留 {days} 天",
-  "@adminRetentionDays": { "placeholders": { "days": {} } },
+  "@adminRetentionDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "adminCleanupConfirmTitle": "确认清理记录",
   "adminCleanupConfirmMessage": "将删除保留期之外的记录。此操作不可撤销。",
   "adminCleanupCompleted": "已清理 {count} 条记录",
-  "@adminCleanupCompleted": { "placeholders": { "count": {} } },
+  "@adminCleanupCompleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminBackgroundTasks": "后台任务",
   "adminBackgroundTasksSubtitle": "跟踪索引、转码、同步、备份和清理任务。",
   "adminTotalTasks": "任务总数",
@@ -931,7 +1084,11 @@
   "adminRoleManagement": "角色管理",
   "adminRoleManagementSubtitle": "维护角色、权限集合和资源访问边界。",
   "adminPermissionCount": "{count} 个权限",
-  "@adminPermissionCount": { "placeholders": { "count": {} } },
+  "@adminPermissionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminRoles": "角色",
   "adminSystemRoles": "系统角色",
   "adminPermissionBindings": "权限绑定",
@@ -942,17 +1099,31 @@
   "adminRolePermissionsSubtitle": "内置角色不允许删除，SUPER_ADMIN 权限由系统维护。",
   "adminNoRoles": "当前没有角色数据。",
   "adminPermissionCountInline": "{count} 个权限",
-  "@adminPermissionCountInline": { "placeholders": { "count": {} } },
+  "@adminPermissionCountInline": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminConfigurePermissions": "配置权限",
   "adminConfigureRolePermissions": "配置 {name} 权限",
-  "@adminConfigureRolePermissions": { "placeholders": { "name": {} } },
+  "@adminConfigureRolePermissions": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "adminSecurityWarning": "安全提示",
   "adminSecurityWarningMessage": "请仅授予实际需要的权限，过度授权可能导致越权访问数据或滥用系统功能。",
   "adminConfigCenter": "配置中心",
   "adminConfigCenterSubtitle": "管理业务策略与外部服务集成。",
   "adminConfigRefresh": "刷新配置",
   "adminConfigGroupItemCount": "{count} 项设置",
-  "@adminConfigGroupItemCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminConfigGroupItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminConfigGroupMedia": "媒体导入",
   "adminConfigGroupReader": "阅读",
   "adminConfigGroupMusic": "音乐",
@@ -975,7 +1146,11 @@
   "adminConfigSecretConfigured": "敏感凭据已配置，原值不会回显",
   "adminConfigNeedsSetup": "尚未配置",
   "adminConfigCurrentValue": "当前值：{value}",
-  "@adminConfigCurrentValue": { "placeholders": { "value": {} } },
+  "@adminConfigCurrentValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "adminConfigClearCredential": "清除凭据",
   "adminConfigClearCredentialConfirm": "清除后相关集成功能将无法使用，确定继续吗？",
   "adminConfigCredentialClearedReason": "管理员清除集成凭据",
@@ -1139,7 +1314,11 @@
   "adminNoSessions": "暂无会话记录。",
   "adminConfirmKick": "确认踢出",
   "adminConfirmKickMessage": "确定要撤销该会话吗？设备: {device}",
-  "@adminConfirmKickMessage": { "placeholders": { "device": {} } },
+  "@adminConfirmKickMessage": {
+    "placeholders": {
+      "device": {}
+    }
+  },
   "adminRevokeSession": "踢出会话",
   "adminRevokedLabel": "已撤销",
   "adminSessionAllStatuses": "全部状态",
@@ -1153,8 +1332,17 @@
   "adminTotalCount": "共 {count} 条",
   "adminPreviousPage": "上一页",
   "adminNextPage": "下一页",
-  "@adminPageIndicator": { "placeholders": { "page": {}, "totalPages": {} } },
-  "@adminTotalCount": { "placeholders": { "count": {} } },
+  "@adminPageIndicator": {
+    "placeholders": {
+      "page": {},
+      "totalPages": {}
+    }
+  },
+  "@adminTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminUserManagement": "用户管理",
   "adminUserManagementSubtitle": "管理账号、状态、配额和角色分配。",
   "adminAccountList": "账号列表",
@@ -1164,7 +1352,12 @@
   "adminAll": "全部",
   "adminNoMatchingUsers": "当前没有匹配用户。",
   "adminLoadMore": "加载更多（已加载 {loaded} / {total}）",
-  "@adminLoadMore": { "placeholders": { "loaded": {}, "total": {} } },
+  "@adminLoadMore": {
+    "placeholders": {
+      "loaded": {},
+      "total": {}
+    }
+  },
   "adminTotalUsers": "用户总数",
   "adminDatabaseAccounts": "数据库账号",
   "adminSuperAdmin": "超级管理员",
@@ -1180,9 +1373,17 @@
   "adminBatchQuota": "批量设置配额",
   "adminDeselect": "取消选择",
   "adminSelectedUsers": "已选择 {count} 个用户",
-  "@adminSelectedUsers": { "placeholders": { "count": {} } },
+  "@adminSelectedUsers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminBatchSetStorageQuota": "批量设置存储配额（{count} 个用户）",
-  "@adminBatchSetStorageQuota": { "placeholders": { "count": {} } },
+  "@adminBatchSetStorageQuota": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminBatchQuotaHint": "将为所有选中的用户设置相同的存储配额。超级管理员和空间不足的用户将被跳过。",
   "adminQuotaGib": "配额 (GiB)",
   "adminQuotaHint": "例如：50",
@@ -1191,16 +1392,37 @@
   "adminValidQuotaRequired": "请输入有效的配额值",
   "adminNoUsersSelected": "未选择任何用户",
   "adminUsersQuotaUpdated": "已更新 {count} 个用户的存储配额",
-  "@adminUsersQuotaUpdated": { "placeholders": { "count": {} } },
+  "@adminUsersQuotaUpdated": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminEditQuota": "调整 {name} 的存储配额",
-  "@adminEditQuota": { "placeholders": { "name": {} } },
+  "@adminEditQuota": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "adminCurrentUsage": "当前使用：{used} / {quota}",
-  "@adminCurrentUsage": { "placeholders": { "used": {}, "quota": {} } },
+  "@adminCurrentUsage": {
+    "placeholders": {
+      "used": {},
+      "quota": {}
+    }
+  },
   "adminNewQuotaGib": "新配额 (GiB)",
   "adminQuotaMinError": "新配额不能小于当前已使用空间（{used} GiB）",
-  "@adminQuotaMinError": { "placeholders": { "used": {} } },
+  "@adminQuotaMinError": {
+    "placeholders": {
+      "used": {}
+    }
+  },
   "adminEditRoles": "调整 {name} 的角色",
-  "@adminEditRoles": { "placeholders": { "name": {} } },
+  "@adminEditRoles": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "adminSelectAtLeastOneRole": "请至少选择一个角色",
   "adminCreating": "创建中",
   "adminCreate": "创建",
@@ -1218,7 +1440,11 @@
   "adminActive": "活跃",
   "adminPermissionModel": "权限模型",
   "adminPermissionBindingsCount": "{count} 个权限绑定",
-  "@adminPermissionBindingsCount": { "placeholders": { "count": {} } },
+  "@adminPermissionBindingsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminTasks": "后台任务",
   "adminRunningLabel": "运行",
   "adminQueued": "排队",
@@ -1226,7 +1452,12 @@
   "adminNeedAttention": "需处理",
   "adminStorageAssets": "存储资产",
   "adminFilesFolders": "{files} 文件 · {folders} 文件夹",
-  "@adminFilesFolders": { "placeholders": { "files": {}, "folders": {} } },
+  "@adminFilesFolders": {
+    "placeholders": {
+      "files": {},
+      "folders": {}
+    }
+  },
   "adminObjects": "对象",
   "adminHealthy": "健康",
   "adminFiles": "文件",
@@ -1250,7 +1481,6 @@
   "adminObjectsLabel": "对象",
   "adminSystemLoad": "系统负载",
   "adminHotConfig": "热配置",
-  "adminNextTask": "下次任务",
   "adminRestartItems": "重启项",
   "adminStatusEnabled": "启用",
   "adminStatusDisabled": "禁用",
@@ -1258,7 +1488,6 @@
   "adminRoleAdmin": "管理员",
   "adminRoleMember": "成员",
   "adminRoleGuest": "访客",
-
   "adminGroupOverview": "总览",
   "adminGroupOperations": "运维",
   "adminGroupIdentity": "身份与权限",
@@ -1296,16 +1525,21 @@
   "adminStorageTitle": "存储管理",
   "adminStorageSubtitle": "管理 MinIO 桶、容量与索引维护。",
   "adminExternalStorageTitle": "外部存储集成",
-  "adminExternalStorageSubtitle": "接入 WebDAV、S3、SMB 和挂载网盘。",
-
   "adminRefresh": "刷新",
   "adminRecalculate": "重算用量",
   "adminRecalculateDone": "已更新 {count} 位用户的存储用量",
-  "@adminRecalculateDone": { "placeholders": { "count": {} } },
+  "@adminRecalculateDone": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminRebuildIndex": "重建索引",
   "adminRebuildIndexDone": "已清除 {count} 个索引文档，请等待重新索引",
-  "@adminRebuildIndexDone": { "placeholders": { "count": {} } },
-
+  "@adminRebuildIndexDone": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminApiResponseFormat": "Admin 响应格式不正确",
   "adminNoResponse": "服务端没有返回 Admin 结果",
   "adminOperationFailed": "Admin 操作失败",
@@ -1317,7 +1551,6 @@
   "adminNoConsoleResult": "服务端没有返回管理控制台结果",
   "adminConsoleLoadFailed": "管理控制台加载失败",
   "adminNoDetailDiagnostics": "暂无详细诊断信息",
-
   "readerNavBookshelf": "书架",
   "readerNavLibrary": "书籍",
   "readerNavComics": "漫画",
@@ -1364,18 +1597,42 @@
   "readerSearchCurrentChapter": "搜索当前章节",
   "readerNoSearchResults": "没有找到匹配内容",
   "readerSearchResultCount": "找到 {count} 处",
-  "@readerSearchResultCount": { "placeholders": { "count": { "type": "int" } } },
+  "@readerSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "readerReadingProgress": "阅读进度 {percent}%",
-  "@readerReadingProgress": { "placeholders": { "percent": { "type": "int" } } },
+  "@readerReadingProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "readerResetTypography": "恢复默认排版",
   "readerComicModePage": "翻页模式",
   "readerComicModeScroll": "卷轴模式",
   "readerComicFullWidth": "连续阅读使用全部可用宽度",
   "readerComicFullWidthHint": "关闭后限制桌面端页面宽度，避免图片被过度放大",
   "readerComicContentWidth": "内容宽度 {width} 像素",
-  "@readerComicContentWidth": { "placeholders": { "width": { "type": "int" } } },
+  "@readerComicContentWidth": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      }
+    }
+  },
   "readerComicPageGap": "页面间距 {gap} 像素",
-  "@readerComicPageGap": { "placeholders": { "gap": { "type": "int" } } },
+  "@readerComicPageGap": {
+    "placeholders": {
+      "gap": {
+        "type": "int"
+      }
+    }
+  },
   "readerComicImageLoadFailed": "漫画页面加载失败",
   "readerComicImageDecodeFailed": "漫画页面解码失败",
   "readerStatsToday": "今日",
@@ -1421,33 +1678,73 @@
   "readerCollapse": "收起",
   "readerExpandFull": "展开全文",
   "readerChapterListCount": "章节列表 ({count} 章)",
-  "@readerChapterListCount": { "placeholders": { "count": {} } },
+  "@readerChapterListCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerTotalPages": "共 {count} 页",
-  "@readerTotalPages": { "placeholders": { "count": {} } },
+  "@readerTotalPages": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerPageCount": "{count} 页",
-  "@readerPageCount": { "placeholders": { "count": {} } },
+  "@readerPageCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerViewAllChapters": "查看全部 {count} 章",
-  "@readerViewAllChapters": { "placeholders": { "count": {} } },
+  "@readerViewAllChapters": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerPageInfo": "页面信息",
   "readerTableOfContents": "目录",
   "readerTotalChapters": "共 {count} 章",
-  "@readerTotalChapters": { "placeholders": { "count": {} } },
+  "@readerTotalChapters": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerDeleteCollection": "删除合集",
   "readerCollectionCount": "{count} 本",
-  "@readerCollectionCount": { "placeholders": { "count": {} } },
+  "@readerCollectionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerCollectionEmpty": "合集里还没有书籍",
   "readerCollectionEmptyHint": "在书架中长按书籍，可以将它添加到合集。",
   "readerConfirmDeleteCollection": "删除合集",
   "readerConfirmDeleteCollectionMsg": "确定要删除「{name}」吗？合集内的书籍不会被删除。",
-  "@readerConfirmDeleteCollectionMsg": { "placeholders": { "name": {} } },
+  "@readerConfirmDeleteCollectionMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerDeletedCollection": "已删除「{name}」",
-  "@readerDeletedCollection": { "placeholders": { "name": {} } },
+  "@readerDeletedCollection": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerDeleteFailed": "删除失败: {error}",
-  "@readerDeleteFailed": { "placeholders": { "error": {} } },
+  "@readerDeleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerNoChanges": "未修改任何字段",
   "readerMetadataSaved": "元数据已保存",
   "readerSaveFailed": "保存失败: {error}",
-  "@readerSaveFailed": { "placeholders": { "error": {} } },
+  "@readerSaveFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerEditMetadata": "编辑元数据",
   "readerSave": "保存",
   "readerLabelTitle": "标题",
@@ -1468,18 +1765,43 @@
   "readerUnknownFile": "未知文件",
   "readerCoverUpdated": "封面已更新",
   "readerOperationFailedError": "操作失败: {error}",
-  "@readerOperationFailedError": { "placeholders": { "error": {} } },
+  "@readerOperationFailedError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerCoverUploaded": "封面已上传",
   "readerUploadFailed": "上传失败: {error}",
-  "@readerUploadFailed": { "placeholders": { "error": {} } },
+  "@readerUploadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerPageInfoFormat": "第 {current} 页 / 共 {total} 页",
-  "@readerPageInfoFormat": { "placeholders": { "current": {}, "total": {} } },
+  "@readerPageInfoFormat": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
   "readerPageNumber": "第 {page} 页",
-  "@readerPageNumber": { "placeholders": { "page": {} } },
+  "@readerPageNumber": {
+    "placeholders": {
+      "page": {}
+    }
+  },
   "readerWordCount": "{count} 字",
-  "@readerWordCount": { "placeholders": { "count": {} } },
+  "@readerWordCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerWordCountWan": "{count} 万",
-  "@readerWordCountWan": { "placeholders": { "count": {} } },
+  "@readerWordCountWan": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerRetry": "重试",
   "readerRtl": "右到左 (RTL)",
   "readerLtr": "左到右 (LTR)",
@@ -1488,15 +1810,27 @@
   "readerNextChapter": "下一章",
   "readerClose": "关闭",
   "readerDeletedItem": "已删除「{name}」",
-  "@readerDeletedItem": { "placeholders": { "name": {} } },
+  "@readerDeletedItem": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerDeleteItemFailed": "删除失败，请稍后重试",
   "readerRemovedFromBookshelf": "已从书架移除",
   "readerSearchBooksHint": "搜索书名、作者…",
   "readerCollectionCreated": "合集「{name}」已创建",
-  "@readerCollectionCreated": { "placeholders": { "name": {} } },
+  "@readerCollectionCreated": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerCreateFailed": "创建失败，请稍后重试",
   "readerImportSuccess": "「{name}」导入成功",
-  "@readerImportSuccess": { "placeholders": { "name": {} } },
+  "@readerImportSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerImportFailed": "导入失败，请稍后重试",
   "readerImportFailedWithReason": "《{name}》导入失败：{reason}",
   "@readerImportFailedWithReason": {
@@ -1518,7 +1852,11 @@
   "readerImportComic": "漫画",
   "readerPendingImport": "待导入文件",
   "readerPendingImportCount": "{count} 个",
-  "@readerPendingImportCount": { "placeholders": { "count": {} } },
+  "@readerPendingImportCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerPendingImportDesc": "以下是已上传但尚未导入到阅读中心的文件。EPUB 文件可选择作为图书或漫画导入。",
   "readerNoPendingImport": "没有待导入的文件",
   "readerNoPendingImportHint": "上传 EPUB、CBZ 等阅读文件后，它们会出现在这里。已导入的文件不会重复显示。",
@@ -1528,17 +1866,37 @@
   "readerNoImportedContentHint": "导入书籍后，可以在这里重新解析。",
   "readerNoFileNode": "该条目无文件节点，无法重新解析",
   "readerReparseSuccess": "「{name}」重新解析成功",
-  "@readerReparseSuccess": { "placeholders": { "name": {} } },
+  "@readerReparseSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerComicReparseStarted": "「{name}」已开始重新解析，稍后可刷新查看状态",
-  "@readerComicReparseStarted": { "placeholders": { "name": {} } },
+  "@readerComicReparseStarted": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerReparseFailed": "重新解析失败，请稍后重试",
   "readerComicImportStatusTitle": "漫画解析状态",
   "readerComicImportStatusValue": "当前状态：{status}",
-  "@readerComicImportStatusValue": { "placeholders": { "status": {} } },
+  "@readerComicImportStatusValue": {
+    "placeholders": {
+      "status": {}
+    }
+  },
   "readerComicSourceCount": "{count} 个来源",
-  "@readerComicSourceCount": { "placeholders": { "count": {} } },
+  "@readerComicSourceCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerComicCatalogCount": "{count} 个目录",
-  "@readerComicCatalogCount": { "placeholders": { "count": {} } },
+  "@readerComicCatalogCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerComicCatalogPreview": "目录结构",
   "readerComicPagePreview": "页面预览",
   "readerComicCatalogPending": "目录仍在解析中，稍后刷新可查看结果。",
@@ -1555,7 +1913,11 @@
   "readerComicFailedMessage": "解析失败，请重试失败来源。",
   "readerComicSources": "来源",
   "readerComicRetryCount": "已重试 {count} 次",
-  "@readerComicRetryCount": { "placeholders": { "count": {} } },
+  "@readerComicRetryCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerRefreshFailed": "刷新失败，请稍后重试",
   "readerDone": "完成",
   "readerUnsupportedLink": "暂不支持打开该链接",
@@ -1563,14 +1925,34 @@
   "readerUnknownBook": "未知书籍",
   "readerReadingReport": "阅读报告",
   "readerWeeklyHours": "本周阅读 {hours} 小时",
-  "@readerWeeklyHours": { "placeholders": { "hours": {} } },
+  "@readerWeeklyHours": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
   "readerContinueBtn": "继续阅读",
   "readerBookshelfSection": "书架",
+  "readerShowAllBooks": "显示全部 {count} 本",
+  "@readerShowAllBooks": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "readerViewAll": "查看全部",
   "readerBookCount": "{count} 本",
-  "@readerBookCount": { "placeholders": { "count": {} } },
+  "@readerBookCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerContinueCount": "{count} 继续",
-  "@readerContinueCount": { "placeholders": { "count": {} } },
+  "@readerContinueCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerRefresh": "刷新",
   "readerAddBook": "添加图书",
   "readerImportQueued": "文件已上传，正在后台导入...",
@@ -1592,12 +1974,21 @@
   "readerAllMetadataComplete": "所有条目元数据已齐全",
   "readerScrapeHint": "新导入的书籍会自动触发刮削，也可在详情页手动重试。",
   "readerScrapeSubmitted": "刮削任务已提交: {id}…",
-  "@readerScrapeSubmitted": { "placeholders": { "id": {} } },
+  "@readerScrapeSubmitted": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "readerScrapeSubmitFailed": "刮削任务提交失败，请稍后重试",
   "readerSubmitting": "提交中…",
   "readerBatchScrape": "全量刮削",
   "readerBatchScrapeResult": "已提交 {success} / {total} 个刮削任务",
-  "@readerBatchScrapeResult": { "placeholders": { "success": {}, "total": {} } },
+  "@readerBatchScrapeResult": {
+    "placeholders": {
+      "success": {},
+      "total": {}
+    }
+  },
   "readerSubmittingLabel": "提交中",
   "readerScrapeLabel": "刮削",
   "readerRemoveFromBookshelf": "从书架移除",
@@ -1605,27 +1996,46 @@
   "readerDeleteBookHint": "永久删除书籍及其源文件",
   "readerDeleteSource": "删除来源",
   "readerConfirmDeleteSource": "确定删除来源「{name}」吗？该来源解析出的页面会从漫画中移除，文件模块中的原始文件将保留。",
-  "@readerConfirmDeleteSource": { "placeholders": { "name": {} } },
+  "@readerConfirmDeleteSource": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerConfirmDelete": "确认永久删除",
   "readerConfirmDeleteMsg": "确定要从书库删除「{name}」吗？源文件将保留。",
-  "@readerConfirmDeleteMsg": { "placeholders": { "name": {} } },
+  "@readerConfirmDeleteMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerFieldRequired": "{field}不能为空",
-  "@readerFieldRequired": { "placeholders": { "field": {} } },
+  "@readerFieldRequired": {
+    "placeholders": {
+      "field": {}
+    }
+  },
   "readerHistory": "历史",
   "readerImports": "导入",
   "readerGroupPersonal": "个人",
   "readerGroupTools": "工具",
   "readerGroupManagement": "管理",
   "readerPercentRead": "{percent}% 已读",
-  "@readerPercentRead": { "placeholders": { "percent": {} } },
+  "@readerPercentRead": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "readerSectionNotAvailable": "{section} 暂未接入",
-  "@readerSectionNotAvailable": { "placeholders": { "section": {} } },
+  "@readerSectionNotAvailable": {
+    "placeholders": {
+      "section": {}
+    }
+  },
   "readerSectionNotAvailableHint": "这个入口已经预留好了，后续会接入独立内容页。",
   "readerNoBookmarks": "还没有书签",
   "readerNoBookmarksHint": "在阅读时添加书签，下次可以从这里快速跳转。",
   "readerEmptyHint": "这里还没有内容",
   "readerEmptyHintDesc": "从文件管理导入书籍后，它们会自动出现在书架里。",
-
   "readerHighlight": "高亮",
   "readerAnnotate": "批注",
   "readerRemoveHighlight": "取消高亮",
@@ -1644,7 +2054,6 @@
   "readerTransitionCover": "覆盖",
   "readerTransitionFade": "淡入",
   "readerTransitionScroll": "上下",
-
   "videoSectionMovies": "电影",
   "videoSectionTvShows": "剧集",
   "videoSectionAnime": "动漫",
@@ -1679,7 +2088,13 @@
   "videoRecentSubtitle": "最近 30 天新增的内容集中显示在此。",
   "videoFavoritesSubtitle": "当前用户标记星标的影片和剧集会集中显示在这里。",
   "videoSeasonProgress": "第 {season} 季 · {current}/{total} 集",
-  "@videoSeasonProgress": { "placeholders": { "season": {}, "current": {}, "total": {} } },
+  "@videoSeasonProgress": {
+    "placeholders": {
+      "season": {},
+      "current": {},
+      "total": {}
+    }
+  },
   "videoDefaultVersion": "默认版本",
   "videoSelectVersion": "选择版本",
   "videoPlay": "播放",
@@ -1691,7 +2106,11 @@
   "videoDelete": "删除",
   "videoDeleteItemTitle": "删除影视条目？",
   "videoDeleteItemMessage": "\"{title}\" 及其源文件将被永久删除，此操作无法撤销。",
-  "@videoDeleteItemMessage": { "placeholders": { "title": {} } },
+  "@videoDeleteItemMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "videoSubtitleManagement": "字幕管理",
   "videoNoSubtitles": "暂无可用字幕",
   "videoSubtitleLoadFailed": "加载字幕信息失败",
@@ -1700,7 +2119,11 @@
   "videoSubtitleUploaded": "字幕上传成功",
   "videoDeleteSubtitleTitle": "删除字幕？",
   "videoDeleteSubtitleMessage": "确定删除字幕 \"{label}\" 吗？",
-  "@videoDeleteSubtitleMessage": { "placeholders": { "label": {} } },
+  "@videoDeleteSubtitleMessage": {
+    "placeholders": {
+      "label": {}
+    }
+  },
   "videoSubtitleDeleted": "字幕已删除",
   "videoSubtitleLanguage": "字幕语言",
   "videoSubtitleLanguageHint": "例如: chi, eng, jpn",
@@ -1715,7 +2138,11 @@
   "videoNotExtracted": "未提取",
   "videoLoadFailed": "加载失败",
   "videoAudioIncompatibleNotice": "当前音频编码 {codec} 不兼容 Web 浏览器。提取兼容音频后，Web 端将使用缓存音频播放。",
-  "@videoAudioIncompatibleNotice": { "placeholders": { "codec": {} } },
+  "@videoAudioIncompatibleNotice": {
+    "placeholders": {
+      "codec": {}
+    }
+  },
   "videoCompatibleAudioReady": "兼容音频已就绪",
   "videoExtracting": "提取中...",
   "videoExtractCompatibleAudio": "提取兼容音频",
@@ -1748,14 +2175,30 @@
   "videoWatching": "观看中",
   "videoNoWatchRecord": "暂无观看记录",
   "videoLastPlayed": "上次播放: {time}",
-  "@videoLastPlayed": { "placeholders": { "time": {} } },
+  "@videoLastPlayed": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "videoJustNow": "刚刚",
   "videoMinutesAgo": "{n} 分钟前",
-  "@videoMinutesAgo": { "placeholders": { "n": {} } },
+  "@videoMinutesAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "videoHoursAgo": "{n} 小时前",
-  "@videoHoursAgo": { "placeholders": { "n": {} } },
+  "@videoHoursAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "videoDaysAgo": "{n} 天前",
-  "@videoDaysAgo": { "placeholders": { "n": {} } },
+  "@videoDaysAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "videoHighRated": "高分推荐",
   "videoNewest": "最新上映",
   "videoViewMore": "查看更多",
@@ -1772,7 +2215,11 @@
   "videoCollectionCreated": "合集已创建",
   "videoCollectionEmpty": "合集为空",
   "videoLoadFailedWith": "加载失败: {error}",
-  "@videoLoadFailedWith": { "placeholders": { "error": {} } },
+  "@videoLoadFailedWith": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "videoRequestTimeout": "请求超时，请稍后重试",
   "videoConnectionError": "无法连接后端服务，请确认服务已启动",
   "videoOperationCancelled": "操作已取消",
@@ -1801,16 +2248,29 @@
   "videoScrapeTaskSubmitted": "刮削任务已提交",
   "videoNoScrapeItems": "当前没有需要处理的刮削条目。",
   "videoSeasonNumber": "第 {number} 季",
-  "@videoSeasonNumber": { "placeholders": { "number": {} } },
+  "@videoSeasonNumber": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoEpisodesPending": "{count} 集待处理",
-  "@videoEpisodesPending": { "placeholders": { "count": {} } },
+  "@videoEpisodesPending": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "videoEdit": "编辑",
   "videoNfo": "NFO",
   "videoParseComplete": "视频解析完成",
   "videoMetadataSubtitle": "管理员可手动编辑标题、简介、海报、演员和评分，并锁定自动刮削结果。",
   "videoNoMetadata": "暂无可管理的媒体元数据。",
   "videoEpisodeStatus": "剧集 · {count} 集 · {status}",
-  "@videoEpisodeStatus": { "placeholders": { "count": {}, "status": {} } },
+  "@videoEpisodeStatus": {
+    "placeholders": {
+      "count": {},
+      "status": {}
+    }
+  },
   "videoParse": "解析",
   "videoTranscodeSubtitle": "为指定影片创建视频转码或音频提取任务，并查看任务进度。",
   "videoTranscodeSubmitted": "转码任务已提交",
@@ -1840,20 +2300,36 @@
   "videoRecentScanRecords": "最近发现与入库记录",
   "videoRecentScanSubtitle": "展示本地来源发现、审核入库和既有托管媒体扫描任务。",
   "videoNfoPreviewTitle": "NFO - {title}",
-  "@videoNfoPreviewTitle": { "placeholders": { "title": {} } },
+  "@videoNfoPreviewTitle": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "videoSeriesLibrary": "剧集库",
   "videoSeriesLibrarySubtitle": "剧集按系列组织，点击可查看详情、季集列表和直接播放。",
   "videoNoSeries": "还没有剧集系列。",
   "videoNoSeasonInfo": "暂无季信息",
   "videoEpisodeList": "剧集列表",
   "videoSeasonTab": "第{number}季",
-  "@videoSeasonTab": { "placeholders": { "number": {} } },
+  "@videoSeasonTab": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoNoEpisodesInSeason": "该季暂无单集信息",
   "videoMediaCenter": "媒体库",
   "videoSeasonLabel": "第 {number} 季",
-  "@videoSeasonLabel": { "placeholders": { "number": {} } },
+  "@videoSeasonLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoEpisodeLabel": "第 {number} 集",
-  "@videoEpisodeLabel": { "placeholders": { "number": {} } },
+  "@videoEpisodeLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoPreviousEpisode": "上一集",
   "videoNextEpisode": "下一集",
   "videoTitleRequired": "标题不能为空",
@@ -1878,7 +2354,6 @@
   "videoOriginalAspectRatio": "原始比例",
   "videoCompatibleAudioNotice": "已使用兼容音频流播放。点击底部音频按钮可切换音频源。",
   "videoGotIt": "知道了",
-
   "videoSubtitleTrack": "字幕轨道",
   "videoNoSubtitlesAvailable": "当前视频无可用字幕",
   "videoDisableSubtitles": "关闭字幕",
@@ -1886,7 +2361,11 @@
   "videoCompatibleAudioAac": "兼容音频（AAC 缓存）",
   "videoCompatibleAudioDesc": "预处理的 AAC 音频流，兼容所有 Web 浏览器",
   "videoOriginalAudioLabel": "原始音频（{codec}）",
-  "@videoOriginalAudioLabel": { "placeholders": { "codec": {} } },
+  "@videoOriginalAudioLabel": {
+    "placeholders": {
+      "codec": {}
+    }
+  },
   "videoOriginalAudioDesc": "实时转码原始音频，可能需要更多处理时间",
   "videoPlaybackSpeed": "播放速度",
   "videoAspectRatio": "画面比例",
@@ -1901,20 +2380,37 @@
   "videoInfoAudioCodec": "音频编码",
   "videoInfoAudioSource": "音频源",
   "videoInfoSubtitleCount": "{count} 条",
-  "@videoInfoSubtitleCount": { "placeholders": { "count": {} } },
+  "@videoInfoSubtitleCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "videoInfoVolume": "音量",
   "videoBackToDetail": "返回详情",
   "videoStatusSubtitle": "当前视频为 {container}/{video}/{audio}，浏览器不支持直接播放，正在通过服务端转码流式播放。跳转精度有限，如需精准 Seek 请使用桌面客户端。",
-  "@videoStatusSubtitle": { "placeholders": { "container": {}, "video": {}, "audio": {} } },
+  "@videoStatusSubtitle": {
+    "placeholders": {
+      "container": {},
+      "video": {},
+      "audio": {}
+    }
+  },
   "videoLastPlayedTime": "上次播放: {time}",
-  "@videoLastPlayedTime": { "placeholders": { "time": {} } },
-
+  "@videoLastPlayedTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "photosLoading": "加载中...",
   "photoThumbnailLoading": "正在加载缩略图",
   "photosTaskFailed": "任务执行失败",
   "photosTaskStatusRefreshFailed": "任务状态更新失败，正在自动重试",
   "photosProcessedItems": "已完成 {count} 项",
-  "@photosProcessedItems": { "placeholders": { "count": {} } },
+  "@photosProcessedItems": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosDone": "完成",
   "photosRunInBackground": "后台运行",
   "photosSlideshow3s": "3秒",
@@ -1929,7 +2425,11 @@
   "photosTabGraph": "关系图谱",
   "photosGraphFilter": "筛选节点类型",
   "photosGraphSearchActive": "正在筛选“{query}”",
-  "@photosGraphSearchActive": { "placeholders": { "query": {} } },
+  "@photosGraphSearchActive": {
+    "placeholders": {
+      "query": {}
+    }
+  },
   "photosGraphKindAlbum": "相册",
   "photosGraphKindTime": "时间",
   "photosGraphKindLocation": "地点",
@@ -1942,35 +2442,68 @@
   "photosGraphOpenAlbum": "打开相册",
   "photosGraphViewPhoto": "查看照片",
   "photosGraphPhotoCount": "{count} 张照片",
-  "@photosGraphPhotoCount": { "placeholders": { "count": {} } },
+  "@photosGraphPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosGraphFaceCount": "{count} 张人脸",
-  "@photosGraphFaceCount": { "placeholders": { "count": {} } },
+  "@photosGraphFaceCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosGraphShowing": "显示 {shown} / {total} 张",
-  "@photosGraphShowing": { "placeholders": { "shown": {}, "total": {} } },
+  "@photosGraphShowing": {
+    "placeholders": {
+      "shown": {},
+      "total": {}
+    }
+  },
   "photosGraphLoadMore": "加载更多",
   "photosGraphTruncated": "关系较多，仅展示部分节点与连线。",
   "photosTabMemories": "回忆",
   "photosClose": "关闭",
   "photosDeletePhotoTitle": "永久删除照片",
   "photosDeletePhotoConfirm": "「{title}」及其源文件将被永久删除，此操作无法撤销。",
-  "@photosDeletePhotoConfirm": { "placeholders": { "title": {} } },
+  "@photosDeletePhotoConfirm": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosCancel": "取消",
   "photosDelete": "永久删除",
   "photosDeletedPhoto": "已永久删除「{title}」及其源文件",
-  "@photosDeletedPhoto": { "placeholders": { "title": {} } },
+  "@photosDeletedPhoto": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosDeleteFailed": "删除失败，请稍后重试",
   "photosDeleteAlbumTitle": "删除相册",
   "photosDeleteAlbumConfirm": "确定要删除相册「{name}」吗？相册内的照片不会被删除。",
-  "@photosDeleteAlbumConfirm": { "placeholders": { "name": {} } },
+  "@photosDeleteAlbumConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "photosDeletedAlbum": "已删除相册「{name}」",
-  "@photosDeletedAlbum": { "placeholders": { "name": {} } },
+  "@photosDeletedAlbum": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "photosNewAlbum": "新建相册",
   "photosAlbumName": "相册名称",
   "photosAlbumNameHint": "例如：旅行照片",
   "photosAlbumDescription": "描述（可选）",
   "photosAlbumDescriptionHint": "简要描述这个相册",
   "photosAlbumCreated": "相册「{name}」已创建",
-  "@photosAlbumCreated": { "placeholders": { "name": {} } },
+  "@photosAlbumCreated": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "photosCreateFailed": "创建失败，请稍后重试",
   "photosCreate": "创建",
   "photosBackToPortal": "返回 Portal",
@@ -1987,12 +2520,25 @@
   "photosAlbums": "影集",
   "photosNoAlbums": "还没有影集",
   "photosAlbumPhotoCount": "{count}",
-  "@photosAlbumPhotoCount": { "placeholders": { "count": {} } },
+  "@photosAlbumPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosViewAll": "查看全部",
   "photosLoadMore": "加载更多（已加载 {loaded} / {total}）",
-  "@photosLoadMore": { "placeholders": { "loaded": {}, "total": {} } },
+  "@photosLoadMore": {
+    "placeholders": {
+      "loaded": {},
+      "total": {}
+    }
+  },
   "photosSelectedCount": "已选 {count} 张",
-  "@photosSelectedCount": { "placeholders": { "count": {} } },
+  "@photosSelectedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosTag": "标签",
   "photosMove": "移动",
   "photosExportZip": "导出 ZIP",
@@ -2000,7 +2546,11 @@
   "photosSaveZip": "保存 ZIP",
   "photosDownloadStarted": "已交由浏览器下载",
   "photosArchiveSaved": "ZIP 已保存至 {path}",
-  "@photosArchiveSaved": { "placeholders": { "path": {} } },
+  "@photosArchiveSaved": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "photosArchiveDownloadFailed": "ZIP 下载失败，可重新选择同一路径继续下载",
   "photosBatchAddTag": "批量添加标签",
   "photosTagName": "标签名称",
@@ -2010,14 +2560,26 @@
   "photosSelectAlbum": "选择相册",
   "photosBatchDelete": "批量删除",
   "photosBatchDeleteConfirm": "选中的 {count} 张照片及其源文件将被永久删除，此操作无法撤销。",
-  "@photosBatchDeleteConfirm": { "placeholders": { "count": {} } },
+  "@photosBatchDeleteConfirm": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosBatchDeleted": "已永久删除 {count} 张照片及其源文件",
-  "@photosBatchDeleted": { "placeholders": { "count": {} } },
+  "@photosBatchDeleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosDeselect": "取消选择",
   "photosNoTimelineData": "暂无时间线数据",
   "photosNoTimelineHint": "照片需要包含拍摄时间信息才能显示时间线",
   "photosYear": "{year}年",
-  "@photosYear": { "placeholders": { "year": {} } },
+  "@photosYear": {
+    "placeholders": {
+      "year": {}
+    }
+  },
   "photosOperationFailed": "操作失败，请稍后重试",
   "photosImageLoadFailed": "图片加载失败",
   "photosBack": "返回",
@@ -2080,7 +2642,11 @@
   "photosRolledBack": "已回滚到指定版本",
   "photosRollbackFailed": "回滚失败",
   "photosEditTitle": "编辑 - {title}",
-  "@photosEditTitle": { "placeholders": { "title": {} } },
+  "@photosEditTitle": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosVersionHistory": "版本历史",
   "photosSave": "保存",
   "photosCropDragHint": "拖拽选择裁剪区域",
@@ -2089,11 +2655,19 @@
   "photosNoEditHistory": "暂无编辑历史",
   "photosRollback": "回滚",
   "photosLoadFailed": "加载失败: {error}",
-  "@photosLoadFailed": { "placeholders": { "error": {} } },
+  "@photosLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "photosAiActions": "图像分析操作",
   "photosAnalyzeLibrary": "重分析照片库",
   "photosAiTaskSubmitted": "AI 任务已提交（{taskId}），可在任务中心查看进度",
-  "@photosAiTaskSubmitted": { "placeholders": { "taskId": {} } },
+  "@photosAiTaskSubmitted": {
+    "placeholders": {
+      "taskId": {}
+    }
+  },
   "photosAiTaskSubmitFailed": "AI 任务提交失败",
   "photosNamePerson": "命名人物",
   "photosPersonNameHint": "输入人物名称",
@@ -2102,12 +2676,24 @@
   "photosNoFaceData": "暂无人脸数据\n上传照片后系统会自动识别并分组",
   "photosUnnamed": "未命名",
   "photosFaceCount": "{count} 张",
-  "@photosFaceCount": { "placeholders": { "count": {} } },
+  "@photosFaceCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosPhotoCount": "{count} 张照片",
-  "@photosPhotoCount": { "placeholders": { "count": {} } },
+  "@photosPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosPersonNoPhotos": "该人物暂无照片",
   "photosSharedAlbumAccessError": "无法访问共享相册：{error}",
-  "@photosSharedAlbumAccessError": { "placeholders": { "error": {} } },
+  "@photosSharedAlbumAccessError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "photosSharedAlbumPasswordRequired": "此相册需要密码访问",
   "photosSharedAlbumPasswordHint": "请输入分享密码以查看相册内容",
   "photosEnterPassword": "输入密码",
@@ -2123,19 +2709,39 @@
   "photosShareExpiryNever": "永不过期",
   "photosExistingShareLinks": "现有分享链接",
   "photosShareAccessCount": "访问 {count} 次",
-  "@photosShareAccessCount": { "placeholders": { "count": {} } },
+  "@photosShareAccessCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosCreateLink": "创建链接",
   "photosShareLinkCreated": "分享链接已创建: {token}",
-  "@photosShareLinkCreated": { "placeholders": { "token": {} } },
+  "@photosShareLinkCreated": {
+    "placeholders": {
+      "token": {}
+    }
+  },
   "photosShareLinkFailed": "创建分享链接失败",
   "photosRemoveFromAlbum": "从相册移除",
   "photosRemoveFromAlbumConfirm": "确定要将「{title}」从相册中移除吗？照片本身不会被删除。",
-  "@photosRemoveFromAlbumConfirm": { "placeholders": { "title": {} } },
+  "@photosRemoveFromAlbumConfirm": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosRemove": "移除",
   "photosRemovedFromAlbum": "已将「{title}」从相册移除",
-  "@photosRemovedFromAlbum": { "placeholders": { "title": {} } },
+  "@photosRemovedFromAlbum": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosAlbumPhotoCountLabel": "{count} 张照片",
-  "@photosAlbumPhotoCountLabel": { "placeholders": { "count": {} } },
+  "@photosAlbumPhotoCountLabel": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosDeleteAlbumTooltip": "删除相册",
   "photosAllPhotos": "全部照片",
   "photosNoGroupData": "暂无分组数据",
@@ -2149,7 +2755,6 @@
   "photosFilterSepia": "复古",
   "photosFilterBlur": "模糊",
   "photosFilterSharpen": "锐化",
-
   "musicDeckTitle": "音乐空间",
   "musicDeckHome": "首页",
   "musicDeckLibrary": "曲库",
@@ -2166,7 +2771,11 @@
   "musicDailyRecommendationSection": "今日推荐",
   "musicDailyRecommendationTitle": "每日推荐歌曲",
   "musicDailyRecommendationTrackCount": "共 {count} 首 · 每日更新",
-  "@musicDailyRecommendationTrackCount": { "placeholders": { "count": {} } },
+  "@musicDailyRecommendationTrackCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicDailyRecommendationEmpty": "今日推荐暂不可用，请稍后再试",
   "musicDailyRecommendationLoadFailed": "加载每日推荐失败，请稍后重试",
   "musicDeckAccounts": "平台账号",
@@ -2183,19 +2792,35 @@
   "musicDeleteLocalTrack": "删除本地歌曲",
   "musicDeleteLocalTrackTitle": "永久删除本地歌曲？",
   "musicDeleteLocalTrackMessage": "「{title}」及其源文件将被永久删除，此操作无法撤销。",
-  "@musicDeleteLocalTrackMessage": { "placeholders": { "title": {} } },
+  "@musicDeleteLocalTrackMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "musicDeleteLocalTrackSuccess": "本地歌曲已永久删除",
   "musicDeleteLocalTrackFailed": "删除失败，请稍后重试",
   "musicDeletePlaylistTitle": "删除这个歌单？",
   "musicDeletePlaylistMessage": "确定要删除「{name}」吗？歌单内的歌曲不会被删除。",
-  "@musicDeletePlaylistMessage": { "placeholders": { "name": {} } },
+  "@musicDeletePlaylistMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "musicPlaylistCoverPick": "选择封面",
   "musicPlaylistCoverChange": "更换封面",
   "musicPlaylistCoverHint": "未选择时使用第一首歌曲的封面",
   "musicPlaylistSaveFailed": "歌单保存失败：{error}",
-  "@musicPlaylistSaveFailed": { "placeholders": { "error": {} } },
+  "@musicPlaylistSaveFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "musicPlaylistDeleteFailed": "歌单删除失败：{error}",
-  "@musicPlaylistDeleteFailed": { "placeholders": { "error": {} } },
+  "@musicPlaylistDeleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "musicDeckConnectedSources": "已连接来源",
   "musicDeckSearchPrompt": "输入至少两个字符，按歌曲、歌手或专辑筛选",
   "musicDeckNoSearchResults": "没有匹配的歌曲",
@@ -2205,9 +2830,18 @@
   "musicDeckNowPlaying": "正在播放",
   "musicDeckLibraryReady": "曲库已就绪",
   "musicDeckLibrarySummary": "{trackCount} 首歌曲 · {albumCount} 张专辑",
-  "@musicDeckLibrarySummary": { "placeholders": { "trackCount": {}, "albumCount": {} } },
+  "@musicDeckLibrarySummary": {
+    "placeholders": {
+      "trackCount": {},
+      "albumCount": {}
+    }
+  },
   "musicDeckTrackCount": "{count} 首歌曲",
-  "@musicDeckTrackCount": { "placeholders": { "count": {} } },
+  "@musicDeckTrackCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicDeckContinueListening": "继续聆听",
   "musicDeckYourCollections": "你的歌单",
   "musicDeckRecentEmpty": "播放歌曲后，最近内容会显示在这里。",
@@ -2240,30 +2874,35 @@
   "musicNoLyrics": "暂无歌词",
   "musicNowPlayingArtwork": "封面",
   "musicNowPlayingLyrics": "歌词",
-
   "musicEditMetadata": "编辑元数据",
   "musicTitleRequired": "标题不能为空",
   "musicMetadataSaved": "元数据已保存",
   "musicSaveFailed": "保存失败: {error}",
-  "@musicSaveFailed": { "placeholders": { "error": {} } },
+  "@musicSaveFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "musicFieldTitle": "标题",
   "musicFieldArtist": "艺术家",
   "musicFieldAlbum": "专辑",
   "musicFieldGenre": "风格",
   "musicCoverImage": "封面图片",
   "musicCoverSelected": "已选择: {name}",
-  "@musicCoverSelected": { "placeholders": { "name": {} } },
+  "@musicCoverSelected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "musicCoverPick": "选择封面图片",
   "musicLyricsFile": "歌词文件",
   "musicLyricsPick": "选择歌词文件（LRC / TXT / SRT / VTT）",
-
   "musicQueueTitle": "播放队列",
   "musicQueueEmpty": "播放队列为空",
   "musicShuffle": "随机播放",
   "musicRepeatOff": "顺序播放",
   "musicRepeatAll": "列表循环",
   "musicRepeatOne": "单曲循环",
-
   "musicPlaylistsSubtitle": "管理你创建的本地播放列表。",
   "musicPlaylistsEmptyHint": "创建歌单后可在这里集中管理。",
   "musicOpenPlaylist": "打开歌单",
@@ -2272,12 +2911,14 @@
   "musicArtistNoTracks": "该艺术家下暂无歌曲。",
   "musicRemoveFromPlaylist": "移出歌单",
   "musicViewAll": "查看全部 ({count})",
-  "@musicViewAll": { "placeholders": { "count": {} } },
-
+  "@musicViewAll": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicPause": "暂停",
   "musicPlay": "播放",
   "musicNotPlaying": "未播放",
-
   "musicRecommendedArtist": "推荐艺术家",
   "musicExploreMusic": "探索音乐",
   "musicPlayNow": "立即播放",
@@ -2294,14 +2935,23 @@
   "musicArtistsSubtitle": "按艺术家聚合歌曲与专辑。",
   "musicNoArtists": "暂无艺术家",
   "musicArtistsHint": "歌曲标签解析后会显示艺术家。",
-
   "musicSidebarViewAll": "查看全部 ({count})",
-  "@musicSidebarViewAll": { "placeholders": { "count": {} } },
-
+  "@musicSidebarViewAll": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicScanSubtitle": "扫描文件库中的音频文件，解析标签、专辑、艺术家和封面。",
   "musicNoScanTask": "当前没有新扫描任务。",
   "musicScanStatus": "任务 {id} · {status} · {progress}% · 已扫描 {files} 个文件",
-  "@musicScanStatus": { "placeholders": { "id": {}, "status": {}, "progress": {}, "files": {} } },
+  "@musicScanStatus": {
+    "placeholders": {
+      "id": {},
+      "status": {},
+      "progress": {},
+      "files": {}
+    }
+  },
   "musicMetadataSubtitle": "集中检查歌曲标题、艺术家、专辑和音质标签。",
   "musicNoMetadataHint": "音乐扫描完成后，可以在这里补全 MusicBrainz 元数据。",
   "musicCandidate": "候选",
@@ -2309,7 +2959,6 @@
   "musicCandidateFetchFailed": "候选获取失败",
   "musicNoCandidates": "没有找到候选",
   "musicNoCandidatesHint": "可以先完善本地标题、歌手或专辑，再重新尝试。",
-
   "backupSkipNonWifi": "非 WiFi 网络，跳过备份",
   "backupSkipNoPermission": "未获得相册访问权限",
   "backupSkipNoAlbums": "无相册",
@@ -2318,17 +2967,31 @@
   "backupNotificationChannelDesc": "照片自动备份进度",
   "backupNotificationTitle": "照片备份中",
   "backupNotificationProgress": "已处理 {current}/{total}，已上传 {uploaded} 张",
-  "@backupNotificationProgress": { "placeholders": { "current": {}, "total": {}, "uploaded": {} } },
+  "@backupNotificationProgress": {
+    "placeholders": {
+      "current": {},
+      "total": {},
+      "uploaded": {}
+    }
+  },
   "backupNotificationComplete": "照片备份完成",
   "backupNotificationSummary": "上传 {uploaded} 张，跳过 {skipped} 张，失败 {failed} 张",
-  "@backupNotificationSummary": { "placeholders": { "uploaded": {}, "skipped": {}, "failed": {} } },
-
+  "@backupNotificationSummary": {
+    "placeholders": {
+      "uploaded": {},
+      "skipped": {},
+      "failed": {}
+    }
+  },
   "photoRegenerateThumbnails": "重建缩略图",
   "photoRegenerateDone": "已重建 {count} 个缩略图",
-  "@photoRegenerateDone": { "placeholders": { "count": {} } },
+  "@photoRegenerateDone": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photoImportCandidates": "导入候选",
   "photoNoImportCandidates": "暂无待导入的图片",
-
   "importFiles": "导入文件",
   "importToPersonalSpace": "个人空间",
   "importToSharedSpace": "共享空间",
@@ -2338,14 +3001,26 @@
   "importSharedSpaceDesc": "所有用户可见",
   "importUploading": "导入中...",
   "importComplete": "已导入 {count} 个文件",
-  "@importComplete": { "placeholders": { "count": {} } },
+  "@importComplete": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "importFailed": "导入失败",
   "importRefreshFailed": "文件已导入，但列表刷新失败。",
   "importProcessing": "已上传 {count} 个文件，仍在处理中，请稍后刷新。",
-  "@importProcessing": { "placeholders": { "count": {} } },
+  "@importProcessing": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "importUnsupportedFormat": "不支持以下文件格式：{files}。支持格式：{extensions}。",
-  "@importUnsupportedFormat": { "placeholders": { "files": {}, "extensions": {} } },
-
+  "@importUnsupportedFormat": {
+    "placeholders": {
+      "files": {},
+      "extensions": {}
+    }
+  },
   "readerPortal": "Portal",
   "readerCenter": "阅读中心",
   "readerSortRecent": "最近阅读",
@@ -2360,15 +3035,27 @@
   "readerNotStarted": "未开始",
   "readerUnknownTime": "未知时间",
   "readerChapterNumber": "第 {number} 章",
-  "@readerChapterNumber": { "placeholders": { "number": {} } },
+  "@readerChapterNumber": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "readerProgressLabel": "进度 {progress}",
-  "@readerProgressLabel": { "placeholders": { "progress": {} } },
+  "@readerProgressLabel": {
+    "placeholders": {
+      "progress": {}
+    }
+  },
   "readerRestoreProgress": "恢复阅读进度",
   "readerRestoreProgressConfirm": "确定要恢复到此版本的阅读进度吗？当前进度将被覆盖。",
   "readerConfirmRestore": "确定恢复",
   "readerProgressRestored": "阅读进度已恢复",
   "readerRestoreFailed": "恢复失败: {error}",
-  "@readerRestoreFailed": { "placeholders": { "error": {} } },
+  "@readerRestoreFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerVersionHistory": "版本历史",
   "readerNoVersionHistory": "暂无版本记录",
   "readerVersionHistoryHint": "阅读进度变更后会自动记录版本",
@@ -2382,30 +3069,81 @@
   "videoSubtitleFileTooLarge": "字幕文件不能超过 2 MB",
   "videoSubtitleNoCues": "字幕文件中没有可识别的时间轴内容",
   "videoAudioTrackNumber": "音轨 {index}",
-  "@videoAudioTrackNumber": { "placeholders": { "index": { "type": "int" } } },
+  "@videoAudioTrackNumber": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "videoLanguageTrackNumber": "语言 {index}",
-  "@videoLanguageTrackNumber": { "placeholders": { "index": { "type": "int" } } },
+  "@videoLanguageTrackNumber": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "videoSubtitleTrackNumber": "字幕轨道 {index}",
-  "@videoSubtitleTrackNumber": { "placeholders": { "index": { "type": "int" } } },
+  "@videoSubtitleTrackNumber": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "videoMute": "静音",
   "videoUnmute": "取消静音",
   "videoPause": "暂停",
   "videoEnterFullscreen": "进入全屏",
   "videoExitFullscreen": "退出全屏",
   "videoSeekBackwardSeconds": "快退 {seconds} 秒",
-  "@videoSeekBackwardSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@videoSeekBackwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "videoSeekForwardSeconds": "快进 {seconds} 秒",
-  "@videoSeekForwardSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@videoSeekForwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "videoNoAudioTracks": "没有可用音轨",
   "videoSelectAudioTrack": "选择音轨",
   "videoNoLanguages": "没有可用语言",
   "videoSelectLanguage": "选择语言",
   "videoVolumeValue": "音量 {volume}%",
-  "@videoVolumeValue": { "placeholders": { "volume": { "type": "int" } } },
+  "@videoVolumeValue": {
+    "placeholders": {
+      "volume": {
+        "type": "int"
+      }
+    }
+  },
   "videoVolumeMutedValue": "音量 {volume}%（已静音）",
-  "@videoVolumeMutedValue": { "placeholders": { "volume": { "type": "int" } } },
+  "@videoVolumeMutedValue": {
+    "placeholders": {
+      "volume": {
+        "type": "int"
+      }
+    }
+  },
   "videoSeasonEpisodeLabel": "第 {season} 季 · 第 {episode} 集",
-  "@videoSeasonEpisodeLabel": { "placeholders": { "season": { "type": "int" }, "episode": { "type": "int" } } },
+  "@videoSeasonEpisodeLabel": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
   "videoHeroFeatured": "精选",
   "videoHeroMovie": "电影",
   "videoHeroTv": "剧集",
@@ -2415,16 +3153,37 @@
   "videoHeroCenterSubtitle": "选择影片以查看详情并开始播放。",
   "filePurgeDeleteTitle": "永久删除？",
   "filePurgeDeleteMessage": "是否删除“{name}”及其存储文件？此操作无法撤销。",
-  "@filePurgeDeleteMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@filePurgeDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filePurgeImpactTitle": "文件仍被其他内容使用",
   "filePurgeImpactMessage": "本次操作将影响 {fileCount} 个文件节点和其他模块中的 {referenceCount} 个引用。是否继续级联删除？",
-  "@filePurgeImpactMessage": { "placeholders": { "fileCount": { "type": "int" }, "referenceCount": { "type": "int" } } },
+  "@filePurgeImpactMessage": {
+    "placeholders": {
+      "fileCount": {
+        "type": "int"
+      },
+      "referenceCount": {
+        "type": "int"
+      }
+    }
+  },
   "filePurgeCascadeDelete": "删除全部引用",
   "videoLocalLibrarySources": "本地直连媒体库",
   "videoLocalLibrarySourcesSubtitle": "直接引用部署白名单内的只读目录，原始影片不会复制到 MinIO。",
   "videoLibrarySourcesTitle": "媒体来源",
   "videoLibrarySourceCount": "{count} 个来源",
-  "@videoLibrarySourceCount": { "placeholders": { "count": { "type": "int" } } },
+  "@videoLibrarySourceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoLibraryLoading": "正在加载媒体库",
   "videoRefreshSources": "刷新媒体库来源",
   "videoAddLibrarySource": "添加来源",
@@ -2445,13 +3204,34 @@
   "videoStorageDisabled": "已停用",
   "videoDeleteLibrarySource": "删除媒体来源",
   "videoDeleteLibrarySourceConfirm": "确定删除来源“{name}”吗？已入库媒体不会被删除，存在媒体引用时操作会被拒绝。",
-  "@videoDeleteLibrarySourceConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "@videoDeleteLibrarySourceConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "videoDeleteLibrarySourceDone": "媒体来源已删除",
   "videoUnknownStorageLocation": "未知存储位置",
   "videoSourceScanSummary": "上次发现 {count} 个视频，待审核 {created} 项",
-  "@videoSourceScanSummary": { "placeholders": { "count": { "type": "int" }, "created": { "type": "int" } } },
+  "@videoSourceScanSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "created": {
+        "type": "int"
+      }
+    }
+  },
   "videoSourceMissingCount": "不可用 {count} 项",
-  "@videoSourceMissingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@videoSourceMissingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoSourceDisabled": "已停用",
   "videoScanThisSource": "发现更新",
   "videoReviewLibrarySource": "查看发现结果并按需加入媒体库",
@@ -2468,11 +3248,29 @@
   "videoDiscoveryFailed": "发现任务失败，请检查来源健康状态后重试。",
   "videoDiscoveryCancelled": "发现或入库任务已取消。",
   "videoDiscoveryCandidates": "候选 {count} 项",
-  "@videoDiscoveryCandidates": { "placeholders": { "count": { "type": "int" } } },
+  "@videoDiscoveryCandidates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoDiscoverySelected": "已选择 {count} 项",
-  "@videoDiscoverySelected": { "placeholders": { "count": { "type": "int" } } },
+  "@videoDiscoverySelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoDiscoveryIssues": "异常 {count} 项",
-  "@videoDiscoveryIssues": { "placeholders": { "count": { "type": "int" } } },
+  "@videoDiscoveryIssues": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoSelectAllCandidates": "选择当前来源的全部候选",
   "videoClearCandidateSelection": "清除全部选择",
   "videoAddSelectedToLibrary": "加入媒体库",
@@ -2489,7 +3287,13 @@
   "videoUnavailableTitle": "不可用项目",
   "videoUnavailableEmpty": "当前没有缺失或不可读取的本地媒体。",
   "videoUnavailableCount": "{count} 项需要处理",
-  "@videoUnavailableCount": { "placeholders": { "count": { "type": "int" } } },
+  "@videoUnavailableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoUnavailableLoadFailed": "不可用项目加载失败",
   "videoMissingPending": "等待缺失确认",
   "videoMissingConfirmed": "文件缺失",
@@ -2529,7 +3333,9 @@
   "musicQrUnknownStatus": "状态：{status}",
   "@musicQrUnknownStatus": {
     "placeholders": {
-      "status": {"type": "String"}
+      "status": {
+        "type": "String"
+      }
     }
   },
   "videoLibraryOverviewTab": "概览",
@@ -2546,7 +3352,9 @@
   "videoLibraryAccessSelectedCount": "已选择 {count} 位用户",
   "@videoLibraryAccessSelectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "videoLibraryAccessSave": "保存访问权限",
@@ -2565,7 +3373,9 @@
   "readerComicCatalogItems": "{count} 项",
   "@readerComicCatalogItems": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "readerComicExpandAll": "全部展开",

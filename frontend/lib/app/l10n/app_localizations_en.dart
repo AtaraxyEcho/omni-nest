@@ -4741,6 +4741,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readerBookshelfSection => 'Bookshelf';
 
   @override
+  String readerShowAllBooks(Object count) {
+    return 'Show all $count more';
+  }
+
+  @override
   String get readerViewAll => 'View all';
 
   @override

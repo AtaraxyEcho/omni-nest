@@ -674,7 +674,7 @@ class _SectionToolbar extends StatelessWidget {
   }
 }
 
-class _ReaderGrid extends StatelessWidget {
+class _ReaderGrid extends StatefulWidget {
   const _ReaderGrid({
     required this.items,
     required this.onOpenItem,
@@ -688,12 +688,34 @@ class _ReaderGrid extends StatelessWidget {
   final ValueChanged<ReaderItem>? onToggleBookshelf;
 
   @override
+  State<_ReaderGrid> createState() => _ReaderGridState();
+}
+
+class _ReaderGridState extends State<_ReaderGrid> {
+  /// 分页渲染：shrinkWrap 网格一次性布局全部子项，初始只暴露前
+  /// [_pageSize] 个，条目列表变化时重置。
+  static const _pageSize = 60;
+  bool _showAll = false;
+
+  @override
+  void didUpdateWidget(_ReaderGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.items, widget.items)) {
+      _showAll = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final items = widget.items;
+    final visibleCount =
+        _showAll || items.length <= _pageSize ? items.length : _pageSize;
+    final hiddenCount = items.length - visibleCount;
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = readerGridColumnCount(constraints.maxWidth);
-        return GridView.builder(
-          itemCount: items.length,
+        final grid = GridView.builder(
+          itemCount: visibleCount,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -706,14 +728,32 @@ class _ReaderGrid extends StatelessWidget {
             final item = items[index];
             return ReaderBookCard(
               item: item,
-              onTap: () => onOpenItem(item),
-              onDelete: () => onDeleteItem(item),
+              onTap: () => widget.onOpenItem(item),
+              onDelete: () => widget.onDeleteItem(item),
               onToggleBookshelf:
-                  onToggleBookshelf != null
-                      ? () => onToggleBookshelf!(item)
+                  widget.onToggleBookshelf != null
+                      ? () => widget.onToggleBookshelf!(item)
                       : null,
             );
           },
+        );
+        if (hiddenCount <= 0) {
+          return grid;
+        }
+        return Column(
+          children: [
+            grid,
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: TextButton.icon(
+                onPressed: () => setState(() => _showAll = true),
+                icon: const Icon(Icons.expand_more_rounded, size: 18),
+                label: Text(
+                  AppLocalizations.of(context).readerShowAllBooks(hiddenCount),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

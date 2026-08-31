@@ -139,7 +139,7 @@ class ReadingNowCard extends ConsumerWidget {
 }
 
 /// 书架网格 — 展示书籍封面和类型标签。
-class BookshelfGrid extends ConsumerWidget {
+class BookshelfGrid extends ConsumerStatefulWidget {
   const BookshelfGrid({
     required this.books,
     required this.onOpenItem,
@@ -160,8 +160,22 @@ class BookshelfGrid extends ConsumerWidget {
   final Set<String> importingIds;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BookshelfGrid> createState() => _BookshelfGridState();
+}
+
+class _BookshelfGridState extends ConsumerState<BookshelfGrid> {
+  /// 分页渲染：shrinkWrap 网格会一次性布局全部子项，初始只暴露前
+  /// [_pageSize] 本书，末尾提供展开入口；导入任务与添加卡片恒显。
+  static const _pageSize = 60;
+  bool _showAllBooks = false;
+
+  @override
+  Widget build(BuildContext context) {
     final importJobs = ref.watch(readerImportQueueProvider);
+    final books = widget.books;
+    final visibleBookCount =
+        _showAllBooks || books.length <= _pageSize ? books.length : _pageSize;
+    final hiddenBookCount = books.length - visibleBookCount;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -178,9 +192,9 @@ class BookshelfGrid extends ConsumerWidget {
                 ),
               ),
             ),
-            if (onViewAll != null)
+            if (widget.onViewAll != null)
               TextButton(
-                onPressed: onViewAll,
+                onPressed: widget.onViewAll,
                 child: Text(AppLocalizations.of(context).readerViewAll),
               ),
           ],
@@ -204,22 +218,23 @@ class BookshelfGrid extends ConsumerWidget {
                 crossAxisSpacing: spacing,
                 mainAxisSpacing: 18,
               ),
-              itemCount: books.length + importJobs.length + 1,
+              itemCount: visibleBookCount + importJobs.length + 1,
               itemBuilder: (context, index) {
                 if (index < books.length) {
                   final book = books[index];
                   return _BookTile(
                     book: book,
-                    onTap: () => onOpenItem(book),
+                    onTap: () => widget.onOpenItem(book),
                     onDelete:
-                        book.spaceType == 'SHARED' || onDeleteItem == null
+                        book.spaceType == 'SHARED' ||
+                                widget.onDeleteItem == null
                             ? null
-                            : () => onDeleteItem!(book),
+                            : () => widget.onDeleteItem!(book),
                     onCancelImport:
-                        book.isParsing && onCancelImport != null
-                            ? () => onCancelImport!(book)
+                        book.isParsing && widget.onCancelImport != null
+                            ? () => widget.onCancelImport!(book)
                             : null,
-                    isImporting: importingIds.contains(book.id),
+                    isImporting: widget.importingIds.contains(book.id),
                   );
                 }
                 final jobIndex = index - books.length;
@@ -231,6 +246,19 @@ class BookshelfGrid extends ConsumerWidget {
             );
           },
         ),
+        if (hiddenBookCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: TextButton.icon(
+              onPressed: () => setState(() => _showAllBooks = true),
+              icon: const Icon(Icons.expand_more_rounded, size: 18),
+              label: Text(
+                AppLocalizations.of(
+                  context,
+                ).readerShowAllBooks(hiddenBookCount),
+              ),
+            ),
+          ),
       ],
     );
   }

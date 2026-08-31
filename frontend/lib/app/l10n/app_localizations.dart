@@ -8701,6 +8701,12 @@ abstract class AppLocalizations {
   /// **'Bookshelf'**
   String get readerBookshelfSection;
 
+  /// No description provided for @readerShowAllBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count} more'**
+  String readerShowAllBooks(Object count);
+
   /// No description provided for @readerViewAll.
   ///
   /// In en, this message translates to:

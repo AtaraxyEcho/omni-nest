@@ -4590,6 +4590,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readerBookshelfSection => '书架';
 
   @override
+  String readerShowAllBooks(Object count) {
+    return '显示全部 $count 本';
+  }
+
+  @override
   String get readerViewAll => '查看全部';
 
   @override

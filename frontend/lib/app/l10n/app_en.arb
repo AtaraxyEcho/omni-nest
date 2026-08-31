@@ -10,7 +10,6 @@
   "mobileOfflineBanner": "You are offline. Some actions are unavailable.",
   "fullscreenEnterShortcut": "Full screen (F11)",
   "fullscreenExitShortcut": "Exit full screen (F11)",
-
   "searchTitle": "Search",
   "searchHint": "Search files, books, videos…",
   "searchEmptyQuery": "Enter keywords to start searching",
@@ -22,7 +21,6 @@
   "searchGroupVideo": "Videos",
   "searchGroupMusic": "Music",
   "searchGroupPhoto": "Photos",
-
   "tasksTitle": "Tasks",
   "tasksEmpty": "No tasks",
   "tasksEmptyHint": "System tasks will appear here",
@@ -38,7 +36,12 @@
   "tasksStatusFailed": "Failed",
   "tasksRetryCount": "Retry",
   "tasksRetryProgress": "Retries: {current}/{maximum}",
-  "@tasksRetryProgress": { "placeholders": { "current": {}, "maximum": {} } },
+  "@tasksRetryProgress": {
+    "placeholders": {
+      "current": {},
+      "maximum": {}
+    }
+  },
   "tasksStatusRetryWait": "Waiting to retry",
   "tasksStatusNeedsAttention": "Needs attention",
   "tasksStatusCancelled": "Cancelled",
@@ -49,12 +52,23 @@
   "tasksPhaseWaiting": "Waiting for progress",
   "tasksTimeJustNow": "Just now",
   "tasksTimeMinutesAgo": "{count} min ago",
-  "@tasksTimeMinutesAgo": { "placeholders": { "count": {} } },
+  "@tasksTimeMinutesAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "tasksTimeHoursAgo": "{count} hr ago",
-  "@tasksTimeHoursAgo": { "placeholders": { "count": {} } },
+  "@tasksTimeHoursAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "tasksTimeDaysAgo": "{count} days ago",
-  "@tasksTimeDaysAgo": { "placeholders": { "count": {} } },
-
+  "@tasksTimeDaysAgo": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "settingsTitle": "Settings",
   "settingsLoadFailed": "Failed to load: {error}",
   "settingsAppearance": "Appearance",
@@ -75,7 +89,6 @@
   "settingsSecurityHint": "Manage your password and active sessions",
   "settingsAbout": "About OmniNest",
   "settingsAboutHint": "Version 0.1.0",
-
   "setupTitle": "Initial Setup",
   "setupSubtitle": "Create the super administrator account for this OmniNest instance.",
   "setupUnavailableTitle": "Setup is not ready",
@@ -98,13 +111,15 @@
   "setupStatusFailed": "Unable to read setup status",
   "setupCreateFailed": "Failed to create super administrator",
   "setupSecureNotice": "The setup token is only used for initialization and is not stored on this device.",
-
   "adminSearchHint": "Search admin data…",
   "adminNoMatch": "No matching data found.",
-
   "notificationTitle": "Notifications",
   "notificationTitleWithCount": "Notifications ({count})",
-  "@notificationTitleWithCount": { "placeholders": { "count": {} } },
+  "@notificationTitleWithCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "notificationNoTitle": "No title",
   "notificationEmpty": "No notifications",
   "notificationEmptyHint": "New notifications will appear here",
@@ -139,12 +154,23 @@
   "notificationTypesHeader": "Notification Types",
   "notificationTimeNow": "Just now",
   "notificationTimeMinutes": "{n} min ago",
-  "@notificationTimeMinutes": { "placeholders": { "n": {} } },
+  "@notificationTimeMinutes": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "notificationTimeHours": "{n} hr ago",
-  "@notificationTimeHours": { "placeholders": { "n": {} } },
+  "@notificationTimeHours": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "notificationTimeDays": "{n} days ago",
-  "@notificationTimeDays": { "placeholders": { "n": {} } },
-
+  "@notificationTimeDays": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "profileTitle": "Profile",
   "profileBackTooltip": "Back to Portal",
   "profileAvatarFormatError": "Only JPG, PNG, WebP formats are supported",
@@ -192,7 +218,6 @@
   "profileNotificationPreviewHint": "Show message content in notifications",
   "profileNotificationTypes": "Notification Types ({count})",
   "profileLoadFailed": "Failed to load: {error}",
-
   "profileSessionManagement": "Session Management",
   "profileSessionManagementSubtitle": "View and manage current login sessions",
   "profileActiveSessions": "Active Sessions",
@@ -208,7 +233,6 @@
   "profileSessionRevokeFailed": "Revocation failed, please retry",
   "profileSessionsLoadFailed": "Failed to load sessions",
   "profileSessionCurrentDevice": "Current Device",
-
   "changePasswordOldPassword": "Current Password",
   "changePasswordNewPassword": "New Password",
   "changePasswordEnterNew": "Please enter new password",
@@ -222,7 +246,6 @@
   "changePasswordWrongOld": "Incorrect current password",
   "changePasswordFailed": "Password change failed, please retry",
   "changePasswordEnterField": "Please enter {field}",
-
   "loginWelcome": "Welcome Back",
   "loginDescription": "Sign in with your OmniNest account.",
   "loginSubtitle": "Consolidate family media, reading, files, and automation tasks into one stable personal space.",
@@ -241,7 +264,6 @@
   "loginFailed": "Login failed, please try again later",
   "loginConnectionError": "Cannot connect to backend, please confirm the service is running",
   "loginRequestFailed": "Login request failed, please check your account or network",
-
   "coreRetry": "Retry",
   "coreStartupFailed": "Startup failed",
   "coreStartupFailedHint": "A runtime dependency could not be initialized. Retry, then check the local media components and application logs if the problem continues.",
@@ -273,7 +295,6 @@
   "coreRoleSuperAdmin": "Admin",
   "coreRoleAdmin": "Mod",
   "coreRoleMember": "Member",
-
   "filesAllFiles": "All Files",
   "filesRecent": "Recent",
   "filesFavorites": "Favorites",
@@ -298,7 +319,6 @@
   "filesOfflineDownloadsDesc": "Manage HTTP, BT and magnet offline download tasks.",
   "filesExternalStorageDesc": "Manage OneDrive, WebDAV and other third-party storage mounts.",
   "filesImportTasksDesc": "View external storage file import progress, supports cancelling queued tasks.",
-
   "filesSharedSpace": "Shared Space",
   "filesSharedSpaceDesc": "All users shared file space",
   "filesSharedSpaceUsage": "Shared Space Usage",
@@ -310,8 +330,16 @@
   "filesMoveToPersonalConfirm": "Move to Personal Space",
   "filesMoveToPersonalMessage": "Move \"{name}\" to personal space?",
   "filesMoveToPersonalLabel": "Move back",
-  "@filesMoveToSharedMessage": { "placeholders": { "name": {} } },
-  "@filesMoveToPersonalMessage": { "placeholders": { "name": {} } },
+  "@filesMoveToSharedMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@filesMoveToPersonalMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesCount": "files",
   "filesCategoryAll": "All",
   "filesCategoryImage": "Images",
@@ -352,7 +380,12 @@
   "filesRecycleBinEmpty": "Recycle bin is empty",
   "filesUploadFile": "Upload File",
   "filesLoadMore": "Load more ({loaded} / {total} loaded)",
-  "@filesLoadMore": { "placeholders": { "loaded": {}, "total": {} } },
+  "@filesLoadMore": {
+    "placeholders": {
+      "loaded": {},
+      "total": {}
+    }
+  },
   "filesDropToUpload": "Drop files here to upload",
   "filesUploadProcessing": "Processing {count} files · Progress {progress}",
   "filesViewAll": "View All",
@@ -381,15 +414,35 @@
   "filesMoreActions": "More Actions",
   "filesFileActions": "File Actions",
   "filesDeleteConfirmTitle": "Move to Recycle Bin?",
-  "@filesDeleteConfirmTitle": { "placeholders": { "name": {} } },
+  "@filesDeleteConfirmTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesDeleteConfirmMessage": "\"{name}\" will be removed from the file list and associated records in video, music and other modules will be cleaned up.",
-  "@filesDeleteConfirmMessage": { "placeholders": { "name": {} } },
+  "@filesDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesPurgeConfirmTitle": "Permanently Delete?",
-  "@filesPurgeConfirmTitle": { "placeholders": { "name": {} } },
+  "@filesPurgeConfirmTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesPurgeConfirmMessage": "\"{name}\" will be permanently deleted from the recycle bin. This action cannot be undone.",
-  "@filesPurgeConfirmMessage": { "placeholders": { "name": {} } },
+  "@filesPurgeConfirmMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesSelectedCount": "{count} selected",
-  "@filesSelectedCount": { "placeholders": { "count": {} } },
+  "@filesSelectedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesSelectAll": "Select All",
   "filesDeselect": "Deselect",
   "filesBatchRestore": "Batch Restore",
@@ -400,29 +453,64 @@
   "filesBatchRemoveFavorite": "Batch Unfavorite",
   "filesBatchRestoreTitle": "Batch Restore?",
   "filesBatchRestoreMessage": "Will restore {count} selected files.",
-  "@filesBatchRestoreMessage": { "placeholders": { "count": {} } },
+  "@filesBatchRestoreMessage": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesBatchPurgeTitle": "Batch Permanently Delete?",
   "filesBatchPurgeMessage": "{count} selected files will be permanently deleted. This action cannot be undone.",
-  "@filesBatchPurgeMessage": { "placeholders": { "count": {} } },
+  "@filesBatchPurgeMessage": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesBatchDeleteTitle": "Batch Move to Recycle Bin?",
   "filesBatchDeleteMessage": "{count} selected files will be moved to the recycle bin.",
-  "@filesBatchDeleteMessage": { "placeholders": { "count": {} } },
+  "@filesBatchDeleteMessage": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesDownloadLinkCopied": "Download link copied to clipboard",
   "filesDownloadFailed": "Failed to get download link",
   "filesMovedFile": "Moved \"{name}\"",
-  "@filesMovedFile": { "placeholders": { "name": {} } },
+  "@filesMovedFile": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesMovedCount": "Moved {count} files",
-  "@filesMovedCount": { "placeholders": { "count": {} } },
+  "@filesMovedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesUploadComplete": "{count} files uploaded",
-  "@filesUploadComplete": { "placeholders": { "count": {} } },
+  "@filesUploadComplete": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesUploadBatchSummary": "{completed} uploaded, {conflicts} conflicted, {failed} failed, {paused} paused",
-  "@filesUploadBatchSummary": { "placeholders": { "completed": {}, "conflicts": {}, "failed": {}, "paused": {} } },
+  "@filesUploadBatchSummary": {
+    "placeholders": {
+      "completed": {},
+      "conflicts": {},
+      "failed": {},
+      "paused": {}
+    }
+  },
   "filesSelectTargetFolder": "Select Target Folder",
   "filesRootDirectory": "Root Directory",
   "filesGoToParent": "Go to parent folder",
   "filesFolderEmpty": "This folder is empty",
   "filesMoveToFolder": "Move to \"{name}\"",
-  "@filesMoveToFolder": { "placeholders": { "name": {} } },
+  "@filesMoveToFolder": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesStatusQueued": "Queued",
   "filesStatusUploading": "Uploading",
   "filesStatusPaused": "Paused",
@@ -439,7 +527,11 @@
   "filesTaskEnded": "Task Ended",
   "filesCancelOfflineConfirm": "Cancel Offline Download?",
   "filesCancelOfflineMessage": "\"{name}\" download will stop. Unfinished data won't be imported.",
-  "@filesCancelOfflineMessage": { "placeholders": { "name": {} } },
+  "@filesCancelOfflineMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesNoExternalStorage": "No external storage",
   "filesAddMount": "Add Mount",
   "filesEdit": "Edit",
@@ -447,11 +539,19 @@
   "filesDisableMount": "Disable Mount",
   "filesDisableMountConfirm": "Disable External Mount?",
   "filesDisableMountMessage": "\"{name}\" will no longer participate in file mount and sync.",
-  "@filesDisableMountMessage": { "placeholders": { "name": {} } },
+  "@filesDisableMountMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesDeleteMount": "Delete Mount",
   "filesDeleteMountConfirm": "Delete External Mount?",
   "filesDeleteMountMessage": "Will permanently delete \"{name}\" and its rclone configuration. This action cannot be undone.",
-  "@filesDeleteMountMessage": { "placeholders": { "name": {} } },
+  "@filesDeleteMountMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesCloseBrowse": "Close Browse",
   "filesDirectoryEmpty": "This directory is empty",
   "filesEnterFolder": "Enter Folder",
@@ -459,26 +559,46 @@
   "filesImportFolder": "Import Entire Folder",
   "filesImportConfirm": "Import External Content?",
   "filesImportMessage": "Import \"{name}\" to current file directory.",
-  "@filesImportMessage": { "placeholders": { "name": {} } },
+  "@filesImportMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesImport": "Import",
   "filesNoImportTasks": "No import tasks",
   "filesCancelImportConfirm": "Cancel Import Task?",
   "filesCancelImportMessage": "\"{name}\" import will be cancelled.",
-  "@filesCancelImportMessage": { "placeholders": { "name": {} } },
+  "@filesCancelImportMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesDeleteRecord": "Delete Record",
   "filesDeleteImportConfirm": "Delete Import Record?",
   "filesDeleteImportMessage": "\"{name}\" import record will be deleted.",
-  "@filesDeleteImportMessage": { "placeholders": { "name": {} } },
+  "@filesDeleteImportMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesNoSharedFiles": "No shared files",
   "filesFromUser": "From {userId}",
-  "@filesFromUser": { "placeholders": { "userId": {} } },
+  "@filesFromUser": {
+    "placeholders": {
+      "userId": {}
+    }
+  },
   "filesLongTerm": "Long term",
   "filesHasExpiry": "Has expiry",
   "filesShareMgmt": "Share Management",
   "filesShareMgmtDesc": "Manage share links created by you. Revocable.",
   "filesNoShareLinks": "No share links",
   "filesLoadFailed": "Failed to load: {error}",
-  "@filesLoadFailed": { "placeholders": { "error": {} } },
+  "@filesLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "filesAccessUnlimited": "Unlimited",
   "filesShareActive": "Active",
   "filesShareRevoked": "Revoked",
@@ -487,7 +607,11 @@
   "filesRevokeShare": "Revoke Share",
   "filesRevokeShareConfirm": "Revoke Share?",
   "filesRevokeShareMessage": "\"{name}\" share link will be invalidated. People with the link can no longer access.",
-  "@filesRevokeShareMessage": { "placeholders": { "name": {} } },
+  "@filesRevokeShareMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesClose": "Close",
   "filesWaitingUpload": "Waiting to upload",
   "filesDirectUploading": "Direct uploading",
@@ -498,7 +622,12 @@
   "filesUploadRetrying": "Cleanup complete. Retrying upload",
   "filesUploadDone": "Upload complete",
   "filesUploadedParts": "Uploaded {current}/{total} parts",
-  "@filesUploadedParts": { "placeholders": { "current": {}, "total": {} } },
+  "@filesUploadedParts": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
   "filesCleanupConflict": "Clean up same-name file in recycle bin?",
   "filesCleanupMessage": "Same-name file exists in recycle bin. Will auto re-upload after cleanup.",
   "filesCleanupAndRetry": "Clean up and retry",
@@ -514,7 +643,12 @@
   "externalRenameFile": "Rename",
   "externalDeleteConfirm": "Delete this remote file? This cannot be undone.",
   "externalSpaceUsedOf": "{used} / {total}",
-  "@externalSpaceUsedOf": { "placeholders": { "used": {}, "total": {} } },
+  "@externalSpaceUsedOf": {
+    "placeholders": {
+      "used": {},
+      "total": {}
+    }
+  },
   "filesStorageType": "Storage Type",
   "filesDisplayName": "Display Name",
   "filesDisplayNameHint": "e.g. My Cloud Storage",
@@ -551,7 +685,11 @@
   "filesCopiedClipboard": "Copied to clipboard",
   "filesPasswordLabel": "Password",
   "filesSharePasswordLabel": "Password: {password}",
-  "@filesSharePasswordLabel": { "placeholders": { "password": {} } },
+  "@filesSharePasswordLabel": {
+    "placeholders": {
+      "password": {}
+    }
+  },
   "filesCopyLinkWithPassword": "Copy link (with password)",
   "filesCopyLinkOnly": "Copy link only",
   "filesCopyLink": "Copy Link",
@@ -575,7 +713,11 @@
   "filesFileExists": "File already exists",
   "filesGotIt": "Got it",
   "filesSaveFailed": "Save failed: {message}",
-  "@filesSaveFailed": { "placeholders": { "message": {} } },
+  "@filesSaveFailed": {
+    "placeholders": {
+      "message": {}
+    }
+  },
   "filesPasswordAccess": "This share requires password access",
   "filesEnterSharePassword": "Enter share password to view the file",
   "filesAccess": "Access",
@@ -585,12 +727,20 @@
   "filesConfirm": "Confirm",
   "filesOpenTooltip": "Open",
   "filesConflictMsg": "A file with the same name \"{name}\" exists in the recycle bin. Clean up and retry.",
-  "@filesConflictMsg": { "placeholders": { "name": {} } },
+  "@filesConflictMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesStatusConflict": "Conflict",
   "filesStatusCreated": "Created",
   "filesLocalUpload": "Local Upload",
   "filesUploadTaskCount": "{count} tasks",
-  "@filesUploadTaskCount": { "placeholders": { "count": {} } },
+  "@filesUploadTaskCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "filesNoLocalUpload": "No local uploads",
   "filesFailedTasks": "Failed Tasks",
   "filesNoFailedTasks": "No failed tasks",
@@ -608,16 +758,28 @@
   "filesImportWriting": "Writing to the file library",
   "filesImportWaitingWorker": "Waiting for the background worker",
   "filesImportFileProgress": "{completed}/{total} files completed",
-  "@filesImportFileProgress": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
+  "@filesImportFileProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "filesImportCurrentFile": "Current: {name}",
-  "@filesImportCurrentFile": { "placeholders": { "name": {} } },
+  "@filesImportCurrentFile": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "filesImportRunning": "Importing",
   "filesImportCancelling": "Cancelling",
   "filesImportCancelled": "Cancelled",
   "filesS3Compatible": "S3 Compatible Storage",
   "filesAliyunDrive": "Aliyun Drive",
   "filesLocalStorage": "Local Directory",
-
   "portalSearch": "Search",
   "portalOpenReadingItem": "Open Reading",
   "portalOpenPhoto": "View Photo",
@@ -648,40 +810,84 @@
   "portalNoReadingHistory": "No reading history",
   "portalNoPhotos": "No photos",
   "portalPhotoCount": "{count} photos",
-  "@portalPhotoCount": { "placeholders": { "count": {} } },
+  "@portalPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalAlbumCount": "{count} albums",
-  "@portalAlbumCount": { "placeholders": { "count": {} } },
+  "@portalAlbumCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalMovieBadge": "{count} movies",
-  "@portalMovieBadge": { "placeholders": { "count": {} } },
+  "@portalMovieBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalReaderBadge": "{count} reading",
-  "@portalReaderBadge": { "placeholders": { "count": {} } },
+  "@portalReaderBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalMusicBadge": "{count} tracks",
-  "@portalMusicBadge": { "placeholders": { "count": {} } },
+  "@portalMusicBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalPhotoBadge": "{count} photos",
-  "@portalPhotoBadge": { "placeholders": { "count": {} } },
-
+  "@portalPhotoBadge": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalRelativeNow": "Just now",
   "portalRelativeMinutes": "{n} min ago",
-  "@portalRelativeMinutes": { "placeholders": { "n": {} } },
+  "@portalRelativeMinutes": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeHours": "{n} hr ago",
-  "@portalRelativeHours": { "placeholders": { "n": {} } },
+  "@portalRelativeHours": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeYesterday": "Yesterday",
   "portalRelativeDays": "{n} days ago",
-  "@portalRelativeDays": { "placeholders": { "n": {} } },
+  "@portalRelativeDays": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeMonths": "{n} months ago",
-  "@portalRelativeMonths": { "placeholders": { "n": {} } },
+  "@portalRelativeMonths": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalRelativeYears": "{n} years ago",
-  "@portalRelativeYears": { "placeholders": { "n": {} } },
-
+  "@portalRelativeYears": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "portalStorageTitle": "Storage",
   "portalStorageUnlimited": "{used} GiB / Unlimited",
-  "@portalStorageUnlimited": { "placeholders": { "used": {} } },
-
+  "@portalStorageUnlimited": {
+    "placeholders": {
+      "used": {}
+    }
+  },
   "portalTaskTitle": "Tasks",
   "portalTaskRunning": "Running",
   "portalTaskQueued": "Queued",
   "portalTaskFailed": "Failed",
-
   "portalNowPlaying": "Now Playing",
   "portalNoPlayRecord": "No play record",
   "portalImmersivePlayback": "Immersive playback",
@@ -729,14 +935,15 @@
   "musicVisualizerCoverRadius": "Cover radius",
   "musicVisualizerCoverTilt": "Cover tilt",
   "musicVisualizerHeroCoverOpacity": "Hero cover opacity",
-
   "portalReading": "Reading",
   "portalNoReadingBook": "No books being read",
-
   "portalRecentPhotos": "Recent Photos",
   "portalNewPhotoCount": "{count} new photos",
-  "@portalNewPhotoCount": { "placeholders": { "count": {} } },
-
+  "@portalNewPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalQuickUpload": "Upload",
   "portalQuickDownload": "Download",
   "portalQuickNew": "New",
@@ -753,14 +960,21 @@
   "portalMobileSyncOnline": "Sync service online",
   "portalMobileSyncOffline": "Offline, waiting to sync",
   "portalMobileTaskSummary": "{active} active, {failed} failed",
-  "@portalMobileTaskSummary": { "placeholders": { "active": {}, "failed": {} } },
+  "@portalMobileTaskSummary": {
+    "placeholders": {
+      "active": {},
+      "failed": {}
+    }
+  },
   "portalMobileStorageUsed": "{used} used",
-  "@portalMobileStorageUsed": { "placeholders": { "used": {} } },
+  "@portalMobileStorageUsed": {
+    "placeholders": {
+      "used": {}
+    }
+  },
   "portalMobileViewAll": "View all",
-
   "portalContinueWatching": "Continue Watching",
   "portalNoWatchingContent": "No content being watched",
-
   "portalPressBackAgain": "Press back again to exit",
   "portalLoadMovieFailed": "Failed to load media library info",
   "portalLoadMusicFailed": "Failed to load music info",
@@ -772,26 +986,36 @@
   "portalDockMusic": "Music",
   "portalDockPhotos": "Photos",
   "portalDockReading": "Reading",
-
   "portalWeatherTitle": "Weather",
   "portalWeatherUpdated": "Updated",
   "portalWeatherDisconnected": "Disconnected",
   "portalWeatherFeelsLike": "{text} · Feels like {feelsLike}°",
-  "@portalWeatherFeelsLike": { "placeholders": { "text": {}, "feelsLike": {} } },
+  "@portalWeatherFeelsLike": {
+    "placeholders": {
+      "text": {},
+      "feelsLike": {}
+    }
+  },
   "portalWeatherSunrise": "Sunrise {time}",
-  "@portalWeatherSunrise": { "placeholders": { "time": {} } },
+  "@portalWeatherSunrise": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "portalWeatherSunset": "Sunset {time}",
-  "@portalWeatherSunset": { "placeholders": { "time": {} } },
+  "@portalWeatherSunset": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "portalWeatherConfigApiKey": "Please configure API Key",
   "portalWeatherWeeklyStats": "Weekly Stats",
   "portalWeatherStatReading": "Reading",
   "portalWeatherStatPlaying": "Playing",
   "portalWeatherStatPhotos": "Photos",
-
   "portalWeatherUnknown": "Unknown",
   "portalWeatherLoading": "Loading",
   "portalWeatherDefaultLocation": "Beijing",
-
   "portalWeatherTipMask": "Poor air quality, wear a mask",
   "portalWeatherTipRain": "Rain expected, bring an umbrella",
   "portalWeatherTipIce": "Roads may be slippery, watch your step",
@@ -800,7 +1024,6 @@
   "portalWeatherTipHot": "Hot weather, stay hydrated",
   "portalWeatherTipFog": "Foggy, drive safely",
   "portalWeatherTipNice": "Nice weather, great for outdoor activities",
-
   "portalWeatherHumidity": "Humidity",
   "portalWeatherWind": "Wind",
   "portalWeatherVisibility": "Visibility",
@@ -849,7 +1072,11 @@
   "portalLocalBackdropClearAllMessage": "This only clears the backdrop index in this device's SQLite database. Your original local files are not deleted.",
   "portalLocalBackdropClearAllConfirm": "Clear",
   "portalLocalBackdropCount": "{count} backdrops",
-  "@portalLocalBackdropCount": { "placeholders": { "count": {} } },
+  "@portalLocalBackdropCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "portalLocalBackdropEmpty": "No local backdrops yet. Add video backdrops, GIFs, images, or scan a folder that contains them.",
   "portalLocalBackdropFilterEmpty": "No backdrops in this category",
   "portalLocalBackdropEmptyScan": "No usable backdrop files found. MP4, WEBM, MOV, M4V, GIF, JPG, PNG, and WEBP are supported.",
@@ -879,19 +1106,30 @@
   "portalLocalBackdropVideoMuted": "Mute video",
   "portalLocalBackdropRetryPlayback": "Retry playback",
   "portalLocalBackdropLocalOnly": "Backdrop paths are stored only in SQLite on this device. Use short loops with common codecs; playback pauses when the page is hidden or the app enters the background. Web uses the default theme backdrop.",
-
   "adminOpenMenu": "Open admin menu",
   "adminStorageOverview": "Storage Overview",
   "adminPercentUsed": "{percent}% used",
-  "@adminPercentUsed": { "placeholders": { "percent": {} } },
+  "@adminPercentUsed": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "adminSystemMonitoring": "System Monitoring",
   "adminMonitoringSubtitle": "View service status, resource usage, component health, alerts and admin operation records.",
   "adminRunning": "Running",
   "adminAttentionItems": "{count} items to watch",
-  "@adminAttentionItems": { "placeholders": { "count": {} } },
+  "@adminAttentionItems": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminServiceStatus": "Service Status",
   "adminUptime": "Uptime {uptime}",
-  "@adminUptime": { "placeholders": { "uptime": {} } },
+  "@adminUptime": {
+    "placeholders": {
+      "uptime": {}
+    }
+  },
   "adminComponents": "Components",
   "adminAlerts": "Alerts",
   "adminSystemCpu": "System CPU",
@@ -916,7 +1154,11 @@
   "adminLogCenter": "Log Center",
   "adminLogCenterSubtitle": "Unified view of operation audit and login logs.",
   "adminAuditCount": "{count} audit records",
-  "@adminAuditCount": { "placeholders": { "count": {} } },
+  "@adminAuditCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminTabAudit": "Operation Audit",
   "adminTabLoginLog": "Login Log",
   "adminRecentAudit": "Recent Audit",
@@ -924,7 +1166,11 @@
   "adminNoAuditLogs": "No audit logs.",
   "adminNoLoginLogs": "No login logs.",
   "adminLoadFailed": "Load failed: {error}",
-  "@adminLoadFailed": { "placeholders": { "error": {} } },
+  "@adminLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "adminLoginLog": "Login Log",
   "adminLoginLogSubtitle": "From auth_login_audit, records all login attempts.",
   "adminLoginSuccess": "Success",
@@ -934,11 +1180,19 @@
   "adminFilterPlatform": "Platform",
   "adminCleanup": "Clean up",
   "adminRetentionDays": "Keep {days} days",
-  "@adminRetentionDays": { "placeholders": { "days": {} } },
+  "@adminRetentionDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "adminCleanupConfirmTitle": "Confirm cleanup",
   "adminCleanupConfirmMessage": "Records outside the retention period will be deleted permanently.",
   "adminCleanupCompleted": "Cleaned up {count} records",
-  "@adminCleanupCompleted": { "placeholders": { "count": {} } },
+  "@adminCleanupCompleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminBackgroundTasks": "Background Tasks",
   "adminBackgroundTasksSubtitle": "Track indexing, transcoding, sync, backup and cleanup tasks.",
   "adminTotalTasks": "Total Tasks",
@@ -956,7 +1210,11 @@
   "adminRoleManagement": "Role Management",
   "adminRoleManagementSubtitle": "Maintain roles, permission sets and resource access boundaries.",
   "adminPermissionCount": "{count} permissions",
-  "@adminPermissionCount": { "placeholders": { "count": {} } },
+  "@adminPermissionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminRoles": "Roles",
   "adminSystemRoles": "System roles",
   "adminPermissionBindings": "Permission Bindings",
@@ -967,17 +1225,31 @@
   "adminRolePermissionsSubtitle": "Built-in roles cannot be deleted, SUPER_ADMIN permissions maintained by system.",
   "adminNoRoles": "No role data.",
   "adminPermissionCountInline": "{count} permissions",
-  "@adminPermissionCountInline": { "placeholders": { "count": {} } },
+  "@adminPermissionCountInline": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminConfigurePermissions": "Configure Permissions",
   "adminConfigureRolePermissions": "Configure {name} Permissions",
-  "@adminConfigureRolePermissions": { "placeholders": { "name": {} } },
+  "@adminConfigureRolePermissions": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "adminSecurityWarning": "Security Warning",
   "adminSecurityWarningMessage": "Only grant permissions that are actually needed. Over-privileged roles may lead to unauthorized data access or system misuse.",
   "adminConfigCenter": "Config Center",
   "adminConfigCenterSubtitle": "Manage business policies and external service integrations.",
   "adminConfigRefresh": "Refresh settings",
   "adminConfigGroupItemCount": "{count} settings",
-  "@adminConfigGroupItemCount": { "placeholders": { "count": { "type": "int" } } },
+  "@adminConfigGroupItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "adminConfigGroupMedia": "Media Import",
   "adminConfigGroupReader": "Reader",
   "adminConfigGroupMusic": "Music",
@@ -1000,7 +1272,11 @@
   "adminConfigSecretConfigured": "Sensitive credential configured; its value is never shown",
   "adminConfigNeedsSetup": "Not configured",
   "adminConfigCurrentValue": "Current value: {value}",
-  "@adminConfigCurrentValue": { "placeholders": { "value": {} } },
+  "@adminConfigCurrentValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "adminConfigClearCredential": "Clear credential",
   "adminConfigClearCredentialConfirm": "The related integration will stop working after this credential is cleared. Continue?",
   "adminConfigCredentialClearedReason": "Integration credential cleared by administrator",
@@ -1164,7 +1440,11 @@
   "adminNoSessions": "No session records.",
   "adminConfirmKick": "Confirm Kick",
   "adminConfirmKickMessage": "Are you sure to revoke this session? Device: {device}",
-  "@adminConfirmKickMessage": { "placeholders": { "device": {} } },
+  "@adminConfirmKickMessage": {
+    "placeholders": {
+      "device": {}
+    }
+  },
   "adminRevokeSession": "Kick Session",
   "adminRevokedLabel": "revoked",
   "adminSessionAllStatuses": "All statuses",
@@ -1178,8 +1458,17 @@
   "adminTotalCount": "Total {count}",
   "adminPreviousPage": "Previous page",
   "adminNextPage": "Next page",
-  "@adminPageIndicator": { "placeholders": { "page": {}, "totalPages": {} } },
-  "@adminTotalCount": { "placeholders": { "count": {} } },
+  "@adminPageIndicator": {
+    "placeholders": {
+      "page": {},
+      "totalPages": {}
+    }
+  },
+  "@adminTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminUserManagement": "User Management",
   "adminUserManagementSubtitle": "Manage accounts, status, quota and role assignment.",
   "adminAccountList": "Account List",
@@ -1189,7 +1478,12 @@
   "adminAll": "All",
   "adminNoMatchingUsers": "No matching users.",
   "adminLoadMore": "Load more (loaded {loaded} / {total})",
-  "@adminLoadMore": { "placeholders": { "loaded": {}, "total": {} } },
+  "@adminLoadMore": {
+    "placeholders": {
+      "loaded": {},
+      "total": {}
+    }
+  },
   "adminTotalUsers": "Total Users",
   "adminDatabaseAccounts": "Database accounts",
   "adminSuperAdmin": "Super Admin",
@@ -1205,9 +1499,17 @@
   "adminBatchQuota": "Batch Set Quota",
   "adminDeselect": "Deselect",
   "adminSelectedUsers": "{count} users selected",
-  "@adminSelectedUsers": { "placeholders": { "count": {} } },
+  "@adminSelectedUsers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminBatchSetStorageQuota": "Batch Set Storage Quota ({count} users)",
-  "@adminBatchSetStorageQuota": { "placeholders": { "count": {} } },
+  "@adminBatchSetStorageQuota": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminBatchQuotaHint": "Will set the same storage quota for all selected users. Super admins and users with insufficient space will be skipped.",
   "adminQuotaGib": "Quota (GiB)",
   "adminQuotaHint": "e.g. 50",
@@ -1216,16 +1518,37 @@
   "adminValidQuotaRequired": "Please enter a valid quota value",
   "adminNoUsersSelected": "No users selected",
   "adminUsersQuotaUpdated": "Updated storage quota for {count} users",
-  "@adminUsersQuotaUpdated": { "placeholders": { "count": {} } },
+  "@adminUsersQuotaUpdated": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminEditQuota": "Adjust Storage Quota for {name}",
-  "@adminEditQuota": { "placeholders": { "name": {} } },
+  "@adminEditQuota": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "adminCurrentUsage": "Current usage: {used} / {quota}",
-  "@adminCurrentUsage": { "placeholders": { "used": {}, "quota": {} } },
+  "@adminCurrentUsage": {
+    "placeholders": {
+      "used": {},
+      "quota": {}
+    }
+  },
   "adminNewQuotaGib": "New Quota (GiB)",
   "adminQuotaMinError": "New quota cannot be less than current used space ({used} GiB)",
-  "@adminQuotaMinError": { "placeholders": { "used": {} } },
+  "@adminQuotaMinError": {
+    "placeholders": {
+      "used": {}
+    }
+  },
   "adminEditRoles": "Adjust Roles for {name}",
-  "@adminEditRoles": { "placeholders": { "name": {} } },
+  "@adminEditRoles": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "adminSelectAtLeastOneRole": "Please select at least one role",
   "adminCreating": "Creating",
   "adminCreate": "Create",
@@ -1243,7 +1566,11 @@
   "adminActive": "Active",
   "adminPermissionModel": "Permission Model",
   "adminPermissionBindingsCount": "{count} permission bindings",
-  "@adminPermissionBindingsCount": { "placeholders": { "count": {} } },
+  "@adminPermissionBindingsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminTasks": "Tasks",
   "adminRunningLabel": "Running",
   "adminQueued": "Queued",
@@ -1251,7 +1578,12 @@
   "adminNeedAttention": "Need attention",
   "adminStorageAssets": "Storage Assets",
   "adminFilesFolders": "{files} files · {folders} folders",
-  "@adminFilesFolders": { "placeholders": { "files": {}, "folders": {} } },
+  "@adminFilesFolders": {
+    "placeholders": {
+      "files": {},
+      "folders": {}
+    }
+  },
   "adminObjects": "Objects",
   "adminHealthy": "Healthy",
   "adminFiles": "Files",
@@ -1275,7 +1607,6 @@
   "adminObjectsLabel": "objects",
   "adminSystemLoad": "System Load",
   "adminHotConfig": "Hot Config",
-  "adminNextTask": "Next Task",
   "adminRestartItems": "Restart Items",
   "adminStatusEnabled": "Enabled",
   "adminStatusDisabled": "Disabled",
@@ -1283,7 +1614,6 @@
   "adminRoleAdmin": "Admin",
   "adminRoleMember": "Member",
   "adminRoleGuest": "Guest",
-
   "adminGroupOverview": "Overview",
   "adminGroupOperations": "Operations",
   "adminGroupIdentity": "Identity & Permissions",
@@ -1321,16 +1651,21 @@
   "adminStorageTitle": "Storage Management",
   "adminStorageSubtitle": "Manage MinIO buckets, capacity, and index maintenance.",
   "adminExternalStorageTitle": "External Storage Integration",
-  "adminExternalStorageSubtitle": "Connect WebDAV, S3, SMB and mount cloud drives.",
-
   "adminRefresh": "Refresh",
   "adminRecalculate": "Recalculate",
   "adminRecalculateDone": "Updated storage for {count} users",
-  "@adminRecalculateDone": { "placeholders": { "count": {} } },
+  "@adminRecalculateDone": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminRebuildIndex": "Rebuild Index",
   "adminRebuildIndexDone": "Cleared {count} index documents, re-indexing in progress",
-  "@adminRebuildIndexDone": { "placeholders": { "count": {} } },
-
+  "@adminRebuildIndexDone": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminApiResponseFormat": "Admin response format is incorrect",
   "adminNoResponse": "Server did not return admin result",
   "adminOperationFailed": "Admin operation failed",
@@ -1342,7 +1677,6 @@
   "adminNoConsoleResult": "Server did not return admin console result",
   "adminConsoleLoadFailed": "Admin console load failed",
   "adminNoDetailDiagnostics": "No detailed diagnostics available",
-
   "readerNavBookshelf": "Bookshelf",
   "readerNavLibrary": "Books",
   "readerNavComics": "Comics",
@@ -1389,18 +1723,42 @@
   "readerSearchCurrentChapter": "Search current chapter",
   "readerNoSearchResults": "No matching content found",
   "readerSearchResultCount": "{count} matches",
-  "@readerSearchResultCount": { "placeholders": { "count": { "type": "int" } } },
+  "@readerSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "readerReadingProgress": "Reading progress {percent}%",
-  "@readerReadingProgress": { "placeholders": { "percent": { "type": "int" } } },
+  "@readerReadingProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "readerResetTypography": "Reset typography",
   "readerComicModePage": "Page mode",
   "readerComicModeScroll": "Scroll mode",
   "readerComicFullWidth": "Use all available width in continuous mode",
   "readerComicFullWidthHint": "Turn off to limit page width on desktop and avoid excessive upscaling",
   "readerComicContentWidth": "Content width: {width} px",
-  "@readerComicContentWidth": { "placeholders": { "width": { "type": "int" } } },
+  "@readerComicContentWidth": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      }
+    }
+  },
   "readerComicPageGap": "Page spacing: {gap} px",
-  "@readerComicPageGap": { "placeholders": { "gap": { "type": "int" } } },
+  "@readerComicPageGap": {
+    "placeholders": {
+      "gap": {
+        "type": "int"
+      }
+    }
+  },
   "readerComicImageLoadFailed": "Comic page failed to load",
   "readerComicImageDecodeFailed": "Comic page failed to decode",
   "readerStatsToday": "Today",
@@ -1446,33 +1804,73 @@
   "readerCollapse": "Collapse",
   "readerExpandFull": "Show full text",
   "readerChapterListCount": "Chapter List ({count} chapters)",
-  "@readerChapterListCount": { "placeholders": { "count": {} } },
+  "@readerChapterListCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerTotalPages": "{count} pages total",
-  "@readerTotalPages": { "placeholders": { "count": {} } },
+  "@readerTotalPages": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerPageCount": "{count} pages",
-  "@readerPageCount": { "placeholders": { "count": {} } },
+  "@readerPageCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerViewAllChapters": "View all {count} chapters",
-  "@readerViewAllChapters": { "placeholders": { "count": {} } },
+  "@readerViewAllChapters": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerPageInfo": "Page Info",
   "readerTableOfContents": "Table of Contents",
   "readerTotalChapters": "{count} chapters total",
-  "@readerTotalChapters": { "placeholders": { "count": {} } },
+  "@readerTotalChapters": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerDeleteCollection": "Delete Collection",
   "readerCollectionCount": "{count} items",
-  "@readerCollectionCount": { "placeholders": { "count": {} } },
+  "@readerCollectionCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerCollectionEmpty": "No books in this collection",
   "readerCollectionEmptyHint": "Long press a book on the bookshelf to add it to a collection.",
   "readerConfirmDeleteCollection": "Delete collection",
   "readerConfirmDeleteCollectionMsg": "Are you sure you want to delete \"{name}\"? Books in the collection will not be deleted.",
-  "@readerConfirmDeleteCollectionMsg": { "placeholders": { "name": {} } },
+  "@readerConfirmDeleteCollectionMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerDeletedCollection": "Deleted \"{name}\"",
-  "@readerDeletedCollection": { "placeholders": { "name": {} } },
+  "@readerDeletedCollection": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerDeleteFailed": "Delete failed: {error}",
-  "@readerDeleteFailed": { "placeholders": { "error": {} } },
+  "@readerDeleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerNoChanges": "No changes made",
   "readerMetadataSaved": "Metadata saved",
   "readerSaveFailed": "Save failed: {error}",
-  "@readerSaveFailed": { "placeholders": { "error": {} } },
+  "@readerSaveFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerEditMetadata": "Edit Metadata",
   "readerSave": "Save",
   "readerLabelTitle": "Title",
@@ -1493,18 +1891,43 @@
   "readerUnknownFile": "Unknown file",
   "readerCoverUpdated": "Cover updated",
   "readerOperationFailedError": "Operation failed: {error}",
-  "@readerOperationFailedError": { "placeholders": { "error": {} } },
+  "@readerOperationFailedError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerCoverUploaded": "Cover uploaded",
   "readerUploadFailed": "Upload failed: {error}",
-  "@readerUploadFailed": { "placeholders": { "error": {} } },
+  "@readerUploadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerPageInfoFormat": "Page {current} / {total} pages",
-  "@readerPageInfoFormat": { "placeholders": { "current": {}, "total": {} } },
+  "@readerPageInfoFormat": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
   "readerPageNumber": "Page {page}",
-  "@readerPageNumber": { "placeholders": { "page": {} } },
+  "@readerPageNumber": {
+    "placeholders": {
+      "page": {}
+    }
+  },
   "readerWordCount": "{count} characters",
-  "@readerWordCount": { "placeholders": { "count": {} } },
+  "@readerWordCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerWordCountWan": "{count} 万",
-  "@readerWordCountWan": { "placeholders": { "count": {} } },
+  "@readerWordCountWan": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerRetry": "Retry",
   "readerRtl": "Right to Left (RTL)",
   "readerLtr": "Left to Right (LTR)",
@@ -1513,15 +1936,27 @@
   "readerNextChapter": "Next Chapter",
   "readerClose": "Close",
   "readerDeletedItem": "Deleted \"{name}\"",
-  "@readerDeletedItem": { "placeholders": { "name": {} } },
+  "@readerDeletedItem": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerDeleteItemFailed": "Delete failed, please try again later",
   "readerRemovedFromBookshelf": "Removed from bookshelf",
   "readerSearchBooksHint": "Search book titles, authors…",
   "readerCollectionCreated": "Collection \"{name}\" created",
-  "@readerCollectionCreated": { "placeholders": { "name": {} } },
+  "@readerCollectionCreated": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerCreateFailed": "Create failed, please try again later",
   "readerImportSuccess": "\"{name}\" imported successfully",
-  "@readerImportSuccess": { "placeholders": { "name": {} } },
+  "@readerImportSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerImportFailed": "Import failed, please try again later",
   "readerImportFailedWithReason": "Failed to import {name}: {reason}",
   "@readerImportFailedWithReason": {
@@ -1543,7 +1978,11 @@
   "readerImportComic": "Comic",
   "readerPendingImport": "Pending Import",
   "readerPendingImportCount": "{count} files",
-  "@readerPendingImportCount": { "placeholders": { "count": {} } },
+  "@readerPendingImportCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerPendingImportDesc": "These files have been uploaded but not yet imported to the Reader Center. EPUB files can be imported as books or comics.",
   "readerNoPendingImport": "No files pending import",
   "readerNoPendingImportHint": "After uploading EPUB, CBZ and other reading files, they will appear here. Already imported files won't be shown again.",
@@ -1553,17 +1992,37 @@
   "readerNoImportedContentHint": "After importing books, you can re-parse them here.",
   "readerNoFileNode": "This entry has no file node, cannot re-parse",
   "readerReparseSuccess": "\"{name}\" re-parsed successfully",
-  "@readerReparseSuccess": { "placeholders": { "name": {} } },
+  "@readerReparseSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerComicReparseStarted": "\"{name}\" re-parse has started. Refresh later to view the status.",
-  "@readerComicReparseStarted": { "placeholders": { "name": {} } },
+  "@readerComicReparseStarted": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerReparseFailed": "Re-parse failed, please try again later",
   "readerComicImportStatusTitle": "Comic Parse Status",
   "readerComicImportStatusValue": "Current status: {status}",
-  "@readerComicImportStatusValue": { "placeholders": { "status": {} } },
+  "@readerComicImportStatusValue": {
+    "placeholders": {
+      "status": {}
+    }
+  },
   "readerComicSourceCount": "{count} sources",
-  "@readerComicSourceCount": { "placeholders": { "count": {} } },
+  "@readerComicSourceCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerComicCatalogCount": "{count} catalog entries",
-  "@readerComicCatalogCount": { "placeholders": { "count": {} } },
+  "@readerComicCatalogCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerComicCatalogPreview": "Catalog Structure",
   "readerComicPagePreview": "Page Preview",
   "readerComicCatalogPending": "Catalog parsing is still in progress. Refresh later to view the result.",
@@ -1580,7 +2039,11 @@
   "readerComicFailedMessage": "Parsing failed. Retry the failed source.",
   "readerComicSources": "Sources",
   "readerComicRetryCount": "Retried {count} times",
-  "@readerComicRetryCount": { "placeholders": { "count": {} } },
+  "@readerComicRetryCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerRefreshFailed": "Refresh failed, please try again later",
   "readerDone": "Done",
   "readerUnsupportedLink": "This link is not supported yet",
@@ -1588,14 +2051,34 @@
   "readerUnknownBook": "Unknown book",
   "readerReadingReport": "Reading Report",
   "readerWeeklyHours": "Read {hours} hours this week",
-  "@readerWeeklyHours": { "placeholders": { "hours": {} } },
+  "@readerWeeklyHours": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
   "readerContinueBtn": "Continue Reading",
   "readerBookshelfSection": "Bookshelf",
+  "readerShowAllBooks": "Show all {count} more",
+  "@readerShowAllBooks": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "readerViewAll": "View all",
   "readerBookCount": "{count} items",
-  "@readerBookCount": { "placeholders": { "count": {} } },
+  "@readerBookCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerContinueCount": "{count} continue",
-  "@readerContinueCount": { "placeholders": { "count": {} } },
+  "@readerContinueCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "readerRefresh": "Refresh",
   "readerAddBook": "Add Book",
   "readerImportQueued": "File uploaded. Import is running in the background...",
@@ -1617,12 +2100,21 @@
   "readerAllMetadataComplete": "All entries have complete metadata",
   "readerScrapeHint": "Newly imported books will be automatically scraped. You can also manually retry from the detail page.",
   "readerScrapeSubmitted": "Scrape task submitted: {id}…",
-  "@readerScrapeSubmitted": { "placeholders": { "id": {} } },
+  "@readerScrapeSubmitted": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "readerScrapeSubmitFailed": "Scrape task submission failed, please try again later",
   "readerSubmitting": "Submitting…",
   "readerBatchScrape": "Batch Scrape",
   "readerBatchScrapeResult": "Submitted {success} / {total} scrape tasks",
-  "@readerBatchScrapeResult": { "placeholders": { "success": {}, "total": {} } },
+  "@readerBatchScrapeResult": {
+    "placeholders": {
+      "success": {},
+      "total": {}
+    }
+  },
   "readerSubmittingLabel": "Submitting",
   "readerScrapeLabel": "Scrape",
   "readerRemoveFromBookshelf": "Remove from Bookshelf",
@@ -1630,27 +2122,46 @@
   "readerDeleteBookHint": "Permanently delete the book and its source file",
   "readerDeleteSource": "Delete source",
   "readerConfirmDeleteSource": "Delete source \"{name}\"? Its parsed pages will be removed from this comic, while the original file remains in Files.",
-  "@readerConfirmDeleteSource": { "placeholders": { "name": {} } },
+  "@readerConfirmDeleteSource": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerConfirmDelete": "Confirm Permanent Deletion",
   "readerConfirmDeleteMsg": "Remove \"{name}\" from the library? The source file will be kept.",
-  "@readerConfirmDeleteMsg": { "placeholders": { "name": {} } },
+  "@readerConfirmDeleteMsg": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "readerFieldRequired": "{field} cannot be empty",
-  "@readerFieldRequired": { "placeholders": { "field": {} } },
+  "@readerFieldRequired": {
+    "placeholders": {
+      "field": {}
+    }
+  },
   "readerHistory": "History",
   "readerImports": "Imports",
   "readerGroupPersonal": "Personal",
   "readerGroupTools": "Tools",
   "readerGroupManagement": "Management",
   "readerPercentRead": "{percent}% read",
-  "@readerPercentRead": { "placeholders": { "percent": {} } },
+  "@readerPercentRead": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
   "readerSectionNotAvailable": "{section} not yet available",
-  "@readerSectionNotAvailable": { "placeholders": { "section": {} } },
+  "@readerSectionNotAvailable": {
+    "placeholders": {
+      "section": {}
+    }
+  },
   "readerSectionNotAvailableHint": "This entry has been reserved and will be connected to an independent content page later.",
   "readerNoBookmarks": "No bookmarks yet",
   "readerNoBookmarksHint": "Add bookmarks while reading to quickly jump back here later.",
   "readerEmptyHint": "No content here yet",
   "readerEmptyHintDesc": "After importing books from the file manager, they will automatically appear on the bookshelf.",
-
   "readerHighlight": "Highlight",
   "readerAnnotate": "Annotate",
   "readerRemoveHighlight": "Remove highlight",
@@ -1669,7 +2180,6 @@
   "readerTransitionCover": "Cover",
   "readerTransitionFade": "Fade",
   "readerTransitionScroll": "Vertical",
-
   "videoSectionMovies": "Movies",
   "videoSectionTvShows": "TV Shows",
   "videoSectionAnime": "Anime",
@@ -1704,7 +2214,13 @@
   "videoRecentSubtitle": "Content added in the last 30 days is shown here.",
   "videoFavoritesSubtitle": "Movies and TV shows starred by the current user are shown here.",
   "videoSeasonProgress": "Season {season} - {current}/{total} episodes",
-  "@videoSeasonProgress": { "placeholders": { "season": {}, "current": {}, "total": {} } },
+  "@videoSeasonProgress": {
+    "placeholders": {
+      "season": {},
+      "current": {},
+      "total": {}
+    }
+  },
   "videoDefaultVersion": "Default Version",
   "videoSelectVersion": "Select Version",
   "videoPlay": "Play",
@@ -1716,7 +2232,11 @@
   "videoDelete": "Delete",
   "videoDeleteItemTitle": "Delete media item?",
   "videoDeleteItemMessage": "\"{title}\" and its source file will be permanently deleted. This cannot be undone.",
-  "@videoDeleteItemMessage": { "placeholders": { "title": {} } },
+  "@videoDeleteItemMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "videoSubtitleManagement": "Subtitle Management",
   "videoNoSubtitles": "No subtitles available",
   "videoSubtitleLoadFailed": "Failed to load subtitle info",
@@ -1725,7 +2245,11 @@
   "videoSubtitleUploaded": "Subtitle uploaded successfully",
   "videoDeleteSubtitleTitle": "Delete Subtitle?",
   "videoDeleteSubtitleMessage": "Are you sure you want to delete subtitle \"{label}\"?",
-  "@videoDeleteSubtitleMessage": { "placeholders": { "label": {} } },
+  "@videoDeleteSubtitleMessage": {
+    "placeholders": {
+      "label": {}
+    }
+  },
   "videoSubtitleDeleted": "Subtitle deleted",
   "videoSubtitleLanguage": "Subtitle Language",
   "videoSubtitleLanguageHint": "e.g. chi, eng, jpn",
@@ -1740,7 +2264,11 @@
   "videoNotExtracted": "Not extracted",
   "videoLoadFailed": "Load failed",
   "videoAudioIncompatibleNotice": "Current audio codec {codec} is incompatible with web browsers. After extracting compatible audio, the web player will use cached audio.",
-  "@videoAudioIncompatibleNotice": { "placeholders": { "codec": {} } },
+  "@videoAudioIncompatibleNotice": {
+    "placeholders": {
+      "codec": {}
+    }
+  },
   "videoCompatibleAudioReady": "Compatible audio ready",
   "videoExtracting": "Extracting...",
   "videoExtractCompatibleAudio": "Extract Compatible Audio",
@@ -1773,14 +2301,30 @@
   "videoWatching": "Watching",
   "videoNoWatchRecord": "No watch record",
   "videoLastPlayed": "Last played: {time}",
-  "@videoLastPlayed": { "placeholders": { "time": {} } },
+  "@videoLastPlayed": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "videoJustNow": "Just now",
   "videoMinutesAgo": "{n} min ago",
-  "@videoMinutesAgo": { "placeholders": { "n": {} } },
+  "@videoMinutesAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "videoHoursAgo": "{n} hr ago",
-  "@videoHoursAgo": { "placeholders": { "n": {} } },
+  "@videoHoursAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "videoDaysAgo": "{n} days ago",
-  "@videoDaysAgo": { "placeholders": { "n": {} } },
+  "@videoDaysAgo": {
+    "placeholders": {
+      "n": {}
+    }
+  },
   "videoHighRated": "Top Rated",
   "videoNewest": "Newest Releases",
   "videoViewMore": "View More",
@@ -1797,7 +2341,11 @@
   "videoCollectionCreated": "Collection created",
   "videoCollectionEmpty": "Collection is empty",
   "videoLoadFailedWith": "Load failed: {error}",
-  "@videoLoadFailedWith": { "placeholders": { "error": {} } },
+  "@videoLoadFailedWith": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "videoRequestTimeout": "Request timed out, please try again later",
   "videoConnectionError": "Cannot connect to backend, please confirm the service is running",
   "videoOperationCancelled": "Operation cancelled",
@@ -1826,16 +2374,29 @@
   "videoScrapeTaskSubmitted": "Scrape task submitted",
   "videoNoScrapeItems": "No scrape items to process.",
   "videoSeasonNumber": "Season {number}",
-  "@videoSeasonNumber": { "placeholders": { "number": {} } },
+  "@videoSeasonNumber": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoEpisodesPending": "{count} episodes pending",
-  "@videoEpisodesPending": { "placeholders": { "count": {} } },
+  "@videoEpisodesPending": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "videoEdit": "Edit",
   "videoNfo": "NFO",
   "videoParseComplete": "Video parsing complete",
   "videoMetadataSubtitle": "Admins can manually edit title, overview, poster, cast and rating, and lock auto-scrape results.",
   "videoNoMetadata": "No manageable media metadata.",
   "videoEpisodeStatus": "Series - {count} episodes - {status}",
-  "@videoEpisodeStatus": { "placeholders": { "count": {}, "status": {} } },
+  "@videoEpisodeStatus": {
+    "placeholders": {
+      "count": {},
+      "status": {}
+    }
+  },
   "videoParse": "Parse",
   "videoTranscodeSubtitle": "Create video transcode or audio extraction tasks for specified movies, and view task progress.",
   "videoTranscodeSubmitted": "Transcode task submitted",
@@ -1865,20 +2426,36 @@
   "videoRecentScanRecords": "Recent Discovery and Import Runs",
   "videoRecentScanSubtitle": "Review local discovery, selected imports, and existing managed-library scan tasks.",
   "videoNfoPreviewTitle": "NFO - {title}",
-  "@videoNfoPreviewTitle": { "placeholders": { "title": {} } },
+  "@videoNfoPreviewTitle": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "videoSeriesLibrary": "Series Library",
   "videoSeriesLibrarySubtitle": "TV series organized by series, click to view details, season/episode list and direct playback.",
   "videoNoSeries": "No series yet.",
   "videoNoSeasonInfo": "No season info",
   "videoEpisodeList": "Episode List",
   "videoSeasonTab": "Season {number}",
-  "@videoSeasonTab": { "placeholders": { "number": {} } },
+  "@videoSeasonTab": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoNoEpisodesInSeason": "No episodes in this season",
   "videoMediaCenter": "Media Library",
   "videoSeasonLabel": "Season {number}",
-  "@videoSeasonLabel": { "placeholders": { "number": {} } },
+  "@videoSeasonLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoEpisodeLabel": "Episode {number}",
-  "@videoEpisodeLabel": { "placeholders": { "number": {} } },
+  "@videoEpisodeLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "videoPreviousEpisode": "Previous Episode",
   "videoNextEpisode": "Next Episode",
   "videoTitleRequired": "Title cannot be empty",
@@ -1903,7 +2480,6 @@
   "videoOriginalAspectRatio": "Original Aspect Ratio",
   "videoCompatibleAudioNotice": "Using compatible audio stream. Tap the audio button at the bottom to switch audio source.",
   "videoGotIt": "Got it",
-
   "videoSubtitleTrack": "Subtitle Track",
   "videoNoSubtitlesAvailable": "No subtitles available for this video",
   "videoDisableSubtitles": "Disable Subtitles",
@@ -1911,7 +2487,11 @@
   "videoCompatibleAudioAac": "Compatible Audio (AAC Cache)",
   "videoCompatibleAudioDesc": "Pre-processed AAC audio stream, compatible with all web browsers",
   "videoOriginalAudioLabel": "Original Audio ({codec})",
-  "@videoOriginalAudioLabel": { "placeholders": { "codec": {} } },
+  "@videoOriginalAudioLabel": {
+    "placeholders": {
+      "codec": {}
+    }
+  },
   "videoOriginalAudioDesc": "Real-time transcoded original audio, may require more processing time",
   "videoPlaybackSpeed": "Playback Speed",
   "videoAspectRatio": "Aspect Ratio",
@@ -1926,20 +2506,37 @@
   "videoInfoAudioCodec": "Audio Codec",
   "videoInfoAudioSource": "Audio Source",
   "videoInfoSubtitleCount": "{count} tracks",
-  "@videoInfoSubtitleCount": { "placeholders": { "count": {} } },
+  "@videoInfoSubtitleCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "videoInfoVolume": "Volume",
   "videoBackToDetail": "Back to Detail",
   "videoStatusSubtitle": "Current video is {container}/{video}/{audio}, browser does not support direct playback, streaming via server transcoding. Seek precision is limited, use desktop client for precise seeking.",
-  "@videoStatusSubtitle": { "placeholders": { "container": {}, "video": {}, "audio": {} } },
+  "@videoStatusSubtitle": {
+    "placeholders": {
+      "container": {},
+      "video": {},
+      "audio": {}
+    }
+  },
   "videoLastPlayedTime": "Last played: {time}",
-  "@videoLastPlayedTime": { "placeholders": { "time": {} } },
-
+  "@videoLastPlayedTime": {
+    "placeholders": {
+      "time": {}
+    }
+  },
   "photosLoading": "Loading...",
   "photoThumbnailLoading": "Loading thumbnail",
   "photosTaskFailed": "Task failed",
   "photosTaskStatusRefreshFailed": "Unable to refresh task status. Retrying automatically",
   "photosProcessedItems": "{count} items completed",
-  "@photosProcessedItems": { "placeholders": { "count": {} } },
+  "@photosProcessedItems": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosDone": "Done",
   "photosRunInBackground": "Run in background",
   "photosSlideshow3s": "3s",
@@ -1954,7 +2551,11 @@
   "photosTabGraph": "Graph",
   "photosGraphFilter": "Filter nodes",
   "photosGraphSearchActive": "Filtering for \"{query}\"",
-  "@photosGraphSearchActive": { "placeholders": { "query": {} } },
+  "@photosGraphSearchActive": {
+    "placeholders": {
+      "query": {}
+    }
+  },
   "photosGraphKindAlbum": "Albums",
   "photosGraphKindTime": "Time",
   "photosGraphKindLocation": "Places",
@@ -1967,35 +2568,68 @@
   "photosGraphOpenAlbum": "Open album",
   "photosGraphViewPhoto": "View photo",
   "photosGraphPhotoCount": "{count} photos",
-  "@photosGraphPhotoCount": { "placeholders": { "count": {} } },
+  "@photosGraphPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosGraphFaceCount": "{count} faces",
-  "@photosGraphFaceCount": { "placeholders": { "count": {} } },
+  "@photosGraphFaceCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosGraphShowing": "Showing {shown} of {total}",
-  "@photosGraphShowing": { "placeholders": { "shown": {}, "total": {} } },
+  "@photosGraphShowing": {
+    "placeholders": {
+      "shown": {},
+      "total": {}
+    }
+  },
   "photosGraphLoadMore": "Load more",
   "photosGraphTruncated": "Large graph: showing a subset of nodes and links.",
   "photosTabMemories": "Memories",
   "photosClose": "Close",
   "photosDeletePhotoTitle": "Permanently Delete Photo",
   "photosDeletePhotoConfirm": "\"{title}\" and its source file will be permanently deleted. This cannot be undone.",
-  "@photosDeletePhotoConfirm": { "placeholders": { "title": {} } },
+  "@photosDeletePhotoConfirm": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosCancel": "Cancel",
   "photosDelete": "Permanently Delete",
   "photosDeletedPhoto": "Permanently deleted \"{title}\" and its source file",
-  "@photosDeletedPhoto": { "placeholders": { "title": {} } },
+  "@photosDeletedPhoto": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosDeleteFailed": "Delete failed, please try again later",
   "photosDeleteAlbumTitle": "Delete Album",
   "photosDeleteAlbumConfirm": "Are you sure you want to delete album \"{name}\"? Photos in the album will not be deleted.",
-  "@photosDeleteAlbumConfirm": { "placeholders": { "name": {} } },
+  "@photosDeleteAlbumConfirm": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "photosDeletedAlbum": "Deleted album \"{name}\"",
-  "@photosDeletedAlbum": { "placeholders": { "name": {} } },
+  "@photosDeletedAlbum": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "photosNewAlbum": "New Album",
   "photosAlbumName": "Album Name",
   "photosAlbumNameHint": "e.g. Travel Photos",
   "photosAlbumDescription": "Description (optional)",
   "photosAlbumDescriptionHint": "Briefly describe this album",
   "photosAlbumCreated": "Album \"{name}\" created",
-  "@photosAlbumCreated": { "placeholders": { "name": {} } },
+  "@photosAlbumCreated": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "photosCreateFailed": "Creation failed, please try again later",
   "photosCreate": "Create",
   "photosBackToPortal": "Back to Portal",
@@ -2012,12 +2646,25 @@
   "photosAlbums": "Albums",
   "photosNoAlbums": "No albums yet",
   "photosAlbumPhotoCount": "{count}",
-  "@photosAlbumPhotoCount": { "placeholders": { "count": {} } },
+  "@photosAlbumPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosViewAll": "View All",
   "photosLoadMore": "Load more ({loaded} / {total} loaded)",
-  "@photosLoadMore": { "placeholders": { "loaded": {}, "total": {} } },
+  "@photosLoadMore": {
+    "placeholders": {
+      "loaded": {},
+      "total": {}
+    }
+  },
   "photosSelectedCount": "{count} selected",
-  "@photosSelectedCount": { "placeholders": { "count": {} } },
+  "@photosSelectedCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosTag": "Tag",
   "photosMove": "Move",
   "photosExportZip": "Export ZIP",
@@ -2025,7 +2672,11 @@
   "photosSaveZip": "Save ZIP",
   "photosDownloadStarted": "Download handed off to the browser",
   "photosArchiveSaved": "ZIP saved to {path}",
-  "@photosArchiveSaved": { "placeholders": { "path": {} } },
+  "@photosArchiveSaved": {
+    "placeholders": {
+      "path": {}
+    }
+  },
   "photosArchiveDownloadFailed": "ZIP download failed. Choose the same path to resume.",
   "photosBatchAddTag": "Batch Add Tags",
   "photosTagName": "Tag Name",
@@ -2035,14 +2686,26 @@
   "photosSelectAlbum": "Select Album",
   "photosBatchDelete": "Batch Delete",
   "photosBatchDeleteConfirm": "The selected {count} photos and their source files will be permanently deleted. This cannot be undone.",
-  "@photosBatchDeleteConfirm": { "placeholders": { "count": {} } },
+  "@photosBatchDeleteConfirm": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosBatchDeleted": "Permanently deleted {count} photos and their source files",
-  "@photosBatchDeleted": { "placeholders": { "count": {} } },
+  "@photosBatchDeleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosDeselect": "Deselect",
   "photosNoTimelineData": "No timeline data",
   "photosNoTimelineHint": "Photos need capture time info to display timeline",
   "photosYear": "{year}",
-  "@photosYear": { "placeholders": { "year": {} } },
+  "@photosYear": {
+    "placeholders": {
+      "year": {}
+    }
+  },
   "photosOperationFailed": "Operation failed, please try again later",
   "photosImageLoadFailed": "Image load failed",
   "photosBack": "Back",
@@ -2105,7 +2768,11 @@
   "photosRolledBack": "Rolled back to specified version",
   "photosRollbackFailed": "Rollback failed",
   "photosEditTitle": "Edit - {title}",
-  "@photosEditTitle": { "placeholders": { "title": {} } },
+  "@photosEditTitle": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosVersionHistory": "Version History",
   "photosSave": "Save",
   "photosCropDragHint": "Drag to select crop area",
@@ -2114,11 +2781,19 @@
   "photosNoEditHistory": "No edit history",
   "photosRollback": "Rollback",
   "photosLoadFailed": "Load failed: {error}",
-  "@photosLoadFailed": { "placeholders": { "error": {} } },
+  "@photosLoadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "photosAiActions": "Image analysis actions",
   "photosAnalyzeLibrary": "Reanalyze photo library",
   "photosAiTaskSubmitted": "AI task submitted ({taskId}). Track progress in Tasks",
-  "@photosAiTaskSubmitted": { "placeholders": { "taskId": {} } },
+  "@photosAiTaskSubmitted": {
+    "placeholders": {
+      "taskId": {}
+    }
+  },
   "photosAiTaskSubmitFailed": "Failed to submit AI task",
   "photosNamePerson": "Name Person",
   "photosPersonNameHint": "Enter person name",
@@ -2127,12 +2802,24 @@
   "photosNoFaceData": "No face data yet\nPhotos will be automatically recognized and grouped after upload",
   "photosUnnamed": "Unnamed",
   "photosFaceCount": "{count}",
-  "@photosFaceCount": { "placeholders": { "count": {} } },
+  "@photosFaceCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosPhotoCount": "{count} photos",
-  "@photosPhotoCount": { "placeholders": { "count": {} } },
+  "@photosPhotoCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosPersonNoPhotos": "No photos for this person",
   "photosSharedAlbumAccessError": "Cannot access shared album: {error}",
-  "@photosSharedAlbumAccessError": { "placeholders": { "error": {} } },
+  "@photosSharedAlbumAccessError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "photosSharedAlbumPasswordRequired": "This album requires password access",
   "photosSharedAlbumPasswordHint": "Enter share password to view album content",
   "photosEnterPassword": "Enter password",
@@ -2148,19 +2835,39 @@
   "photosShareExpiryNever": "Never",
   "photosExistingShareLinks": "Existing Share Links",
   "photosShareAccessCount": "Accessed {count} times",
-  "@photosShareAccessCount": { "placeholders": { "count": {} } },
+  "@photosShareAccessCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosCreateLink": "Create Link",
   "photosShareLinkCreated": "Share link created: {token}",
-  "@photosShareLinkCreated": { "placeholders": { "token": {} } },
+  "@photosShareLinkCreated": {
+    "placeholders": {
+      "token": {}
+    }
+  },
   "photosShareLinkFailed": "Failed to create share link",
   "photosRemoveFromAlbum": "Remove from Album",
   "photosRemoveFromAlbumConfirm": "Are you sure you want to remove \"{title}\" from the album? The photo itself will not be deleted.",
-  "@photosRemoveFromAlbumConfirm": { "placeholders": { "title": {} } },
+  "@photosRemoveFromAlbumConfirm": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosRemove": "Remove",
   "photosRemovedFromAlbum": "Removed \"{title}\" from album",
-  "@photosRemovedFromAlbum": { "placeholders": { "title": {} } },
+  "@photosRemovedFromAlbum": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "photosAlbumPhotoCountLabel": "{count} photos",
-  "@photosAlbumPhotoCountLabel": { "placeholders": { "count": {} } },
+  "@photosAlbumPhotoCountLabel": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photosDeleteAlbumTooltip": "Delete Album",
   "photosAllPhotos": "All Photos",
   "photosNoGroupData": "No group data",
@@ -2174,7 +2881,6 @@
   "photosFilterSepia": "Sepia",
   "photosFilterBlur": "Blur",
   "photosFilterSharpen": "Sharpen",
-
   "musicDeckTitle": "Music Space",
   "musicDeckHome": "Home",
   "musicDeckLibrary": "Library",
@@ -2191,7 +2897,11 @@
   "musicDailyRecommendationSection": "Recommended today",
   "musicDailyRecommendationTitle": "Daily recommended tracks",
   "musicDailyRecommendationTrackCount": "{count} tracks · Updated daily",
-  "@musicDailyRecommendationTrackCount": { "placeholders": { "count": {} } },
+  "@musicDailyRecommendationTrackCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicDailyRecommendationEmpty": "Today's recommendations are unavailable. Try again later.",
   "musicDailyRecommendationLoadFailed": "Could not load daily recommendations. Try again.",
   "musicDeckAccounts": "Platform accounts",
@@ -2208,19 +2918,35 @@
   "musicDeleteLocalTrack": "Delete local track",
   "musicDeleteLocalTrackTitle": "Permanently delete local track?",
   "musicDeleteLocalTrackMessage": "\"{title}\" and its source file will be permanently deleted. This cannot be undone.",
-  "@musicDeleteLocalTrackMessage": { "placeholders": { "title": {} } },
+  "@musicDeleteLocalTrackMessage": {
+    "placeholders": {
+      "title": {}
+    }
+  },
   "musicDeleteLocalTrackSuccess": "Local track permanently deleted",
   "musicDeleteLocalTrackFailed": "Delete failed. Please try again later.",
   "musicDeletePlaylistTitle": "Delete this playlist?",
   "musicDeletePlaylistMessage": "Delete \"{name}\"? Songs in the playlist will not be deleted.",
-  "@musicDeletePlaylistMessage": { "placeholders": { "name": {} } },
+  "@musicDeletePlaylistMessage": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "musicPlaylistCoverPick": "Choose cover",
   "musicPlaylistCoverChange": "Change cover",
   "musicPlaylistCoverHint": "Uses the first song cover when no image is selected",
   "musicPlaylistSaveFailed": "Could not save playlist: {error}",
-  "@musicPlaylistSaveFailed": { "placeholders": { "error": {} } },
+  "@musicPlaylistSaveFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "musicPlaylistDeleteFailed": "Could not delete playlist: {error}",
-  "@musicPlaylistDeleteFailed": { "placeholders": { "error": {} } },
+  "@musicPlaylistDeleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "musicDeckConnectedSources": "Connected sources",
   "musicDeckSearchPrompt": "Enter at least two characters to filter by song, artist, or album",
   "musicDeckNoSearchResults": "No matching songs",
@@ -2230,9 +2956,18 @@
   "musicDeckNowPlaying": "Now playing",
   "musicDeckLibraryReady": "Library ready",
   "musicDeckLibrarySummary": "{trackCount} songs · {albumCount} albums",
-  "@musicDeckLibrarySummary": { "placeholders": { "trackCount": {}, "albumCount": {} } },
+  "@musicDeckLibrarySummary": {
+    "placeholders": {
+      "trackCount": {},
+      "albumCount": {}
+    }
+  },
   "musicDeckTrackCount": "{count} songs",
-  "@musicDeckTrackCount": { "placeholders": { "count": {} } },
+  "@musicDeckTrackCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicDeckContinueListening": "Continue listening",
   "musicDeckYourCollections": "Your playlists",
   "musicDeckRecentEmpty": "Recently played content will appear here after you play a song.",
@@ -2265,30 +3000,35 @@
   "musicNoLyrics": "No lyrics",
   "musicNowPlayingArtwork": "Artwork",
   "musicNowPlayingLyrics": "Lyrics",
-
   "musicEditMetadata": "Edit Metadata",
   "musicTitleRequired": "Title cannot be empty",
   "musicMetadataSaved": "Metadata saved",
   "musicSaveFailed": "Save failed: {error}",
-  "@musicSaveFailed": { "placeholders": { "error": {} } },
+  "@musicSaveFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "musicFieldTitle": "Title",
   "musicFieldArtist": "Artist",
   "musicFieldAlbum": "Album",
   "musicFieldGenre": "Genre",
   "musicCoverImage": "Cover Image",
   "musicCoverSelected": "Selected: {name}",
-  "@musicCoverSelected": { "placeholders": { "name": {} } },
+  "@musicCoverSelected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "musicCoverPick": "Select Cover Image",
   "musicLyricsFile": "Lyrics File",
   "musicLyricsPick": "Select Lyrics File (LRC / TXT / SRT / VTT)",
-
   "musicQueueTitle": "Play Queue",
   "musicQueueEmpty": "Play queue is empty",
   "musicShuffle": "Shuffle",
   "musicRepeatOff": "Sequential",
   "musicRepeatAll": "Loop All",
   "musicRepeatOne": "Loop Single",
-
   "musicPlaylistsSubtitle": "Manage your local playlists.",
   "musicPlaylistsEmptyHint": "Create playlists to manage them here.",
   "musicOpenPlaylist": "Open Playlist",
@@ -2297,12 +3037,14 @@
   "musicArtistNoTracks": "No tracks for this artist.",
   "musicRemoveFromPlaylist": "Remove from Playlist",
   "musicViewAll": "View All ({count})",
-  "@musicViewAll": { "placeholders": { "count": {} } },
-
+  "@musicViewAll": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicPause": "Pause",
   "musicPlay": "Play",
   "musicNotPlaying": "Not playing",
-
   "musicRecommendedArtist": "Recommended Artist",
   "musicExploreMusic": "Explore Music",
   "musicPlayNow": "Play Now",
@@ -2319,14 +3061,23 @@
   "musicArtistsSubtitle": "Aggregate songs and albums by artist.",
   "musicNoArtists": "No artists yet",
   "musicArtistsHint": "Artists will appear after song tag parsing.",
-
   "musicSidebarViewAll": "View All ({count})",
-  "@musicSidebarViewAll": { "placeholders": { "count": {} } },
-
+  "@musicSidebarViewAll": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "musicScanSubtitle": "Scan audio files in the file library, parse tags, albums, artists and covers.",
   "musicNoScanTask": "No new scan tasks.",
   "musicScanStatus": "Task {id} · {status} · {progress}% · {files} files scanned",
-  "@musicScanStatus": { "placeholders": { "id": {}, "status": {}, "progress": {}, "files": {} } },
+  "@musicScanStatus": {
+    "placeholders": {
+      "id": {},
+      "status": {},
+      "progress": {},
+      "files": {}
+    }
+  },
   "musicMetadataSubtitle": "Review song titles, artists, albums and quality tags.",
   "musicNoMetadataHint": "After music scanning, you can complete MusicBrainz metadata here.",
   "musicCandidate": "Candidate",
@@ -2334,7 +3085,6 @@
   "musicCandidateFetchFailed": "Failed to fetch candidates",
   "musicNoCandidates": "No candidates found",
   "musicNoCandidatesHint": "Try improving the local title, artist or album, then retry.",
-
   "backupSkipNonWifi": "Not on WiFi, skipping backup",
   "backupSkipNoPermission": "Photo library access not granted",
   "backupSkipNoAlbums": "No albums",
@@ -2343,17 +3093,31 @@
   "backupNotificationChannelDesc": "Photo auto-backup progress",
   "backupNotificationTitle": "Photo Backup In Progress",
   "backupNotificationProgress": "Processed {current}/{total}, {uploaded} uploaded",
-  "@backupNotificationProgress": { "placeholders": { "current": {}, "total": {}, "uploaded": {} } },
+  "@backupNotificationProgress": {
+    "placeholders": {
+      "current": {},
+      "total": {},
+      "uploaded": {}
+    }
+  },
   "backupNotificationComplete": "Photo Backup Complete",
   "backupNotificationSummary": "{uploaded} uploaded, {skipped} skipped, {failed} failed",
-  "@backupNotificationSummary": { "placeholders": { "uploaded": {}, "skipped": {}, "failed": {} } },
-
+  "@backupNotificationSummary": {
+    "placeholders": {
+      "uploaded": {},
+      "skipped": {},
+      "failed": {}
+    }
+  },
   "photoRegenerateThumbnails": "Regenerate Thumbnails",
   "photoRegenerateDone": "Regenerated {count} thumbnails",
-  "@photoRegenerateDone": { "placeholders": { "count": {} } },
+  "@photoRegenerateDone": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "photoImportCandidates": "Import Candidates",
   "photoNoImportCandidates": "No pending photos to import",
-
   "importFiles": "Import Files",
   "importToPersonalSpace": "Personal Space",
   "importToSharedSpace": "Shared Space",
@@ -2363,14 +3127,26 @@
   "importSharedSpaceDesc": "All users can see these files",
   "importUploading": "Importing...",
   "importComplete": "{count} files imported successfully",
-  "@importComplete": { "placeholders": { "count": {} } },
+  "@importComplete": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "importFailed": "Import failed",
   "importRefreshFailed": "Import completed, but the list could not be refreshed.",
   "importProcessing": "{count} files uploaded; processing is still in progress.",
-  "@importProcessing": { "placeholders": { "count": {} } },
+  "@importProcessing": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "importUnsupportedFormat": "Unsupported file format: {files}. Supported formats: {extensions}.",
-  "@importUnsupportedFormat": { "placeholders": { "files": {}, "extensions": {} } },
-
+  "@importUnsupportedFormat": {
+    "placeholders": {
+      "files": {},
+      "extensions": {}
+    }
+  },
   "readerPortal": "Portal",
   "readerCenter": "Reader Center",
   "readerSortRecent": "Recent",
@@ -2385,15 +3161,27 @@
   "readerNotStarted": "Not started",
   "readerUnknownTime": "Unknown time",
   "readerChapterNumber": "Chapter {number}",
-  "@readerChapterNumber": { "placeholders": { "number": {} } },
+  "@readerChapterNumber": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "readerProgressLabel": "Progress {progress}",
-  "@readerProgressLabel": { "placeholders": { "progress": {} } },
+  "@readerProgressLabel": {
+    "placeholders": {
+      "progress": {}
+    }
+  },
   "readerRestoreProgress": "Restore Reading Progress",
   "readerRestoreProgressConfirm": "Restore to this version's reading progress? Current progress will be overwritten.",
   "readerConfirmRestore": "Restore",
   "readerProgressRestored": "Reading progress restored",
   "readerRestoreFailed": "Restore failed: {error}",
-  "@readerRestoreFailed": { "placeholders": { "error": {} } },
+  "@readerRestoreFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "readerVersionHistory": "Version History",
   "readerNoVersionHistory": "No version history",
   "readerVersionHistoryHint": "Versions are automatically recorded when reading progress changes",
@@ -2407,30 +3195,81 @@
   "videoSubtitleFileTooLarge": "Subtitle files must be 2 MB or smaller",
   "videoSubtitleNoCues": "No supported timed captions were found in this file",
   "videoAudioTrackNumber": "Audio track {index}",
-  "@videoAudioTrackNumber": { "placeholders": { "index": { "type": "int" } } },
+  "@videoAudioTrackNumber": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "videoLanguageTrackNumber": "Language {index}",
-  "@videoLanguageTrackNumber": { "placeholders": { "index": { "type": "int" } } },
+  "@videoLanguageTrackNumber": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "videoSubtitleTrackNumber": "Subtitle track {index}",
-  "@videoSubtitleTrackNumber": { "placeholders": { "index": { "type": "int" } } },
+  "@videoSubtitleTrackNumber": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "videoMute": "Mute",
   "videoUnmute": "Unmute",
   "videoPause": "Pause",
   "videoEnterFullscreen": "Enter fullscreen",
   "videoExitFullscreen": "Exit fullscreen",
   "videoSeekBackwardSeconds": "Back {seconds}s",
-  "@videoSeekBackwardSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@videoSeekBackwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "videoSeekForwardSeconds": "Forward {seconds}s",
-  "@videoSeekForwardSeconds": { "placeholders": { "seconds": { "type": "int" } } },
+  "@videoSeekForwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "videoNoAudioTracks": "No audio tracks available",
   "videoSelectAudioTrack": "Select audio track",
   "videoNoLanguages": "No languages available",
   "videoSelectLanguage": "Select language",
   "videoVolumeValue": "Volume {volume}%",
-  "@videoVolumeValue": { "placeholders": { "volume": { "type": "int" } } },
+  "@videoVolumeValue": {
+    "placeholders": {
+      "volume": {
+        "type": "int"
+      }
+    }
+  },
   "videoVolumeMutedValue": "Volume {volume}% (muted)",
-  "@videoVolumeMutedValue": { "placeholders": { "volume": { "type": "int" } } },
+  "@videoVolumeMutedValue": {
+    "placeholders": {
+      "volume": {
+        "type": "int"
+      }
+    }
+  },
   "videoSeasonEpisodeLabel": "Season {season} · Episode {episode}",
-  "@videoSeasonEpisodeLabel": { "placeholders": { "season": { "type": "int" }, "episode": { "type": "int" } } },
+  "@videoSeasonEpisodeLabel": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
   "videoHeroFeatured": "Featured",
   "videoHeroMovie": "Movie",
   "videoHeroTv": "TV",
@@ -2440,16 +3279,37 @@
   "videoHeroCenterSubtitle": "Select a title to view its details and start playback.",
   "filePurgeDeleteTitle": "Permanently delete?",
   "filePurgeDeleteMessage": "Delete {name} and its stored file? This action cannot be undone.",
-  "@filePurgeDeleteMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@filePurgeDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "filePurgeImpactTitle": "This file is still in use",
   "filePurgeImpactMessage": "This operation affects {fileCount} file nodes and {referenceCount} references in other modules. Continue with cascade deletion?",
-  "@filePurgeImpactMessage": { "placeholders": { "fileCount": { "type": "int" }, "referenceCount": { "type": "int" } } },
+  "@filePurgeImpactMessage": {
+    "placeholders": {
+      "fileCount": {
+        "type": "int"
+      },
+      "referenceCount": {
+        "type": "int"
+      }
+    }
+  },
   "filePurgeCascadeDelete": "Delete all references",
   "videoLocalLibrarySources": "Local direct media libraries",
   "videoLocalLibrarySourcesSubtitle": "Reference read-only deployment mounts directly; original movies are not copied to MinIO.",
   "videoLibrarySourcesTitle": "Media sources",
   "videoLibrarySourceCount": "{count} sources",
-  "@videoLibrarySourceCount": { "placeholders": { "count": { "type": "int" } } },
+  "@videoLibrarySourceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoLibraryLoading": "Loading media library",
   "videoRefreshSources": "Refresh media library sources",
   "videoAddLibrarySource": "Add source",
@@ -2470,13 +3330,34 @@
   "videoStorageDisabled": "Disabled",
   "videoDeleteLibrarySource": "Delete media source",
   "videoDeleteLibrarySourceConfirm": "Delete source “{name}”? Imported media is not deleted; deletion is rejected while media references remain.",
-  "@videoDeleteLibrarySourceConfirm": {"placeholders": {"name": {"type": "String"}}},
+  "@videoDeleteLibrarySourceConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "videoDeleteLibrarySourceDone": "Media source deleted",
   "videoUnknownStorageLocation": "Unknown storage location",
   "videoSourceScanSummary": "Last discovery found {count} videos with {created} awaiting review",
-  "@videoSourceScanSummary": { "placeholders": { "count": { "type": "int" }, "created": { "type": "int" } } },
+  "@videoSourceScanSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "created": {
+        "type": "int"
+      }
+    }
+  },
   "videoSourceMissingCount": "{count} unavailable",
-  "@videoSourceMissingCount": { "placeholders": { "count": { "type": "int" } } },
+  "@videoSourceMissingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoSourceDisabled": "Disabled",
   "videoScanThisSource": "Discover updates",
   "videoReviewLibrarySource": "Review discoveries and add selected media",
@@ -2493,11 +3374,29 @@
   "videoDiscoveryFailed": "Discovery failed. Check source health and try again.",
   "videoDiscoveryCancelled": "The discovery or import task was cancelled.",
   "videoDiscoveryCandidates": "{count} candidates",
-  "@videoDiscoveryCandidates": { "placeholders": { "count": { "type": "int" } } },
+  "@videoDiscoveryCandidates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoDiscoverySelected": "{count} selected",
-  "@videoDiscoverySelected": { "placeholders": { "count": { "type": "int" } } },
+  "@videoDiscoverySelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoDiscoveryIssues": "{count} issues",
-  "@videoDiscoveryIssues": { "placeholders": { "count": { "type": "int" } } },
+  "@videoDiscoveryIssues": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoSelectAllCandidates": "Select every candidate in this source",
   "videoClearCandidateSelection": "Clear selection",
   "videoAddSelectedToLibrary": "Add to media library",
@@ -2514,7 +3413,13 @@
   "videoUnavailableTitle": "Unavailable items",
   "videoUnavailableEmpty": "No local media is currently missing or unreadable.",
   "videoUnavailableCount": "{count} items need attention",
-  "@videoUnavailableCount": { "placeholders": { "count": { "type": "int" } } },
+  "@videoUnavailableCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoUnavailableLoadFailed": "Unavailable items could not be loaded",
   "videoMissingPending": "Awaiting missing confirmation",
   "videoMissingConfirmed": "File missing",
@@ -2554,7 +3459,9 @@
   "musicQrUnknownStatus": "Status: {status}",
   "@musicQrUnknownStatus": {
     "placeholders": {
-      "status": {"type": "String"}
+      "status": {
+        "type": "String"
+      }
     }
   },
   "videoLibraryOverviewTab": "Overview",
@@ -2571,7 +3478,9 @@
   "videoLibraryAccessSelectedCount": "{count} users selected",
   "@videoLibraryAccessSelectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "videoLibraryAccessSave": "Save access",
@@ -2590,7 +3499,9 @@
   "readerComicCatalogItems": "{count} items",
   "@readerComicCatalogItems": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "readerComicExpandAll": "Expand all",

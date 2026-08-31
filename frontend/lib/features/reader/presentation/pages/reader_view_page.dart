@@ -249,6 +249,7 @@ class _ReaderViewPageState extends ConsumerState<ReaderViewPage>
   set lastAppliedProgressAt(DateTime? v) => _lastAppliedProgressAt = v;
 
   /// 记录本机推送的进度快照，供回声判定使用。
+  @override
   void noteOwnProgressSave(ReaderProgressSnapshot snapshot) {
     _lastOwnProgressSave = snapshot;
   }
