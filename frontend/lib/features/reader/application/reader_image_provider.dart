@@ -20,8 +20,14 @@ final coverBytesProvider = FutureProvider.autoDispose
     });
 
 /// 阅读正文缓存图片字节。
+///
+/// [request.bust] 为失败重试计数：占位图点击重试时递增，family 键
+/// 随之变化使 provider 重新执行，而不是永远缓存上一次的失败结果。
 final readerCachedImageProvider = FutureProvider.autoDispose
-    .family<Uint8List?, ({String itemId, String imagePath})>((ref, request) {
+    .family<Uint8List?, ({String itemId, String imagePath, int bust})>((
+      ref,
+      request,
+    ) {
       return ReaderImageCache.loadImage(
         itemId: request.itemId,
         imagePath: request.imagePath,

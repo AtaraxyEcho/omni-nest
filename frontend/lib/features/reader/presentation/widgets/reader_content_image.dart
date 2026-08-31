@@ -121,6 +121,7 @@ class ReaderContentImage extends StatelessWidget {
     return _CachedReaderImage(
       itemId: itemId!,
       imagePath: imagePath,
+      bust: retryCount,
       errorBuilder: _buildError,
     );
   }
@@ -196,17 +197,23 @@ class _CachedReaderImage extends ConsumerWidget {
   const _CachedReaderImage({
     required this.itemId,
     required this.imagePath,
+    required this.bust,
     required this.errorBuilder,
   });
 
   final String itemId;
   final String imagePath;
+  final int bust;
   final Widget Function() errorBuilder;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final image = ref.watch(
-      readerCachedImageProvider((itemId: itemId, imagePath: imagePath)),
+      readerCachedImageProvider((
+        itemId: itemId,
+        imagePath: imagePath,
+        bust: bust,
+      )),
     );
     return image.when(
       loading:

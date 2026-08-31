@@ -519,6 +519,13 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
         // 用户真实触摸：消耗模式切换冻结锚点
         if (modeSwitchAnchor != null) modeSwitchAnchor = null;
       },
+      onPointerMove: (event) {
+        // 按住拖动阅读时持续刷新进度窗口起点；buttons==0 的悬停移动
+        // 不刷新，保留"非指针驱动滚动不写进度"的守卫语义
+        if (event.buttons != 0) {
+          lastPointerDownTime = DateTime.now();
+        }
+      },
       onPointerSignal: (event) {
         if (event is PointerScrollEvent) {
           lastPointerDownTime = DateTime.now();

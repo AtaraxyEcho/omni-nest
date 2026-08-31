@@ -371,6 +371,12 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
     }
 
     // 滚动节流保存：500ms 后触发
+    _scheduleProgressSave();
+  }
+
+  /// 进度落库节流：翻页与滚动共用 500ms 防抖，快速连翻/连续滚动合并为
+  /// 一次本地写入与服务端同步；dispose 的最终持久化兜底防丢。
+  void _scheduleProgressSave() {
     _scrollSaveTimer?.cancel();
     _scrollSaveTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted) _saveProgress();
@@ -395,7 +401,9 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
         manifestVersion: _manifest.manifestVersion,
       );
     });
-    _saveProgress();
+    // 预加载立即执行，持久化走防抖合并
+    _preloadAdjacent();
+    _scheduleProgressSave();
   }
 
   /// 保存阅读进度到本地和服务器。
