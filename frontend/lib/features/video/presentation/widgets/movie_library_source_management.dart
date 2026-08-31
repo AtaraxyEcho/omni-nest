@@ -1,7 +1,11 @@
 part of 'movie_management.dart';
 
 class LocalLibrarySourcesPanel extends ConsumerStatefulWidget {
-  const LocalLibrarySourcesPanel({super.key});
+  const LocalLibrarySourcesPanel({this.fillHeight = false, super.key});
+
+  /// 工作台模式：填满父级剩余高度，隐藏命令栏与失效影片面板
+  /// （操作与面板由页面头部和底部条承载），供桌面端固定布局使用。
+  final bool fillHeight;
 
   @override
   ConsumerState<LocalLibrarySourcesPanel> createState() =>
@@ -18,77 +22,70 @@ class _LocalLibrarySourcesPanelState
     final l10n = AppLocalizations.of(context);
     final locations = ref.watch(videoStorageLocationsProvider);
     final sources = ref.watch(videoLibrarySourcesProvider);
+    final commandBar = _MediaLibraryCommandBar(
+      canAdd:
+          locations.asData?.value.any((location) => location.available) == true,
+      onRefresh: () {
+        ref.invalidate(videoStorageLocationsProvider);
+        ref.invalidate(videoLibrarySourcesProvider);
+      },
+      onAdd:
+          () => showDialog<void>(
+            context: context,
+            builder:
+                (context) => _VideoLibrarySourceDialog(
+                  locations: locations.requireValue,
+                ),
+          ),
+    );
+    final content = locations.when(
+      loading: () => const LinearProgressIndicator(),
+      error:
+          (error, _) => MovieNoticePanel(
+            icon: Icons.warning_amber_rounded,
+            title: l10n.videoStorageLocationUnavailable,
+            message: movieErrorMessage(error),
+          ),
+      data:
+          (items) => sources.when(
+            loading: () => const LinearProgressIndicator(),
+            error:
+                (error, _) => MovieNoticePanel(
+                  icon: Icons.error_outline_rounded,
+                  title: l10n.videoLoadSourcesFailed,
+                  message: movieErrorMessage(error),
+                ),
+            data: (sourceItems) {
+              if (sourceItems.isEmpty) {
+                return _MediaLibraryEmptyState(
+                  onAdd:
+                      () => showDialog<void>(
+                        context: context,
+                        builder:
+                            (context) =>
+                                _VideoLibrarySourceDialog(locations: items),
+                      ),
+                );
+              }
+              final selectedSource = sourceItems.firstWhere(
+                (source) => source.id == _selectedSourceId,
+                orElse: () => sourceItems.first,
+              );
+              return _buildWorkspace(
+                context,
+                items,
+                sourceItems,
+                selectedSource,
+              );
+            },
+          ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _MediaLibraryCommandBar(
-          canAdd:
-              locations.asData?.value.any((location) => location.available) ==
-              true,
-          onRefresh: () {
-            ref.invalidate(videoStorageLocationsProvider);
-            ref.invalidate(videoLibrarySourcesProvider);
-          },
-          onAdd:
-              () => showDialog<void>(
-                context: context,
-                builder:
-                    (context) => _VideoLibrarySourceDialog(
-                      locations: locations.requireValue,
-                    ),
-              ),
-        ),
-        const SizedBox(height: 12),
-        locations.when(
-          loading: () => const LinearProgressIndicator(),
-          error:
-              (error, _) => MovieNoticePanel(
-                icon: Icons.warning_amber_rounded,
-                title: l10n.videoStorageLocationUnavailable,
-                message: movieErrorMessage(error),
-              ),
-          data: (items) {
-            if (items.where((item) => item.available).isEmpty) {
-              return MovieNoticePanel(
-                icon: Icons.admin_panel_settings_outlined,
-                title: l10n.videoNoStorageLocation,
-                message: l10n.videoNoStorageLocationHint,
-              );
-            }
-            return sources.when(
-              loading: () => const LinearProgressIndicator(),
-              error:
-                  (error, _) => MovieNoticePanel(
-                    icon: Icons.error_outline_rounded,
-                    title: l10n.videoLoadSourcesFailed,
-                    message: movieErrorMessage(error),
-                  ),
-              data: (sourceItems) {
-                if (sourceItems.isEmpty) {
-                  return _MediaLibraryEmptyState(
-                    onAdd:
-                        () => showDialog<void>(
-                          context: context,
-                          builder:
-                              (context) =>
-                                  _VideoLibrarySourceDialog(locations: items),
-                        ),
-                  );
-                }
-                final selectedSource = sourceItems.firstWhere(
-                  (source) => source.id == _selectedSourceId,
-                  orElse: () => sourceItems.first,
-                );
-                return _buildWorkspace(
-                  context,
-                  items,
-                  sourceItems,
-                  selectedSource,
-                );
-              },
-            );
-          },
-        ),
+        if (!widget.fillHeight) ...[commandBar, const SizedBox(height: 12)],
+        if (widget.fillHeight) Expanded(child: content) else content,
       ],
     );
   }
@@ -104,59 +101,97 @@ class _LocalLibrarySourcesPanelState
       data: (run) => run?.active == true,
       orElse: () => false,
     );
-    return Column(
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final split = constraints.maxWidth >= 960;
-            final navigator = _MediaLibrarySourceNavigator(
-              sources: sources,
-              selectedSourceId: selectedSource.id,
-              bounded: split,
-              onSelected:
-                  (source) => setState(() => _selectedSourceId = source.id),
-            );
-            final workspace = _MediaLibrarySourceWorkspace(
-              source: selectedSource,
-              locations: locations,
-              bounded: split,
-              scanning:
-                  _scanningSourceId == selectedSource.id || backendScanning,
-              onEdit:
-                  () => showDialog<void>(
-                    context: context,
-                    builder:
-                        (context) => _VideoLibrarySourceDialog(
-                          locations: locations,
-                          source: selectedSource,
-                        ),
-                  ),
-              onScan: () => _scan(selectedSource),
-              onDelete: () => _delete(selectedSource),
-            );
-            if (!split) {
-              return Column(
-                key: const Key('mediaLibraryMobileStack'),
-                children: [navigator, const SizedBox(height: 12), workspace],
-              );
-            }
-            return SizedBox(
-              key: const Key('mediaLibraryDesktopSplit'),
+    final navigator = _MediaLibrarySourceNavigator(
+      sources: sources,
+      selectedSourceId: selectedSource.id,
+      bounded: widget.fillHeight,
+      onSelected: (source) => setState(() => _selectedSourceId = source.id),
+    );
+    final workspace = _MediaLibrarySourceWorkspace(
+      source: selectedSource,
+      locations: locations,
+      bounded: widget.fillHeight,
+      scanning: _scanningSourceId == selectedSource.id || backendScanning,
+      onEdit:
+          () => showDialog<void>(
+            context: context,
+            builder:
+                (context) => _VideoLibrarySourceDialog(
+                  locations: locations,
+                  source: selectedSource,
+                ),
+          ),
+      onScan: () => _scan(selectedSource),
+      onDelete: () => _delete(selectedSource),
+    );
+    if (widget.fillHeight) {
+      return Row(
+        key: const Key('mediaLibraryDesktopSplit'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(width: 320, child: navigator),
+          const SizedBox(width: 12),
+          Expanded(child: workspace),
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final split = constraints.maxWidth >= 960;
+        final stackedNavigator = _MediaLibrarySourceNavigator(
+          sources: sources,
+          selectedSourceId: selectedSource.id,
+          bounded: split,
+          onSelected: (source) => setState(() => _selectedSourceId = source.id),
+        );
+        final stackedWorkspace = _MediaLibrarySourceWorkspace(
+          source: selectedSource,
+          locations: locations,
+          bounded: split,
+          scanning: _scanningSourceId == selectedSource.id || backendScanning,
+          onEdit:
+              () => showDialog<void>(
+                context: context,
+                builder:
+                    (context) => _VideoLibrarySourceDialog(
+                      locations: locations,
+                      source: selectedSource,
+                    ),
+              ),
+          onScan: () => _scan(selectedSource),
+          onDelete: () => _delete(selectedSource),
+        );
+        if (!split) {
+          return Column(
+            key: const Key('mediaLibraryMobileStack'),
+            children: [
+              stackedNavigator,
+              const SizedBox(height: 12),
+              stackedWorkspace,
+              const SizedBox(height: 12),
+              const _UnavailableLocalMediaPanel(),
+            ],
+          );
+        }
+        return Column(
+          key: const Key('mediaLibraryDesktopSplit'),
+          children: [
+            SizedBox(
               height: 620,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: 320, child: navigator),
+                  SizedBox(width: 320, child: stackedNavigator),
                   const SizedBox(width: 12),
-                  Expanded(child: workspace),
+                  Expanded(child: stackedWorkspace),
                 ],
               ),
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-        const _UnavailableLocalMediaPanel(),
-      ],
+            ),
+            const SizedBox(height: 12),
+            const _UnavailableLocalMediaPanel(),
+          ],
+        );
+      },
     );
   }
 
@@ -547,17 +582,24 @@ class _MediaLibrarySourceItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      source.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color:
-                            selected
-                                ? context.videoColors.onPrimaryContainer
-                                : context.videoColors.onSurface,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            source.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color:
+                                  selected
+                                      ? context.videoColors.onPrimaryContainer
+                                      : context.videoColors.onSurface,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        _SourceStatusBadge(source: source, dense: true),
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -1029,9 +1071,12 @@ class _SourceMeta extends StatelessWidget {
 }
 
 class _SourceStatusBadge extends StatelessWidget {
-  const _SourceStatusBadge({required this.source});
+  const _SourceStatusBadge({required this.source, this.dense = false});
 
   final VideoLibrarySource source;
+
+  /// 紧凑形态：仅状态色点，用于来源列表行。
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -1057,6 +1102,16 @@ class _SourceStatusBadge extends StatelessWidget {
                 ? l10n.videoSourceOffline
                 : l10n.videoSourceDisabled
             : _sourceStatusLabel(l10n, source.scanStatus);
+    if (dense) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

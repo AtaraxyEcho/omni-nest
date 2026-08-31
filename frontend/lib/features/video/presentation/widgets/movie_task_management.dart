@@ -363,34 +363,204 @@ class LibraryScanSection extends ConsumerWidget {
               }.contains(task.taskType),
             )
             .toList();
-    // 标题固定，库管理与扫描记录在下方统一滚动，避免外层滚动与面板固定高度冲突。
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        MovieSectionHeading(
-          title: AppLocalizations.of(context).videoSectionLibraryScan,
-          subtitle: AppLocalizations.of(context).videoLibraryScanSubtitle,
-        ),
-        const SizedBox(height: 22),
-        Expanded(
-          child: CustomScrollView(
+    final locations = ref.watch(videoStorageLocationsProvider);
+    final canAdd =
+        locations.asData?.value.any((location) => location.available) == true;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 宽高充足时进入固定工作台布局（无外层滚动），否则保持堆叠滚动。
+        final workbench =
+            constraints.maxWidth >= 960 && constraints.maxHeight >= 520;
+        final panel = LocalLibrarySourcesPanel(fillHeight: workbench);
+        if (!workbench) {
+          return CustomScrollView(
             slivers: [
-              const SliverToBoxAdapter(child: LocalLibrarySourcesPanel()),
-              SliverToBoxAdapter(child: SizedBox(height: 24)),
-              SliverToBoxAdapter(
-                child: TaskBoardSection(
-                  title: AppLocalizations.of(context).videoRecentScanRecords,
-                  subtitle:
-                      AppLocalizations.of(context).videoRecentScanSubtitle,
-                  icon: Icons.sync_rounded,
-                  tasks: scanTasks,
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                sliver: SliverToBoxAdapter(
+                  child: MovieSectionHeading(
+                    title: AppLocalizations.of(context).videoSectionLibraryScan,
+                    subtitle:
+                        AppLocalizations.of(context).videoLibraryScanSubtitle,
+                  ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              const SliverPadding(padding: EdgeInsets.only(top: 20)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: panel,
+                ),
+              ),
+              const SliverPadding(padding: EdgeInsets.only(top: 24)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: SliverToBoxAdapter(
+                  child: TaskBoardSection(
+                    title: AppLocalizations.of(context).videoRecentScanRecords,
+                    subtitle:
+                        AppLocalizations.of(context).videoRecentScanSubtitle,
+                    icon: Icons.sync_rounded,
+                    tasks: scanTasks,
+                  ),
+                ),
+              ),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+            ],
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: MovieSectionHeading(
+                      title:
+                          AppLocalizations.of(context).videoSectionLibraryScan,
+                      subtitle:
+                          AppLocalizations.of(context).videoLibraryScanSubtitle,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ref.invalidate(videoStorageLocationsProvider);
+                      ref.invalidate(videoLibrarySourcesProvider);
+                    },
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text(
+                      AppLocalizations.of(context).videoRefreshSources,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    onPressed:
+                        canAdd
+                            ? () => showDialog<void>(
+                              context: context,
+                              builder:
+                                  (context) => _VideoLibrarySourceDialog(
+                                    locations: locations.requireValue,
+                                  ),
+                            )
+                            : null,
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: Text(
+                      AppLocalizations.of(context).videoAddLibrarySource,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(child: panel),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 232,
+                child: _LibraryRecordsStrip(scanTasks: scanTasks),
+              ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+/// 底部记录条：扫描任务记录与失效影片在同一容器内切换，
+/// 让工作台主区域保持稳定，不被记录列表推挤。
+class _LibraryRecordsStrip extends StatelessWidget {
+  const _LibraryRecordsStrip({required this.scanTasks});
+
+  final List<MovieTask> scanTasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: context.videoColors.surfaceContainerLow.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: context.videoColors.outlineVariant.withValues(alpha: 0.32),
         ),
-      ],
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                l10n.videoRecentScanRecords,
+                style: TextStyle(
+                  color: context.videoColors.onSurface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _RecordsCountBadge(count: scanTasks.length),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  l10n.videoRecentScanSubtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.videoColors.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(child: _UnavailableLocalMediaPanel()),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child:
+                scanTasks.isEmpty
+                    ? EmptyMovieState(
+                      message: AppLocalizations.of(context).videoNoTasks,
+                    )
+                    : ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: scanTasks.length,
+                      itemBuilder:
+                          (context, index) => TaskRow(task: scanTasks[index]),
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecordsCountBadge extends StatelessWidget {
+  const _RecordsCountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.videoColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '$count',
+        style: TextStyle(
+          color: context.videoColors.primary,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 }
