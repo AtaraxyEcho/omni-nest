@@ -103,7 +103,11 @@ public class PhotoAiService {
 
     /**
      * 对用户所有人脸进行聚类。
+     *
+     * <p>多步写入（清空人脸归属、删除旧聚类、写入新聚类）必须在同一事务内完成，
+     * 中途失败整体回滚，避免留下无归属的人脸或丢失聚类。</p>
      */
+    @Transactional(rollbackFor = Exception.class)
     public void clusterFaces(UUID ownerUserId) {
         List<PhotoFace> allFaces = faceRepository.findByOwnerUserId(ownerUserId);
         if (allFaces.isEmpty()) {
