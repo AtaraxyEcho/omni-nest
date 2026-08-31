@@ -7,11 +7,11 @@ import 'package:omninest/app/theme/feature/video_colors.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
 
 List<MovieVideoItem> movieHeroItems(List<MovieVideoItem> items) {
-  final withBackdrop = [
+  final withImage = [
     for (final item in items)
-      if (item.backdropImageUrl != null) item,
+      if (item.heroImageUrl != null) item,
   ];
-  final source = withBackdrop.isEmpty ? items : withBackdrop;
+  final source = withImage.isEmpty ? items : withImage;
   final sorted = List<MovieVideoItem>.from(source)..sort((a, b) {
     final aDate = a.releaseDate ?? DateTime.fromMillisecondsSinceEpoch(0);
     final bDate = b.releaseDate ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -185,7 +185,7 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
                   item == null || item.id.isEmpty
                       ? null
                       : () => context.push('/video/${item.id}'),
-              child: _HeroCardImage(url: _items[_index].backdropImageUrl),
+              child: _HeroCardImage(url: _items[_index].heroImageUrl),
             ),
           ),
           Positioned(
@@ -222,7 +222,7 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
             heroHeight: heroHeight,
             angle: _sideAngle,
             scale: _sideScale,
-            url: _items[_sideIndex(-1)].backdropImageUrl,
+            url: _items[_sideIndex(-1)].heroImageUrl,
             onTap: () => _animateTo(-1),
           ),
         if (_items.length >= 2)
@@ -232,7 +232,7 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
             heroHeight: heroHeight,
             angle: -_sideAngle,
             scale: _sideScale,
-            url: _items[_sideIndex(1)].backdropImageUrl,
+            url: _items[_sideIndex(1)].heroImageUrl,
             onTap: () => _animateTo(1),
           ),
         _build3DCard(
@@ -241,7 +241,7 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
           heroHeight: heroHeight,
           angle: 0,
           scale: _centerScale,
-          url: _items[_index].backdropImageUrl,
+          url: _items[_index].heroImageUrl,
           key: ValueKey(_index),
           onTap:
               item == null || item.id.isEmpty

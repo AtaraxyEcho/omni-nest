@@ -3,6 +3,7 @@ package com.omninest.modules.video.service;
 import com.omninest.modules.file.service.FileLifecycleGuard;
 import com.omninest.modules.video.domain.MediaType;
 import com.omninest.modules.media.domain.MetadataStatus;
+import com.omninest.modules.media.domain.ResourceType;
 import com.omninest.modules.video.domain.SeriesType;
 import com.omninest.common.sync.SyncAction;
 import com.omninest.common.sync.SyncScope;
@@ -420,7 +421,12 @@ public class MovieScrapeExecutionService {
                 m.put("character", member.character());
                 if (member.profilePath() != null) {
                     m.put("profilePath", member.profilePath());
-                    UUID profileFileId = storeProfileImage(movie.getOwnerUserId(), movie.getId(), member.profilePath(), member.name());
+                    UUID profileFileId = storeProfileImage(
+                            movie.getOwnerUserId(),
+                            movie.getId(),
+                            ResourceType.MOVIE.getValue(),
+                            member.profilePath(),
+                            member.name());
                     if (profileFileId != null) m.put("profileFileId", profileFileId.toString());
                 }
                 if (member.order() != null) m.put("order", member.order());
@@ -437,7 +443,12 @@ public class MovieScrapeExecutionService {
                 m.put("department", member.department());
                 if (member.profilePath() != null) {
                     m.put("profilePath", member.profilePath());
-                    UUID profileFileId = storeProfileImage(movie.getOwnerUserId(), movie.getId(), member.profilePath(), member.name());
+                    UUID profileFileId = storeProfileImage(
+                            movie.getOwnerUserId(),
+                            movie.getId(),
+                            ResourceType.MOVIE.getValue(),
+                            member.profilePath(),
+                            member.name());
                     if (profileFileId != null) m.put("profileFileId", profileFileId.toString());
                 }
                 crewMaps.add(m);
@@ -523,6 +534,51 @@ public class MovieScrapeExecutionService {
         if (series.getLibrarySourceId() == null) {
             series.setSeriesType(detectSeriesType(candidate.genres(), candidate.originalLanguage()));
         }
+        // 剧集刮削按集触发：演员表仅在没有数据时补齐，避免每集刮削重复下载全部头像。
+        if ((series.getCastMembers() == null || series.getCastMembers().isEmpty())
+                && candidate.castMembers() != null && !candidate.castMembers().isEmpty()) {
+            List<Map<String, Object>> castMaps = new ArrayList<>();
+            for (var member : candidate.castMembers()) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("name", member.name());
+                m.put("character", member.character());
+                if (member.profilePath() != null) {
+                    m.put("profilePath", member.profilePath());
+                    UUID profileFileId = storeProfileImage(
+                            series.getOwnerUserId(),
+                            series.getId(),
+                            ResourceType.TV_SERIES.getValue(),
+                            member.profilePath(),
+                            member.name());
+                    if (profileFileId != null) m.put("profileFileId", profileFileId.toString());
+                }
+                if (member.order() != null) m.put("order", member.order());
+                castMaps.add(m);
+            }
+            series.setCastMembers(castMaps);
+        }
+        if ((series.getCrewMembers() == null || series.getCrewMembers().isEmpty())
+                && candidate.crewMembers() != null && !candidate.crewMembers().isEmpty()) {
+            List<Map<String, Object>> crewMaps = new ArrayList<>();
+            for (var member : candidate.crewMembers()) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("name", member.name());
+                m.put("job", member.job());
+                m.put("department", member.department());
+                if (member.profilePath() != null) {
+                    m.put("profilePath", member.profilePath());
+                    UUID profileFileId = storeProfileImage(
+                            series.getOwnerUserId(),
+                            series.getId(),
+                            ResourceType.TV_SERIES.getValue(),
+                            member.profilePath(),
+                            member.name());
+                    if (profileFileId != null) m.put("profileFileId", profileFileId.toString());
+                }
+                crewMaps.add(m);
+            }
+            series.setCrewMembers(crewMaps);
+        }
         series.setMetadataStatus(MetadataStatus.MATCHED.getValue());
         series.setLastScrapedAt(Instant.now());
     }
@@ -595,7 +651,8 @@ public class MovieScrapeExecutionService {
     /**
      * 下载演员头像到 MinIO，返回 FileNode UUID。失败时返回 null（保留 TMDB URL 降级）。
      */
-    private UUID storeProfileImage(UUID ownerUserId, UUID movieId, String profileUrl, String personName) {
+    private UUID storeProfileImage(
+            UUID ownerUserId, UUID resourceId, String resourceType, String profileUrl, String personName) {
         if (profileUrl == null || profileUrl.isBlank()) {
             return null;
         }
@@ -604,8 +661,8 @@ public class MovieScrapeExecutionService {
             return derivedAssetStorageService.storeRemote(new DerivedAssetRequest(
                     ownerUserId,
                     profileUrl,
-                    "MOVIE",
-                    movieId,
+                    resourceType,
+                    resourceId,
                     "PROFILE",
                     safeName + ".jpg",
                     "image/jpeg",

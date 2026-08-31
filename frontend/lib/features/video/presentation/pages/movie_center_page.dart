@@ -28,16 +28,11 @@ class MovieCenterPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(movieCenterControllerProvider);
-    final user = ref.watch(authSessionProvider).asData?.value.user;
-    final canManage =
-        user?.permissions.contains('media:library:manage') ?? false;
-
     return state.when(
       data: (data) {
-        final visibleState =
-            data.section.requiresManagementRole && !canManage
-                ? data.copyWith(section: MovieSection.movies)
-                : data;
+        // 管理分区不再静默回退到电影：无权限时由内容区显示明确提示，
+        // 避免用户点击「媒体库管理」等管理项后被悄悄带回电影页。
+        final visibleState = data;
         return Column(
           children: [
             if (data.errorMessage != null)
@@ -60,7 +55,8 @@ class MovieCenterPage extends ConsumerWidget {
                 section: visibleState.section,
                 childOwnsScroll:
                     visibleState.section == MovieSection.movies ||
-                    visibleState.section == MovieSection.recent,
+                    visibleState.section == MovieSection.recent ||
+                    visibleState.section == MovieSection.libraryScan,
                 onSectionSelected:
                     ref
                         .read(movieCenterControllerProvider.notifier)
@@ -159,6 +155,12 @@ class _MovieContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filteredItems = state.filteredMovies;
     final l10n = AppLocalizations.of(context);
+    final user = ref.watch(authSessionProvider).asData?.value.user;
+    final canManage =
+        user?.permissions.contains('media:library:manage') ?? false;
+    if (state.section.requiresManagementRole && !canManage) {
+      return _ManagementAccessDenied(l10n: l10n);
+    }
     if (state.loadingSections.contains(state.section) &&
         !state.loadedSections.contains(state.section)) {
       return AppLoading.grid(gridAspectRatio: 0.68);
@@ -226,6 +228,41 @@ class _MovieContent extends ConsumerWidget {
       MovieSection.transcodeTasks => TranscodeTasksSection(state: state),
       MovieSection.libraryScan => LibraryScanSection(state: state),
     };
+  }
+}
+
+class _ManagementAccessDenied extends StatelessWidget {
+  const _ManagementAccessDenied({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.admin_panel_settings_outlined,
+            size: 48,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              l10n.videoManageAdminOnly,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

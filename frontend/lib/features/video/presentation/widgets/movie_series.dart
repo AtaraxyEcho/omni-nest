@@ -21,11 +21,11 @@ part 'movie_series_catalog.dart';
 enum SeriesCatalogVariant { tv, anime }
 
 List<MovieSeries> seriesHeroItems(List<MovieSeries> series) {
-  final withBackdrop = [
+  final withImage = [
     for (final s in series)
-      if (s.backdropImageUrl != null) s,
+      if (s.heroImageUrl != null) s,
   ];
-  final source = withBackdrop.isEmpty ? series : withBackdrop;
+  final source = withImage.isEmpty ? series : withImage;
   final sorted = List<MovieSeries>.from(source)..sort((a, b) {
     final aDate = a.firstAirDate ?? DateTime.fromMillisecondsSinceEpoch(0);
     final bDate = b.firstAirDate ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -251,7 +251,7 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
                       heroHeight: heroHeight,
                       angle: _sideAngle,
                       scale: _sideScale,
-                      url: _items[_sideIndex(-1)].backdropImageUrl,
+                      url: _items[_sideIndex(-1)].heroImageUrl,
                       overlayOpacity: 0.60,
                       onTap: () => _animateTo(-1),
                     ),
@@ -262,7 +262,7 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
                       heroHeight: heroHeight,
                       angle: -_sideAngle,
                       scale: _sideScale,
-                      url: _items[_sideIndex(1)].backdropImageUrl,
+                      url: _items[_sideIndex(1)].heroImageUrl,
                       overlayOpacity: 0.60,
                       onTap: () => _animateTo(1),
                     ),
@@ -272,7 +272,7 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
                     heroHeight: heroHeight,
                     angle: 0,
                     scale: _centerScale,
-                    url: _items[_index].backdropImageUrl,
+                    url: _items[_index].heroImageUrl,
                     overlayOpacity: 0,
                     key: ValueKey(_index),
                     onTap:

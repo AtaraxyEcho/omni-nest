@@ -363,6 +363,7 @@ class LibraryScanSection extends ConsumerWidget {
               }.contains(task.taskType),
             )
             .toList();
+    // 标题固定，库管理与扫描记录在下方统一滚动，避免外层滚动与面板固定高度冲突。
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,13 +372,23 @@ class LibraryScanSection extends ConsumerWidget {
           subtitle: AppLocalizations.of(context).videoLibraryScanSubtitle,
         ),
         const SizedBox(height: 22),
-        const LocalLibrarySourcesPanel(),
-        const SizedBox(height: 22),
-        TaskBoardSection(
-          title: AppLocalizations.of(context).videoRecentScanRecords,
-          subtitle: AppLocalizations.of(context).videoRecentScanSubtitle,
-          icon: Icons.sync_rounded,
-          tasks: scanTasks,
+        Expanded(
+          child: CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(child: LocalLibrarySourcesPanel()),
+              SliverToBoxAdapter(child: SizedBox(height: 24)),
+              SliverToBoxAdapter(
+                child: TaskBoardSection(
+                  title: AppLocalizations.of(context).videoRecentScanRecords,
+                  subtitle:
+                      AppLocalizations.of(context).videoRecentScanSubtitle,
+                  icon: Icons.sync_rounded,
+                  tasks: scanTasks,
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
         ),
       ],
     );

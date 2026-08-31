@@ -179,10 +179,8 @@ class _MovieShellState extends ConsumerState<MovieShell> {
     final user = ref.watch(authSessionProvider).asData?.value.user;
     final canManage =
         user?.permissions.contains('media:library:manage') ?? false;
-    final effectiveSection =
-        !widget.section.requiresManagementRole || canManage
-            ? widget.section
-            : MovieSection.movies;
+    // 管理分区不再静默回退到电影：无权限时由内容区显示明确提示。
+    final effectiveSection = widget.section;
 
     // 跟踪初始切片
     _lastSection ??= effectiveSection;

@@ -142,7 +142,7 @@ class _LocalLibrarySourcesPanelState
             }
             return SizedBox(
               key: const Key('mediaLibraryDesktopSplit'),
-              height: 650,
+              height: 620,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -481,7 +481,11 @@ class _MediaLibrarySourceItem extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final offline = !source.enabled || source.healthStatus == 'OFFLINE';
-    final issue = source.scanStatus == 'FAILED' || source.lastMissingCount > 0;
+    final failed = source.scanStatus == 'FAILED';
+    final issue = failed || source.lastMissingCount > 0;
+    final scanning =
+        !offline &&
+        const {'QUEUED', 'DISCOVERING', 'APPLYING'}.contains(source.scanStatus);
     final statusColor =
         offline || issue ? colorScheme.error : context.videoColors.primary;
     return Material(
@@ -497,20 +501,46 @@ class _MediaLibrarySourceItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(
-                  offline
-                      ? Icons.folder_off_outlined
-                      : _libraryTypeIcon(source.libraryType),
-                  size: 19,
-                  color: statusColor,
-                ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      offline
+                          ? Icons.folder_off_outlined
+                          : _libraryTypeIcon(source.libraryType),
+                      size: 19,
+                      color: statusColor,
+                    ),
+                  ),
+                  if (scanning)
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: context.videoColors.surfaceContainerLow,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const SizedBox.square(dimension: 8),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 10),
               Expanded(

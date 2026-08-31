@@ -19,7 +19,9 @@ class MovieApi {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/dashboard',
     );
-    return MovieDashboard.fromJson(parseData(response.data));
+    return MovieDashboard.fromJson(
+      _resolveDashboardJson(parseData(response.data)),
+    );
   }
 
   Future<List<MovieVideoItem>> library({String mediaType = 'MOVIE'}) async {
@@ -33,7 +35,7 @@ class MovieApi {
     }
     return data
         .whereType<Map<String, dynamic>>()
-        .map(MovieVideoItem.fromJson)
+        .map(_videoItemFromJson)
         .toList();
   }
 
@@ -54,10 +56,7 @@ class MovieApi {
         'sort': sort,
       },
     );
-    return MediaPage.fromJson(
-      parseData(response.data),
-      MovieVideoItem.fromJson,
-    );
+    return MediaPage.fromJson(parseData(response.data), _videoItemFromJson);
   }
 
   Future<List<MovieVideoItem>> recent({int days = 30}) async {
@@ -65,37 +64,39 @@ class MovieApi {
       '/video/recent',
       queryParameters: {'days': days},
     );
-    return parseList(response.data).map(MovieVideoItem.fromJson).toList();
+    return parseList(response.data).map(_videoItemFromJson).toList();
   }
 
   Future<List<MovieVideoItem>> seriesEpisodes(String seriesId) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/series/$seriesId/episodes',
     );
-    return parseList(response.data).map(MovieVideoItem.fromJson).toList();
+    return parseList(response.data).map(_videoItemFromJson).toList();
   }
 
   Future<List<MovieContinueWatching>> continueWatching() async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/continue',
     );
-    return parseList(
-      response.data,
-    ).map(MovieContinueWatching.fromJson).toList();
+    return parseList(response.data)
+        .map((json) => MovieContinueWatching.fromJson(_resolvePosterJson(json)))
+        .toList();
   }
 
   Future<List<MovieVideoItem>> favorites() async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/favorites',
     );
-    return parseList(response.data).map(MovieVideoItem.fromJson).toList();
+    return parseList(response.data).map(_videoItemFromJson).toList();
   }
 
   Future<List<MovieWatchHistory>> history() async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/history',
     );
-    return parseList(response.data).map(MovieWatchHistory.fromJson).toList();
+    return parseList(response.data)
+        .map((json) => MovieWatchHistory.fromJson(_resolvePosterJson(json)))
+        .toList();
   }
 
   Future<void> deleteHistoryItem(String historyId) async {
@@ -127,14 +128,14 @@ class MovieApi {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/items/$videoItemId',
     );
-    return MovieVideoItem.fromJson(parseData(response.data));
+    return _videoItemFromJson(parseData(response.data));
   }
 
   Future<List<MovieVideoItem>> versions(String videoItemId) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/items/$videoItemId/versions',
     );
-    return parseList(response.data).map(MovieVideoItem.fromJson).toList();
+    return parseList(response.data).map(_videoItemFromJson).toList();
   }
 
   Future<TaskSubmission> deleteItem(
@@ -172,7 +173,7 @@ class MovieApi {
         'metadataStatus': metadataStatus,
       },
     );
-    return MovieVideoItem.fromJson(parseData(response.data));
+    return _videoItemFromJson(parseData(response.data));
   }
 
   Future<PlaybackPlan> playbackPlan(String videoItemId) async {
@@ -296,7 +297,7 @@ class MovieApi {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/collections/$collectionId/items',
     );
-    return parseList(response.data).map(MovieVideoItem.fromJson).toList();
+    return parseList(response.data).map(_videoItemFromJson).toList();
   }
 
   Future<void> addCollectionItem({
@@ -601,14 +602,16 @@ class MovieApi {
       '/video/series/by-type',
       queryParameters: {'seriesType': seriesType},
     );
-    return parseList(response.data).map(MovieSeries.fromJson).toList();
+    return parseList(response.data).map(_seriesFromJson).toList();
   }
 
   Future<MovieSeriesDetail> seriesDetail(String seriesId) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/series/$seriesId',
     );
-    return MovieSeriesDetail.fromJson(parseData(response.data));
+    return MovieSeriesDetail.fromJson(
+      _resolveSeriesDetailJson(parseData(response.data)),
+    );
   }
 
   Future<MovieSeasonDetail> seasonDetail(
@@ -618,14 +621,18 @@ class MovieApi {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/series/$seriesId/seasons/$seasonNumber',
     );
-    return MovieSeasonDetail.fromJson(parseData(response.data));
+    return MovieSeasonDetail.fromJson(
+      _resolveSeasonDetailJson(parseData(response.data)),
+    );
   }
 
   Future<List<MovieContentAsset>> itemAssets(String itemId) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/video/items/$itemId/assets',
     );
-    return parseList(response.data).map(MovieContentAsset.fromJson).toList();
+    return parseList(response.data)
+        .map((json) => MovieContentAsset.fromJson(_resolveAssetJson(json)))
+        .toList();
   }
 
   Future<bool> seriesFavoriteStatus(String seriesId) async {
@@ -763,5 +770,162 @@ class MovieApi {
       );
     }
     return body;
+  }
+
+  // ---- 相对资源 URL 解析 ----
+  // 后端对本地媒体库等场景返回相对路径（/api/v1/...），Flutter 的 Image.network /
+  // CachedNetworkImage 需要绝对地址，这里在 data 层统一解析为 API origin。
+
+  String? _resolveApiUrl(String? url) {
+    if (url == null || url.isEmpty) return url;
+    final parsed = Uri.tryParse(url);
+    if (parsed != null && parsed.hasScheme) return url;
+    if (!url.startsWith('/')) return url;
+    final baseUri = Uri.parse(apiClient.dio.options.baseUrl);
+    final origin = '${baseUri.scheme}://${baseUri.authority}';
+    return '$origin$url';
+  }
+
+  /// 演员头像：MinIO 绝对地址直接使用；TMDB 相对头像路径降级拼接 TMDB 图床。
+  String? _resolveProfileImageUrl(String? url) {
+    if (url == null || url.isEmpty) return url;
+    final parsed = Uri.tryParse(url);
+    if (parsed != null && parsed.hasScheme) return url;
+    if (url.startsWith('/')) {
+      return 'https://image.tmdb.org/t/p/w185$url';
+    }
+    return url;
+  }
+
+  /// 影片/剧集条目的媒体字段（poster/backdrop/assets/演员/职员）统一解析。
+  Map<String, dynamic> _resolveMediaJson(Map<String, dynamic> json) {
+    final resolved = Map<String, dynamic>.from(json);
+    resolved['posterUrl'] = _resolveApiUrl(json['posterUrl']?.toString());
+    resolved['backdropUrl'] = _resolveApiUrl(json['backdropUrl']?.toString());
+    final rawAssets = json['assets'];
+    if (rawAssets is Map) {
+      resolved['assets'] = rawAssets.map((key, value) {
+        if (value is Map) {
+          final asset = Map<String, dynamic>.from(value);
+          asset['url'] = _resolveApiUrl(asset['url']?.toString());
+          return MapEntry(key, asset);
+        }
+        return MapEntry(key, value);
+      });
+    }
+    resolved['castMembers'] = _resolveMembers(json['castMembers']);
+    resolved['crewMembers'] = _resolveMembers(json['crewMembers']);
+    return resolved;
+  }
+
+  List<dynamic>? _resolveMembers(Object? raw) {
+    if (raw is! List) return null;
+    return raw.map((member) {
+      if (member is Map) {
+        final resolved = Map<String, dynamic>.from(member);
+        resolved['profilePath'] = _resolveProfileImageUrl(
+          resolved['profilePath']?.toString(),
+        );
+        return resolved;
+      }
+      return member;
+    }).toList();
+  }
+
+  /// 仅含 posterUrl 的条目（继续观看、观看历史、季）。
+  Map<String, dynamic> _resolvePosterJson(Map<String, dynamic> json) {
+    final resolved = Map<String, dynamic>.from(json);
+    resolved['posterUrl'] = _resolveApiUrl(json['posterUrl']?.toString());
+    return resolved;
+  }
+
+  Map<String, dynamic> _resolveAssetJson(Map<String, dynamic> json) {
+    final resolved = Map<String, dynamic>.from(json);
+    resolved['url'] = _resolveApiUrl(json['url']?.toString());
+    return resolved;
+  }
+
+  Map<String, dynamic> _resolveSeriesDetailJson(Map<String, dynamic> json) {
+    final resolved = Map<String, dynamic>.from(json);
+    final series = json['series'];
+    if (series is Map) {
+      resolved['series'] = _resolveMediaJson(Map<String, dynamic>.from(series));
+    }
+    resolved['cast'] = _resolveMembers(json['cast']);
+    resolved['crew'] = _resolveMembers(json['crew']);
+    final seasons = json['seasons'];
+    if (seasons is List) {
+      resolved['seasons'] =
+          seasons.map((season) {
+            if (season is Map) {
+              return _resolvePosterJson(Map<String, dynamic>.from(season));
+            }
+            return season;
+          }).toList();
+    }
+    return resolved;
+  }
+
+  Map<String, dynamic> _resolveSeasonDetailJson(Map<String, dynamic> json) {
+    final resolved = Map<String, dynamic>.from(json);
+    final season = json['season'];
+    if (season is Map) {
+      resolved['season'] = _resolvePosterJson(
+        Map<String, dynamic>.from(season),
+      );
+    }
+    final episodes = json['episodes'];
+    if (episodes is List) {
+      resolved['episodes'] =
+          episodes.map((episode) {
+            if (episode is Map) {
+              return _resolveMediaJson(Map<String, dynamic>.from(episode));
+            }
+            return episode;
+          }).toList();
+    }
+    return resolved;
+  }
+
+  MovieVideoItem _videoItemFromJson(Map<String, dynamic> json) =>
+      MovieVideoItem.fromJson(_resolveMediaJson(json));
+
+  MovieSeries _seriesFromJson(Map<String, dynamic> json) =>
+      MovieSeries.fromJson(_resolveMediaJson(json));
+
+  /// 首页摘要内部嵌有影片、继续观看与系列列表，需要一并解析媒体 URL。
+  Map<String, dynamic> _resolveDashboardJson(Map<String, dynamic> json) {
+    final resolved = Map<String, dynamic>.from(json);
+    final recentlyAdded = json['recentlyAdded'];
+    if (recentlyAdded is List) {
+      resolved['recentlyAdded'] =
+          recentlyAdded.map((item) {
+            if (item is Map) {
+              return _resolveMediaJson(Map<String, dynamic>.from(item));
+            }
+            return item;
+          }).toList();
+    }
+    final continueWatching = json['continueWatching'];
+    if (continueWatching is List) {
+      resolved['continueWatching'] =
+          continueWatching.map((item) {
+            if (item is Map) {
+              return _resolvePosterJson(Map<String, dynamic>.from(item));
+            }
+            return item;
+          }).toList();
+    }
+    final series = json['series'];
+    if (series is List) {
+      resolved['series'] =
+          series.map((item) {
+            if (item is Map) {
+              return _resolveMediaJson(Map<String, dynamic>.from(item));
+            }
+            return item;
+          }).toList();
+    }
+    return resolved;
   }
 }

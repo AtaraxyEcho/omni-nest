@@ -30,6 +30,113 @@ void main() {
     expect(adapter.lastHeaders?['Range'], 'bytes=0-2097151');
     expect(content.length, 2 * 1024 * 1024);
   });
+
+  test('detail resolves relative asset urls to absolute api origin', () async {
+    final adapter = _JsonHttpClientAdapter({
+      'code': 200,
+      'message': 'success',
+      'data': {
+        'id': 'video-1',
+        'fileNodeId': 'file-1',
+        'mediaType': 'MOVIE',
+        'title': '影片',
+        'metadataStatus': 'MATCHED',
+        'nfoStatus': 'DISABLED',
+        'updatedAt': null,
+        'metadata': <String, dynamic>{},
+        'posterUrl': '/api/v1/public/video/items/video-1/assets/file-1?token=t',
+        'backdropUrl':
+            '/api/v1/public/video/items/video-1/assets/file-2?token=t',
+        'assets': {
+          'POSTER': {
+            'assetType': 'POSTER',
+            'primary': true,
+            'metadata': <String, dynamic>{},
+            'url': '/api/v1/public/video/items/video-1/assets/file-3?token=t',
+          },
+        },
+        'castMembers': [
+          {
+            'name': '张三',
+            'character': '角色',
+            'profilePath': '/abc.jpg',
+            'order': 0,
+          },
+        ],
+        'crewMembers': <Map<String, dynamic>>[],
+      },
+    });
+    final api = MovieApi(_apiClient(adapter));
+
+    final item = await api.detail('video-1');
+
+    expect(
+      item.posterImageUrl,
+      startsWith('http://localhost:8080/api/v1/public/video/items/video-1'),
+    );
+    expect(
+      item.backdropImageUrl,
+      startsWith('http://localhost:8080/api/v1/public/video/items/video-1'),
+    );
+    expect(
+      item.assets['POSTER']?.url,
+      startsWith('http://localhost:8080/api/v1/public/video/items/video-1'),
+    );
+    // TMDB 相对头像路径应拼接 TMDB 图床，而不是 API origin。
+    expect(
+      item.castMembers.first.profilePath,
+      'https://image.tmdb.org/t/p/w185/abc.jpg',
+    );
+  });
+
+  test('detail keeps absolute asset urls unchanged', () async {
+    final adapter = _JsonHttpClientAdapter({
+      'code': 200,
+      'message': 'success',
+      'data': {
+        'id': 'video-1',
+        'fileNodeId': 'file-1',
+        'mediaType': 'MOVIE',
+        'title': '影片',
+        'metadataStatus': 'MATCHED',
+        'nfoStatus': 'DISABLED',
+        'updatedAt': null,
+        'metadata': <String, dynamic>{},
+        'posterUrl': 'http://localhost:9000/media/poster.jpg',
+        'castMembers': <Map<String, dynamic>>[],
+        'crewMembers': <Map<String, dynamic>>[],
+      },
+    });
+    final api = MovieApi(_apiClient(adapter));
+
+    final item = await api.detail('video-1');
+
+    expect(item.posterImageUrl, 'http://localhost:9000/media/poster.jpg');
+  });
+}
+
+class _JsonHttpClientAdapter implements HttpClientAdapter {
+  _JsonHttpClientAdapter(this.body);
+
+  final Map<String, dynamic> body;
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    return ResponseBody.fromString(
+      jsonEncode(body),
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
 }
 
 ApiClient _apiClient(HttpClientAdapter adapter) {

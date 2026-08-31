@@ -76,15 +76,38 @@ final videoStorageDirectoriesProvider = FutureProvider.autoDispose
 final latestMediaScanRunProvider = StreamProvider.autoDispose
     .family<MediaScanRun?, String>((ref, sourceId) async* {
       final api = ref.watch(movieApiProvider);
+      // 连续网络/服务错误次数，达到阈值后抛出，避免无限重试掩盖真实故障。
+      var consecutiveErrors = 0;
       while (true) {
-        final run = await api.latestMediaScanRun(sourceId);
+        MediaScanRun? run;
+        try {
+          run = await api.latestMediaScanRun(sourceId);
+          consecutiveErrors = 0;
+        } catch (_) {
+          // 网络抖动或服务临时不可用：短暂退避后重试，避免轮询流直接终止。
+          if (++consecutiveErrors >= 3) {
+            rethrow;
+          }
+          await Future<void>.delayed(const Duration(seconds: 3));
+          continue;
+        }
         yield run;
         if (run == null || !run.active) {
           if (run != null) {
             ref.invalidate(videoLibrarySourcesProvider);
             ref.invalidate(unavailableLocalMediaProvider);
             if (run.status == 'COMPLETED' || run.status == 'PARTIAL') {
-              ref.invalidate(movieCenterControllerProvider);
+              // 面板重新挂载会重启轮询流；同一完成 run 只触发一次中心数据
+              // 重载，否则管理页每次进入都会全量刷新并在历史缺陷下反复跳回
+              // 电影分区。
+              final handled = ref.read(handledCompletedScanRunIdsProvider);
+              if (handled.add(run.id)) {
+                if (handled.length > 128) {
+                  handled.clear();
+                  handled.add(run.id);
+                }
+                ref.invalidate(movieCenterControllerProvider);
+              }
             }
           }
           return;
@@ -92,6 +115,11 @@ final latestMediaScanRunProvider = StreamProvider.autoDispose
         await Future<void>.delayed(const Duration(seconds: 2));
       }
     });
+
+/// 已触发过中心数据刷新的完成态扫描 run ID，用于跨面板重挂载去重。
+final handledCompletedScanRunIdsProvider = Provider<Set<String>>(
+  (ref) => <String>{},
+);
 
 typedef MediaTreeKey = ({String runId, String? parentNodeId, int page});
 
@@ -229,6 +257,22 @@ final movieCenterControllerProvider =
       MovieCenterController.new,
     );
 
+/// 影视中心当前分区。独立于 [MovieCenterController] 持久保存，
+/// 避免实时刷新（invalidate 重建）时把当前分区重置回电影页。
+final movieCenterSectionProvider =
+    NotifierProvider<MovieCenterSectionNotifier, MovieSection>(
+      MovieCenterSectionNotifier.new,
+    );
+
+class MovieCenterSectionNotifier extends Notifier<MovieSection> {
+  @override
+  MovieSection build() => MovieSection.movies;
+
+  void select(MovieSection section) {
+    state = section;
+  }
+}
+
 final movieDetailProvider = FutureProvider.autoDispose
     .family<MovieVideoItem, String>((ref, videoItemId) {
       return ref.watch(movieApiProvider).detail(videoItemId);
@@ -312,11 +356,23 @@ class MovieCenterController extends AsyncNotifier<MovieCenterState> {
   int _episodePageGeneration = 0;
   final Map<MovieSection, int> _sectionLoadGenerations = {};
 
+  /// controller 重建期间（实时刷新触发 invalidate）被点击但未生效的分区。
+  MovieSection? _pendingSection;
+
   MovieApi get _api => ref.read(movieApiProvider);
 
   @override
   Future<MovieCenterState> build() async {
-    return _loadState();
+    final loaded = await _loadState();
+    final section = _pendingSection ?? ref.read(movieCenterSectionProvider);
+    _pendingSection = null;
+    final restored =
+        section == loaded.section ? loaded : loaded.copyWith(section: section);
+    // 恢复非电影分区时主动重载分区数据，避免管理页只显示空任务列表。
+    if (restored.section != MovieSection.movies) {
+      Future<void>.microtask(() => _loadSection(restored.section));
+    }
+    return restored;
   }
 
   Future<void> refresh() async {
@@ -385,10 +441,15 @@ class MovieCenterController extends AsyncNotifier<MovieCenterState> {
   }
 
   void selectSection(MovieSection section) {
+    ref.read(movieCenterSectionProvider.notifier).select(section);
     final current = state.asData?.value;
     if (current == null) {
+      // controller 正在重建（如 apply 完成后实时刷新）：记录待恢复分区，
+      // build() 完成后会从 provider / pending 恢复，避免点击被静默丢弃。
+      _pendingSection = section;
       return;
     }
+    _pendingSection = null;
     state = AsyncData(
       current.copyWith(
         section: section,

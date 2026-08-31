@@ -201,6 +201,9 @@ class MovieVideoItem {
 
   String? get backdropImageUrl =>
       _firstNonBlank([backdropUrl, assets['BACKDROP']?.url]);
+
+  /// Hero 大图：背景图缺失时回退海报，保证封面可回显。
+  String? get heroImageUrl => backdropImageUrl ?? posterImageUrl;
 }
 
 class MovieContentAsset {
@@ -452,6 +455,9 @@ class MovieSeries {
 
   String? get backdropImageUrl =>
       _firstNonBlank([backdropUrl, assets['BACKDROP']?.url]);
+
+  /// Hero 大图：背景图缺失时回退海报，保证封面可回显。
+  String? get heroImageUrl => backdropImageUrl ?? posterImageUrl;
 }
 
 class MovieCastMember {

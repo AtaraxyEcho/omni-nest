@@ -99,15 +99,6 @@ class _HeroContentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isNarrow = screenWidth < 600;
-    final posterWidth =
-        screenWidth >= 1920
-            ? 200.0
-            : screenWidth >= 1280
-            ? 160.0
-            : screenWidth >= 720
-            ? 140.0
-            : 100.0;
-    final posterHeight = posterWidth * 1.4375;
     if (isNarrow) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,14 +116,9 @@ class _HeroContentRow extends StatelessWidget {
       children: [
         _HeroPoster(posterUrl: posterUrl, screenWidth: screenWidth),
         const SizedBox(width: 24),
-        Expanded(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: posterHeight),
-            child: SingleChildScrollView(
-              child: _HeroInfo(item: item, width: screenWidth),
-            ),
-          ),
-        ),
+        // 不使用内嵌 SingleChildScrollView：内嵌可滚动区域会抢占页面滚轮事件，
+        // 导致鼠标悬停 Hero 时详情页无法滚动。信息区高度低于 Hero 最小高度。
+        Expanded(child: _HeroInfo(item: item, width: screenWidth)),
       ],
     );
   }
