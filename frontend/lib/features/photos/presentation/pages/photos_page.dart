@@ -29,6 +29,7 @@ import 'package:omninest/features/photos/presentation/widgets/photo_album_card.d
 import 'package:omninest/features/photos/presentation/widgets/photo_grid_tile.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_group_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_graph_view.dart';
 import 'package:omninest/features/photos/presentation/pages/photo_faces_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';

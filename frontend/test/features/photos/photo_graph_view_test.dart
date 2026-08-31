@@ -309,7 +309,10 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('No photo relationships are available yet.'), findsOneWidget);
+    expect(
+      find.text('No photo relationships are available yet.'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

@@ -88,7 +88,7 @@ class _PhotoTopBar extends StatelessWidget {
                   AppLocalizations.of(context).photosTabTimeline,
                 PhotoTab.graph => AppLocalizations.of(context).photosTabGraph,
                 PhotoTab.albums => AppLocalizations.of(context).photosTabAlbums,
-                _ => 'Photos',
+                _ => AppLocalizations.of(context).portalPhotos,
               },
               style: TextStyle(
                 color: context.photosColors.primaryContainer,
@@ -129,11 +129,18 @@ class _PhotoTopBar extends StatelessWidget {
                           .whereType<String>(),
                 );
                 if (!context.mounted) return null;
-                final failure = controller.lastImportFailureMessage;
+                final failure = controller.lastImportNotice;
                 if (!visible && failure != null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(failure)));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        photoImportNoticeText(
+                          AppLocalizations.of(context),
+                          failure,
+                        ),
+                      ),
+                    ),
+                  );
                   return MediaImportCompletionState.failed;
                 }
                 return visible

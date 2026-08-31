@@ -36,7 +36,7 @@ void main() {
     );
 
     expect(find.text('v2'), findsOneWidget);
-    expect(find.text('裁剪'), findsOneWidget);
+    expect(find.text('Crop'), findsOneWidget);
 
     await tester.tap(find.text('Rollback'));
     expect(revertedVersionId, version.id);

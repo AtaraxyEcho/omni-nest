@@ -158,10 +158,14 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
   int _refreshGeneration = 0;
   Future<bool>? _importRefreshInFlight;
   Future<void>? _realtimeRefreshInFlight;
-  String? _lastImportFailureMessage;
+  PhotoImportNotice? _lastImportNotice;
+  String? _lastImportDetail;
 
   /// 最近一次导入后台任务的终态错误，供导入入口显示准确反馈。
-  String? get lastImportFailureMessage => _lastImportFailureMessage;
+  PhotoImportNotice? get lastImportNotice => _lastImportNotice;
+
+  /// 后端任务返回的自定义错误信息（如安全隔离提示），仅 backendFailed 时有值。
+  String? get lastImportDetail => _lastImportDetail;
 
   @override
   Future<PhotoCenterState> build() async {
@@ -254,7 +258,8 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
   }) {
     final active = _importRefreshInFlight;
     if (active != null) return active;
-    _lastImportFailureMessage = null;
+    _lastImportNotice = null;
+    _lastImportDetail = null;
     final baseline = state.asData?.value.dashboard.totalPhotos ?? 0;
     final epoch = ++_importRefreshEpoch;
     final generation = ++_refreshGeneration;
@@ -323,8 +328,7 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
           expectedFileIds,
         );
         if (!visible && ref.mounted && epoch == _importRefreshEpoch) {
-          _lastImportFailureMessage = '照片导入任务已完成，但照片尚未出现在当前列表中';
-          _setError(_lastImportFailureMessage!);
+          _lastImportNotice = PhotoImportNotice.completedNotVisible;
         }
         return visible;
       }
@@ -340,7 +344,7 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
         ref.mounted &&
         epoch == _importRefreshEpoch &&
         generation == _refreshGeneration) {
-      _setError('Photo import is still processing. Refresh the page later.');
+      _lastImportNotice = PhotoImportNotice.stillProcessing;
     }
     return visible;
   }
@@ -378,11 +382,8 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
           }
         }
         if (failed != null) {
-          _lastImportFailureMessage =
-              failed.errorMessage?.trim().isNotEmpty == true
-                  ? failed.errorMessage!.trim()
-                  : '照片后台导入任务失败，请在任务中心查看详情';
-          _setError(_lastImportFailureMessage!);
+          _lastImportDetail = failed.errorMessage?.trim();
+          _lastImportNotice = PhotoImportNotice.backendFailed;
           return _ImportTaskPollOutcome.failed;
         }
         if (tasks.every((task) => task.isCompleted)) {

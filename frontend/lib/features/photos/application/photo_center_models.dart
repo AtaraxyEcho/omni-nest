@@ -10,6 +10,9 @@ import 'package:omninest/features/photos/domain/photo_timeline.dart';
 /// 照片中心的内容页签。
 enum PhotoTab { all, favorites, albums, timeline, groups, graph, people }
 
+/// 导入流程提示类型；文案由界面层按语言映射。
+enum PhotoImportNotice { completedNotVisible, stillProcessing, backendFailed }
+
 /// 照片中心状态
 class PhotoCenterState {
   const PhotoCenterState({

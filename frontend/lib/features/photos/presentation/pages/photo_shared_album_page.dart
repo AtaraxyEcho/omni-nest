@@ -376,7 +376,7 @@ class _SharedAlbumContent extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(12),
           child: Text(
-            'Powered by OmniNest',
+            AppLocalizations.of(context).photosSharedPoweredBy,
             style: TextStyle(
               color: context.photosColors.onSurfaceVariant,
               fontSize: 12,

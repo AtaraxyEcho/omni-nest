@@ -5699,6 +5699,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosGraphTruncated => '关系较多，仅展示部分节点与连线。';
 
   @override
+  String get photosGroupByDate => '时间';
+
+  @override
+  String get photosGroupByLocation => '位置';
+
+  @override
+  String get photosGroupByFormat => '格式';
+
+  @override
+  String get photosGroupByTag => '标签';
+
+  @override
+  String get photosEditTypeRotate => '旋转';
+
+  @override
+  String get photosEditTypeCrop => '裁剪';
+
+  @override
+  String get photosEditTypeBrightness => '亮度';
+
+  @override
+  String get photosEditTypeContrast => '对比度';
+
+  @override
+  String get photosEditTypeFilter => '滤镜';
+
+  @override
+  String get photosImportCompletedNotVisible => '照片导入任务已完成，但照片尚未出现在当前列表中';
+
+  @override
+  String get photosImportStillProcessing => '照片仍在后台导入，请稍后刷新查看';
+
+  @override
+  String get photosImportBackendFailed => '照片后台导入任务失败，请在任务中心查看详情';
+
+  @override
+  String get photosSharedPoweredBy => '由 OmniNest 提供';
+
+  @override
   String get photosTabMemories => '回忆';
 
   @override

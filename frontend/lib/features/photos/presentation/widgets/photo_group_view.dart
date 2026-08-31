@@ -3,6 +3,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_grid_tile.dart';
@@ -55,7 +56,12 @@ class _PhotoGroupViewState extends ConsumerState<PhotoGroupView> {
                         (by) => Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text(by.label),
+                            label: Text(
+                              photoGroupByLabel(
+                                AppLocalizations.of(context),
+                                by,
+                              ),
+                            ),
                             selected: groupBy == by,
                             onSelected: (selected) {
                               if (selected) {

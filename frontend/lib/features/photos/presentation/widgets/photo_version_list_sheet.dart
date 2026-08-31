@@ -60,7 +60,10 @@ class PhotoVersionListSheet extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      version.editTypeDisplay,
+                      _editTypeLabel(
+                        AppLocalizations.of(context),
+                        version.editType,
+                      ),
                       style: TextStyle(color: context.photosColors.onSurface),
                     ),
                     subtitle: Text(
@@ -91,4 +94,15 @@ class PhotoVersionListSheet extends StatelessWidget {
         '${twoDigits(createdAt.day)} ${twoDigits(createdAt.hour)}:'
         '${twoDigits(createdAt.minute)}';
   }
+}
+
+String _editTypeLabel(AppLocalizations l10n, String editType) {
+  return switch (editType) {
+    'ROTATE' => l10n.photosEditTypeRotate,
+    'CROP' => l10n.photosEditTypeCrop,
+    'BRIGHTNESS' => l10n.photosEditTypeBrightness,
+    'CONTRAST' => l10n.photosEditTypeContrast,
+    'FILTER' => l10n.photosEditTypeFilter,
+    _ => editType,
+  };
 }

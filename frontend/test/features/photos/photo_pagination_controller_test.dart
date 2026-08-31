@@ -439,7 +439,8 @@ void main() {
     );
 
     expect(visible, isFalse);
-    expect(controller.lastImportFailureMessage, '安全扫描服务不可用，文件已隔离');
+    expect(controller.lastImportNotice, PhotoImportNotice.backendFailed);
+    expect(controller.lastImportDetail, '安全扫描服务不可用，文件已隔离');
   });
 
   test('永久删除任务提交后立即从本地状态移除照片', () async {

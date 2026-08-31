@@ -30,16 +30,4 @@ class PhotoEditVersion {
           DateTime.tryParse(json['createdAt']?.toString() ?? '')?.toLocal(),
     );
   }
-
-  /// 编辑类型显示文本
-  String get editTypeDisplay {
-    return switch (editType) {
-      'ROTATE' => '旋转',
-      'CROP' => '裁剪',
-      'BRIGHTNESS' => '亮度',
-      'CONTRAST' => '对比度',
-      'FILTER' => '滤镜',
-      _ => editType,
-    };
-  }
 }

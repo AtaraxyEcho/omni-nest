@@ -5886,6 +5886,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Large graph: showing a subset of nodes and links.';
 
   @override
+  String get photosGroupByDate => 'Time';
+
+  @override
+  String get photosGroupByLocation => 'Places';
+
+  @override
+  String get photosGroupByFormat => 'Formats';
+
+  @override
+  String get photosGroupByTag => 'Tags';
+
+  @override
+  String get photosEditTypeRotate => 'Rotate';
+
+  @override
+  String get photosEditTypeCrop => 'Crop';
+
+  @override
+  String get photosEditTypeBrightness => 'Brightness';
+
+  @override
+  String get photosEditTypeContrast => 'Contrast';
+
+  @override
+  String get photosEditTypeFilter => 'Filter';
+
+  @override
+  String get photosImportCompletedNotVisible =>
+      'Import finished, but the photos are not visible in this list yet. Refresh later.';
+
+  @override
+  String get photosImportStillProcessing =>
+      'Photo import is still processing. Refresh the page later.';
+
+  @override
+  String get photosImportBackendFailed =>
+      'Photo import failed in the background. Check the task center for details.';
+
+  @override
+  String get photosSharedPoweredBy => 'Powered by OmniNest';
+
+  @override
   String get photosTabMemories => 'Memories';
 
   @override

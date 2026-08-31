@@ -10777,6 +10777,84 @@ abstract class AppLocalizations {
   /// **'Large graph: showing a subset of nodes and links.'**
   String get photosGraphTruncated;
 
+  /// No description provided for @photosGroupByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get photosGroupByDate;
+
+  /// No description provided for @photosGroupByLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get photosGroupByLocation;
+
+  /// No description provided for @photosGroupByFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Formats'**
+  String get photosGroupByFormat;
+
+  /// No description provided for @photosGroupByTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get photosGroupByTag;
+
+  /// No description provided for @photosEditTypeRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get photosEditTypeRotate;
+
+  /// No description provided for @photosEditTypeCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get photosEditTypeCrop;
+
+  /// No description provided for @photosEditTypeBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness'**
+  String get photosEditTypeBrightness;
+
+  /// No description provided for @photosEditTypeContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Contrast'**
+  String get photosEditTypeContrast;
+
+  /// No description provided for @photosEditTypeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get photosEditTypeFilter;
+
+  /// No description provided for @photosImportCompletedNotVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Import finished, but the photos are not visible in this list yet. Refresh later.'**
+  String get photosImportCompletedNotVisible;
+
+  /// No description provided for @photosImportStillProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo import is still processing. Refresh the page later.'**
+  String get photosImportStillProcessing;
+
+  /// No description provided for @photosImportBackendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo import failed in the background. Check the task center for details.'**
+  String get photosImportBackendFailed;
+
+  /// No description provided for @photosSharedPoweredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Powered by OmniNest'**
+  String get photosSharedPoweredBy;
+
   /// No description provided for @photosTabMemories.
   ///
   /// In en, this message translates to:

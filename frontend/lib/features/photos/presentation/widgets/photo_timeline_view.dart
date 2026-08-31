@@ -271,7 +271,9 @@ class _MonthHeader extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              month.monthName,
+              MaterialLocalizations.of(
+                context,
+              ).formatMonthYear(DateTime(2024, month.month)),
               style: TextStyle(
                 color: context.photosColors.onSurface,
                 fontSize: 15,

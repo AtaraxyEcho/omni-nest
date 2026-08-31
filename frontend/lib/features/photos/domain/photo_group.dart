@@ -74,11 +74,4 @@ enum GroupBy {
 
   const GroupBy(this.value);
   final String value;
-
-  String get label => switch (this) {
-    GroupBy.date => '时间',
-    GroupBy.location => '位置',
-    GroupBy.format => '格式',
-    GroupBy.tag => '标签',
-  };
 }

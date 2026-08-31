@@ -144,11 +144,18 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
                         .whereType<String>(),
               );
               if (!context.mounted) return null;
-              final failure = controller.lastImportFailureMessage;
+              final failure = controller.lastImportNotice;
               if (!visible && failure != null) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(failure)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      photoImportNoticeText(
+                        AppLocalizations.of(context),
+                        failure,
+                      ),
+                    ),
+                  ),
+                );
                 return MediaImportCompletionState.failed;
               }
               return visible
