@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
@@ -224,6 +226,53 @@ class MovieInlinePanel extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 竖版海报在宽幅 Hero 中的展示：以模糊放大的同图打底，海报等比完整展示。
+/// 直接用 BoxFit.cover 会把竖版海报放大裁切到只剩中部一条。
+class PosterHeroImage extends StatelessWidget {
+  const PosterHeroImage({required this.url, this.errorFallback, super.key});
+
+  final String url;
+
+  /// 图片加载失败时的占位；不传则显示空层。
+  final Widget? errorFallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget fallback = errorFallback ?? const SizedBox.expand();
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ClipRect(
+          child: Transform.scale(
+            scale: 1.2,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Image.network(
+                url,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                filterQuality: FilterQuality.low,
+                gaplessPlayback: true,
+                errorBuilder: (context, error, stackTrace) => fallback,
+              ),
+            ),
+          ),
+        ),
+        const ColoredBox(color: Color(0x4D000000)),
+        Image.network(
+          url,
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.high,
+          gaplessPlayback: true,
+          cacheWidth: 800,
+          errorBuilder: (context, error, stackTrace) => fallback,
+        ),
+      ],
     );
   }
 }

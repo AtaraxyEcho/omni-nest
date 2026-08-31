@@ -251,7 +251,8 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
                       heroHeight: heroHeight,
                       angle: _sideAngle,
                       scale: _sideScale,
-                      url: _items[_sideIndex(-1)].heroImageUrl,
+                      backdropUrl: _items[_sideIndex(-1)].backdropImageUrl,
+                      posterUrl: _items[_sideIndex(-1)].posterUrl,
                       overlayOpacity: 0.60,
                       onTap: () => _animateTo(-1),
                     ),
@@ -262,7 +263,8 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
                       heroHeight: heroHeight,
                       angle: -_sideAngle,
                       scale: _sideScale,
-                      url: _items[_sideIndex(1)].heroImageUrl,
+                      backdropUrl: _items[_sideIndex(1)].backdropImageUrl,
+                      posterUrl: _items[_sideIndex(1)].posterUrl,
                       overlayOpacity: 0.60,
                       onTap: () => _animateTo(1),
                     ),
@@ -272,7 +274,8 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
                     heroHeight: heroHeight,
                     angle: 0,
                     scale: _centerScale,
-                    url: _items[_index].heroImageUrl,
+                    backdropUrl: _items[_index].backdropImageUrl,
+                    posterUrl: _items[_index].posterUrl,
                     overlayOpacity: 0,
                     key: ValueKey(_index),
                     onTap:
@@ -351,7 +354,8 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
     required double heroHeight,
     required double angle,
     required double scale,
-    required String? url,
+    required String? backdropUrl,
+    required String? posterUrl,
     double overlayOpacity = 0,
     VoidCallback? onTap,
     Key? key,
@@ -389,7 +393,10 @@ class _SeriesHeroCarouselState extends State<SeriesHeroCarousel>
             child: Stack(
               fit: StackFit.expand,
               children: [
-                _SeriesCardImage(url: url),
+                _SeriesCardImage(
+                  backdropUrl: backdropUrl,
+                  posterUrl: posterUrl,
+                ),
                 if (overlayOpacity > 0)
                   ColoredBox(
                     color: Colors.black.withValues(alpha: overlayOpacity),
@@ -426,22 +433,32 @@ class _SeriesHeroPlaceholder extends StatelessWidget {
 }
 
 class _SeriesCardImage extends StatelessWidget {
-  const _SeriesCardImage({required this.url});
+  const _SeriesCardImage({required this.backdropUrl, required this.posterUrl});
 
-  final String? url;
+  final String? backdropUrl;
+  final String? posterUrl;
 
   @override
   Widget build(BuildContext context) {
-    if (url == null) return const _SeriesCardFallback();
-    return Image.network(
-      url!,
-      fit: BoxFit.cover,
-      alignment: Alignment.center,
-      filterQuality: FilterQuality.high,
-      gaplessPlayback: true,
-      cacheWidth: 800,
-      errorBuilder: (context, error, stackTrace) => const _SeriesCardFallback(),
-    );
+    if (backdropUrl != null) {
+      return Image.network(
+        backdropUrl!,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        filterQuality: FilterQuality.high,
+        gaplessPlayback: true,
+        cacheWidth: 800,
+        errorBuilder:
+            (context, error, stackTrace) => const _SeriesCardFallback(),
+      );
+    }
+    if (posterUrl != null) {
+      return PosterHeroImage(
+        url: posterUrl!,
+        errorFallback: const _SeriesCardFallback(),
+      );
+    }
+    return const _SeriesCardFallback();
   }
 }
 

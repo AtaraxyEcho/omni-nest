@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
+import 'package:omninest/features/video/presentation/widgets/movie_common_widgets.dart';
 
 List<MovieVideoItem> movieHeroItems(List<MovieVideoItem> items) {
   final withImage = [
@@ -185,7 +186,10 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
                   item == null || item.id.isEmpty
                       ? null
                       : () => context.push('/video/${item.id}'),
-              child: _HeroCardImage(url: _items[_index].heroImageUrl),
+              child: _HeroCardImage(
+                backdropUrl: _items[_index].backdropImageUrl,
+                posterUrl: _items[_index].posterUrl,
+              ),
             ),
           ),
           Positioned(
@@ -222,7 +226,8 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
             heroHeight: heroHeight,
             angle: _sideAngle,
             scale: _sideScale,
-            url: _items[_sideIndex(-1)].heroImageUrl,
+            backdropUrl: _items[_sideIndex(-1)].backdropImageUrl,
+            posterUrl: _items[_sideIndex(-1)].posterUrl,
             onTap: () => _animateTo(-1),
           ),
         if (_items.length >= 2)
@@ -232,7 +237,8 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
             heroHeight: heroHeight,
             angle: -_sideAngle,
             scale: _sideScale,
-            url: _items[_sideIndex(1)].heroImageUrl,
+            backdropUrl: _items[_sideIndex(1)].backdropImageUrl,
+            posterUrl: _items[_sideIndex(1)].posterUrl,
             onTap: () => _animateTo(1),
           ),
         _build3DCard(
@@ -241,7 +247,8 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
           heroHeight: heroHeight,
           angle: 0,
           scale: _centerScale,
-          url: _items[_index].heroImageUrl,
+          backdropUrl: _items[_index].backdropImageUrl,
+          posterUrl: _items[_index].posterUrl,
           key: ValueKey(_index),
           onTap:
               item == null || item.id.isEmpty
@@ -294,7 +301,8 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
     required double heroHeight,
     required double angle,
     required double scale,
-    required String? url,
+    required String? backdropUrl,
+    required String? posterUrl,
     VoidCallback? onTap,
     Key? key,
   }) {
@@ -332,7 +340,10 @@ class _MovieHeroCarouselState extends State<MovieHeroCarousel>
                 ),
               ],
             ),
-            child: _HeroCardImage(url: url),
+            child: _HeroCardImage(
+              backdropUrl: backdropUrl,
+              posterUrl: posterUrl,
+            ),
           ),
         ),
       ),
@@ -359,22 +370,31 @@ class _HeroPlaceholder extends StatelessWidget {
 }
 
 class _HeroCardImage extends StatelessWidget {
-  const _HeroCardImage({required this.url});
+  const _HeroCardImage({required this.backdropUrl, required this.posterUrl});
 
-  final String? url;
+  final String? backdropUrl;
+  final String? posterUrl;
 
   @override
   Widget build(BuildContext context) {
-    if (url == null) return const _CardFallback();
-    return Image.network(
-      url!,
-      fit: BoxFit.cover,
-      alignment: Alignment.center,
-      filterQuality: FilterQuality.high,
-      gaplessPlayback: true,
-      cacheWidth: 800,
-      errorBuilder: (context, error, stackTrace) => const _CardFallback(),
-    );
+    if (backdropUrl != null) {
+      return Image.network(
+        backdropUrl!,
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        filterQuality: FilterQuality.high,
+        gaplessPlayback: true,
+        cacheWidth: 800,
+        errorBuilder: (context, error, stackTrace) => const _CardFallback(),
+      );
+    }
+    if (posterUrl != null) {
+      return PosterHeroImage(
+        url: posterUrl!,
+        errorFallback: const _CardFallback(),
+      );
+    }
+    return const _CardFallback();
   }
 }
 
