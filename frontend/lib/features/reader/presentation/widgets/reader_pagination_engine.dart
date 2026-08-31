@@ -141,7 +141,12 @@ class ReaderPaginationEngine {
     ReaderViewSettings settings,
     double textScale,
   ) {
-    final lineRefs = _buildLineRefs(blocks);
+    final lineRefs = _buildLineRefs(
+      blocks,
+      effectiveWidth,
+      settings,
+      textScale,
+    );
     if (lineRefs.isEmpty) return [];
 
     final lineOffsets = <int>[];
@@ -326,7 +331,12 @@ class ReaderPaginationEngine {
 
   // ── Step 1：展开 ContentBlock 为 PaginationLineRef 列表 ──
 
-  static List<PaginationLineRef> _buildLineRefs(List<ContentBlock> blocks) {
+  static List<PaginationLineRef> _buildLineRefs(
+    List<ContentBlock> blocks,
+    double effectiveWidth,
+    ReaderViewSettings settings,
+    double textScale,
+  ) {
     final refs = <PaginationLineRef>[];
     for (var bi = 0; bi < blocks.length; bi++) {
       final block = blocks[bi];
@@ -359,7 +369,10 @@ class ReaderPaginationEngine {
               blockIndex: bi,
               lineIndex: 0,
               isTextual: false,
-              fixedHeight: _ReaderPaginationMetrics.imageHeight(800, caption),
+              fixedHeight: _ReaderPaginationMetrics.imageHeight(
+                effectiveWidth,
+                caption,
+              ),
             ),
           );
         case DividerBlock():
@@ -379,9 +392,9 @@ class ReaderPaginationEngine {
               isTextual: false,
               fixedHeight: _ReaderPaginationMetrics.tableHeight(
                 rows,
-                800,
-                ReaderViewSettings(),
-                1.0,
+                effectiveWidth,
+                settings,
+                textScale,
               ),
             ),
           );

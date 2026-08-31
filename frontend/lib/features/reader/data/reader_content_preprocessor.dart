@@ -35,7 +35,12 @@ class ReaderContentPreprocessor {
         body = await _extractImagesToDisk(body, itemId, archive, contentPath);
       } else if (archiveBytes != null) {
         try {
-          final decoded = ZipDecoder().decodeBytes(archiveBytes);
+          // 整包解压可能处理数十 MB 归档，原生平台放到 isolate 执行；
+          // Web 上 compute 退化为同步执行，维持原行为。
+          final decoded =
+              kIsWeb
+                  ? ZipDecoder().decodeBytes(archiveBytes)
+                  : await compute(_decodeArchiveJob, archiveBytes);
           body = await _extractImagesToDisk(body, itemId, decoded, contentPath);
         } on FormatException {
           rethrow;
@@ -76,7 +81,7 @@ class ReaderContentPreprocessor {
       (match) async {
         final originalSrc = match.group(1) ?? '';
         if (originalSrc.startsWith('data:')) {
-          final inlineImage = _decodeInlineImage(originalSrc);
+          final inlineImage = await _decodeInlineImage(originalSrc);
           if (inlineImage == null) {
             return match.group(0)!;
           }
@@ -179,7 +184,7 @@ class ReaderContentPreprocessor {
         );
   }
 
-  static _InlineImage? _decodeInlineImage(String source) {
+  static Future<_InlineImage?> _decodeInlineImage(String source) async {
     final commaIndex = source.indexOf(',');
     if (commaIndex <= 5 ||
         !source.substring(0, commaIndex).contains(';base64')) {
@@ -189,7 +194,11 @@ class ReaderContentPreprocessor {
     if (encoded.length > ((_maxImageBytes + 2) ~/ 3) * 4) {
       throw const FormatException('章节内嵌图片超过 20 MiB');
     }
-    final bytes = base64Decode(encoded);
+    // 最大 20 MiB 的 base64 解码在原生平台移入 isolate，避免卡 UI 线程
+    final bytes =
+        kIsWeb || encoded.length < 1024 * 1024
+            ? base64Decode(encoded)
+            : await compute(_base64DecodeJob, encoded);
     final mimeType = source.substring(5, source.indexOf(';', 5)).toLowerCase();
     final extension = switch (mimeType) {
       'image/png' => 'png',
@@ -310,3 +319,9 @@ class _InlineImage {
   final String path;
   final Uint8List bytes;
 }
+
+/// isolate 中解压归档的纯函数入口。
+Archive _decodeArchiveJob(Uint8List bytes) => ZipDecoder().decodeBytes(bytes);
+
+/// isolate 中解码 base64 的纯函数入口。
+Uint8List _base64DecodeJob(String encoded) => base64Decode(encoded);

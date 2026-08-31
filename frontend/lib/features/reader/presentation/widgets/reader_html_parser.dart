@@ -80,7 +80,9 @@ List<ContentBlock> _mergeConsecutiveParagraphs(List<ContentBlock> blocks) {
         }
         pending = ParagraphBlock(
           lines: mergedLines,
-          hasTrailingSpacing: block.hasTrailingSpacing,
+          // 任一被合并块带段距即保留，避免 <br><br> 产生的段距被吞
+          hasTrailingSpacing:
+              pending.hasTrailingSpacing || block.hasTrailingSpacing,
         );
       } else {
         // 单个段落块：过滤内部空白行，标记新段落
@@ -142,6 +144,10 @@ const _blockElements = {
 
 bool _isBlockTag(String? tag) => _blockElements.contains(tag);
 
+/// 块级与内联递归的最大深度；畸形 EPUB 的超深嵌套折叠为纯文本，
+/// 防止解析期栈溢出。
+const _maxHtmlParseDepth = 64;
+
 // ── 节点遍历 ──
 
 /// 递归遍历 DOM 节点的子节点，将块级元素转为 [ContentBlock]。
@@ -152,8 +158,26 @@ void _walkNode(
   dom.Node node,
   List<ContentBlock> blocks,
   _StyleContext style,
-  _ParseContext ctx,
-) {
+  _ParseContext ctx, [
+  int depth = 0,
+]) {
+  if (depth > _maxHtmlParseDepth) {
+    // 超深块级嵌套折叠为纯文本段落
+    final text = _collectText(node).trim();
+    if (text.isNotEmpty) {
+      blocks.add(
+        ParagraphBlock(
+          lines: [
+            LineData(
+              spans: [ReaderInlineSpan(text: text, startOffset: ctx.offset)],
+            ),
+          ],
+        ),
+      );
+      ctx.offset += text.length + 1;
+    }
+    return;
+  }
   final buffer = <ReaderInlineSpan>[];
 
   void flushBufferAsParagraph() {
@@ -164,16 +188,25 @@ void _walkNode(
 
   for (final child in node.nodes) {
     if (child is dom.Text) {
-      _collectInlineSpans(child, buffer, style, ctx);
+      _collectInlineSpans(child, buffer, style, ctx, depth + 1);
     } else if (child is dom.Element) {
       final tag = child.localName;
       if (_isBlockTag(tag)) {
         flushBufferAsParagraph();
-        _processBlock(child, blocks, style, ctx);
+        _processBlock(child, blocks, style, ctx, depth + 1);
       } else if (tag == 'br') {
         // 裸 br 跳过（等价于正则解析器的非段落上下文行为）
       } else {
-        _collectInlineSpans(child, buffer, style, ctx);
+        // 内联上下文中嵌套的 <img> 升级为独立图片块，原实现静默丢弃
+        final images =
+            tag == 'img' ? <dom.Element>[child] : child.querySelectorAll('img');
+        for (final img in images) {
+          final src = img.attributes['src'];
+          if (src == null || src.isEmpty) continue;
+          flushBufferAsParagraph();
+          blocks.add(ImageBlock(src: src, alt: img.attributes['alt']));
+        }
+        _collectInlineSpans(child, buffer, style, ctx, depth + 1);
       }
     }
   }
@@ -188,8 +221,9 @@ void _processBlock(
   dom.Element element,
   List<ContentBlock> blocks,
   _StyleContext style,
-  _ParseContext ctx,
-) {
+  _ParseContext ctx, [
+  int depth = 0,
+]) {
   final tag = element.localName ?? '';
 
   switch (tag) {
@@ -213,7 +247,7 @@ void _processBlock(
 
     case 'div':
       // <div> 可以包含块级子元素，递归遍历而非当段落处理
-      _walkNode(element, blocks, style, ctx);
+      _walkNode(element, blocks, style, ctx, depth + 1);
 
     case 'img':
       final src = element.attributes['src'];
@@ -256,7 +290,7 @@ void _processBlock(
 
     default:
       // section, article, main 等 —— 递归子节点
-      _walkNode(element, blocks, style, ctx);
+      _walkNode(element, blocks, style, ctx, depth + 1);
   }
 }
 
@@ -657,8 +691,9 @@ void _collectInlineSpans(
   dom.Node node,
   List<ReaderInlineSpan> spans,
   _StyleContext style,
-  _ParseContext ctx,
-) {
+  _ParseContext ctx, [
+  int depth = 0,
+]) {
   if (node is dom.Text) {
     final text = _sanitizeText(node.text);
     if (text.trim().isNotEmpty) {
@@ -701,6 +736,23 @@ void _collectInlineSpans(
 
   if (node is! dom.Element) return;
   final tag = node.localName ?? '';
+  if (depth > _maxHtmlParseDepth) {
+    // 超深内联嵌套折叠为纯文本 span
+    final text = _sanitizeText(_collectText(node));
+    if (text.trim().isNotEmpty) {
+      spans.add(
+        ReaderInlineSpan(
+          text: text,
+          isBold: style.isBold,
+          isItalic: style.isItalic,
+          href: style.href,
+          startOffset: ctx.offset,
+        ),
+      );
+      ctx.offset += text.length;
+    }
+    return;
+  }
 
   switch (tag) {
     case 'br':
@@ -710,24 +762,48 @@ void _collectInlineSpans(
     case 'b':
     case 'strong':
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style.copyWith(isBold: true), ctx);
+        _collectInlineSpans(
+          child,
+          spans,
+          style.copyWith(isBold: true),
+          ctx,
+          depth + 1,
+        );
       }
 
     case 'i':
     case 'em':
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style.copyWith(isItalic: true), ctx);
+        _collectInlineSpans(
+          child,
+          spans,
+          style.copyWith(isItalic: true),
+          ctx,
+          depth + 1,
+        );
       }
 
     case 'a':
       final href = node.attributes['href'];
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style.copyWith(href: href), ctx);
+        _collectInlineSpans(
+          child,
+          spans,
+          style.copyWith(href: href),
+          ctx,
+          depth + 1,
+        );
       }
 
     case 'code':
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style.copyWith(isCode: true), ctx);
+        _collectInlineSpans(
+          child,
+          spans,
+          style.copyWith(isCode: true),
+          ctx,
+          depth + 1,
+        );
       }
 
     case 'sup':
@@ -737,6 +813,7 @@ void _collectInlineSpans(
           spans,
           style.copyWith(isSuperscript: true),
           ctx,
+          depth + 1,
         );
       }
 
@@ -747,18 +824,31 @@ void _collectInlineSpans(
           spans,
           style.copyWith(isSubscript: true),
           ctx,
+          depth + 1,
         );
       }
 
     case 'mark':
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style.copyWith(isMarked: true), ctx);
+        _collectInlineSpans(
+          child,
+          spans,
+          style.copyWith(isMarked: true),
+          ctx,
+          depth + 1,
+        );
       }
 
     case 'del':
     case 's':
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style.copyWith(isDeleted: true), ctx);
+        _collectInlineSpans(
+          child,
+          spans,
+          style.copyWith(isDeleted: true),
+          ctx,
+          depth + 1,
+        );
       }
 
     case 'u':
@@ -768,13 +858,14 @@ void _collectInlineSpans(
           spans,
           style.copyWith(isUnderlined: true),
           ctx,
+          depth + 1,
         );
       }
 
     default:
       // span, abbr, cite, q, small 等 —— 递归处理子节点
       for (final child in node.nodes) {
-        _collectInlineSpans(child, spans, style, ctx);
+        _collectInlineSpans(child, spans, style, ctx, depth + 1);
       }
   }
 }
