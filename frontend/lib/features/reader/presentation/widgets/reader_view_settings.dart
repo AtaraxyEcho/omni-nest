@@ -360,6 +360,8 @@ class ReaderViewSettingsPanel extends StatelessWidget {
             inactiveTrackColor: settings.onSurfaceColor.withValues(alpha: 0.12),
             thumbColor: settings.accentColor,
             overlayColor: settings.accentColor.withValues(alpha: 0.18),
+            activeTickMarkColor: Colors.transparent,
+            inactiveTickMarkColor: Colors.transparent,
           ),
           child: AppSlider(
             value: settings.fontSize,
@@ -409,6 +411,8 @@ class ReaderViewSettingsPanel extends StatelessWidget {
             inactiveTrackColor: settings.onSurfaceColor.withValues(alpha: 0.12),
             thumbColor: settings.accentColor,
             overlayColor: settings.accentColor.withValues(alpha: 0.18),
+            activeTickMarkColor: Colors.transparent,
+            inactiveTickMarkColor: Colors.transparent,
           ),
           child: AppSlider(
             value: settings.lineHeight,

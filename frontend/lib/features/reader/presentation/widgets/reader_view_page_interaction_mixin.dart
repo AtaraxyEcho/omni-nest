@@ -113,25 +113,35 @@ mixin ReaderViewPageInteractionMixin
     }
   }
 
+  /// 用户主动滚动前终止进行中的进度恢复。
+  ///
+  /// ScrollRestore 在恢复期与监控期都会 jumpTo 锚点，会与本次滚动对抗，
+  /// 导致滚动位移归零被误判为章末并触发跳章；同时清掉恢复遮罩。
+  void _cancelOngoingRestoreForUserScroll() {
+    if (!restore.shouldSuppressWrites && !isRestoringProgress) {
+      return;
+    }
+    restore.cancel();
+    isRestoringProgress = false;
+    pendingChapterProgress = null;
+    pendingRestoreCharOffset = null;
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   /// 侧边点击处理。
   Future<void> handleSideTap(
     ReaderItemDetail detail, {
     required bool forward,
   }) async {
     if (isSwitchingChapter || isLoadingChapter) return;
-    final offsetBefore =
-        scrollController.hasClients ? scrollController.offset : 0.0;
+    _cancelOngoingRestoreForUserScroll();
     final didScroll = await scrollBy(
       (forward ? 1 : -1) * MediaQuery.sizeOf(context).height * 0.8,
     );
     if (!mounted) return;
     if (!didScroll) {
-      tryNavigateChapter(forward ? 1 : -1);
-      return;
-    }
-    final offsetAfter =
-        scrollController.hasClients ? scrollController.offset : 0.0;
-    if ((offsetAfter - offsetBefore).abs() < 1.0) {
       tryNavigateChapter(forward ? 1 : -1);
     }
   }

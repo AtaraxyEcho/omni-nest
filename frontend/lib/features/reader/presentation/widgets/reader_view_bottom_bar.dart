@@ -232,15 +232,17 @@ class _ReaderProgressSliderState extends State<_ReaderProgressSlider> {
       height: 24,
       child: SliderTheme(
         data: SliderThemeData(
-          trackHeight: 2,
+          trackHeight: 3,
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 11),
           activeTrackColor: widget.settings.accentColor,
           inactiveTrackColor: widget.settings.onSurfaceColor.withValues(
-            alpha: 0.14,
+            alpha: 0.30,
           ),
           thumbColor: widget.settings.accentColor,
           overlayColor: widget.settings.accentColor.withValues(alpha: 0.16),
+          activeTickMarkColor: Colors.transparent,
+          inactiveTickMarkColor: Colors.transparent,
         ),
         child: AppSlider(
           value: (_dragValue ?? widget.progress).clamp(0.0, 1.0),

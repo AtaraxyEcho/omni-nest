@@ -234,6 +234,7 @@ class _WindowsSafeSliderState extends State<_WindowsSafeSlider> {
                     onHorizontalDragEnd: _enabled ? (_) => _endDrag() : null,
                     onHorizontalDragCancel: _enabled ? _cancelDrag : null,
                     child: CustomPaint(
+                      size: Size(width, constraints.maxHeight),
                       painter: _WindowsSafeSliderPainter(
                         progress: _normalizedValue,
                         activeColor: activeColor,
