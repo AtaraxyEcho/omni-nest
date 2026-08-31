@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.HexFormat;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,13 @@ public class DerivedAssetStorageService {
     private static final Duration DOWNLOAD_TIMEOUT = Duration.ofSeconds(30);
     private static final int MAX_REDIRECTS = 5;
     private static final long MAX_DERIVED_ASSET_BYTES = 128L * 1024 * 1024;
+    /** 转码产物、批量打包等完整内容产物的兜底上限，仅用于拦截异常产物写满磁盘。 */
+    private static final long MAX_MEDIA_DERIVED_ASSET_BYTES = 64L * 1024 * 1024 * 1024;
+    /**
+     * 允许按完整内容产物上限存储的资产类型。文件模块不感知业务枚举，此处按字符串契约匹配；
+     * 新增资产类型默认沿用小资产上限，确属完整内容产物时在此显式加入。
+     */
+    private static final Set<String> LARGE_ASSET_TYPES = Set.of("TRANSCODE", "DOWNLOAD");
     private static final Path PROCESSING_ROOT = Path.of(
             System.getProperty("java.io.tmpdir"), "omninest-derived");
     private static final String SOURCE_TYPE_DERIVED = "DERIVED";
@@ -354,7 +362,10 @@ public class DerivedAssetStorageService {
             throw new IOException("派生资源源文件不存在");
         }
         long sizeBytes = Files.size(normalizedSource);
-        if (sizeBytes <= 0 || sizeBytes > MAX_DERIVED_ASSET_BYTES) {
+        long maxBytes = assetType != null && LARGE_ASSET_TYPES.contains(assetType)
+                ? MAX_MEDIA_DERIVED_ASSET_BYTES
+                : MAX_DERIVED_ASSET_BYTES;
+        if (sizeBytes <= 0 || sizeBytes > maxBytes) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源大小超出限制");
         }
         String objectKey = "derived/"

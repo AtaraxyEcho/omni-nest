@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.omninest.modules.file.domain.SpaceType;
+import com.omninest.common.error.BusinessException;
 import com.omninest.common.security.SafeUrlValidator;
 import com.omninest.common.storage.ObjectStorageBuckets;
 import com.omninest.common.storage.ObjectStorageClient;
@@ -22,6 +23,7 @@ import com.omninest.modules.file.repository.FileObjectRepository;
 import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -377,6 +379,63 @@ class DerivedAssetStorageServiceTest {
         } finally {
             server.stop(0);
         }
+    }
+
+    @Test
+    void storePathAllowsLargeMediaProductsButRejectsLargeSmallAssets(@TempDir Path tempDirectory) throws Exception {
+        Path bigFile = tempDirectory.resolve("audio_only.aac");
+        try (RandomAccessFile file = new RandomAccessFile(bigFile.toFile(), "rw")) {
+            file.setLength(129L * 1024 * 1024);
+        }
+        DerivedAssetStorageService service = new DerivedAssetStorageService(
+                objectStorageBuckets(),
+                objectStorageClient,
+                fileObjectRepository,
+                fileNodeRepository,
+                safeUrlValidator,
+                transactionTemplate
+        );
+
+        assertThatThrownBy(() -> service.store(
+                OWNER_ID,
+                "VIDEO",
+                RESOURCE_ID,
+                "POSTER",
+                "big.jpg",
+                "image/jpeg",
+                bigFile
+        ))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("派生资源大小超出限制");
+
+        when(fileNodeRepository.findActivePath(any(), any())).thenReturn(Optional.empty());
+        when(fileObjectRepository.save(any())).thenAnswer(invocation -> {
+            FileObject object = invocation.getArgument(0);
+            object.setId(FILE_OBJECT_ID);
+            return object;
+        });
+        when(fileNodeRepository.save(any())).thenAnswer(invocation -> {
+            FileNode node = invocation.getArgument(0);
+            node.setId(FILE_NODE_ID);
+            return node;
+        });
+
+        UUID fileNodeId = service.store(
+                OWNER_ID,
+                "VIDEO",
+                RESOURCE_ID,
+                "TRANSCODE",
+                "audio_only.aac",
+                "audio/aac",
+                bigFile
+        );
+
+        assertThat(fileNodeId).isEqualTo(FILE_NODE_ID);
+        verify(objectStorageClient).putObject(
+                any(ObjectStorageKey.class),
+                eq(bigFile.toAbsolutePath().normalize()),
+                eq("audio/aac")
+        );
     }
 
     private ObjectStorageBuckets objectStorageBuckets() {
