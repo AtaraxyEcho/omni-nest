@@ -60,7 +60,7 @@ class _PhotoSharedAlbumPageState extends ConsumerState<PhotoSharedAlbumPage> {
         _loading = false;
         _needPassword = false;
       });
-    } on Exception catch (e) {
+    } catch (e) {
       if (!mounted || generation != _loadGeneration) {
         return;
       }

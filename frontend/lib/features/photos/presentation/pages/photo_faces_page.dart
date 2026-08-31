@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:omninest/core/widgets/app_empty_state.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
+import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_grid_tile.dart';
@@ -135,16 +136,38 @@ class _PhotoFacesPageState extends ConsumerState<PhotoFacesPage> {
           ),
     );
     if (name != null && name.isNotEmpty && context.mounted) {
-      await ref
-          .read(photoCenterControllerProvider.notifier)
-          .nameCluster(clusterId, name);
+      try {
+        await ref
+            .read(photoCenterControllerProvider.notifier)
+            .nameCluster(clusterId, name);
+      } on Exception catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(describeUserFacingError(error).displayMessage),
+            ),
+          );
+        }
+      }
     }
   }
 
   Future<void> _viewCluster(BuildContext context, String clusterId) async {
-    final photos = await ref
-        .read(photoCenterControllerProvider.notifier)
-        .getPhotosByCluster(clusterId);
+    List<PhotoItem> photos;
+    try {
+      photos = await ref
+          .read(photoCenterControllerProvider.notifier)
+          .getPhotosByCluster(clusterId);
+    } on Exception catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(describeUserFacingError(error).displayMessage),
+          ),
+        );
+      }
+      return;
+    }
     if (!context.mounted) return;
     showModalBottomSheet(
       context: context,

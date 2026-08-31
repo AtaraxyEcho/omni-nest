@@ -765,13 +765,18 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     });
   }
 
-  /// 切换收藏状态
-  Future<void> toggleFavorite(String photoId) async {
+  /// 切换收藏状态。
+  ///
+  /// [currentFavorite] 必须由调用方传入照片的真实当前值（如详情页持有的
+  /// photo.favorite），避免分页快照缺失或过期时把取消收藏误判为收藏。
+  Future<void> toggleFavorite(
+    String photoId, {
+    required bool currentFavorite,
+  }) async {
     final current = state.asData?.value;
     if (current == null) return;
     try {
-      final isFav = current.photos.any((p) => p.id == photoId && p.favorite);
-      if (isFav) {
+      if (currentFavorite) {
         await _repo.removeFavorite(photoId);
       } else {
         await _repo.addFavorite(photoId);

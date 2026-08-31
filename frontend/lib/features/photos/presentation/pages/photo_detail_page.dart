@@ -63,7 +63,7 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
               if (!mounted) return;
               await ref
                   .read(photoCenterControllerProvider.notifier)
-                  .toggleFavorite(photo.id);
+                  .toggleFavorite(photo.id, currentFavorite: photo.favorite);
               if (!mounted) return;
               // 刷新详情
               ref.invalidate(photoDetailProvider(photo.id));

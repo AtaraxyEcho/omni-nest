@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
+import 'package:omninest/core/errors/error_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/core/navigation/navigation_extensions.dart';
@@ -199,8 +200,14 @@ class _AlbumDetailBody extends ConsumerWidget {
       shares = await ref
           .read(photoCenterControllerProvider.notifier)
           .listAlbumShares(albumId);
-    } on Exception {
-      // 忽略加载错误
+    } on Exception catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(describeUserFacingError(error).displayMessage),
+          ),
+        );
+      }
     }
 
     if (!context.mounted) return;
@@ -362,8 +369,18 @@ class _AlbumDetailBody extends ConsumerWidget {
                                     if (ctx.mounted) {
                                       Navigator.pop(ctx, true);
                                     }
-                                  } on Exception {
-                                    // ignore
+                                  } on Exception catch (error) {
+                                    if (ctx.mounted) {
+                                      ScaffoldMessenger.of(ctx).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            describeUserFacingError(
+                                              error,
+                                            ).displayMessage,
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   }
                                 },
                               ),
@@ -471,6 +488,8 @@ class _AlbumDetailBody extends ConsumerWidget {
         await ref
             .read(photoCenterControllerProvider.notifier)
             .removePhotoFromAlbum(albumId: albumId, photoId: photo.id);
+        // 页面可能在等待期间被关闭，ref 失效前先终止。
+        if (!context.mounted) return;
         // 刷新相册详情
         ref.invalidate(photoAlbumDetailProvider(albumId));
         if (context.mounted) {
