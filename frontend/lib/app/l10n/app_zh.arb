@@ -2984,12 +2984,8 @@
     }
   },
   "photoRegenerateThumbnails": "重建缩略图",
-  "photoRegenerateDone": "已重建 {count} 个缩略图",
-  "@photoRegenerateDone": {
-    "placeholders": {
-      "count": {}
-    }
-  },
+  "photoRegenerateQueued": "缩略图重建任务已创建，可在任务中心查看进度",
+  "photosActionFailed": "操作失败，请稍后重试",
   "photoImportCandidates": "导入候选",
   "photoNoImportCandidates": "暂无待导入的图片",
   "importFiles": "导入文件",

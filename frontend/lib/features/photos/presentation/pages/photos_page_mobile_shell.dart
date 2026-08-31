@@ -256,25 +256,20 @@ Future<void> _handleRegenerateThumbnails(
   WidgetRef ref,
 ) async {
   try {
-    final count =
-        await ref
-            .read(photoCenterControllerProvider.notifier)
-            .regenerateThumbnails();
+    await ref
+        .read(photoCenterControllerProvider.notifier)
+        .regenerateThumbnails();
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context).photoRegenerateDone('$count'),
-          ),
+          content: Text(AppLocalizations.of(context).photoRegenerateQueued),
         ),
       );
     }
-  } on Exception {
+  } catch (error) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).photosDeleteFailed),
-        ),
+        SnackBar(content: Text(describeUserFacingError(error).displayMessage)),
       );
     }
   }

@@ -553,13 +553,13 @@ public class PhotoLibraryController {
         return ApiResponse.success(Map.of("url", url));
     }
 
-    @Operation(summary = "重新生成缩略图", description = "批量重新生成所有照片的缩略图")
+    @Operation(summary = "重建缩略图", description = "创建异步任务重生成所有缺失的照片缩略图")
     @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
     @PostMapping("/api/v1/admin/photos/thumbnails/regenerate")
-    ApiResponse<Map<String, Object>> regenerateThumbnails() {
+    ApiResponse<Map<String, String>> regenerateThumbnails() {
         UUID userId = currentUserContext.requireCurrentUserId();
-        int count = adminService.regenerateThumbnails(userId);
-        return ApiResponse.success(Map.of("regenerated", count));
+        UUID taskId = adminService.createThumbnailRegenerationTask(userId);
+        return ApiResponse.success(Map.of("taskId", taskId.toString()));
     }
 
     // ─── 图像分析与人脸聚类 ───

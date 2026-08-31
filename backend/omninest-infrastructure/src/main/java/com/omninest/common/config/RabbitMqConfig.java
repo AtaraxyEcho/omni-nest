@@ -146,6 +146,11 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    Queue photoThumbnailsQueue() {
+        return durableQueue(QueueNames.PHOTO_THUMBNAILS_QUEUE);
+    }
+
+    @Bean
     Queue photoIndexQueue() {
         return durableQueue(QueueNames.PHOTO_INDEX_QUEUE);
     }

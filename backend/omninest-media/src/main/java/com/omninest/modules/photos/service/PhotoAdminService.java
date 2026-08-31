@@ -23,6 +23,7 @@ import com.omninest.modules.photos.domain.PhotoScanJob;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoScanJobDto;
 import com.omninest.modules.photos.event.PhotoIndexEvent;
 import com.omninest.modules.photos.event.PhotoScanEvent;
+import com.omninest.modules.photos.event.PhotoThumbnailRegenerationEvent;
 import com.omninest.modules.photos.repository.PhotoItemRepository;
 import com.omninest.modules.photos.repository.PhotoScanJobRepository;
 import com.omninest.modules.task.service.TaskRecordService;
@@ -403,39 +404,89 @@ public class PhotoAdminService {
     }
 
     /**
-     * 重新生成缺失缩略图的照片缩略图。
+     * 创建缩略图重生成任务，发布到 RabbitMQ 异步执行。
      *
      * @param ownerUserId 当前用户 ID
-     * @return 已重新生成的数量
+     * @return 任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public int regenerateThumbnails(UUID ownerUserId) {
-        List<PhotoItem> photos = photoItemRepository.findByOwnerUserIdOrderByCreatedAtDesc(ownerUserId);
-        int regenerated = 0;
-        for (PhotoItem photo : photos) {
-            if (photo.getCoverFileId() != null) {
-                continue;
+    public UUID createThumbnailRegenerationTask(UUID ownerUserId) {
+        UUID taskId = UUID.randomUUID();
+        taskRecordService.createQueuedTask(
+                taskId,
+                ownerUserId,
+                "PHOTO_THUMBNAILS",
+                QueueNames.PHOTO_THUMBNAILS_ROUTING_KEY,
+                Map.of("ownerUserId", ownerUserId.toString())
+        );
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                eventPublisher.publishTask(
+                        QueueNames.PHOTO_THUMBNAILS_ROUTING_KEY,
+                        new PhotoThumbnailRegenerationEvent(taskId, ownerUserId));
             }
-            FileDescriptor file = fileMetadataQueryService.findById(photo.getFileNodeId()).orElse(null);
-            if (file == null) {
-                continue;
-            }
-            try (PhotoSourceFileService.StagedPhotoFile source = sourceFileService.stageReadable(
-                    ownerUserId,
-                    file.id()
-            )) {
-                UUID coverFileId = createCover(ownerUserId, photo, file, source);
-                if (coverFileId != null) {
-                    photo.setCoverFileId(coverFileId);
-                    photoItemRepository.save(photo);
-                    regenerated++;
-                }
-            } catch (BusinessException exception) {
-                log.warn("缩略图源文件处理失败: fileNodeId={}, error={}", file.id(), exception.getMessage());
-            }
+        });
+        return taskId;
+    }
+
+    /**
+     * 执行缩略图重生成任务（由 Worker 消费者调用）。
+     *
+     * <p>逐张处理缺失封面的照片，单张失败仅记录并继续；进度实时上报任务记录。</p>
+     *
+     * @param taskId 任务 ID
+     * @param ownerUserId 当前用户 ID
+     */
+    public void executeThumbnailRegeneration(UUID taskId, UUID ownerUserId) {
+        if (!taskRecordService.claimForExecution(taskId, "PROCESSING")) {
+            return;
         }
-        log.info("缩略图重新生成完成: ownerUserId={}, regenerated={}", ownerUserId, regenerated);
-        return regenerated;
+        List<UUID> photoIds = photoItemRepository.findIdsMissingCover(ownerUserId);
+        int total = photoIds.size();
+        int regenerated = 0;
+        try {
+            for (int index = 0; index < total; index++) {
+                PhotoItem photo = photoItemRepository.findById(photoIds.get(index))
+                        .filter(item -> ownerUserId.equals(item.getOwnerUserId()))
+                        .orElse(null);
+                if (photo == null || photo.getCoverFileId() != null) {
+                    taskRecordService.updateProgress(taskId, progressPercent(index + 1, total));
+                    continue;
+                }
+                FileDescriptor file = fileMetadataQueryService.findById(photo.getFileNodeId()).orElse(null);
+                if (file == null) {
+                    taskRecordService.updateProgress(taskId, progressPercent(index + 1, total));
+                    continue;
+                }
+                try (PhotoSourceFileService.StagedPhotoFile source = sourceFileService.stageReadable(
+                        ownerUserId,
+                        file.id()
+                )) {
+                    UUID coverFileId = createCover(ownerUserId, photo, file, source);
+                    if (coverFileId != null) {
+                        photo.setCoverFileId(coverFileId);
+                        photoItemRepository.save(photo);
+                        regenerated++;
+                    }
+                } catch (BusinessException exception) {
+                    log.warn("缩略图源文件处理失败: fileNodeId={}, error={}", file.id(), exception.getMessage());
+                }
+                taskRecordService.updateProgress(taskId, progressPercent(index + 1, total));
+            }
+            taskRecordService.markCompleted(taskId, Map.of("regenerated", regenerated));
+            log.info("缩略图重新生成完成: ownerUserId={}, total={}, regenerated={}", ownerUserId, total, regenerated);
+        } catch (RuntimeException ex) {
+            taskRecordService.markFailed(taskId, ex.getMessage());
+            throw ex;
+        }
+    }
+
+    private int progressPercent(int finished, int total) {
+        if (total <= 0) {
+            return 100;
+        }
+        return Math.min(100, (int) Math.round(finished * 100.0 / total));
     }
 
     private String computeSha256(Path file) throws IOException {

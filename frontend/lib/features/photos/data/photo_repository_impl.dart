@@ -98,7 +98,8 @@ class PhotoRepositoryImpl implements PhotoRepository {
       _api.getScanStatus(jobId);
 
   @override
-  Future<int> regenerateThumbnails() => _api.regenerateThumbnails();
+  @override
+  Future<String> regenerateThumbnails() => _api.regenerateThumbnails();
 
   @override
   Future<PhotoTimelinePage> getTimeline({int page = 0, int size = 50}) =>

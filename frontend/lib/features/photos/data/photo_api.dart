@@ -204,15 +204,13 @@ class PhotoApi {
   }
 
   /// 重建所有缩略图
-  Future<int> regenerateThumbnails() async {
+  /// 创建缩略图重建任务，返回任务 ID。
+  Future<String> regenerateThumbnails() async {
     final response = await apiClient.dio.post<Map<String, dynamic>>(
       '/admin/photos/thumbnails/regenerate',
     );
     final data = parseData(response.data);
-    if (data['regenerated'] is int) {
-      return data['regenerated'] as int;
-    }
-    return 0;
+    return data['taskId']?.toString() ?? '';
   }
 
   /// 分页获取时间线月份数据。

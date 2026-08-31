@@ -87,7 +87,7 @@ abstract interface class PhotoRepository {
   Future<Map<String, dynamic>> getScanStatus(String jobId);
 
   /// 重建所有缩略图
-  Future<int> regenerateThumbnails();
+  Future<String> regenerateThumbnails();
 
   /// 分页获取时间线月份数据。
   Future<PhotoTimelinePage> getTimeline({int page = 0, int size = 50});

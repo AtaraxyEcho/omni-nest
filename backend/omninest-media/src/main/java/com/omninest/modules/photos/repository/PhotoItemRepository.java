@@ -825,4 +825,13 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
     List<PhotoRelationNodeProjection> findLocationRelationNodes(
             @Param("ownerUserId") UUID ownerUserId,
             @Param("limit") int limit);
+
+    @Query("""
+            SELECT p.id
+              FROM PhotoItem p
+             WHERE p.ownerUserId = :ownerUserId
+               AND p.coverFileId IS NULL
+             ORDER BY p.createdAt DESC
+            """)
+    List<UUID> findIdsMissingCover(@Param("ownerUserId") UUID ownerUserId);
 }

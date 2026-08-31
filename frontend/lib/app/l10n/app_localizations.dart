@@ -12758,11 +12758,17 @@ abstract class AppLocalizations {
   /// **'Regenerate Thumbnails'**
   String get photoRegenerateThumbnails;
 
-  /// No description provided for @photoRegenerateDone.
+  /// No description provided for @photoRegenerateQueued.
   ///
   /// In en, this message translates to:
-  /// **'Regenerated {count} thumbnails'**
-  String photoRegenerateDone(Object count);
+  /// **'Thumbnail rebuild queued. Track progress in the task center.'**
+  String get photoRegenerateQueued;
+
+  /// No description provided for @photosActionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Action failed. Try again later.'**
+  String get photosActionFailed;
 
   /// No description provided for @photoImportCandidates.
   ///

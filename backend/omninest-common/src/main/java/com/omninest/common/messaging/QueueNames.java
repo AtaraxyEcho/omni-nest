@@ -41,6 +41,8 @@ public final class QueueNames {
     public static final String THUMBNAIL_ROUTING_KEY = "thumbnail.generate";
     public static final String PHOTO_SCAN_QUEUE = "omninest.tasks.photo-scan";
     public static final String PHOTO_SCAN_ROUTING_KEY = "photo.scan";
+    public static final String PHOTO_THUMBNAILS_QUEUE = "omninest.tasks.photo-thumbnails";
+    public static final String PHOTO_THUMBNAILS_ROUTING_KEY = "photo.thumbnails";
     public static final String PHOTO_INDEX_QUEUE = "omninest.tasks.photo-index";
     public static final String PHOTO_INDEX_ROUTING_KEY = "photo.index";
     public static final String PHOTO_BATCH_QUEUE = "omninest.tasks.photo-batch";

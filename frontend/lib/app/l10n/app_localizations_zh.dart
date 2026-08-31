@@ -6770,9 +6770,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photoRegenerateThumbnails => '重建缩略图';
 
   @override
-  String photoRegenerateDone(Object count) {
-    return '已重建 $count 个缩略图';
-  }
+  String get photoRegenerateQueued => '缩略图重建任务已创建，可在任务中心查看进度';
+
+  @override
+  String get photosActionFailed => '操作失败，请稍后重试';
 
   @override
   String get photoImportCandidates => '导入候选';

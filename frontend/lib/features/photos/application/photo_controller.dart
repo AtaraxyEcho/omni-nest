@@ -930,8 +930,8 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     return _repo.getScanStatus(jobId);
   }
 
-  /// 重建所有缩略图
-  Future<int> regenerateThumbnails() async {
+  /// 创建缩略图重建任务，返回任务 ID（进度在任务中心查看）。
+  Future<String> regenerateThumbnails() async {
     return _repo.regenerateThumbnails();
   }
 

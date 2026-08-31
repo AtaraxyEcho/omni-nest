@@ -6987,9 +6987,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoRegenerateThumbnails => 'Regenerate Thumbnails';
 
   @override
-  String photoRegenerateDone(Object count) {
-    return 'Regenerated $count thumbnails';
-  }
+  String get photoRegenerateQueued =>
+      'Thumbnail rebuild queued. Track progress in the task center.';
+
+  @override
+  String get photosActionFailed => 'Action failed. Try again later.';
 
   @override
   String get photoImportCandidates => 'Import Candidates';

@@ -3110,12 +3110,8 @@
     }
   },
   "photoRegenerateThumbnails": "Regenerate Thumbnails",
-  "photoRegenerateDone": "Regenerated {count} thumbnails",
-  "@photoRegenerateDone": {
-    "placeholders": {
-      "count": {}
-    }
-  },
+  "photoRegenerateQueued": "Thumbnail rebuild queued. Track progress in the task center.",
+  "photosActionFailed": "Action failed. Try again later.",
   "photoImportCandidates": "Import Candidates",
   "photoNoImportCandidates": "No pending photos to import",
   "importFiles": "Import Files",

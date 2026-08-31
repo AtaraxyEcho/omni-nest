@@ -68,6 +68,7 @@ class FileQueryServiceTest {
     private final FileContentAccessService fileContentAccessService = new FileContentAccessService(
             List.of(minioFileContentProvider),
             fileNodeRepository,
+            fileObjectRepository,
             new LocalContentAccessTokenService()
     );
     private final FileQueryService fileQueryService = new FileQueryService(
