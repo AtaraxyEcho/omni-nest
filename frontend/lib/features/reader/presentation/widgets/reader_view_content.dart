@@ -713,17 +713,22 @@ class _ReaderViewContentState extends State<ReaderViewContent> {
   void _handlePointerUp(PointerUpEvent event) {
     final pointerDownPosition = _pointerDownPosition;
     final pointerDownAt = _pointerDownAt;
-    final isContentTap =
+    final isTapLike =
         pointerDownPosition != null &&
         pointerDownAt != null &&
         !_pointerMoved &&
-        !_selectionWasActiveOnPointerDown &&
         (event.position - pointerDownPosition).distance <= 12 &&
         DateTime.now().difference(pointerDownAt) <=
             const Duration(milliseconds: 450);
     final hadSelection = _selectionWasActiveOnPointerDown;
     _resetPointerTracking();
-    if (!isContentTap) {
+    if (!isTapLike) {
+      return;
+    }
+
+    // 选中态下的首次点击仅清除选中，不切换控制栏；选中清除后再次点击恢复切换。
+    if (hadSelection) {
+      clearSelection();
       return;
     }
 
@@ -731,9 +736,6 @@ class _ReaderViewContentState extends State<ReaderViewContent> {
       if (!mounted || _suppressNextContentTap) {
         _suppressNextContentTap = false;
         return;
-      }
-      if (hadSelection) {
-        clearSelection();
       }
       widget.onTap?.call();
     });

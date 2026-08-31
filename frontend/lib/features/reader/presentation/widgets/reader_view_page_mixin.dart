@@ -59,6 +59,9 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
   set scrollProgress(double value);
   DateTime? get lastAppliedProgressAt;
   set lastAppliedProgressAt(DateTime? value);
+
+  /// 记录本机推送的进度快照，供 provider 回灌时判定自身回声。
+  void noteOwnProgressSave(ReaderProgressSnapshot snapshot);
   double? get pendingChapterProgress;
   set pendingChapterProgress(double? value);
   int? get pendingRestoreCharOffset;
@@ -752,6 +755,7 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
     }
 
     progressSaveCoordinator.schedule(snapshot);
+    noteOwnProgressSave(snapshot);
     await progressSaveCoordinator.flush();
     if (!mounted ||
         (generation != null && generation != syncProgressGeneration)) {
@@ -781,6 +785,7 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
       );
     }
     progressSaveCoordinator.schedule(snapshot);
+    noteOwnProgressSave(snapshot);
     unawaited(progressSaveCoordinator.flush());
   }
 
@@ -790,17 +795,17 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
     required int charOffset,
     required String mode,
   }) {
-    progressSaveCoordinator.schedule(
-      ReaderProgressSnapshot(
-        chapterId: currentChapterId,
-        charOffset: charOffset,
-        progress: bookProgress,
-        chapterProgress: chapterProgress,
-        chapterTitle: cachedContent?.title ?? '',
-        mode: mode,
-        updatedAt: DateTime.now(),
-      ),
+    final snapshot = ReaderProgressSnapshot(
+      chapterId: currentChapterId,
+      charOffset: charOffset,
+      progress: bookProgress,
+      chapterProgress: chapterProgress,
+      chapterTitle: cachedContent?.title ?? '',
+      mode: mode,
+      updatedAt: DateTime.now(),
     );
+    progressSaveCoordinator.schedule(snapshot);
+    noteOwnProgressSave(snapshot);
   }
 
   /// 从当前页面更新阅读进度。

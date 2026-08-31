@@ -124,6 +124,7 @@ class _ReaderViewPageState extends ConsumerState<ReaderViewPage>
   // ── 进度 ──
   double _scrollProgress = 0;
   DateTime? _lastAppliedProgressAt;
+  ReaderProgressSnapshot? _lastOwnProgressSave; // 本机最近一次推送的进度快照
   double? _pendingChapterProgress; // 恢复时的章节进度比例（0-1）
   int? _pendingRestoreCharOffset; // 模式切换时待恢复的字符偏移（用于精确像素定位）
   bool _isRestoringProgress = false; // 正在恢复阅读位置，显示加载遮罩
@@ -246,6 +247,30 @@ class _ReaderViewPageState extends ConsumerState<ReaderViewPage>
   DateTime? get lastAppliedProgressAt => _lastAppliedProgressAt;
   @override
   set lastAppliedProgressAt(DateTime? v) => _lastAppliedProgressAt = v;
+
+  /// 记录本机推送的进度快照，供回声判定使用。
+  void noteOwnProgressSave(ReaderProgressSnapshot snapshot) {
+    _lastOwnProgressSave = snapshot;
+  }
+
+  /// 判断服务端回灌的进度快照是否为本机刚保存的自身回声。
+  ///
+  /// 本机保存→服务端落库→详情 provider 刷新会产生一条与本地快照内容
+  /// 相同、时间戳略新的记录；不跳过就会把刚保存的位置重新施加回 UI，
+  /// 表现为每次滚动/点击后内容回跳"刷新"。跨设备更新时间必然晚于
+  /// 本机保存时刻，不受影响。
+  bool _isOwnProgressEcho(ReaderProgressSnapshot snapshot, DateTime at) {
+    final own = _lastOwnProgressSave;
+    final ownAt = own?.updatedAt;
+    if (own == null || ownAt == null) {
+      return false;
+    }
+    return own.chapterId == snapshot.chapterId &&
+        (own.charOffset - snapshot.charOffset).abs() <= 64 &&
+        (own.progress - snapshot.progress).abs() <= 0.002 &&
+        at.isBefore(ownAt.add(const Duration(seconds: 30)));
+  }
+
   @override
   double? get pendingChapterProgress => _pendingChapterProgress;
   @override
@@ -782,7 +807,8 @@ class _ReaderViewPageState extends ConsumerState<ReaderViewPage>
                   latestSnapshot.chapterId == _currentChapterId &&
                   latestTime != null &&
                   (_lastAppliedProgressAt == null ||
-                      latestTime.isAfter(_lastAppliedProgressAt!));
+                      latestTime.isAfter(_lastAppliedProgressAt!)) &&
+                  !_isOwnProgressEcho(latestSnapshot, latestTime);
               if (shouldApply) {
                 scheduleProgressSnapshotApply(latestSnapshot);
               }
