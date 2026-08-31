@@ -612,4 +612,217 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
     List<String> findExistingContentHashes(
             @Param("ownerUserId") UUID ownerUserId,
             @Param("hashes") List<String> hashes);
+
+    // ─── 关系图谱边聚合 ───
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT a1.album_id AS source_key,
+                           a2.album_id AS target_key,
+                           COUNT(*) AS weight
+                      FROM omni.photo_album_items a1
+                      JOIN omni.photo_album_items a2
+                        ON a2.photo_id = a1.photo_id AND a2.owner_user_id = a1.owner_user_id
+                     WHERE a1.owner_user_id = :ownerUserId
+                       AND a2.album_id > a1.album_id
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findAlbumAlbumRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT ai.album_id AS source_key,
+                           f.cluster_id AS target_key,
+                           COUNT(DISTINCT f.photo_id) AS weight
+                      FROM omni.photo_faces f
+                      JOIN omni.photo_album_items ai
+                        ON ai.photo_id = f.photo_id AND ai.owner_user_id = f.owner_user_id
+                     WHERE f.owner_user_id = :ownerUserId
+                       AND f.cluster_id IS NOT NULL
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findAlbumPersonRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT ai.album_id AS source_key,
+                           TO_CHAR(p.date_taken AT TIME ZONE :zoneId, 'YYYY-MM') AS target_key,
+                           COUNT(*) AS weight
+                      FROM omni.photo_album_items ai
+                      JOIN omni.photo_items p
+                        ON p.id = ai.photo_id AND p.owner_user_id = ai.owner_user_id
+                     WHERE ai.owner_user_id = :ownerUserId
+                       AND p.date_taken IS NOT NULL
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findAlbumTimeRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("zoneId") String zoneId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT ai.album_id AS source_key,
+                           COALESCE(NULLIF(p.gps_location ->> 'city', ''), '未知位置') AS target_key,
+                           COUNT(*) AS weight
+                      FROM omni.photo_album_items ai
+                      JOIN omni.photo_items p
+                        ON p.id = ai.photo_id AND p.owner_user_id = ai.owner_user_id
+                     WHERE ai.owner_user_id = :ownerUserId
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findAlbumLocationRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT f.cluster_id AS source_key,
+                           TO_CHAR(p.date_taken AT TIME ZONE :zoneId, 'YYYY-MM') AS target_key,
+                           COUNT(*) AS weight
+                      FROM omni.photo_faces f
+                      JOIN omni.photo_items p
+                        ON p.id = f.photo_id AND p.owner_user_id = f.owner_user_id
+                     WHERE f.owner_user_id = :ownerUserId
+                       AND f.cluster_id IS NOT NULL
+                       AND p.date_taken IS NOT NULL
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findPersonTimeRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("zoneId") String zoneId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT f.cluster_id AS source_key,
+                           COALESCE(NULLIF(p.gps_location ->> 'city', ''), '未知位置') AS target_key,
+                           COUNT(*) AS weight
+                      FROM omni.photo_faces f
+                      JOIN omni.photo_items p
+                        ON p.id = f.photo_id AND p.owner_user_id = f.owner_user_id
+                     WHERE f.owner_user_id = :ownerUserId
+                       AND f.cluster_id IS NOT NULL
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findPersonLocationRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT e.source_key AS "sourceKey",
+                   e.target_key AS "targetKey",
+                   e.weight AS "weight"
+              FROM (
+                    SELECT TO_CHAR(p.date_taken AT TIME ZONE :zoneId, 'YYYY-MM') AS source_key,
+                           COALESCE(NULLIF(p.gps_location ->> 'city', ''), '未知位置') AS target_key,
+                           COUNT(*) AS weight
+                      FROM omni.photo_items p
+                     WHERE p.owner_user_id = :ownerUserId
+                       AND p.date_taken IS NOT NULL
+                     GROUP BY 1, 2
+                   ) e
+             ORDER BY e.weight DESC, e.source_key ASC, e.target_key ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationEdgeProjection> findTimeLocationRelationEdges(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("zoneId") String zoneId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT a.id AS "key",
+                   a.name AS "label",
+                   a.photo_count AS "weight"
+              FROM omni.photo_albums a
+             WHERE a.owner_user_id = :ownerUserId
+             ORDER BY a.photo_count DESC, a.name ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationNodeProjection> findAlbumRelationNodes(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT c.id AS "key",
+                   c.name AS "label",
+                   c.face_count AS "weight"
+              FROM omni.photo_face_clusters c
+             WHERE c.owner_user_id = :ownerUserId
+             ORDER BY c.face_count DESC, c.id ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationNodeProjection> findPersonRelationNodes(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT TO_CHAR(p.date_taken AT TIME ZONE :zoneId, 'YYYY-MM') AS "key",
+                   CAST(NULL AS varchar) AS "label",
+                   COUNT(*) AS "weight"
+              FROM omni.photo_items p
+             WHERE p.owner_user_id = :ownerUserId
+               AND p.date_taken IS NOT NULL
+             GROUP BY 1
+             ORDER BY 1 ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationNodeProjection> findTimeRelationNodes(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("zoneId") String zoneId,
+            @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT COALESCE(NULLIF(p.gps_location ->> 'city', ''), '未知位置') AS "key",
+                   CAST(NULL AS varchar) AS "label",
+                   COUNT(*) AS "weight"
+              FROM omni.photo_items p
+             WHERE p.owner_user_id = :ownerUserId
+             GROUP BY 1
+             ORDER BY 3 DESC, 1 ASC
+             LIMIT :limit
+            """, nativeQuery = true)
+    List<PhotoRelationNodeProjection> findLocationRelationNodes(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("limit") int limit);
 }

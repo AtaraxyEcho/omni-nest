@@ -11,6 +11,7 @@ import com.omninest.modules.file.dto.ShareAccessSessionDto;
 import com.omninest.modules.file.dto.ShareAuthorizationRequest;
 import com.omninest.modules.photos.dto.GroupBy;
 import com.omninest.modules.photos.dto.PhotoDtos.AddPhotosToAlbumRequest;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoRelationsDto;
 import com.omninest.modules.photos.dto.PhotoDtos.AddTagRequest;
 import com.omninest.modules.photos.dto.PhotoDtos.BackupReportRequest;
 import com.omninest.modules.photos.dto.PhotoDtos.BackupStatusRequest;
@@ -46,6 +47,7 @@ import com.omninest.modules.photos.service.PhotoBackupService;
 import com.omninest.modules.photos.service.PhotoBatchService;
 import com.omninest.modules.photos.service.PhotoEditService;
 import com.omninest.modules.photos.service.PhotoLibraryService;
+import com.omninest.modules.photos.service.PhotoRelationService;
 import com.omninest.modules.photos.service.PhotosRuntimeConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -87,6 +89,7 @@ public class PhotoLibraryController {
     private final PhotoAiService photoAiService;
     private final PhotoAiTaskService photoAiTaskService;
     private final PhotosRuntimeConfigService photosRuntimeConfigService;
+    private final PhotoRelationService relationService;
     private final CurrentUserContext currentUserContext;
 
     // ─── 浏览 ───
@@ -703,4 +706,13 @@ public class PhotoLibraryController {
                 null
         );
     }
+
+    @Operation(summary = "获取照片关系图谱", description = "返回相册、时间、地点、人物之间的共现关系边")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_READ + "')")
+    @GetMapping("/api/v1/photos/relations")
+    ApiResponse<PhotoRelationsDto> relations() {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(relationService.relations(userId));
+    }
 }
+

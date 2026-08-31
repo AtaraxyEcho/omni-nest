@@ -411,4 +411,28 @@ public final class PhotoDtos {
     public record CheckDuplicateRequest(
             List<String> contentHashes
     ) {}
+
+    public record PhotoRelationEdgeDto(
+            String sourceType,
+            String sourceKey,
+            String targetType,
+            String targetKey,
+            long weight
+    ) {
+    }
+
+    public record PhotoRelationNodeDto(
+            String type,
+            String key,
+            String label,
+            long weight
+    ) {
+    }
+
+    public record PhotoRelationsDto(
+            List<PhotoRelationNodeDto> nodes,
+            List<PhotoRelationEdgeDto> edges,
+            boolean truncated
+    ) {
+    }
 }
