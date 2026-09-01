@@ -64,7 +64,7 @@ class _PhotoScrollableContent extends StatelessWidget {
 }
 
 /// 独立滚动内容区（时间线/分组/星系/人物 tab）— 有自己的滚动容器
-class _PhotoIndependentContent extends StatelessWidget {
+class _PhotoIndependentContent extends ConsumerStatefulWidget {
   const _PhotoIndependentContent({
     required this.state,
     required this.onOpenPhoto,
@@ -76,25 +76,60 @@ class _PhotoIndependentContent extends StatelessWidget {
   final ValueChanged<PhotoAlbum> onOpenAlbum;
 
   @override
+  ConsumerState<_PhotoIndependentContent> createState() =>
+      _PhotoIndependentContentState();
+}
+
+class _PhotoIndependentContentState
+    extends ConsumerState<_PhotoIndependentContent> {
+  bool _showGroups = false;
+
+  @override
   Widget build(BuildContext context) {
-    return switch (state.tab) {
-      PhotoTab.timeline => PhotoTimelineView(
-        onOpenPhoto: onOpenPhoto,
-        state: state,
-      ),
-      PhotoTab.groups => PhotoGroupView(onOpenPhoto: onOpenPhoto, state: state),
-      PhotoTab.graph => PhotoGraphView(
-        state: state,
-        onOpenPhoto: onOpenPhoto,
-        onOpenAlbum: onOpenAlbum,
-      ),
-      PhotoTab.people => _PeopleSurfaceContent(
-        state: state,
-        onOpenPhoto: onOpenPhoto,
-        onOpenAlbum: onOpenAlbum,
-      ),
-      _ => const SizedBox.shrink(),
-    };
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      children: [
+        if (widget.state.surface == PhotoSurface.explore)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(
+                  value: false,
+                  icon: const Icon(Icons.timeline_rounded, size: 16),
+                  label: Text(l10n.photosTabTimeline),
+                ),
+                ButtonSegment(
+                  value: true,
+                  icon: const Icon(Icons.folder_copy_outlined, size: 16),
+                  label: Text(l10n.photosTabGroups),
+                ),
+              ],
+              selected: {_showGroups},
+              onSelectionChanged: (v) => setState(() => _showGroups = v.first),
+              showSelectedIcon: false,
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                textStyle: WidgetStateProperty.all(
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ),
+        Expanded(
+          child:
+              _showGroups
+                  ? PhotoGroupView(
+                    onOpenPhoto: widget.onOpenPhoto,
+                    state: widget.state,
+                  )
+                  : PhotoTimelineView(
+                    onOpenPhoto: widget.onOpenPhoto,
+                    state: widget.state,
+                  ),
+        ),
+      ],
+    );
   }
 }
 
