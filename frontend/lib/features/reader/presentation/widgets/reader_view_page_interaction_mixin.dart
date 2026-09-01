@@ -115,7 +115,10 @@ mixin ReaderViewPageInteractionMixin
     // 边界自动续读：滚动到达章末时自动进入下一章，等效于无缝衔接。
     // 仅向前自动续读；向上回退保留点击热区操作（回弹/恢复事件会与
     // 章首判断互相触发，且回退已有"回到原进度"浮层兜底）。
+    final maxStable = _lastObservedMax == max;
+    _lastObservedMax = max;
     if (scrollController.offset >= max - 2 &&
+        maxStable &&
         DateTime.now().isAfter(_lastAutoAdvanceAt) &&
         contentLoader != null &&
         contentLoader!.allChapters.indexWhere((c) => c.id == currentChapterId) +
@@ -145,6 +148,9 @@ mixin ReaderViewPageInteractionMixin
 
   /// 上一次边界自动续读时间；加 1 秒冷却防止连续触发
   DateTime _lastAutoAdvanceAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// 上一次滚动事件观察到的 maxScrollExtent，用于稳定门控
+  double _lastObservedMax = -1;
 
   /// 侧边点击处理。
   Future<void> handleSideTap(
