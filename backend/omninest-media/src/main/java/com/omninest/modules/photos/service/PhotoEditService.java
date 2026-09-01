@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * 照片编辑服务，提供裁剪、旋转、亮度/对比度、滤镜等非破坏性编辑操作。
@@ -49,6 +50,7 @@ public class PhotoEditService {
     private final MediaSyncEventService syncEventService;
     private final PhotoSourceFileService sourceFileService;
     private final PhotoInputGuard inputGuard;
+    private final TransactionTemplate transactionTemplate;
     private final int maxHistoryVersions;
 
     public PhotoEditService(
@@ -58,6 +60,7 @@ public class PhotoEditService {
             MediaSyncEventService syncEventService,
             PhotoSourceFileService sourceFileService,
             PhotoInputGuard inputGuard,
+            TransactionTemplate transactionTemplate,
             @Value("${photo.edit.max-history-versions:5}") int maxHistoryVersions) {
         this.editVersionRepository = editVersionRepository;
         this.photoItemRepository = photoItemRepository;
@@ -65,6 +68,7 @@ public class PhotoEditService {
         this.syncEventService = syncEventService;
         this.sourceFileService = sourceFileService;
         this.inputGuard = inputGuard;
+        this.transactionTemplate = transactionTemplate;
         this.maxHistoryVersions = maxHistoryVersions;
     }
 
@@ -76,8 +80,8 @@ public class PhotoEditService {
      * @param request 编辑请求
      * @return 新建编辑版本
      */
-    @Transactional(rollbackFor = Exception.class)
     public PhotoEditVersionDto applyEdit(UUID ownerUserId, UUID photoId, EditRequest request) {
+        // 读取与校验不占用事务
         PhotoItem photo = photoItemRepository.findById(photoId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "照片不存在"));
         if (!photo.getOwnerUserId().equals(ownerUserId)) {
@@ -89,6 +93,8 @@ public class PhotoEditService {
         UUID sourceFileId = photo.getCoverFileId() != null
                 ? photo.getCoverFileId()
                 : photo.getFileNodeId();
+
+        // 图像解码、变换与对象存储写入在事务外执行
         UUID fileId = transformAndStore(
                 ownerUserId,
                 photoId,
@@ -97,6 +103,7 @@ public class PhotoEditService {
                 request
         );
 
+        // DB 持久化使用短事务
         PhotoEditVersion version = new PhotoEditVersion();
         version.setOwnerUserId(ownerUserId);
         version.setPhotoId(photoId);
@@ -104,24 +111,21 @@ public class PhotoEditService {
         version.setEditType(request.editType());
         version.setEditParams(request.editParams());
         version.setFileId(fileId);
-        editVersionRepository.save(version);
-
-        // 更新照片封面为最新版本
-        photo.setCoverFileId(fileId);
-        photoItemRepository.save(photo);
-
-        // 清理超出上限的旧版本
-        enforceMaxVersions(ownerUserId, photoId);
-
-        syncEventService.record(
-                ownerUserId,
-                SyncScope.PHOTOS,
-                "PHOTO_ITEM",
-                photoId.toString(),
-                SyncAction.UPDATED,
-                photo.getVersion(),
-                Map.of("editVersion", nextVersion)
-        );
+        transactionTemplate.executeWithoutResult(status -> {
+            editVersionRepository.save(version);
+            photo.setCoverFileId(fileId);
+            photoItemRepository.save(photo);
+            enforceMaxVersions(ownerUserId, photoId);
+            syncEventService.record(
+                    ownerUserId,
+                    SyncScope.PHOTOS,
+                    "PHOTO_ITEM",
+                    photoId.toString(),
+                    SyncAction.UPDATED,
+                    photo.getVersion(),
+                    Map.of("editVersion", nextVersion)
+            );
+        });
 
         return toDto(version);
     }

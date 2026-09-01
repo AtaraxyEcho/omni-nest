@@ -15,6 +15,10 @@ import com.omninest.modules.photos.dto.PhotoDtos.EditRequest;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoEditVersionDto;
 import com.omninest.modules.photos.repository.PhotoEditVersionRepository;
 import com.omninest.modules.photos.repository.PhotoItemRepository;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
+import java.util.function.Consumer;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +47,8 @@ class PhotoEditServiceTest {
             new PhotoMediaLimitsProperties(),
             fileDetector
     );
+    private final PlatformTransactionManager txManager = mock(PlatformTransactionManager.class);
+    private final TransactionTemplate transactionTemplate = new TransactionTemplate(txManager);
     private final PhotoEditService service = new PhotoEditService(
             editVersionRepository,
             photoItemRepository,
@@ -50,8 +56,13 @@ class PhotoEditServiceTest {
             syncEventService,
             sourceFileService,
             inputGuard,
+            transactionTemplate,
             5
     );
+
+    {
+        when(txManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
+    }
 
     @Test
     void applyEditStoresFileOutputAndDeletesTemporaryFiles() throws Exception {
