@@ -130,6 +130,7 @@ public class PhotoExifExtractor {
         try {
             return dir.getInt(tagType);
         } catch (Exception ex) {
+            log.debug("EXIF 整型读取失败: tagType={}, message={}", tagType, ex.getMessage());
             return null;
         }
     }

@@ -41,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class PhotoEditService {
 
     private final PhotoEditVersionRepository editVersionRepository;
@@ -50,9 +49,24 @@ public class PhotoEditService {
     private final MediaSyncEventService syncEventService;
     private final PhotoSourceFileService sourceFileService;
     private final PhotoInputGuard inputGuard;
+    private final int maxHistoryVersions;
 
-    @Value("${photo.edit.max-history-versions:5}")
-    private int maxHistoryVersions;
+    public PhotoEditService(
+            PhotoEditVersionRepository editVersionRepository,
+            PhotoItemRepository photoItemRepository,
+            DerivedAssetStorageService derivedAssetStorageService,
+            MediaSyncEventService syncEventService,
+            PhotoSourceFileService sourceFileService,
+            PhotoInputGuard inputGuard,
+            @Value("${photo.edit.max-history-versions:5}") int maxHistoryVersions) {
+        this.editVersionRepository = editVersionRepository;
+        this.photoItemRepository = photoItemRepository;
+        this.derivedAssetStorageService = derivedAssetStorageService;
+        this.syncEventService = syncEventService;
+        this.sourceFileService = sourceFileService;
+        this.inputGuard = inputGuard;
+        this.maxHistoryVersions = maxHistoryVersions;
+    }
 
     /**
      * 应用编辑操作，生成新版本。

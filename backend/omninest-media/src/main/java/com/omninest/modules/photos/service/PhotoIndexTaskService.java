@@ -1,6 +1,7 @@
 package com.omninest.modules.photos.service;
 
 import com.omninest.modules.photos.domain.PhotoItem;
+import com.omninest.modules.photos.domain.PhotoTag;
 import com.omninest.modules.photos.repository.PhotoItemRepository;
 import com.omninest.modules.photos.repository.PhotoTagRepository;
 import com.omninest.modules.photos.search.PhotoSearchIndexService;
@@ -40,11 +41,8 @@ public class PhotoIndexTaskService {
         }
         List<String> tags = photoTagRepository.findByOwnerUserIdAndPhotoId(ownerUserId, photoId)
                 .stream()
-                .map(tag -> tag.getTag())
+                .map(PhotoTag::getTag)
                 .toList();
-        if (!fileLifecycleGuard.isOwnedProcessable(ownerUserId, photo.getFileNodeId())) {
-            return false;
-        }
         photoSearchIndexService.indexPhoto(
                 photo.getId(),
                 photo.getOwnerUserId(),

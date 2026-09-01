@@ -49,7 +49,8 @@ class PhotoEditServiceTest {
             storageService,
             syncEventService,
             sourceFileService,
-            inputGuard
+            inputGuard,
+            5
     );
 
     @Test

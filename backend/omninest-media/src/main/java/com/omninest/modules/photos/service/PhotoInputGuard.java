@@ -177,17 +177,6 @@ public class PhotoInputGuard {
         return true;
     }
 
-    private boolean asciiEquals(byte[] source, int offset, String expected) {
-        if (source.length < offset + expected.length()) {
-            return false;
-        }
-        for (int index = 0; index < expected.length(); index++) {
-            if (source[offset + index] != expected.charAt(index)) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     private int unsigned(byte value) {
         return value & 0xFF;
