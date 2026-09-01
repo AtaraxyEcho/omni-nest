@@ -86,12 +86,20 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
         const SizedBox(height: 12),
         if (locations.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48),
-            child: Center(
-              child: Text(
-                l10n.adminStorageEmptyList,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.folder_off_outlined,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.adminStorageEmptyList,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
             ),
           )
         else
@@ -108,12 +116,20 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
     final detailSection =
         selected == null
             ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 48),
-              child: Center(
-                child: Text(
-                  l10n.adminStorageDetailHint,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.adminStorageDetailHint,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
               ),
             )
             : _StorageDetailPanel(location: selected);
