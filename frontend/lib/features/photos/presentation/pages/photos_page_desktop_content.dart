@@ -1,6 +1,6 @@
 part of 'photos_page.dart';
 
-class _PhotoContent extends ConsumerWidget {
+class _PhotoContent extends ConsumerStatefulWidget {
   const _PhotoContent({
     required this.state,
     required this.onOpenPhoto,
@@ -18,7 +18,21 @@ class _PhotoContent extends ConsumerWidget {
   final VoidCallback onCreateAlbum;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PhotoContent> createState() => _PhotoContentState();
+}
+
+class _PhotoContentState extends ConsumerState<_PhotoContent> {
+  bool _exploreShowGroups = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
+    final ref = this.ref;
+    final onOpenPhoto = widget.onOpenPhoto;
+    final onOpenAlbum = widget.onOpenAlbum;
+    final onDeletePhoto = widget.onDeletePhoto;
+    final onDeleteAlbum = widget.onDeleteAlbum;
+    final onCreateAlbum = widget.onCreateAlbum;
     return Column(
       children: [
         // Library 过滤芯片（仅在 library surface 下显示）
@@ -28,6 +42,40 @@ class _PhotoContent extends ConsumerWidget {
             child: _LibraryFilterChips(state: state),
           ),
           const SizedBox(height: 12),
+        ],
+        // Explore 时间线/分组切换（仅在 explore surface 下显示）
+        if (state.surface == PhotoSurface.explore) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SegmentedButton<bool>(
+                segments: [
+                  ButtonSegment(
+                    value: false,
+                    icon: const Icon(Icons.timeline_rounded, size: 16),
+                    label: Text(AppLocalizations.of(context).photosTabTimeline),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    icon: const Icon(Icons.folder_copy_outlined, size: 16),
+                    label: Text(AppLocalizations.of(context).photosTabGroups),
+                  ),
+                ],
+                selected: {_exploreShowGroups},
+                onSelectionChanged:
+                    (v) => setState(() => _exploreShowGroups = v.first),
+                showSelectedIcon: false,
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  textStyle: WidgetStateProperty.all(
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
         ],
         // 回忆横向滚动区域（仅在全部照片模式下显示）
         if (state.tab == PhotoTab.all) ...[
@@ -89,14 +137,20 @@ class _PhotoContent extends ConsumerWidget {
                     onCreateAlbum: onCreateAlbum,
                   ),
                 ),
-                PhotoTab.timeline => PhotoTimelineView(
-                  onOpenPhoto: onOpenPhoto,
-                  state: state,
-                ),
-                PhotoTab.groups => PhotoGroupView(
-                  onOpenPhoto: onOpenPhoto,
-                  state: state,
-                ),
+                PhotoTab.timeline =>
+                  _exploreShowGroups
+                      ? PhotoGroupView(onOpenPhoto: onOpenPhoto, state: state)
+                      : PhotoTimelineView(
+                        onOpenPhoto: onOpenPhoto,
+                        state: state,
+                      ),
+                PhotoTab.groups =>
+                  _exploreShowGroups
+                      ? PhotoGroupView(onOpenPhoto: onOpenPhoto, state: state)
+                      : PhotoTimelineView(
+                        onOpenPhoto: onOpenPhoto,
+                        state: state,
+                      ),
                 PhotoTab.graph => PhotoGraphView(
                   state: state,
                   onOpenPhoto: onOpenPhoto,
