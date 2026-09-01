@@ -736,6 +736,7 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final restoreScheduledAt = DateTime.now();
       restore.start(
         scrollController: scrollController,
         targetOffsetBuilder: () {
@@ -752,10 +753,7 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
           if (contentY == null || contentY <= 0) return 0;
           return (contentY - capturedAnchorY).clamp(0.0, max);
         },
-        isUserScrolling:
-            () =>
-                DateTime.now().difference(lastPointerDownTime).inMilliseconds <
-                300,
+        isUserScrolling: () => lastPointerDownTime.isAfter(restoreScheduledAt),
         onSettled: (completed) {
           if (completed) {
             positionTracker.setCharOffset(capturedCharOffset, currentChapterId);
@@ -868,6 +866,7 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final restoreScheduledAt = DateTime.now();
       restore.start(
         scrollController: scrollController,
         targetOffsetBuilder: () {
@@ -875,10 +874,7 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
           final max = scrollController.position.maxScrollExtent;
           return capturedRatio * max;
         },
-        isUserScrolling:
-            () =>
-                DateTime.now().difference(lastPointerDownTime).inMilliseconds <
-                300,
+        isUserScrolling: () => lastPointerDownTime.isAfter(restoreScheduledAt),
         onSettled: (completed) {
           if (completed && scrollController.hasClients) {
             final max = scrollController.position.maxScrollExtent;
