@@ -1,6 +1,7 @@
 package com.omninest.modules.photos.service;
 
 import com.alibaba.fastjson2.JSON;
+import com.omninest.common.ratelimit.RateLimitService;
 import com.alibaba.fastjson2.JSONObject;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -39,6 +40,7 @@ public class PhotoGeoService {
 
     private final PhotosRuntimeConfigService configService;
     private final NominatimRateLimiter rateLimiter;
+    private final RateLimitService distributedRateLimiter;
     private final MeterRegistry meterRegistry;
 
     private final Cache<String, Map<String, Object>> cache = Caffeine.newBuilder()
@@ -88,6 +90,15 @@ public class PhotoGeoService {
         }
 
         int rateLimit = Math.max(1, configService.geoRateLimitPerSecond());
+
+        // Redis 分布式预检：多实例部署时防止超过全局速率
+        if (!distributedRateLimiter.tryAcquire(
+                "nominatim:geo", rateLimit, Duration.ofSeconds(1))) {
+            log.warn("Nominatim 分布式速率限制，跳过本次查询");
+            return Map.of();
+        }
+
+        // 进程内间距控制：确保单实例内请求间隔不低于 1 秒
         if (!rateLimiter.tryAcquire(rateLimit, RATE_LIMIT_WAIT)) {
             log.warn("Nominatim 速率限制等待超时，跳过本次查询");
             return Map.of();
