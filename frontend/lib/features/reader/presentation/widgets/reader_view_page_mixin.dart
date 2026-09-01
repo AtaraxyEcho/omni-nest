@@ -913,9 +913,10 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
       showReaderSnackBar(context, msg);
       return;
     }
+    // 回退整章是跳转行为，提供"回到原进度"浮层；顺序前进保持干净
     final intent =
         offset < 0
-            ? const ReaderChapterNavigationIntent.end()
+            ? const ReaderChapterNavigationIntent.end(offerReturn: true)
             : const ReaderChapterNavigationIntent.start();
     unawaited(switchToChapter(chapters[idx].id, intent: intent));
   }

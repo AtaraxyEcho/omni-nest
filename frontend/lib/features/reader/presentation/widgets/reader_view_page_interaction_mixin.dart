@@ -111,6 +111,19 @@ mixin ReaderViewPageInteractionMixin
     if (max - scrollController.offset < max * 0.2) {
       preloadAdjacent();
     }
+
+    // 边界自动续读：滚动到达章末时自动进入下一章，等效于无缝衔接。
+    // 仅向前自动续读；向上回退保留点击热区操作（回弹/恢复事件会与
+    // 章首判断互相触发，且回退已有"回到原进度"浮层兜底）。
+    if (scrollController.offset >= max - 2 &&
+        DateTime.now().isAfter(_lastAutoAdvanceAt) &&
+        contentLoader != null &&
+        contentLoader!.allChapters.indexWhere((c) => c.id == currentChapterId) +
+                1 <
+            contentLoader!.allChapters.length) {
+      _lastAutoAdvanceAt = DateTime.now().add(const Duration(seconds: 1));
+      tryNavigateChapter(1);
+    }
   }
 
   /// 用户主动滚动前终止进行中的进度恢复。
@@ -129,6 +142,9 @@ mixin ReaderViewPageInteractionMixin
       setState(() {});
     }
   }
+
+  /// 上一次边界自动续读时间；加 1 秒冷却防止连续触发
+  DateTime _lastAutoAdvanceAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// 侧边点击处理。
   Future<void> handleSideTap(

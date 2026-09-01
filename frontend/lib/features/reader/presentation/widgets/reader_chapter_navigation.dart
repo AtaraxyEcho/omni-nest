@@ -34,8 +34,11 @@ class ReaderChapterNavigationIntent {
     : this._(ReaderChapterEntryPoint.start, offerReturn: offerReturn);
 
   /// 从章节末尾进入。
-  const ReaderChapterNavigationIntent.end()
-    : this._(ReaderChapterEntryPoint.end);
+  ///
+  /// 回退到上一章属于跳转行为，[offerReturn] 为 true 时提供
+  /// "回到原进度"浮层。
+  const ReaderChapterNavigationIntent.end({bool offerReturn = false})
+    : this._(ReaderChapterEntryPoint.end, offerReturn: offerReturn);
 
   /// 从明确字符偏移进入。
   const ReaderChapterNavigationIntent.offset(
