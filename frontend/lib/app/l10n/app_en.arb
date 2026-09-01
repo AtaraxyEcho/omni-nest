@@ -3421,6 +3421,8 @@
   "videoCandidateNew": "New candidate",
   "videoCandidateDetailsHint": "Select a candidate to inspect its match status, hierarchy, and file summary.",
   "videoUnavailableTitle": "Unavailable items",
+  "videoLibraryRecordsExpand": "Show more records",
+  "videoLibraryRecordsCollapse": "Show fewer records",
   "videoUnavailableEmpty": "No local media is currently missing or unreadable.",
   "videoUnavailableCount": "{count} items need attention",
   "@videoUnavailableCount": {

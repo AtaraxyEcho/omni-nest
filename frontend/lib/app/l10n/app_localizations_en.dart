@@ -7509,6 +7509,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoUnavailableTitle => 'Unavailable items';
 
   @override
+  String get videoLibraryRecordsExpand => 'Show more records';
+
+  @override
+  String get videoLibraryRecordsCollapse => 'Show fewer records';
+
+  @override
   String get videoUnavailableEmpty =>
       'No local media is currently missing or unreadable.';
 

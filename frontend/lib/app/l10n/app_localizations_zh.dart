@@ -7270,6 +7270,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoUnavailableTitle => '不可用项目';
 
   @override
+  String get videoLibraryRecordsExpand => '展开更多记录';
+
+  @override
+  String get videoLibraryRecordsCollapse => '收起记录';
+
+  @override
   String get videoUnavailableEmpty => '当前没有缺失或不可读取的本地媒体。';
 
   @override

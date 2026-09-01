@@ -433,3 +433,20 @@ class DetailGenreChip extends StatelessWidget {
     );
   }
 }
+
+/// 通用状态色点：任务、来源等状态的圆形指示。
+class StatusDot extends StatelessWidget {
+  const StatusDot({required this.color, this.size = 8, super.key});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}

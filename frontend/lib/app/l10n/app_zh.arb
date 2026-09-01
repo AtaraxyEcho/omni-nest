@@ -3295,6 +3295,8 @@
   "videoCandidateNew": "新候选",
   "videoCandidateDetailsHint": "选择左侧候选以查看识别状态、层级和文件摘要。",
   "videoUnavailableTitle": "不可用项目",
+  "videoLibraryRecordsExpand": "展开更多记录",
+  "videoLibraryRecordsCollapse": "收起记录",
   "videoUnavailableEmpty": "当前没有缺失或不可读取的本地媒体。",
   "videoUnavailableCount": "{count} 项需要处理",
   "@videoUnavailableCount": {

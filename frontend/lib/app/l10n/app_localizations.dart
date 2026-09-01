@@ -13664,6 +13664,18 @@ abstract class AppLocalizations {
   /// **'Unavailable items'**
   String get videoUnavailableTitle;
 
+  /// No description provided for @videoLibraryRecordsExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more records'**
+  String get videoLibraryRecordsExpand;
+
+  /// No description provided for @videoLibraryRecordsCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Show fewer records'**
+  String get videoLibraryRecordsCollapse;
+
   /// No description provided for @videoUnavailableEmpty.
   ///
   /// In en, this message translates to:

@@ -273,11 +273,7 @@ class _SourceStatusBadge extends StatelessWidget {
     if (dense) {
       return Padding(
         padding: const EdgeInsets.only(left: 6),
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: background, shape: BoxShape.circle),
-        ),
+        child: StatusDot(color: background),
       );
     }
     return Container(
