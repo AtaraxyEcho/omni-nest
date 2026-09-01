@@ -9331,6 +9331,18 @@ abstract class AppLocalizations {
   /// **'Media Library Management'**
   String get videoSectionLibraryScan;
 
+  /// No description provided for @videoSourceScanStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan status: {status}'**
+  String videoSourceScanStatus(Object status);
+
+  /// No description provided for @videoSourceScannedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items imported'**
+  String videoSourceScannedCount(Object count);
+
   /// No description provided for @videoSidebarGroupLibrary.
   ///
   /// In en, this message translates to:

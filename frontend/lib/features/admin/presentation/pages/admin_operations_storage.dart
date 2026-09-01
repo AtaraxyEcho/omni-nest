@@ -1205,59 +1205,72 @@ class _LibrarySourcesSection extends ConsumerWidget {
                     .firstOrNull;
             final selected = source.id == selectedSourceId;
             final colors = Theme.of(context).colorScheme;
-            return InkWell(
-              onTap: () => onSourceSelected(source.id),
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      selected
-                          ? colors.surfaceContainerHighest
-                          : Colors.transparent,
+            final accessPanel =
+                selected && canManage
+                    ? Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: MediaLibraryAccessPanel(source: source),
+                    )
+                    : null;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InkWell(
+                  onTap: () => onSourceSelected(source.id),
                   borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.circle,
-                      size: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
                       color:
+                          selected
+                              ? colors.surfaceContainerHighest
+                              : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 10,
+                          color:
+                              source.enabled
+                                  ? Colors.green.shade600
+                                  : colors.outline,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            source.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            '${location?.name ?? source.storageLocationId} · ${source.relativeRoot}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        Text(
                           source.enabled
-                              ? Colors.green.shade600
-                              : colors.outline,
+                              ? l10n.adminStorageStatusHealthy
+                              : l10n.adminStorageStatusDisabled,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        source.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 4,
-                      child: Text(
-                        '${location?.name ?? source.storageLocationId} · ${source.relativeRoot}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                    Text(
-                      source.enabled
-                          ? l10n.adminStorageStatusHealthy
-                          : l10n.adminStorageStatusDisabled,
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                if (accessPanel != null) accessPanel,
+              ],
             );
           }),
       ],

@@ -5092,6 +5092,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoSectionLibraryScan => 'Media Library Management';
 
   @override
+  String videoSourceScanStatus(Object status) {
+    return 'Scan status: $status';
+  }
+
+  @override
+  String videoSourceScannedCount(Object count) {
+    return '$count items imported';
+  }
+
+  @override
   String get videoSidebarGroupLibrary => 'Media Library';
 
   @override

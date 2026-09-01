@@ -1,7 +1,7 @@
 part of 'movie_management.dart';
 
-class _MediaLibraryAccessPanel extends ConsumerWidget {
-  const _MediaLibraryAccessPanel({required this.source});
+class MediaLibraryAccessPanel extends ConsumerWidget {
+  const MediaLibraryAccessPanel({required this.source, super.key});
 
   final VideoLibrarySource source;
 

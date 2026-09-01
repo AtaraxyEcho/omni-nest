@@ -4930,6 +4930,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoSectionLibraryScan => '媒体库管理';
 
   @override
+  String videoSourceScanStatus(Object status) {
+    return '扫描状态：$status';
+  }
+
+  @override
+  String videoSourceScannedCount(Object count) {
+    return '已入库 $count 项';
+  }
+
+  @override
   String get videoSidebarGroupLibrary => '媒体库';
 
   @override

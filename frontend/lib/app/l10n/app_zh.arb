@@ -2104,6 +2104,22 @@
   "videoSectionMetadataManagement": "元数据管理",
   "videoSectionTranscodeTasks": "转码任务",
   "videoSectionLibraryScan": "媒体库管理",
+  "videoSourceScanStatus": "扫描状态：{status}",
+  "@videoSourceScanStatus": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSourceScannedCount": "已入库 {count} 项",
+  "@videoSourceScannedCount": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoSidebarGroupLibrary": "媒体库",
   "videoSidebarGroupMine": "我的媒体",
   "videoSidebarGroupManagement": "管理工具",

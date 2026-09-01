@@ -266,7 +266,7 @@ class _MediaLibraryWorkspaceBodyState
         padding: const EdgeInsets.all(16),
         child: MediaLibraryReviewWorkspace(source: widget.source),
       ),
-      _ => _MediaLibraryAccessPanel(source: widget.source),
+      _ => MediaLibraryAccessPanel(source: widget.source),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

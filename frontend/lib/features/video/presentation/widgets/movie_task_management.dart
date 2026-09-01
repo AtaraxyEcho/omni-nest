@@ -324,25 +324,15 @@ class TaskBoardSection extends StatelessWidget {
   }
 }
 
-class LibraryScanSection extends ConsumerStatefulWidget {
+class LibraryScanSection extends ConsumerWidget {
   const LibraryScanSection({required this.state, super.key});
 
   final MovieCenterState state;
 
   @override
-  ConsumerState<LibraryScanSection> createState() => _LibraryScanSectionState();
-}
-
-class _LibraryScanSectionState extends ConsumerState<LibraryScanSection> {
-  static const _collapsedRecordsHeight = 232.0;
-  static const _expandedRecordsHeight = 480.0;
-
-  bool _recordsExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scanTasks =
-        widget.state.tasks
+        state.tasks
             .where(
               (task) => const {
                 'MEDIA_SCAN',
@@ -351,16 +341,74 @@ class _LibraryScanSectionState extends ConsumerState<LibraryScanSection> {
               }.contains(task.taskType),
             )
             .toList();
-    final locations = ref.watch(videoStorageLocationsProvider);
-    final canAdd =
-        locations.asData?.value.any((location) => location.available) == true;
+    final sourcesAsync = ref.watch(videoLibrarySourcesProvider);
+    final sources = sourcesAsync.asData?.value ?? const <VideoLibrarySource>[];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 宽高充足时进入固定工作台布局（无外层滚动），否则保持堆叠滚动。
         final workbench =
             constraints.maxWidth >= 960 && constraints.maxHeight >= 520;
-        final panel = LocalLibrarySourcesPanel(fillHeight: workbench);
+        // 只读概览：库源配置已收敛至 Admin 媒体库管理页
+        final overview = Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (sources.isEmpty)
+                Text(
+                  AppLocalizations.of(context).adminLibrarySourcesEmpty,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
+              else
+                ...sources.map(
+                  (source) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 10,
+                          color:
+                              source.enabled
+                                  ? Colors.green.shade600
+                                  : Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            source.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            AppLocalizations.of(
+                              context,
+                            ).videoSourceScanStatus(source.scanStatus),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                        Text(
+                          AppLocalizations.of(
+                            context,
+                          ).videoSourceScannedCount(source.lastScannedCount),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
         if (!workbench) {
           return CustomScrollView(
             slivers: [
@@ -378,7 +426,7 @@ class _LibraryScanSectionState extends ConsumerState<LibraryScanSection> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: panel,
+                  child: overview,
                 ),
               ),
               const SliverPadding(padding: EdgeInsets.only(top: 24)),
@@ -424,141 +472,20 @@ class _LibraryScanSectionState extends ConsumerState<LibraryScanSection> {
                       AppLocalizations.of(context).videoRefreshSources,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton.icon(
-                    onPressed:
-                        canAdd
-                            ? () => showDialog<void>(
-                              context: context,
-                              builder:
-                                  (context) => VideoLibrarySourceDialog(
-                                    locations: locations.requireValue,
-                                  ),
-                            )
-                            : null,
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: Text(
-                      AppLocalizations.of(context).videoAddLibrarySource,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 16),
-              Expanded(child: panel),
-              const SizedBox(height: 12),
-              _LibraryRecordsStrip(
-                scanTasks: scanTasks,
-                expanded: _recordsExpanded,
-                onToggle:
-                    () => setState(() => _recordsExpanded = !_recordsExpanded),
+              overview,
+              const SizedBox(height: 24),
+              TaskBoardSection(
+                title: AppLocalizations.of(context).videoRecentScanRecords,
+                subtitle: AppLocalizations.of(context).videoRecentScanSubtitle,
+                tasks: scanTasks,
               ),
             ],
           ),
         );
       },
-    );
-  }
-}
-
-/// 底部记录条：扫描任务记录常驻底部，可展开查看更多，避免推挤工作台。
-class _LibraryRecordsStrip extends StatelessWidget {
-  const _LibraryRecordsStrip({
-    required this.scanTasks,
-    required this.expanded,
-    required this.onToggle,
-  });
-
-  final List<MovieTask> scanTasks;
-  final bool expanded;
-  final VoidCallback onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return AnimatedSize(
-      duration:
-          reduceMotion ? Duration.zero : const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.bottomCenter,
-      child: SizedBox(
-        height:
-            expanded
-                ? _LibraryScanSectionState._expandedRecordsHeight
-                : _LibraryScanSectionState._collapsedRecordsHeight,
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.videoColors.surfaceContainerLow.withValues(
-              alpha: 0.72,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: context.videoColors.outlineVariant.withValues(alpha: 0.32),
-            ),
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    l10n.videoRecentScanRecords,
-                    style: TextStyle(
-                      color: context.videoColors.onSurface,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _RecordsCountBadge(count: scanTasks.length),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      l10n.videoRecentScanSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.videoColors.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    tooltip:
-                        expanded
-                            ? l10n.videoLibraryRecordsCollapse
-                            : l10n.videoLibraryRecordsExpand,
-                    onPressed: onToggle,
-                    icon: Icon(
-                      expanded
-                          ? Icons.keyboard_double_arrow_up_rounded
-                          : Icons.keyboard_double_arrow_down_rounded,
-                      size: 20,
-                      color: context.videoColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child:
-                    scanTasks.isEmpty
-                        ? EmptyMovieState(
-                          message: AppLocalizations.of(context).videoNoTasks,
-                        )
-                        : ListView.builder(
-                          padding: EdgeInsets.zero,
-                          itemCount: scanTasks.length,
-                          itemBuilder:
-                              (context, index) =>
-                                  TaskRow(task: scanTasks[index]),
-                        ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -2230,6 +2230,22 @@
   "videoSectionMetadataManagement": "Metadata",
   "videoSectionTranscodeTasks": "Transcoding",
   "videoSectionLibraryScan": "Media Library Management",
+  "videoSourceScanStatus": "Scan status: {status}",
+  "@videoSourceScanStatus": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSourceScannedCount": "{count} items imported",
+  "@videoSourceScannedCount": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "videoSidebarGroupLibrary": "Media Library",
   "videoSidebarGroupMine": "My Media",
   "videoSidebarGroupManagement": "Management Tools",
