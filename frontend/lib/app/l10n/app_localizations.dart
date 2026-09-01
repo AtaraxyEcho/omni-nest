@@ -10825,6 +10825,24 @@ abstract class AppLocalizations {
   /// **'Graph'**
   String get photosTabGraph;
 
+  /// No description provided for @photosSurfaceLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get photosSurfaceLibrary;
+
+  /// No description provided for @photosSurfacePeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get photosSurfacePeople;
+
+  /// No description provided for @photosSurfaceExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get photosSurfaceExplore;
+
   /// No description provided for @photosGraphFilter.
   ///
   /// In en, this message translates to:

@@ -2477,6 +2477,9 @@
   "photosTabPeople": "人物",
   "photosTabGroups": "分组",
   "photosTabGraph": "关系图谱",
+  "photosSurfaceLibrary": "照片库",
+  "photosSurfacePeople": "人物",
+  "photosSurfaceExplore": "探索",
   "photosGraphFilter": "筛选节点类型",
   "photosGraphSearchActive": "正在筛选“{query}”",
   "@photosGraphSearchActive": {

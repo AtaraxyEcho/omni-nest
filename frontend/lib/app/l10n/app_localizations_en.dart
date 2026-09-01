@@ -5911,6 +5911,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosTabGraph => 'Graph';
 
   @override
+  String get photosSurfaceLibrary => 'Library';
+
+  @override
+  String get photosSurfacePeople => 'People';
+
+  @override
+  String get photosSurfaceExplore => 'Explore';
+
+  @override
   String get photosGraphFilter => 'Filter nodes';
 
   @override

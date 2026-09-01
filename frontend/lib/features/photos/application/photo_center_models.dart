@@ -7,8 +7,18 @@ import 'package:omninest/features/photos/domain/photo_timeline.dart';
 
 // -- 状态管理 --
 
-/// 照片中心的内容页签。
+/// 照片模块的三个顶级浏览表面（导航层），内部通过 PhotoTab 路由到具体内容。
+enum PhotoSurface { library, people, explore }
+
+/// 照片中心的内容页签（数据加载层）。
 enum PhotoTab { all, favorites, albums, timeline, groups, graph, people }
+
+/// 导航表面到默认数据页签的映射。
+PhotoTab photoSurfaceToTab(PhotoSurface surface) => switch (surface) {
+  PhotoSurface.library => PhotoTab.all,
+  PhotoSurface.people => PhotoTab.people,
+  PhotoSurface.explore => PhotoTab.timeline,
+};
 
 /// 导入流程提示类型；文案由界面层按语言映射。
 enum PhotoImportNotice { completedNotVisible, stillProcessing, backendFailed }

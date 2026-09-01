@@ -48,12 +48,11 @@ class PhotosPage extends ConsumerStatefulWidget {
   ConsumerState<PhotosPage> createState() => _PhotosPageState();
 }
 
-/// 底部导航目标
+/// 底部导航表面。
 enum _PhotosNavDestination {
-  home(Icons.home_outlined, Icons.home),
-  favorites(Icons.favorite_outline, Icons.favorite),
-  timeline(Icons.timeline_outlined, Icons.timeline),
-  graph(Icons.hub_outlined, Icons.hub_rounded);
+  library(Icons.photo_library_outlined, Icons.photo_library_rounded),
+  people(Icons.people_outline, Icons.people_rounded),
+  explore(Icons.explore_outlined, Icons.explore_rounded);
 
   const _PhotosNavDestination(this.icon, this.selectedIcon);
 
@@ -63,31 +62,28 @@ enum _PhotosNavDestination {
   String label(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return switch (this) {
-      home => l10n.photosTabHome,
-      favorites => l10n.photosTabFavorites,
-      timeline => l10n.photosTabTimeline,
-      graph => l10n.photosTabGraph,
+      library => l10n.photosSurfaceLibrary,
+      people => l10n.photosSurfacePeople,
+      explore => l10n.photosSurfaceExplore,
     };
   }
 }
 
-/// 底部导航目标对应的 PhotoTab
+/// 导航表面到数据页签的映射（复用已有分页逻辑）。
 PhotoTab _photoTabForDestination(_PhotosNavDestination dest) {
   return switch (dest) {
-    _PhotosNavDestination.home => PhotoTab.all,
-    _PhotosNavDestination.favorites => PhotoTab.favorites,
-    _PhotosNavDestination.timeline => PhotoTab.timeline,
-    _PhotosNavDestination.graph => PhotoTab.graph,
+    _PhotosNavDestination.library => PhotoTab.all,
+    _PhotosNavDestination.people => PhotoTab.people,
+    _PhotosNavDestination.explore => PhotoTab.timeline,
   };
 }
 
-/// PhotoTab 对应的底部导航目标
+/// PhotoTab 对应的导航表面。
 _PhotosNavDestination _destinationForPhotoTab(PhotoTab tab) {
   return switch (tab) {
-    PhotoTab.favorites => _PhotosNavDestination.favorites,
-    PhotoTab.timeline => _PhotosNavDestination.timeline,
-    PhotoTab.graph => _PhotosNavDestination.graph,
-    _ => _PhotosNavDestination.home,
+    PhotoTab.people => _PhotosNavDestination.people,
+    PhotoTab.timeline || PhotoTab.groups => _PhotosNavDestination.explore,
+    _ => _PhotosNavDestination.library,
   };
 }
 

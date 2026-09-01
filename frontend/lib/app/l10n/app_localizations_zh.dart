@@ -5723,6 +5723,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosTabGraph => '关系图谱';
 
   @override
+  String get photosSurfaceLibrary => '照片库';
+
+  @override
+  String get photosSurfacePeople => '人物';
+
+  @override
+  String get photosSurfaceExplore => '探索';
+
+  @override
   String get photosGraphFilter => '筛选节点类型';
 
   @override
