@@ -21,6 +21,19 @@ class _PhotoScrollableContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (state.surface == PhotoSurface.library)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: _MobileLibraryFilterChips(state: state, ref: ref),
+          ),
+        Expanded(child: _buildTabContent(context)),
+      ],
+    );
+  }
+
+  Widget _buildTabContent(BuildContext context) {
     return switch (state.tab) {
       PhotoTab.all => _PhotoMobileAllSection(
         state: state,
@@ -331,3 +344,50 @@ class _AlbumHorizontalCard extends StatelessWidget {
 }
 
 /// 主内容区
+
+/// 移动端 Library 过滤芯片：全部/收藏/相册/分组。
+class _MobileLibraryFilterChips extends ConsumerWidget {
+  const _MobileLibraryFilterChips({required this.state, required this.ref});
+
+  final PhotoCenterState state;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context, WidgetRef buildRef) {
+    final l10n = AppLocalizations.of(context);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final tab in [
+            PhotoTab.all,
+            PhotoTab.favorites,
+            PhotoTab.albums,
+            PhotoTab.groups,
+          ])
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                selected: state.tab == tab,
+                onSelected: (_) {
+                  buildRef
+                      .read(photoCenterControllerProvider.notifier)
+                      .selectTab(tab);
+                },
+                label: Text(switch (tab) {
+                  PhotoTab.all => l10n.photosTabHome,
+                  PhotoTab.favorites => l10n.photosTabFavorites,
+                  PhotoTab.albums => l10n.photosTabAlbums,
+                  PhotoTab.groups => l10n.photosTabGroups,
+                  _ => '',
+                }),
+                showCheckmark: false,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
