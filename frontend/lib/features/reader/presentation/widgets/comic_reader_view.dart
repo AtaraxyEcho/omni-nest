@@ -146,7 +146,7 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
   void dispose() {
     // 退出前补一次最终落库：滚动进度走 500ms 防抖，直接 cancel 会丢
     // 最近一次未落盘的位置；持久化不依赖 ref，可在 dispose 中执行。
-    _persistProgress();
+    _persistProgress(force: true);
     _pageController.dispose();
     _scrollController.dispose();
     _transformationController.dispose();
@@ -414,8 +414,18 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
     _preloadAdjacent();
   }
 
+  DateTime? _lastServerSyncAt;
+  double? _lastSyncedProgress;
+  int? _lastSyncedPageIndex;
+
+  /// 服务端同步最小间隔，与文本阅读器保持同一节流策略。
+  static const _serverSyncMinInterval = Duration(seconds: 20);
+
   /// 将当前锚点写入本地与服务端；不依赖 ref，dispose 时也可安全调用。
-  void _persistProgress() {
+  ///
+  /// 本地写入保持每次执行；服务端上报仅在 force（离场补报）或
+  /// 「距上次超过最小间隔且页码确有变化」时执行。
+  void _persistProgress({bool force = false}) {
     if (_pages.isEmpty || _anchor.pageIndex >= _pages.length) return;
     final progress =
         _totalPages > 0
@@ -450,7 +460,20 @@ class _ComicReaderViewState extends ConsumerState<ComicReaderView> {
       ),
     );
 
-    // 服务端同步（漫画锚点）
+    // 服务端同步（漫画锚点）：节流判定与文本阅读器一致
+    final now = DateTime.now();
+    final moved =
+        _anchor.pageIndex != (_lastSyncedPageIndex ?? -1) ||
+        (progress - (_lastSyncedProgress ?? -1)).abs() >= 0.002;
+    final withinInterval =
+        _lastServerSyncAt != null &&
+        now.difference(_lastServerSyncAt!) < _serverSyncMinInterval;
+    if (!force && (!moved || withinInterval)) {
+      return;
+    }
+    _lastServerSyncAt = now;
+    _lastSyncedProgress = progress;
+    _lastSyncedPageIndex = _anchor.pageIndex;
     unawaited(
       _progressSync.sync(
         itemId: widget.itemId,
