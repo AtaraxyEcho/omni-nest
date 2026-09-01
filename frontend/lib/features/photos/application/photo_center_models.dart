@@ -31,6 +31,7 @@ class PhotoCenterState {
     required this.favorites,
     required this.albums,
     required this.tab,
+    this.surface = PhotoSurface.library,
     this.searchQuery = '',
     this.timeline,
     this.groups,
@@ -80,6 +81,7 @@ class PhotoCenterState {
   final List<PhotoItem> favorites;
   final List<PhotoAlbum> albums;
   final PhotoTab tab;
+  final PhotoSurface surface;
   final String searchQuery;
   final PhotoTimeline? timeline;
   final List<PhotoGroup>? groups;
@@ -169,6 +171,7 @@ class PhotoCenterState {
     List<PhotoItem>? favorites,
     List<PhotoAlbum>? albums,
     PhotoTab? tab,
+    PhotoSurface? surface,
     String? searchQuery,
     PhotoTimeline? timeline,
     List<PhotoGroup>? groups,
@@ -215,6 +218,7 @@ class PhotoCenterState {
       favorites: favorites ?? this.favorites,
       albums: albums ?? this.albums,
       tab: tab ?? this.tab,
+      surface: surface ?? this.surface,
       searchQuery: searchQuery ?? this.searchQuery,
       timeline: timeline ?? this.timeline,
       groups: groups ?? this.groups,

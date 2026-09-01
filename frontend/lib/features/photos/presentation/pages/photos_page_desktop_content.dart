@@ -21,7 +21,15 @@ class _PhotoContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
-        // 回忆横向滚动区域（仅在全部照片 tab 下显示）
+        // Library 过滤芯片（仅在 library surface 下显示）
+        if (state.surface == PhotoSurface.library) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _LibraryFilterChips(state: state),
+          ),
+          const SizedBox(height: 12),
+        ],
+        // 回忆横向滚动区域（仅在全部照片模式下显示）
         if (state.tab == PhotoTab.all) ...[
           _MemoriesSection(photos: state.photos),
           const SizedBox(height: 16),
@@ -519,3 +527,42 @@ class _CreateAlbumTile extends StatelessWidget {
 }
 
 /// 批量操作底部栏
+
+/// Library 表面的过滤芯片行：切换全部/收藏/相册/分组。
+class _LibraryFilterChips extends ConsumerWidget {
+  const _LibraryFilterChips({required this.state});
+
+  final PhotoCenterState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children: [
+        for (final tab in [
+          PhotoTab.all,
+          PhotoTab.favorites,
+          PhotoTab.albums,
+          PhotoTab.groups,
+        ])
+          FilterChip(
+            selected: state.tab == tab,
+            onSelected: (_) {
+              ref.read(photoCenterControllerProvider.notifier).selectTab(tab);
+            },
+            label: Text(switch (tab) {
+              PhotoTab.all => l10n.photosTabHome,
+              PhotoTab.favorites => l10n.photosTabFavorites,
+              PhotoTab.albums => l10n.photosTabAlbums,
+              PhotoTab.groups => l10n.photosTabGroups,
+              _ => '',
+            }),
+            showCheckmark: false,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+          ),
+      ],
+    );
+  }
+}
