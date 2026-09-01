@@ -18,6 +18,7 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
   _StorageStatusFilter _statusFilter = _StorageStatusFilter.all;
   String? _selectedLocationId;
   String? _selectedSourceId;
+  String? _reviewSourceId;
 
   List<AdminStorageLocation> _filteredLocations(
     List<AdminStorageLocation> locations,
@@ -194,10 +195,28 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
         ],
         const SizedBox(height: 32),
         _LibrarySourcesSection(
-          canManage: canManageStorage && canManageSources,
-          onSourceSelected: (id) => setState(() => _selectedSourceId = id),
+          canManage: canManageSources,
+          onSourceSelected:
+              (id) => setState(() {
+                _selectedSourceId = id;
+                _reviewSourceId = id;
+              }),
           selectedSourceId: _selectedSourceId,
         ),
+        if (canManageSources) ...[
+          const SizedBox(height: 32),
+          _LibraryReviewSection(
+            sources:
+                ref.watch(videoLibrarySourcesProvider).asData?.value ??
+                const <VideoLibrarySource>[],
+            selectedSourceId: _reviewSourceId,
+            onSelectSource:
+                (id) => setState(() {
+                  _reviewSourceId = id;
+                  _selectedSourceId = id;
+                }),
+          ),
+        ],
       ],
     );
   }
@@ -1241,6 +1260,61 @@ class _LibrarySourcesSection extends ConsumerWidget {
               ),
             );
           }),
+      ],
+    );
+  }
+}
+
+/// 扫描与审阅分区：选定库源后进入审阅工作区。
+class _LibraryReviewSection extends ConsumerWidget {
+  const _LibraryReviewSection({
+    required this.sources,
+    required this.selectedSourceId,
+    required this.onSelectSource,
+  });
+
+  final List<VideoLibrarySource> sources;
+  final String? selectedSourceId;
+  final ValueChanged<String> onSelectSource;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final selected =
+        sources.where((source) => source.id == selectedSourceId).firstOrNull;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.videoSectionLibraryScan,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 12),
+        if (sources.isEmpty)
+          Text(
+            l10n.adminLibrarySourcesEmpty,
+            style: Theme.of(context).textTheme.bodyMedium,
+          )
+        else ...[
+          DropdownButtonFormField<String>(
+            initialValue: selectedSourceId,
+            items: [
+              for (final source in sources)
+                DropdownMenuItem(value: source.id, child: Text(source.name)),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                onSelectSource(value);
+              }
+            },
+            decoration: InputDecoration(
+              labelText: l10n.videoStorageLocation,
+              isDense: true,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (selected != null) MediaLibraryReviewWorkspace(source: selected),
+        ],
       ],
     );
   }

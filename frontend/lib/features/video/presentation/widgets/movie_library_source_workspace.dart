@@ -264,7 +264,7 @@ class _MediaLibraryWorkspaceBodyState
       ),
       1 => SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: _MediaLibraryReviewWorkspace(source: widget.source),
+        child: MediaLibraryReviewWorkspace(source: widget.source),
       ),
       _ => _MediaLibraryAccessPanel(source: widget.source),
     };

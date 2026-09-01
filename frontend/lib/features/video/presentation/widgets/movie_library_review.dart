@@ -1,17 +1,17 @@
 part of 'movie_management.dart';
 
-class _MediaLibraryReviewWorkspace extends ConsumerStatefulWidget {
-  const _MediaLibraryReviewWorkspace({required this.source});
+class MediaLibraryReviewWorkspace extends ConsumerStatefulWidget {
+  const MediaLibraryReviewWorkspace({required this.source, super.key});
 
   final VideoLibrarySource source;
 
   @override
-  ConsumerState<_MediaLibraryReviewWorkspace> createState() =>
-      _MediaLibraryReviewWorkspaceState();
+  ConsumerState<MediaLibraryReviewWorkspace> createState() =>
+      MediaLibraryReviewWorkspaceState();
 }
 
-class _MediaLibraryReviewWorkspaceState
-    extends ConsumerState<_MediaLibraryReviewWorkspace> {
+class MediaLibraryReviewWorkspaceState
+    extends ConsumerState<MediaLibraryReviewWorkspace> {
   final List<MediaScanTreeNode> _ancestors = [];
   MediaScanTreeNode? _focusedNode;
   String? _runId;
@@ -20,7 +20,7 @@ class _MediaLibraryReviewWorkspaceState
   bool _mutating = false;
 
   @override
-  void didUpdateWidget(covariant _MediaLibraryReviewWorkspace oldWidget) {
+  void didUpdateWidget(covariant MediaLibraryReviewWorkspace oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.source.id != widget.source.id) {
       _ancestors.clear();
