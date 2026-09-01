@@ -490,31 +490,6 @@ class LibraryScanSection extends ConsumerWidget {
   }
 }
 
-class _RecordsCountBadge extends StatelessWidget {
-  const _RecordsCountBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.videoColors.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$count',
-        style: TextStyle(
-          color: context.videoColors.primary,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
 class TaskRow extends StatelessWidget {
   const TaskRow({required this.task, super.key});
 

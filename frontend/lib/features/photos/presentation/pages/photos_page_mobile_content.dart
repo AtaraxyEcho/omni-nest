@@ -41,6 +41,7 @@ class _PhotoScrollableContent extends StatelessWidget {
         onOpenAlbum: onOpenAlbum,
       ),
       PhotoTab.favorites => _PhotoGrid(
+        scrollable: true,
         photos: state.visiblePhotos,
         onOpenPhoto: onOpenPhoto,
         onDeletePhoto: onDeletePhoto,
