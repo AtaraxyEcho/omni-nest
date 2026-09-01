@@ -17,6 +17,7 @@ public final class Permissions {
     public static final String MEDIA_LIBRARY_MANAGE = "media:library:manage";
     public static final String PHOTO_READ = "photo:read";
     public static final String PHOTO_WRITE = "photo:write";
+    public static final String PHOTO_ADMIN = "photo:admin";
     public static final String TASK_READ = "task:read";
     public static final String SYSTEM_CONFIG_READ = "system:config:read";
     public static final String SYSTEM_CONFIG_MANAGE = "system:config:manage";
@@ -33,6 +34,7 @@ public final class Permissions {
             MEDIA_LIBRARY_MANAGE,
             PHOTO_READ,
             PHOTO_WRITE,
+            PHOTO_ADMIN,
             TASK_READ,
             SYSTEM_CONFIG_READ,
             SYSTEM_CONFIG_MANAGE,

@@ -97,6 +97,7 @@ INSERT INTO omni.auth_permissions (id, code, name, module, description, enabled)
     ('a1b2c3d4-5555-5555-5555-555555555555', 'media:library:manage', '管理媒体库', 'media', '允许维护服务器媒体库、扫描和访问授权。', true),
     ('a1b2c3d4-3333-3333-3333-333333333333', 'photo:read', '读取照片', 'photo', '允许查看照片和相册。', true),
     ('a1b2c3d4-4444-4444-4444-444444444444', 'photo:write', '管理照片', 'photo', '允许导入和修改照片。', true),
+    ('b2c3d4e4-1111-1111-1111-111111111111', 'photo:admin', '照片管理', 'photo', '允许执行扫描、缩略图重生成等照片管理操作。', true),
     ('6d1b54bd-c1f3-403b-8428-082821e6de03', 'task:read', '读取任务', 'task', '允许查看任务状态。', true),
     ('4fc5ebd6-ae43-4125-9196-b3c2e15741f3', 'system:config:read', '读取系统配置', 'system', '允许读取系统配置。', true),
     ('80dd01d7-9e38-47ec-b644-fcf7d4bcd024', 'system:config:manage', '管理系统配置', 'system', '允许修改系统配置。', true),
@@ -115,7 +116,7 @@ SELECT '53e2e138-59b7-4fa6-988f-58554f34b8d3', permission.id
 FROM omni.auth_permissions permission
 WHERE permission.code IN (
     'profile:read', 'profile:write', 'file:read', 'file:write',
-    'media:read', 'media:write', 'photo:read', 'photo:write', 'task:read'
+    'media:read', 'media:write', 'photo:read', 'photo:write', 'photo:admin', 'task:read'
 );
 
 -- 管理员包含成员权限和用户管理权限，但不包含系统配置修改权限。
@@ -124,7 +125,7 @@ SELECT '00621191-231c-423c-831a-2e18e1d29af8', permission.id
 FROM omni.auth_permissions permission
 WHERE permission.code IN (
     'profile:read', 'profile:write', 'file:read', 'file:write',
-    'media:read', 'media:write', 'photo:read', 'photo:write', 'task:read',
+    'media:read', 'media:write', 'photo:read', 'photo:write', 'photo:admin', 'task:read',
     'media:library:manage', 'system:config:read', 'system:user:read', 'system:user:manage'
 );
 

@@ -526,7 +526,7 @@ public class PhotoLibraryController {
     // ─── 管理 ───
 
     @Operation(summary = "扫描照片库", description = "触发照片库扫描，检测新增或变更的照片文件")
-    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_ADMIN + "')")
     @PostMapping("/api/v1/admin/photos/scan")
     ApiResponse<PhotoScanJobDto> scanLibrary() {
         UUID userId = currentUserContext.requireCurrentUserId();
@@ -554,7 +554,7 @@ public class PhotoLibraryController {
     }
 
     @Operation(summary = "重建缩略图", description = "创建异步任务重生成所有缺失的照片缩略图")
-    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_ADMIN + "')")
     @PostMapping("/api/v1/admin/photos/thumbnails/regenerate")
     ApiResponse<Map<String, String>> regenerateThumbnails() {
         UUID userId = currentUserContext.requireCurrentUserId();
