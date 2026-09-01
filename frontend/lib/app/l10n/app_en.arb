@@ -3480,6 +3480,8 @@
   "videoUnavailableTitle": "Unavailable items",
   "videoLibraryRecordsExpand": "Show more records",
   "videoLibraryRecordsCollapse": "Show fewer records",
+  "photosPrevPhoto": "Previous photo",
+  "photosNextPhoto": "Next photo",
   "videoUnavailableEmpty": "No local media is currently missing or unreadable.",
   "videoUnavailableCount": "{count} items need attention",
   "@videoUnavailableCount": {

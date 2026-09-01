@@ -49,10 +49,30 @@ class _PhotoDetailBody extends ConsumerStatefulWidget {
 class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   bool _showInfo = false;
 
+  /// 在当前照片列表中找到相邻照片 ID，返回 null 表示无相邻照片。
+  String? _adjacentPhotoId(PhotoItem photo, int offset) {
+    final centerState = ref.read(photoCenterControllerProvider).asData?.value;
+    if (centerState == null) return null;
+    final list = centerState.photos;
+    final index = list.indexWhere((p) => p.id == photo.id);
+    if (index < 0) return null;
+    final target = index + offset;
+    if (target < 0 || target >= list.length) return null;
+    return list[target].id;
+  }
+
+  void _navigateToAdjacent(PhotoItem photo, int offset) {
+    final targetId = _adjacentPhotoId(photo, offset);
+    if (targetId == null || !mounted) return;
+    context.pushReplacement('/photos/$targetId');
+  }
+
   @override
   Widget build(BuildContext context) {
     final photo = widget.photo;
     final compact = MediaQuery.sizeOf(context).width < 700;
+    final prevId = _adjacentPhotoId(photo, -1);
+    final nextId = _adjacentPhotoId(photo, 1);
     return Column(
       children: [
         // 顶部操作栏
@@ -95,6 +115,61 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
           showInfo: _showInfo,
           compact: compact,
         ),
+        // 上/下一张导航
+        if (prevId != null || nextId != null)
+          Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: context.photosColors.surfaceContainer.withValues(
+                alpha: 0.6,
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: context.photosColors.outlineVariant.withValues(
+                    alpha: 0.2,
+                  ),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: AppLocalizations.of(context).photosPrevPhoto,
+                  onPressed:
+                      prevId == null
+                          ? null
+                          : () => _navigateToAdjacent(photo, -1),
+                  icon: Icon(
+                    Icons.chevron_left_rounded,
+                    color:
+                        prevId != null
+                            ? context.photosColors.onSurface
+                            : context.photosColors.onSurfaceVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  tooltip: AppLocalizations.of(context).photosNextPhoto,
+                  onPressed:
+                      nextId == null
+                          ? null
+                          : () => _navigateToAdjacent(photo, 1),
+                  icon: Icon(
+                    Icons.chevron_right_rounded,
+                    color:
+                        nextId != null
+                            ? context.photosColors.onSurface
+                            : context.photosColors.onSurfaceVariant.withValues(
+                              alpha: 0.3,
+                            ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         // 照片查看区
         Expanded(
           child: LayoutBuilder(

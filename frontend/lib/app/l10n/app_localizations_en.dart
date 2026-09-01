@@ -7615,6 +7615,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoLibraryRecordsCollapse => 'Show fewer records';
 
   @override
+  String get photosPrevPhoto => 'Previous photo';
+
+  @override
+  String get photosNextPhoto => 'Next photo';
+
+  @override
   String get videoUnavailableEmpty =>
       'No local media is currently missing or unreadable.';
 

@@ -13856,6 +13856,18 @@ abstract class AppLocalizations {
   /// **'Show fewer records'**
   String get videoLibraryRecordsCollapse;
 
+  /// No description provided for @photosPrevPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous photo'**
+  String get photosPrevPhoto;
+
+  /// No description provided for @photosNextPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Next photo'**
+  String get photosNextPhoto;
+
   /// No description provided for @videoUnavailableEmpty.
   ///
   /// In en, this message translates to:
