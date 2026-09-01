@@ -18,6 +18,9 @@ import 'package:omninest/features/admin/presentation/widgets/admin_common_widget
 
 /// 页面入场动画包装器 — 给定 children 列表，自动施加交错 fade+slide 入场。
 
+import 'package:omninest/features/video/application/movie_controller.dart';
+import 'package:omninest/features/video/domain/movie_management_models.dart';
+import 'package:omninest/features/video/presentation/widgets/movie_management.dart';
 part 'admin_operations_monitoring.dart';
 part 'admin_operations_logs_tasks.dart';
 part 'admin_operations_roles.dart';

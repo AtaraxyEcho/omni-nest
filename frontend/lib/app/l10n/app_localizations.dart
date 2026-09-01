@@ -6235,6 +6235,30 @@ abstract class AppLocalizations {
   /// **'Storage Management'**
   String get adminStorageManagement;
 
+  /// No description provided for @adminLibrarySourcesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Video library sources'**
+  String get adminLibrarySourcesSection;
+
+  /// No description provided for @adminLibrarySourceAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add library source'**
+  String get adminLibrarySourceAdd;
+
+  /// No description provided for @adminLibrarySourcesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No library sources yet. Create one on an enabled storage location.'**
+  String get adminLibrarySourcesEmpty;
+
+  /// No description provided for @adminStorageStatusHealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy'**
+  String get adminStorageStatusHealthy;
+
   /// No description provided for @adminStorageFilterAll.
   ///
   /// In en, this message translates to:

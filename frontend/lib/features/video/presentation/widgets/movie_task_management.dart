@@ -431,7 +431,7 @@ class _LibraryScanSectionState extends ConsumerState<LibraryScanSection> {
                             ? () => showDialog<void>(
                               context: context,
                               builder:
-                                  (context) => _VideoLibrarySourceDialog(
+                                  (context) => VideoLibrarySourceDialog(
                                     locations: locations.requireValue,
                                   ),
                             )

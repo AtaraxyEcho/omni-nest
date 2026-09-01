@@ -3366,6 +3366,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminStorageManagement => 'Storage Management';
 
   @override
+  String get adminLibrarySourcesSection => 'Video library sources';
+
+  @override
+  String get adminLibrarySourceAdd => 'Add library source';
+
+  @override
+  String get adminLibrarySourcesEmpty =>
+      'No library sources yet. Create one on an enabled storage location.';
+
+  @override
+  String get adminStorageStatusHealthy => 'Healthy';
+
+  @override
   String get adminStorageFilterAll => 'All';
 
   @override

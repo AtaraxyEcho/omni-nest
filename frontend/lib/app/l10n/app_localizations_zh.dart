@@ -3252,6 +3252,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminStorageManagement => '存储管理';
 
   @override
+  String get adminLibrarySourcesSection => '视频库源';
+
+  @override
+  String get adminLibrarySourceAdd => '新建库源';
+
+  @override
+  String get adminLibrarySourcesEmpty => '尚无库源，点击\"新建库源\"在已启用的存储位置上建立';
+
+  @override
+  String get adminStorageStatusHealthy => '健康';
+
+  @override
   String get adminStorageFilterAll => '全部';
 
   @override

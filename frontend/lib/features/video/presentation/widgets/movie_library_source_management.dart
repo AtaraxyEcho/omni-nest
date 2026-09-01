@@ -33,9 +33,8 @@ class _LocalLibrarySourcesPanelState
           () => showDialog<void>(
             context: context,
             builder:
-                (context) => _VideoLibrarySourceDialog(
-                  locations: locations.requireValue,
-                ),
+                (context) =>
+                    VideoLibrarySourceDialog(locations: locations.requireValue),
           ),
     );
     final content = locations.when(
@@ -63,7 +62,7 @@ class _LocalLibrarySourcesPanelState
                         context: context,
                         builder:
                             (context) =>
-                                _VideoLibrarySourceDialog(locations: items),
+                                VideoLibrarySourceDialog(locations: items),
                       ),
                 );
               }
@@ -116,7 +115,7 @@ class _LocalLibrarySourcesPanelState
           () => showDialog<void>(
             context: context,
             builder:
-                (context) => _VideoLibrarySourceDialog(
+                (context) => VideoLibrarySourceDialog(
                   locations: locations,
                   source: selectedSource,
                 ),
@@ -153,7 +152,7 @@ class _LocalLibrarySourcesPanelState
               () => showDialog<void>(
                 context: context,
                 builder:
-                    (context) => _VideoLibrarySourceDialog(
+                    (context) => VideoLibrarySourceDialog(
                       locations: locations,
                       source: selectedSource,
                     ),

@@ -1,18 +1,22 @@
 part of 'movie_management.dart';
 
-class _VideoLibrarySourceDialog extends ConsumerStatefulWidget {
-  const _VideoLibrarySourceDialog({required this.locations, this.source});
+class VideoLibrarySourceDialog extends ConsumerStatefulWidget {
+  const VideoLibrarySourceDialog({
+    required this.locations,
+    this.source,
+    super.key,
+  });
 
   final List<VideoStorageLocation> locations;
   final VideoLibrarySource? source;
 
   @override
-  ConsumerState<_VideoLibrarySourceDialog> createState() =>
+  ConsumerState<VideoLibrarySourceDialog> createState() =>
       _VideoLibrarySourceDialogState();
 }
 
 class _VideoLibrarySourceDialogState
-    extends ConsumerState<_VideoLibrarySourceDialog> {
+    extends ConsumerState<VideoLibrarySourceDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _pathController;
   late String _locationId;
