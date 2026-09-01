@@ -29,7 +29,7 @@ void main() {
     final data = loaded;
     final initial = List<double>.of(data.cumulativeHeights);
     expect(initial, isNotEmpty);
-    expect(data.blocks.length, 200, reason: "段落与分隔线交错避免被合并");
+    expect(data.blocks.length, 200, reason: '段落与分隔线交错避免被合并');
 
     // 轮询等待分批任务收敛（每批让出一帧）
     var previous = initial;
