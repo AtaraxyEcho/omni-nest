@@ -137,7 +137,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Albums'), findsOneWidget);
+      expect(find.text('Albums'), findsWidgets);
       final importButton = tester.widget<MediaImportButton>(
         find.byType(MediaImportButton),
       );

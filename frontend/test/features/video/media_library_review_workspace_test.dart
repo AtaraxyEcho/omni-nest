@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/features/video/application/movie_controller.dart';
-import 'package:omninest/features/video/presentation/widgets/movie_common_widgets.dart';
 import 'package:omninest/features/video/domain/movie_management_models.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_management.dart';
 
@@ -42,18 +41,6 @@ const _readyRun = MediaScanRun(
   selectedCount: 2,
   appliedCount: 16,
   failedCount: 0,
-);
-
-MediaScanTreeNode _node(String id, String title) => MediaScanTreeNode(
-  nodeId: id,
-  nodeType: 'FILE',
-  title: title,
-  hasChildren: false,
-  childCount: 0,
-  candidateCount: 0,
-  selectedCount: 1,
-  issueCount: 0,
-  selectionState: 'SELECTED',
 );
 
 Future<void> _pump(
