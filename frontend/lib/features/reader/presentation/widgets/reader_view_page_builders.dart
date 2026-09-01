@@ -48,6 +48,8 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
   set pageModePage(int value);
   bool get isRestoringProgress;
   set isRestoringProgress(bool value);
+  DateTime get restoreSilenceUntil;
+  set restoreSilenceUntil(DateTime value);
   double get scrollProgress;
   set scrollProgress(double value);
   double? get pendingChapterProgress;
@@ -66,7 +68,6 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
   set modeSwitchAnchor(int? value);
   int get restoreTargetCharOffset;
   set restoreTargetCharOffset(int value);
-  DateTime get restoreSilenceUntil;
   bool get isSwitchingChapter;
   bool get isLoadingChapter;
   bool get selectionActive;
@@ -751,8 +752,18 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
           if (contentY == null || contentY <= 0) return 0;
           return (contentY - capturedAnchorY).clamp(0.0, max);
         },
-        onSettled: () {
-          positionTracker.setCharOffset(capturedCharOffset, currentChapterId);
+        isUserScrolling:
+            () =>
+                DateTime.now().difference(lastPointerDownTime).inMilliseconds <
+                300,
+        onSettled: (completed) {
+          if (completed) {
+            positionTracker.setCharOffset(capturedCharOffset, currentChapterId);
+          } else {
+            // 被用户滚动中断或超时：当前真实位置即事实，恢复静默窗口
+            // 让进度写入立即恢复，追踪由下一次滚动回调修正
+            restoreSilenceUntil = DateTime.fromMillisecondsSinceEpoch(0);
+          }
           isRestoringProgress = false;
           if (mounted) setState(() {});
         },
@@ -864,8 +875,12 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
           final max = scrollController.position.maxScrollExtent;
           return capturedRatio * max;
         },
-        onSettled: () {
-          if (scrollController.hasClients) {
+        isUserScrolling:
+            () =>
+                DateTime.now().difference(lastPointerDownTime).inMilliseconds <
+                300,
+        onSettled: (completed) {
+          if (completed && scrollController.hasClients) {
             final max = scrollController.position.maxScrollExtent;
             final data = contentLoader?.get(currentChapterId, settings);
             if (data != null && max > 0) {
@@ -887,6 +902,8 @@ mixin ReaderViewPageBuilders on ConsumerState<ReaderViewPage> {
                 charOffset: settledCharOffset,
               );
             }
+          } else if (!completed) {
+            restoreSilenceUntil = DateTime.fromMillisecondsSinceEpoch(0);
           }
           isRestoringProgress = false;
           if (mounted) setState(() {});

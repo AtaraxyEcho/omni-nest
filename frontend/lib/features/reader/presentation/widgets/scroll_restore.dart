@@ -57,20 +57,27 @@ class ScrollRestore {
   /// 使用 [addPostFrameCallback] 自循环，每帧检查偏移量与目标的偏差。
   /// 恢复完成或取消后自动停止调度，不会积累永久回调。
   ///
-  /// 等待布局超时放弃时也会触发 [onSettled]，调用方依赖它结束恢复态；
-  /// [cancel] 不触发回调，由调用方自行清理。
+  /// [onSettled] 在恢复流程结束时触发（无论是否到达目标）：参数为
+  /// true 表示已稳定到达目标位置；false 表示被 [isUserScrolling] 的
+  /// 用户主动滚动中断或超过 [totalTimeout]，此时调用方不得把恢复
+  /// 目标写入位置追踪，只能结束恢复态。[cancel] 不触发回调，由调用
+  /// 方自行清理。
   ///
   /// 恢复完成后进入监控期（[_monitorDuration]），期间如果 maxScrollExtent
-  /// 再次显著变化，会重新激活恢复。
+  /// 再次显著变化会重新激活恢复；maxScrollExtent 因图片渐进加载而持续
+  /// 变化时，用户活动探针与总超时保证循环必然终止。
   void start({
     required ScrollController scrollController,
     required double Function() targetOffsetBuilder,
-    required VoidCallback onSettled,
+    required ValueChanged<bool> onSettled,
+    bool Function()? isUserScrolling,
+    Duration totalTimeout = const Duration(seconds: 10),
   }) {
     _generation++;
     final myGeneration = _generation;
     _active = true;
     _monitoring = false;
+    final startedAt = DateTime.now();
 
     int stableFrames = 0;
     int pendingFrames = 0;
@@ -84,6 +91,21 @@ class ScrollRestore {
     void tick() {
       // 检查是否应继续
       if (!_active || myGeneration != _generation) return;
+      // 用户主动滚动（滚轮/拖动/点击）立即让位，绝不与用户争抢滚动位置
+      if (isUserScrolling != null && isUserScrolling()) {
+        _active = false;
+        _monitoring = false;
+        onSettled(false);
+        return;
+      }
+      // 总时长硬上限：图片渐进加载等导致 maxScrollExtent 持续变化时，
+      // 重新激活分支会无限 jumpTo 拉回用户位置，必须整体兜底
+      if (DateTime.now().difference(startedAt) > totalTimeout) {
+        _active = false;
+        _monitoring = false;
+        onSettled(false);
+        return;
+      }
       if (!scrollController.hasClients) {
         pendingFrames++;
         if (pendingFrames >= maxPendingFrames) {
@@ -91,7 +113,7 @@ class ScrollRestore {
           if (kDebugMode) {
             readerDebugLog('ScrollRestore: timed out waiting for layout');
           }
-          onSettled();
+          onSettled(false);
           return;
         }
         SchedulerBinding.instance.addPostFrameCallback((_) => tick());
@@ -106,7 +128,7 @@ class ScrollRestore {
           if (kDebugMode) {
             readerDebugLog('ScrollRestore: timed out, maxScrollExtent <= 0');
           }
-          onSettled();
+          onSettled(false);
           return;
         }
         SchedulerBinding.instance.addPostFrameCallback((_) => tick());
@@ -143,7 +165,7 @@ class ScrollRestore {
             settled = true;
             settledAt = DateTime.now();
             _monitoring = true;
-            onSettled();
+            onSettled(true);
             if (kDebugMode) {
               readerDebugLog(
                 'ScrollRestore: settled, entering monitor period '

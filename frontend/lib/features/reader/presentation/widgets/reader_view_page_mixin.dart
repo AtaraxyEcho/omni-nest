@@ -713,7 +713,19 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
     return scrollProgress;
   }
 
+  DateTime? _lastServerSyncAt;
+  double? _lastSyncedProgress;
+  String? _lastSyncedChapterId;
+  int? _lastSyncedCharOffset;
+
+  /// 服务端同步最小间隔；期间仅在位置显著变化时才上报。
+  static const _serverSyncMinInterval = Duration(seconds: 20);
+
   /// 异步同步进度到本地和服务端。
+  ///
+  /// 服务端采用主流阅读器的节流策略：本地写入保持连续（协调器合并），
+  /// 上报仅在「距上次超过最小间隔且位置确有变化」或 force 时执行，
+  /// 避免滚动/点击逐次产生请求；章节切换等强一致场景传 force。
   Future<void> syncProgressAsync({
     double? progressOverride,
     bool force = false,
@@ -761,6 +773,23 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
       return;
     }
 
+    // 节流判定：未跨过最小间隔且位置变化不显著时不上报
+    final now = DateTime.now();
+    final lastAt = _lastServerSyncAt;
+    final movedEnough =
+        snapshot.chapterId != _lastSyncedChapterId ||
+        (snapshot.charOffset - (_lastSyncedCharOffset ?? -1)).abs() >= 64 ||
+        (snapshot.progress - (_lastSyncedProgress ?? -1)).abs() >= 0.002;
+    if (!force &&
+        (now.difference(lastAt ?? DateTime.fromMillisecondsSinceEpoch(0)) <
+                _serverSyncMinInterval ||
+            !movedEnough)) {
+      return;
+    }
+    _lastServerSyncAt = now;
+    _lastSyncedProgress = snapshot.progress;
+    _lastSyncedChapterId = snapshot.chapterId;
+    _lastSyncedCharOffset = snapshot.charOffset;
     await ref
         .read(readerProgressSyncServiceProvider)
         .sync(
@@ -936,6 +965,7 @@ mixin ReaderViewPageMixin on ConsumerState<ReaderViewPage> {
           chapterId: currentSnapshot.chapterId,
           charOffset: currentSnapshot.charOffset,
           generation: syncGeneration,
+          force: true,
         ),
       );
     }

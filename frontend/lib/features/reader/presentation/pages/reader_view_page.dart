@@ -12,6 +12,7 @@ import 'package:omninest/core/utils/platform_helper.dart';
 import 'package:omninest/core/window/window_chrome_controller.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/features/reader/application/reader_chapter_load_coordinator.dart';
+import 'package:omninest/features/reader/application/reader_progress_sync_service.dart';
 import 'package:omninest/features/reader/application/reader_controller.dart';
 import 'package:omninest/features/reader/application/reader_local_progress.dart';
 import 'package:omninest/features/reader/application/reader_progress_save_coordinator.dart';
@@ -548,9 +549,12 @@ class _ReaderViewPageState extends ConsumerState<ReaderViewPage>
     );
   }
 
+  late ReaderProgressSyncService _progressSync;
+
   @override
   void initState() {
     super.initState();
+    _progressSync = ref.read(readerProgressSyncServiceProvider);
     _windowChromeController = ref.read(windowChromeControllerProvider.notifier);
     _progressSaveCoordinator = ReaderProgressSaveCoordinator(
       writer: (snapshot) async {
@@ -626,6 +630,16 @@ class _ReaderViewPageState extends ConsumerState<ReaderViewPage>
           chapterId: _currentChapterId,
           charOffset: charOffset,
           chapterProgress: progress,
+        );
+        // 退出时向服务端强制补报最终位置（节流不适用于离场）
+        unawaited(
+          _progressSync.sync(
+            itemId: widget.itemId,
+            charOffset: charOffset,
+            progressPercent: progress,
+            readingMode: 'scroll',
+            chapterId: _currentChapterId,
+          ),
         );
       }
     }
