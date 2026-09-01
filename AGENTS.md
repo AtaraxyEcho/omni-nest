@@ -59,7 +59,7 @@ deploy/       dev/prod Docker Compose、环境模板与共享镜像定义
 - File 模块拥有内容定位、Provider 选择、权限预检、流式读取、Range 读取和受控 staging 能力。
 - Video 首期允许管理员登记 `LOCAL_FILESYSTEM` 只读影视库来源；扫描建立 FileNode、内容引用和影视元数据，不复制大型原影片到 MinIO。
 - LOCAL 来源只读，不具备 FileManager 重命名、移动、删除、复制、分享、版本、备份和离线下载语义。用户显式永久导入后才转为 MinIO 托管能力。
-- Video、Music、Photos、Reader 等业务模块只持有业务 ID 和能力结果，不得直接使用 `Path`、MinIO Client、Rclone Gateway、bucket/object key 或客户端传入的绝对路径。
+- Video、Music、Photos、Reader 等业务模块只持有业务 ID 和能力结果，不得直接使用 `Path`、MinIO Client、Rclone Gateway、bucket/object key 或客户端传入的绝对路径。例外：业务服务内通过 `Files.createTempFile` 创建的自有临时文件与 Lucene 本地索引目录不在此限。
 - 业务模块必须通过 File 模块的统一内容访问接口读取内容，并按 Provider 能力决定是否允许 Range、写入、分享、版本、备份和跨节点访问。
 - 本地来源只能由管理员通过部署白名单的 `mountKey` 创建。数据库、API 和客户端不得保存或暴露宿主机绝对路径。
 - LOCAL 来源必须拒绝 `..`、绝对路径、盘符、UNC、NUL、控制字符、符号链接、junction、reparse point 和根目录逃逸；访问前再次验证规范化真实路径位于允许根目录内。
@@ -68,7 +68,7 @@ deploy/       dev/prod Docker Compose、环境模板与共享镜像定义
 ## 后端架构与 Java 规范
 
 - 后端保持模块化单体和单镜像多运行角色，通过 `SPRING_PROFILES_ACTIVE` 或 `OMNINEST_ROLE=api|worker|scheduler` 区分角色；不得默认拆分微服务。
-- `controller` 只能调用本模块 service 或明确暴露的 application service；`repository` 不得跨模块调用；跨模块协作优先使用 service 接口或领域事件；`common` 不依赖业务模块。
+- `controller` 只能调用本模块 service 或明确暴露的 application service；`repository` 不得跨模块调用（业务仓储 JPQL 中 JOIN File 模块实体的既有写法属既有约定，予以豁免）；跨模块协作优先使用 service 接口或领域事件；`common` 不依赖业务模块。
 - Worker Consumer 只负责消息编排、幂等检查和任务状态转换，复杂业务必须在 Service 中实现。
 - REST 统一前缀为 `/api/v1`，分页使用 `page`、`size`、`sort`，响应使用 `ApiResponse` 和稳定错误码。写接口返回业务对象或 `taskId`，批量操作返回逐项结果，并同步 SpringDoc 注解。
 - Java 使用 Java 21、Maven、Spring Boot、Spring Security、JPA/Hibernate、Flyway、AMQP、Redis、Lucene、Tika、MinIO SDK 与 SpringDoc。关键依赖无法兼容时必须说明临时版本策略与升级路径。

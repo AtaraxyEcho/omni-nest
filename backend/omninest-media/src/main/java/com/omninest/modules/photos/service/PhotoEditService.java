@@ -111,7 +111,7 @@ public class PhotoEditService {
         photoItemRepository.save(photo);
 
         // 清理超出上限的旧版本
-        enforceMaxVersions(photoId);
+        enforceMaxVersions(ownerUserId, photoId);
 
         syncEventService.record(
                 ownerUserId,
@@ -344,12 +344,22 @@ public class PhotoEditService {
         return op.filter(image, null);
     }
 
-    private void enforceMaxVersions(UUID photoId) {
+    private void enforceMaxVersions(UUID ownerUserId, UUID photoId) {
         List<PhotoEditVersion> versions = editVersionRepository.findByPhotoIdOrderByVersionNumberDesc(photoId);
         if (versions.size() <= maxHistoryVersions) {
             return;
         }
         List<PhotoEditVersion> toDelete = versions.subList(maxHistoryVersions, versions.size());
+        // 同步清理已删除版本的派生文件，避免 MinIO 孤儿对象。
+        for (PhotoEditVersion version : toDelete) {
+            if (version.getFileId() != null) {
+                try {
+                    derivedAssetStorageService.deleteOwned(ownerUserId, version.getFileId());
+                } catch (RuntimeException ex) {
+                    log.warn("旧编辑版本派生文件清理失败: versionId={}, fileId={}", version.getId(), version.getFileId(), ex);
+                }
+            }
+        }
         editVersionRepository.deleteAll(toDelete);
     }
 
