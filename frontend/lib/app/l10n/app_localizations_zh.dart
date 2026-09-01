@@ -3252,6 +3252,70 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminStorageManagement => '存储管理';
 
   @override
+  String get adminStorageFilterAll => '全部';
+
+  @override
+  String get adminStorageFilterEnabled => '已启用';
+
+  @override
+  String get adminStorageFilterDisabled => '已停用';
+
+  @override
+  String get adminStorageFilterUnhealthy => '异常';
+
+  @override
+  String get adminStorageEmptyList => '没有符合条件的存储位置';
+
+  @override
+  String get adminStorageDetailHint => '选择左侧存储位置查看详情';
+
+  @override
+  String get adminStorageStatusDisabled => '已停用';
+
+  @override
+  String get adminStorageDisableConfirmTitle => '停用存储位置';
+
+  @override
+  String adminStorageDisableConfirmBody(Object name) {
+    return '停用后\"$name\"将不再参与扫描与媒体读取，可随时重新启用。';
+  }
+
+  @override
+  String get adminStorageDisableAction => '停用';
+
+  @override
+  String get adminStorageEnableAction => '启用';
+
+  @override
+  String get adminStorageDeleteConfirmTitle => '删除存储位置';
+
+  @override
+  String adminStorageDeleteConfirmBody(Object name) {
+    return '将永久移除\"$name\"的登记信息，已入库内容不受影响。';
+  }
+
+  @override
+  String get adminStorageDeleteAction => '删除';
+
+  @override
+  String get adminStorageFieldPath => '路径';
+
+  @override
+  String get adminStorageFieldScope => '空间';
+
+  @override
+  String get adminStorageFieldProvider => '提供方';
+
+  @override
+  String get adminStorageFieldManagement => '管理模式';
+
+  @override
+  String get adminStorageFieldNode => '节点';
+
+  @override
+  String get adminStorageParentDir => '上一级';
+
+  @override
   String get adminStorageManagementSubtitle => '管理 MinIO 桶、容量与索引维护。';
 
   @override

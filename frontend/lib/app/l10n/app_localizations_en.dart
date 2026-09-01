@@ -3366,6 +3366,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminStorageManagement => 'Storage Management';
 
   @override
+  String get adminStorageFilterAll => 'All';
+
+  @override
+  String get adminStorageFilterEnabled => 'Enabled';
+
+  @override
+  String get adminStorageFilterDisabled => 'Disabled';
+
+  @override
+  String get adminStorageFilterUnhealthy => 'Unhealthy';
+
+  @override
+  String get adminStorageEmptyList => 'No storage locations match the filter';
+
+  @override
+  String get adminStorageDetailHint =>
+      'Select a storage location to view details';
+
+  @override
+  String get adminStorageStatusDisabled => 'Disabled';
+
+  @override
+  String get adminStorageDisableConfirmTitle => 'Disable storage location';
+
+  @override
+  String adminStorageDisableConfirmBody(Object name) {
+    return 'Scanning and media access stop for \"$name\" until you enable it again.';
+  }
+
+  @override
+  String get adminStorageDisableAction => 'Disable';
+
+  @override
+  String get adminStorageEnableAction => 'Enable';
+
+  @override
+  String get adminStorageDeleteConfirmTitle => 'Delete storage location';
+
+  @override
+  String adminStorageDeleteConfirmBody(Object name) {
+    return 'This permanently removes the \"$name\" registration. Imported content is not affected.';
+  }
+
+  @override
+  String get adminStorageDeleteAction => 'Delete';
+
+  @override
+  String get adminStorageFieldPath => 'Path';
+
+  @override
+  String get adminStorageFieldScope => 'Scope';
+
+  @override
+  String get adminStorageFieldProvider => 'Provider';
+
+  @override
+  String get adminStorageFieldManagement => 'Management';
+
+  @override
+  String get adminStorageFieldNode => 'Node';
+
+  @override
+  String get adminStorageParentDir => 'Up one level';
+
+  @override
   String get adminStorageManagementSubtitle =>
       'Manage MinIO buckets, capacity, and index maintenance.';
 

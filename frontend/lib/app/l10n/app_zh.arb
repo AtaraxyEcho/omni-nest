@@ -1272,6 +1272,40 @@
   "adminNoDlqTasks": "暂无死信任务",
   "adminNoErrorSummary": "无错误摘要",
   "adminStorageManagement": "存储管理",
+  "adminStorageFilterAll": "全部",
+  "adminStorageFilterEnabled": "已启用",
+  "adminStorageFilterDisabled": "已停用",
+  "adminStorageFilterUnhealthy": "异常",
+  "adminStorageEmptyList": "没有符合条件的存储位置",
+  "adminStorageDetailHint": "选择左侧存储位置查看详情",
+  "adminStorageStatusDisabled": "已停用",
+  "adminStorageDisableConfirmTitle": "停用存储位置",
+  "adminStorageDisableConfirmBody": "停用后\"{name}\"将不再参与扫描与媒体读取，可随时重新启用。",
+  "@adminStorageDisableConfirmBody": {
+    "placeholder": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStorageDisableAction": "停用",
+  "adminStorageEnableAction": "启用",
+  "adminStorageDeleteConfirmTitle": "删除存储位置",
+  "adminStorageDeleteConfirmBody": "将永久移除\"{name}\"的登记信息，已入库内容不受影响。",
+  "@adminStorageDeleteConfirmBody": {
+    "placeholder": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStorageDeleteAction": "删除",
+  "adminStorageFieldPath": "路径",
+  "adminStorageFieldScope": "空间",
+  "adminStorageFieldProvider": "提供方",
+  "adminStorageFieldManagement": "管理模式",
+  "adminStorageFieldNode": "节点",
+  "adminStorageParentDir": "上一级",
   "adminStorageManagementSubtitle": "管理 MinIO 桶、容量与索引维护。",
   "adminBucketConfig": "桶配置",
   "adminMinioBuckets": "MinIO Buckets",
@@ -2462,7 +2496,6 @@
   },
   "photosGraphLoadMore": "加载更多",
   "photosGraphTruncated": "关系较多，仅展示部分节点与连线。",
-
   "photosGroupByDate": "时间",
   "photosGroupByLocation": "位置",
   "photosGroupByFormat": "格式",

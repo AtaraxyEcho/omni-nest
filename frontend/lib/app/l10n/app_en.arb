@@ -1398,6 +1398,40 @@
   "adminNoDlqTasks": "No DLQ tasks",
   "adminNoErrorSummary": "No error summary",
   "adminStorageManagement": "Storage Management",
+  "adminStorageFilterAll": "All",
+  "adminStorageFilterEnabled": "Enabled",
+  "adminStorageFilterDisabled": "Disabled",
+  "adminStorageFilterUnhealthy": "Unhealthy",
+  "adminStorageEmptyList": "No storage locations match the filter",
+  "adminStorageDetailHint": "Select a storage location to view details",
+  "adminStorageStatusDisabled": "Disabled",
+  "adminStorageDisableConfirmTitle": "Disable storage location",
+  "adminStorageDisableConfirmBody": "Scanning and media access stop for \"{name}\" until you enable it again.",
+  "@adminStorageDisableConfirmBody": {
+    "placeholder": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStorageDisableAction": "Disable",
+  "adminStorageEnableAction": "Enable",
+  "adminStorageDeleteConfirmTitle": "Delete storage location",
+  "adminStorageDeleteConfirmBody": "This permanently removes the \"{name}\" registration. Imported content is not affected.",
+  "@adminStorageDeleteConfirmBody": {
+    "placeholder": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adminStorageDeleteAction": "Delete",
+  "adminStorageFieldPath": "Path",
+  "adminStorageFieldScope": "Scope",
+  "adminStorageFieldProvider": "Provider",
+  "adminStorageFieldManagement": "Management",
+  "adminStorageFieldNode": "Node",
+  "adminStorageParentDir": "Up one level",
   "adminStorageManagementSubtitle": "Manage MinIO buckets, capacity, and index maintenance.",
   "adminBucketConfig": "Bucket Config",
   "adminMinioBuckets": "MinIO Buckets",
@@ -2588,7 +2622,6 @@
   },
   "photosGraphLoadMore": "Load more",
   "photosGraphTruncated": "Large graph: showing a subset of nodes and links.",
-
   "photosGroupByDate": "Time",
   "photosGroupByLocation": "Places",
   "photosGroupByFormat": "Formats",

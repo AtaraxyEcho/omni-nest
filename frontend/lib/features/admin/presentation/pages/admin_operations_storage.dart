@@ -1,12 +1,48 @@
 part of 'admin_operations_pages.dart';
 
-class AdminStoragePage extends ConsumerWidget {
+enum _StorageStatusFilter { all, enabled, disabled, unhealthy }
+
+bool _storageHealthy(AdminStorageLocation location) =>
+    location.healthStatus.toUpperCase() == 'HEALTHY';
+
+class AdminStoragePage extends ConsumerStatefulWidget {
   const AdminStoragePage({required this.view, super.key});
 
   final AdminStorageManagementView view;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminStoragePage> createState() => _AdminStoragePageState();
+}
+
+class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
+  _StorageStatusFilter _statusFilter = _StorageStatusFilter.all;
+  String? _selectedLocationId;
+
+  List<AdminStorageLocation> _filteredLocations(
+    List<AdminStorageLocation> locations,
+    String query,
+  ) {
+    final normalizedQuery = query.toLowerCase();
+    return locations.where((location) {
+      final matchesQuery =
+          normalizedQuery.isEmpty ||
+          location.name.toLowerCase().contains(normalizedQuery) ||
+          location.mountKey.toLowerCase().contains(normalizedQuery) ||
+          location.relativeRoot.toLowerCase().contains(normalizedQuery);
+      if (!matchesQuery) {
+        return false;
+      }
+      return switch (_statusFilter) {
+        _StorageStatusFilter.all => true,
+        _StorageStatusFilter.enabled => location.enabled,
+        _StorageStatusFilter.disabled => !location.enabled,
+        _StorageStatusFilter.unhealthy => !_storageHealthy(location),
+      };
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final canManageStorage =
         ref
@@ -18,16 +54,70 @@ class AdminStoragePage extends ConsumerWidget {
             .contains('system:config:manage') ??
         false;
     final query = ref.watch(adminSearchProvider).toLowerCase();
-    final filteredBuckets =
-        query.isEmpty
-            ? view.buckets
-            : view.buckets
-                .where(
-                  (bucket) =>
-                      bucket.name.toLowerCase().contains(query) ||
-                      bucket.purpose.toLowerCase().contains(query),
-                )
-                .toList();
+    final locations = _filteredLocations(widget.view.locations, query);
+    final selected =
+        widget.view.locations
+            .where((location) => location.id == _selectedLocationId)
+            .firstOrNull;
+    final wideLayout = MediaQuery.sizeOf(context).width >= 1080;
+
+    final listSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final filter in _StorageStatusFilter.values)
+              ChoiceChip(
+                label: Text(switch (filter) {
+                  _StorageStatusFilter.all => l10n.adminStorageFilterAll,
+                  _StorageStatusFilter.enabled =>
+                    l10n.adminStorageFilterEnabled,
+                  _StorageStatusFilter.disabled =>
+                    l10n.adminStorageFilterDisabled,
+                  _StorageStatusFilter.unhealthy =>
+                    l10n.adminStorageFilterUnhealthy,
+                }),
+                selected: _statusFilter == filter,
+                onSelected: (_) => setState(() => _statusFilter = filter),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (locations.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: Text(
+                l10n.adminStorageEmptyList,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          )
+        else
+          ...locations.map(
+            (location) => _StorageLocationRow(
+              location: location,
+              selected: location.id == _selectedLocationId,
+              onTap: () => setState(() => _selectedLocationId = location.id),
+            ),
+          ),
+      ],
+    );
+
+    final detailSection =
+        selected == null
+            ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Center(
+                child: Text(
+                  l10n.adminStorageDetailHint,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            )
+            : _StorageDetailPanel(location: selected);
+
     return _PageEntrance(
       children: [
         AdminPageHeader(
@@ -47,223 +137,315 @@ class AdminStoragePage extends ConsumerWidget {
                       () => showDialog<void>(
                         context: context,
                         builder:
-                            (context) => _StorageLocationDialog(
-                              mounts: view.trustedMounts,
+                            (context) => _StorageLocationWizard(
+                              mounts: widget.view.trustedMounts,
                             ),
                       ),
-                  icon: const Icon(Icons.create_new_folder_outlined),
+                  icon: const Icon(Icons.add_rounded),
                   label: Text(l10n.adminAddLocalStorageLocation),
                 ),
-              FilledButton.tonalIcon(
-                onPressed: () async {
-                  try {
-                    final count =
-                        await ref
-                            .read(adminOperationsActionsProvider)
-                            .recalculateStorage();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.adminRecalculateDone('$count')),
-                        ),
-                      );
-                    }
-                  } on Exception catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.adminLoadFailed('$e'))),
-                      );
-                    }
-                  }
-                },
-                icon: const Icon(Icons.calculate_outlined),
-                label: Text(l10n.adminRecalculate),
-              ),
-              FilledButton.tonalIcon(
-                onPressed: () async {
-                  try {
-                    final cleared =
-                        await ref
-                            .read(adminOperationsActionsProvider)
-                            .rebuildSearchIndex();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.adminRebuildIndexDone('$cleared')),
-                        ),
-                      );
-                    }
-                  } on Exception catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.adminLoadFailed('$e'))),
-                      );
-                    }
-                  }
-                },
-                icon: const Icon(Icons.manage_search_rounded),
-                label: Text(l10n.adminRebuildIndex),
-              ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        _MetricGrid(
-          children: [
-            AdminMetricCard(
-              title: l10n.adminBucketConfig,
-              value: view.buckets.length.toString(),
-              detail: l10n.adminMinioBuckets,
-              icon: Icons.cloud_queue_rounded,
+        if (wideLayout)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 5, child: listSection),
+              const SizedBox(width: 24),
+              VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
+              const SizedBox(width: 24),
+              Expanded(flex: 3, child: detailSection),
+            ],
+          )
+        else ...[
+          listSection,
+          if (selected != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: detailSection,
             ),
-            AdminMetricCard(
-              title: l10n.adminLocalStorageLocations,
-              value: view.locations.length.toString(),
-              detail: l10n.adminReadOnlyMediaMounts,
-              icon: Icons.folder_copy_outlined,
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        AdminInfoPanel(
-          title: l10n.adminLocalStorageLocations,
-          subtitle: l10n.adminLocalStorageLocationsSubtitle,
-          children:
-              view.locations.isEmpty
-                  ? [_EmptyText(l10n.adminNoLocalStorageLocations)]
-                  : [
-                    for (final location in view.locations)
-                      _StorageLocationRow(
-                        location: location,
-                        canManage: canManageStorage,
-                      ),
-                  ],
-        ),
-        const SizedBox(height: 24),
-        AdminInfoPanel(
-          title: l10n.adminObjectBuckets,
-          subtitle: l10n.adminObjectBucketsSubtitle,
-          children:
-              filteredBuckets.isEmpty
-                  ? [
-                    _EmptyText(
-                      query.isEmpty
-                          ? l10n.adminNoBucketConfig
-                          : l10n.adminNoMatch,
-                    ),
-                  ]
-                  : [
-                    for (final bucket in filteredBuckets)
-                      _InfoRow(
-                        leading: bucket.name,
-                        middle: bucket.purpose,
-                        trailing: AdminStatusPill(label: bucket.status),
-                      ),
-                  ],
-        ),
+        ],
       ],
     );
   }
 }
 
-class _StorageLocationRow extends ConsumerWidget {
-  const _StorageLocationRow({required this.location, required this.canManage});
+class _StorageLocationRow extends StatelessWidget {
+  const _StorageLocationRow({
+    required this.location,
+    required this.selected,
+    required this.onTap,
+  });
 
   final AdminStorageLocation location;
-  final bool canManage;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final healthy = _storageHealthy(location);
+    final statusColor =
+        !location.enabled
+            ? colors.outline
+            : (healthy ? Colors.green.shade600 : colors.tertiary);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? colors.surfaceContainerHighest : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.circle, size: 10, color: statusColor),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 3,
+              child: Text(
+                location.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(
+                location.mountKey,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            Expanded(
+              flex: 4,
+              child: Text(
+                location.relativeRoot,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              location.enabled
+                  ? location.healthStatus
+                  : AppLocalizations.of(context).adminStorageStatusDisabled,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StorageDetailPanel extends ConsumerWidget {
+  const _StorageDetailPanel({required this.location});
+
+  final AdminStorageLocation location;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(
-            location.healthStatus == 'AVAILABLE'
-                ? Icons.folder_open_rounded
-                : Icons.folder_off_outlined,
-            color:
-                location.healthStatus == 'AVAILABLE'
-                    ? context.adminColors.success
-                    : Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  location.name,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+    final canManage =
+        ref
+            .watch(authSessionProvider)
+            .asData
+            ?.value
+            .user
+            ?.permissions
+            .contains('system:config:manage') ??
+        false;
+    final colors = Theme.of(context).colorScheme;
+    final healthy = _storageHealthy(location);
+    final statusColor =
+        !location.enabled
+            ? colors.outline
+            : (healthy ? Colors.green.shade600 : colors.tertiary);
+
+    Future<void> toggleEnabled(bool enabled) async {
+      if (!enabled) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder:
+              (dialogContext) => AlertDialog(
+                title: Text(l10n.adminStorageDisableConfirmTitle),
+                content: Text(
+                  l10n.adminStorageDisableConfirmBody(location.name),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  '${location.mountKey} · ${location.relativeRoot} · ${location.nodeId}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: Text(l10n.adminCancel),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: Text(l10n.adminStorageDisableAction),
+                  ),
+                ],
+              ),
+        );
+        if (confirmed != true) {
+          return;
+        }
+      }
+      try {
+        await ref
+            .read(adminOperationsActionsProvider)
+            .updateStorageLocation(location: location, enabled: enabled);
+      } on Exception catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
+          );
+        }
+      }
+    }
+
+    Future<void> deleteLocation() async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder:
+            (dialogContext) => AlertDialog(
+              title: Text(l10n.adminStorageDeleteConfirmTitle),
+              content: Text(l10n.adminStorageDeleteConfirmBody(location.name)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l10n.adminCancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(l10n.adminStorageDeleteAction),
                 ),
               ],
             ),
+      );
+      if (confirmed != true) {
+        return;
+      }
+      try {
+        await ref
+            .read(adminOperationsActionsProvider)
+            .deleteStorageLocation(location.id);
+      } on Exception catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
+          );
+        }
+      }
+    }
+
+    String fieldLabel(String label, String value) => '$label: $value';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.circle, size: 10, color: statusColor),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  location.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              AdminStatusPill(label: location.healthStatus),
+            ],
           ),
-          AdminStatusPill(label: location.healthStatus),
-          const SizedBox(width: 8),
-          Switch.adaptive(
-            value: location.enabled,
-            onChanged:
-                canManage
-                    ? (enabled) => ref
-                        .read(adminOperationsActionsProvider)
-                        .updateStorageLocation(
-                          location: location,
-                          enabled: enabled,
-                        )
-                    : null,
+          const Divider(height: 24),
+          Text(
+            fieldLabel(l10n.adminMountKey, location.mountKey),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
-          IconButton(
-            onPressed:
-                canManage
-                    ? () async {
-                      try {
-                        await ref
-                            .read(adminOperationsActionsProvider)
-                            .deleteStorageLocation(location.id);
-                      } on Exception catch (error) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.adminLoadFailed('$error')),
-                            ),
-                          );
-                        }
-                      }
-                    }
-                    : null,
-            tooltip: l10n.adminDeleteLocalStorageLocation,
-            icon: const Icon(Icons.delete_outline_rounded),
+          const SizedBox(height: 6),
+          Text(
+            fieldLabel(l10n.adminStorageFieldPath, location.relativeRoot),
+            style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(height: 6),
+          Text(
+            fieldLabel(l10n.adminStorageFieldScope, location.scopeType),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            fieldLabel(l10n.adminStorageFieldProvider, location.providerType),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            fieldLabel(
+              l10n.adminStorageFieldManagement,
+              location.managementMode,
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            fieldLabel(l10n.adminStorageFieldNode, location.nodeId),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (canManage) ...[
+            const Divider(height: 24),
+            Wrap(
+              spacing: 8,
+              children: [
+                location.enabled
+                    ? OutlinedButton.icon(
+                      onPressed: () => toggleEnabled(false),
+                      icon: const Icon(Icons.pause_circle_outline_rounded),
+                      label: Text(l10n.adminStorageDisableAction),
+                    )
+                    : FilledButton.tonalIcon(
+                      onPressed: () => toggleEnabled(true),
+                      icon: const Icon(Icons.play_circle_outline_rounded),
+                      label: Text(l10n.adminStorageEnableAction),
+                    ),
+                OutlinedButton.icon(
+                  onPressed: deleteLocation,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: Text(l10n.adminStorageDeleteAction),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _StorageLocationDialog extends ConsumerStatefulWidget {
-  const _StorageLocationDialog({required this.mounts});
+class _StorageLocationWizard extends ConsumerStatefulWidget {
+  const _StorageLocationWizard({required this.mounts});
 
   final List<AdminTrustedMount> mounts;
 
   @override
-  ConsumerState<_StorageLocationDialog> createState() =>
-      _StorageLocationDialogState();
+  ConsumerState<_StorageLocationWizard> createState() =>
+      _StorageLocationWizardState();
 }
 
-class _StorageLocationDialogState
-    extends ConsumerState<_StorageLocationDialog> {
+class _StorageLocationWizardState
+    extends ConsumerState<_StorageLocationWizard> {
   final _nameController = TextEditingController();
-  final _relativeRootController = TextEditingController(text: '.');
   String? _mountKey;
+  String? _parent;
   bool _saving = false;
 
   @override
@@ -276,17 +458,43 @@ class _StorageLocationDialogState
   @override
   void dispose() {
     _nameController.dispose();
-    _relativeRootController.dispose();
     super.dispose();
+  }
+
+  Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
+    final name = _nameController.text.trim();
+    final mountKey = _mountKey;
+    final relativeRoot = _parent ?? '.';
+    if (name.isEmpty || mountKey == null) return;
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(adminOperationsActionsProvider)
+          .createStorageLocation(
+            name: name,
+            mountKey: mountKey,
+            relativeRoot: relativeRoot,
+          );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on Exception catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final current = _parent ?? '.';
     return AlertDialog(
       title: Text(l10n.adminAddLocalStorageLocation),
       content: SizedBox(
-        width: 440,
+        width: 480,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,41 +525,114 @@ class _StorageLocationDialogState
               onChanged:
                   _saving
                       ? null
-                      : (value) => setState(() {
-                        _mountKey = value;
-                        _relativeRootController.text = '.';
-                      }),
+                      : (value) {
+                        setState(() {
+                          _mountKey = value;
+                          _parent = null;
+                        });
+                      },
               decoration: InputDecoration(
                 labelText: l10n.adminMountKey,
                 helperText: l10n.adminMountKeyHint,
               ),
             ),
-            if (_mountKey == null) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.adminTrustedMountUnavailable,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
             const SizedBox(height: 14),
-            TextField(
-              controller: _relativeRootController,
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: l10n.adminRelativeRoot,
-                helperText: l10n.adminRelativeRootHint,
-                suffixIcon: IconButton(
-                  tooltip: l10n.adminChooseRelativeFolder,
+            Row(
+              children: [
+                Text(
+                  l10n.adminStorageFieldPath,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    current,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                IconButton(
+                  tooltip: l10n.coreBack,
                   onPressed:
-                      _saving || _mountKey == null ? null : _chooseRelativeRoot,
-                  icon: const Icon(Icons.folder_open_outlined),
+                      current != '.' && !_saving
+                          ? () => setState(() {
+                            final separator = current.lastIndexOf('/');
+                            _parent =
+                                separator < 0
+                                    ? null
+                                    : current.substring(0, separator);
+                          })
+                          : null,
+                  icon: const Icon(Icons.arrow_upward_rounded, size: 20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    final directoryAsync = ref.watch(
+                      adminMountDirectoriesProvider((
+                        mountKey: _mountKey ?? '',
+                        parent: _parent,
+                      )),
+                    );
+                    return directoryAsync.when(
+                      loading:
+                          () => const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                      error:
+                          (error, _) => Center(
+                            child: Text(l10n.adminLoadFailed(error.toString())),
+                          ),
+                      data:
+                          (directories) =>
+                              directories.isEmpty
+                                  ? Center(child: Text(l10n.adminNoSubfolders))
+                                  : ListView.builder(
+                                    itemCount: directories.length,
+                                    itemBuilder: (context, index) {
+                                      final directory = directories[index];
+                                      return ListTile(
+                                        dense: true,
+                                        leading: const Icon(
+                                          Icons.folder_outlined,
+                                          size: 20,
+                                        ),
+                                        title: Text(
+                                          directory.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        subtitle: Text(
+                                          directory.relativePath,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        onTap:
+                                            _saving
+                                                ? null
+                                                : () => setState(
+                                                  () =>
+                                                      _parent =
+                                                          directory
+                                                              .relativePath,
+                                                ),
+                                      );
+                                    },
+                                  ),
+                    );
+                  },
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              l10n.adminLocalStorageSecurityHint,
-              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -363,177 +644,6 @@ class _StorageLocationDialogState
         ),
         FilledButton(
           onPressed: _saving ? null : _save,
-          child:
-              _saving
-                  ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : Text(l10n.adminCreate),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _save() async {
-    final l10n = AppLocalizations.of(context);
-    final name = _nameController.text.trim();
-    final mountKey = _mountKey;
-    final relativeRoot = _relativeRootController.text.trim();
-    if (name.isEmpty || mountKey == null || relativeRoot.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.adminLocalStorageRequiredFields)),
-      );
-      return;
-    }
-    setState(() => _saving = true);
-    try {
-      await ref
-          .read(adminOperationsActionsProvider)
-          .createStorageLocation(
-            name: name,
-            mountKey: mountKey,
-            relativeRoot: relativeRoot,
-          );
-      if (mounted) Navigator.of(context).pop();
-    } on Exception catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.adminLoadFailed('$error'))));
-      }
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  Future<void> _chooseRelativeRoot() async {
-    final mountKey = _mountKey;
-    if (mountKey == null) {
-      return;
-    }
-    final selected = await showDialog<String>(
-      context: context,
-      builder: (context) => _MountDirectoryPickerDialog(mountKey: mountKey),
-    );
-    if (!mounted || selected == null) {
-      return;
-    }
-    _relativeRootController.text = selected;
-  }
-}
-
-class _MountDirectoryPickerDialog extends ConsumerStatefulWidget {
-  const _MountDirectoryPickerDialog({required this.mountKey});
-
-  final String mountKey;
-
-  @override
-  ConsumerState<_MountDirectoryPickerDialog> createState() =>
-      _MountDirectoryPickerDialogState();
-}
-
-class _MountDirectoryPickerDialogState
-    extends ConsumerState<_MountDirectoryPickerDialog> {
-  String? _parent;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final directories = ref.watch(
-      adminMountDirectoriesProvider((
-        mountKey: widget.mountKey,
-        parent: _parent,
-      )),
-    );
-    final current = _parent ?? '.';
-    return AlertDialog(
-      title: Text(l10n.adminChooseRelativeFolder),
-      content: SizedBox(
-        width: 480,
-        height: 420,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  tooltip: l10n.coreBack,
-                  onPressed:
-                      current == '.'
-                          ? null
-                          : () => setState(() {
-                            final separator = current.lastIndexOf('/');
-                            _parent =
-                                separator < 0
-                                    ? null
-                                    : current.substring(0, separator);
-                          }),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                Expanded(
-                  child: SelectableText(
-                    current,
-                    maxLines: 1,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            Expanded(
-              child: directories.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error:
-                    (error, _) =>
-                        Center(child: Text(l10n.adminLoadFailed('$error'))),
-                data:
-                    (items) =>
-                        items.isEmpty
-                            ? Center(child: Text(l10n.adminNoSubfolders))
-                            : ListView.builder(
-                              itemCount: items.length,
-                              itemBuilder: (context, index) {
-                                final directory = items[index];
-                                return ListTile(
-                                  leading: const Icon(Icons.folder_outlined),
-                                  title: Text(directory.name),
-                                  subtitle: Text(directory.relativePath),
-                                  onTap:
-                                      () => Navigator.of(
-                                        context,
-                                      ).pop(directory.relativePath),
-                                  trailing:
-                                      directory.hasChildren
-                                          ? IconButton(
-                                            tooltip: l10n.adminOpenFolder,
-                                            onPressed:
-                                                () => setState(
-                                                  () =>
-                                                      _parent =
-                                                          directory
-                                                              .relativePath,
-                                                ),
-                                            icon: const Icon(
-                                              Icons.chevron_right_rounded,
-                                            ),
-                                          )
-                                          : null,
-                                );
-                              },
-                            ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.adminCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(current),
           child: Text(l10n.adminUseCurrentFolder),
         ),
       ],

@@ -6235,6 +6235,126 @@ abstract class AppLocalizations {
   /// **'Storage Management'**
   String get adminStorageManagement;
 
+  /// No description provided for @adminStorageFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminStorageFilterAll;
+
+  /// No description provided for @adminStorageFilterEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get adminStorageFilterEnabled;
+
+  /// No description provided for @adminStorageFilterDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get adminStorageFilterDisabled;
+
+  /// No description provided for @adminStorageFilterUnhealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhealthy'**
+  String get adminStorageFilterUnhealthy;
+
+  /// No description provided for @adminStorageEmptyList.
+  ///
+  /// In en, this message translates to:
+  /// **'No storage locations match the filter'**
+  String get adminStorageEmptyList;
+
+  /// No description provided for @adminStorageDetailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a storage location to view details'**
+  String get adminStorageDetailHint;
+
+  /// No description provided for @adminStorageStatusDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get adminStorageStatusDisabled;
+
+  /// No description provided for @adminStorageDisableConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable storage location'**
+  String get adminStorageDisableConfirmTitle;
+
+  /// No description provided for @adminStorageDisableConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning and media access stop for \"{name}\" until you enable it again.'**
+  String adminStorageDisableConfirmBody(Object name);
+
+  /// No description provided for @adminStorageDisableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get adminStorageDisableAction;
+
+  /// No description provided for @adminStorageEnableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get adminStorageEnableAction;
+
+  /// No description provided for @adminStorageDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete storage location'**
+  String get adminStorageDeleteConfirmTitle;
+
+  /// No description provided for @adminStorageDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently removes the \"{name}\" registration. Imported content is not affected.'**
+  String adminStorageDeleteConfirmBody(Object name);
+
+  /// No description provided for @adminStorageDeleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get adminStorageDeleteAction;
+
+  /// No description provided for @adminStorageFieldPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get adminStorageFieldPath;
+
+  /// No description provided for @adminStorageFieldScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Scope'**
+  String get adminStorageFieldScope;
+
+  /// No description provided for @adminStorageFieldProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get adminStorageFieldProvider;
+
+  /// No description provided for @adminStorageFieldManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Management'**
+  String get adminStorageFieldManagement;
+
+  /// No description provided for @adminStorageFieldNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Node'**
+  String get adminStorageFieldNode;
+
+  /// No description provided for @adminStorageParentDir.
+  ///
+  /// In en, this message translates to:
+  /// **'Up one level'**
+  String get adminStorageParentDir;
+
   /// No description provided for @adminStorageManagementSubtitle.
   ///
   /// In en, this message translates to:
