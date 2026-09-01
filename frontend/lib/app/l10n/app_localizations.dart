@@ -10843,6 +10843,12 @@ abstract class AppLocalizations {
   /// **'Explore'**
   String get photosSurfaceExplore;
 
+  /// No description provided for @photosGraphToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle relation graph'**
+  String get photosGraphToggle;
+
   /// No description provided for @photosGraphFilter.
   ///
   /// In en, this message translates to:

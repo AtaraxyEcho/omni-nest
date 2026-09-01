@@ -5920,6 +5920,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosSurfaceExplore => 'Explore';
 
   @override
+  String get photosGraphToggle => 'Toggle relation graph';
+
+  @override
   String get photosGraphFilter => 'Filter nodes';
 
   @override

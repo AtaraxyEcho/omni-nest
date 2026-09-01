@@ -2480,6 +2480,7 @@
   "photosSurfaceLibrary": "照片库",
   "photosSurfacePeople": "人物",
   "photosSurfaceExplore": "探索",
+  "photosGraphToggle": "切换关系图谱",
   "photosGraphFilter": "筛选节点类型",
   "photosGraphSearchActive": "正在筛选“{query}”",
   "@photosGraphSearchActive": {

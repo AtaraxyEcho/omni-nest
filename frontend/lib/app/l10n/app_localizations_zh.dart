@@ -5732,6 +5732,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosSurfaceExplore => '探索';
 
   @override
+  String get photosGraphToggle => '切换关系图谱';
+
+  @override
   String get photosGraphFilter => '筛选节点类型';
 
   @override

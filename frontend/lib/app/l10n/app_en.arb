@@ -2606,6 +2606,7 @@
   "photosSurfaceLibrary": "Library",
   "photosSurfacePeople": "People",
   "photosSurfaceExplore": "Explore",
+  "photosGraphToggle": "Toggle relation graph",
   "photosGraphFilter": "Filter nodes",
   "photosGraphSearchActive": "Filtering for \"{query}\"",
   "@photosGraphSearchActive": {
