@@ -99,11 +99,20 @@ class _PhotoContent extends ConsumerWidget {
             ),
           ),
         ),
-        // 批量操作栏（带滑入动画）
+        // 批量操作栏（进入选择模式时从底部滑入）
         if (state.isSelectionMode && state.selectedPhotoIds.isNotEmpty)
-          AnimatedSlide(
-            offset: Offset.zero,
-            duration: const Duration(milliseconds: 300),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 1, end: 0),
+            duration:
+                MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+            builder:
+                (context, t, child) => Transform.translate(
+                  offset: Offset(0, t * 72),
+                  child: Opacity(opacity: 1 - t, child: child),
+                ),
             child: _BatchActionBar(state: state, ref: ref),
           ),
       ],
@@ -131,10 +140,6 @@ class _MemoriesSection extends StatelessWidget {
               Text(
                 AppLocalizations.of(context).photosTabMemories,
                 style: Theme.of(context).textTheme.titleMedium,
-              ),
-              TextButton(
-                onPressed: () {},
-                child: Text(AppLocalizations.of(context).photosViewAll),
               ),
             ],
           ),

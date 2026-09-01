@@ -106,15 +106,7 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
               ),
             ),
           ),
-          IconButton(
-            tooltip: AppLocalizations.of(context).photoRegenerateThumbnails,
-            onPressed: () => _handleRegenerateThumbnails(context, ref),
-            icon: Icon(
-              Icons.burst_mode_outlined,
-              size: 20,
-              color: colors.onSurfaceVariant,
-            ),
-          ),
+          const _RegenerateThumbnailsAction(),
           const SizedBox(width: 4),
           MediaImportButton(
             subsystemDirectory: 'Photos',

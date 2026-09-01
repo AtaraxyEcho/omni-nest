@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/core/navigation/navigation_extensions.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
 import 'package:omninest/core/widgets/file_purge_confirmation.dart';
@@ -779,51 +780,54 @@ class _ExifPanel extends ConsumerWidget {
   }
 
   Future<void> _showAddTagDialog(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
     final tag = await showDialog<String>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            backgroundColor: context.photosColors.surfaceContainerHigh,
-            title: Text(
-              AppLocalizations.of(context).photosAddTag,
-              style: TextStyle(color: context.photosColors.onSurface),
-            ),
-            content: TextField(
-              controller: controller,
-              autofocus: true,
-              style: TextStyle(color: context.photosColors.onSurface),
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).photosTagNameInput,
-                hintStyle: TextStyle(
-                  color: context.photosColors.onSurfaceVariant.withValues(
-                    alpha: 0.6,
+          (ctx) => PhotoDialogTextField(
+            builder:
+                (ctx, controller) => AlertDialog(
+                  backgroundColor: context.photosColors.surfaceContainerHigh,
+                  title: Text(
+                    AppLocalizations.of(context).photosAddTag,
+                    style: TextStyle(color: context.photosColors.onSurface),
                   ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: context.photosColors.outlineVariant.withValues(
-                      alpha: 0.32,
+                  content: TextField(
+                    controller: controller,
+                    autofocus: true,
+                    style: TextStyle(color: context.photosColors.onSurface),
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context).photosTagNameInput,
+                      hintStyle: TextStyle(
+                        color: context.photosColors.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: context.photosColors.outlineVariant.withValues(
+                            alpha: 0.32,
+                          ),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: context.photosColors.primaryContainer,
+                        ),
+                      ),
                     ),
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(AppLocalizations.of(context).photosCancel),
+                    ),
+                    FilledButton(
+                      onPressed:
+                          () => Navigator.pop(ctx, controller.text.trim()),
+                      child: Text(AppLocalizations.of(context).photosAdd),
+                    ),
+                  ],
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: context.photosColors.primaryContainer,
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(AppLocalizations.of(context).photosCancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-                child: Text(AppLocalizations.of(context).photosAdd),
-              ),
-            ],
           ),
     );
     if (tag != null && tag.isNotEmpty && context.mounted) {

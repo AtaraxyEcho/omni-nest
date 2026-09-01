@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
+import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo_share_link.dart';
 
@@ -101,9 +102,9 @@ class _PhotoSharedAlbumPageState extends ConsumerState<PhotoSharedAlbumPage> {
 
     if (_error != null) {
       return AppErrorView(
-        message: AppLocalizations.of(
-          context,
-        ).photosSharedAlbumAccessError(_error.toString()),
+        message: AppLocalizations.of(context).photosSharedAlbumAccessError(
+          describeUserFacingError(_error!).displayMessage,
+        ),
         onRetry: _loadAlbum,
       );
     }

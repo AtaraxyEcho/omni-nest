@@ -179,15 +179,13 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     return _loadState();
   }
 
-  final List<String> _partialErrors = [];
-
   Future<PhotoCenterState> _loadState() async {
-    _partialErrors.clear();
+    final partialErrors = <String>[];
     final results = await Future.wait([
-      _safe(_repo.dashboard, PhotoDashboard.empty()),
-      _safe(_repo.listPhotos, PhotoPage.empty()),
-      _safe(_repo.listFavorites, PhotoPage.empty()),
-      _safe(_repo.listAlbums, <PhotoAlbum>[]),
+      _safe(_repo.dashboard, PhotoDashboard.empty(), partialErrors),
+      _safe(_repo.listPhotos, PhotoPage.empty(), partialErrors),
+      _safe(_repo.listFavorites, PhotoPage.empty(), partialErrors),
+      _safe(_repo.listAlbums, <PhotoAlbum>[], partialErrors),
     ]);
     final photoPage = results[1] as PhotoPage;
     final favoritePage = results[2] as PhotoPage;
@@ -202,7 +200,7 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
       favoritePage: favoritePage.page,
       photoTotalElements: photoPage.totalElements,
       favoriteTotalElements: favoritePage.totalElements,
-      errorMessage: _partialErrors.isEmpty ? null : _partialErrors.join('；'),
+      errorMessage: partialErrors.isEmpty ? null : partialErrors.join('；'),
     );
   }
 
@@ -212,22 +210,24 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     _importRefreshEpoch++;
     final generation = ++_refreshGeneration;
     final current = state.asData?.value ?? PhotoCenterState.empty();
-    _partialErrors.clear();
+    final partialErrors = <String>[];
     final results = await Future.wait([
-      _safe(_repo.dashboard, PhotoDashboard.empty()),
+      _safe(_repo.dashboard, PhotoDashboard.empty(), partialErrors),
       _safe(
         () => _repo.listPhotos(
           query: current.tab == PhotoTab.all ? current.searchQuery : null,
         ),
         PhotoPage.empty(),
+        partialErrors,
       ),
       _safe(
         () => _repo.listFavorites(
           query: current.tab == PhotoTab.favorites ? current.searchQuery : null,
         ),
         PhotoPage.empty(),
+        partialErrors,
       ),
-      _safe(_repo.listAlbums, <PhotoAlbum>[]),
+      _safe(_repo.listAlbums, <PhotoAlbum>[], partialErrors),
     ]);
     final photoPage = results[1] as PhotoPage;
     final favoritePage = results[2] as PhotoPage;
@@ -246,7 +246,7 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
         favoriteRefreshVersion: current.favoriteRefreshVersion + 1,
         clearPhotoPageError: true,
         clearFavoritePageError: true,
-        errorMessage: _partialErrors.isEmpty ? null : _partialErrors.join('；'),
+        errorMessage: partialErrors.isEmpty ? null : partialErrors.join('；'),
       ),
     );
   }
@@ -561,11 +561,15 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     }
   }
 
-  Future<T> _safe<T>(Future<T> Function() call, T fallback) async {
+  Future<T> _safe<T>(
+    Future<T> Function() call,
+    T fallback,
+    List<String> partialErrors,
+  ) async {
     try {
       return await call();
     } on Exception catch (e) {
-      _partialErrors.add(describeUserFacingError(e).message);
+      partialErrors.add(describeUserFacingError(e).message);
       return fallback;
     }
   }
@@ -612,6 +616,7 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
         favorites ? current.hasMoreFavorites : current.hasMorePhotos;
     if (loading || !hasMore) return;
     final expectedQuery = current.searchQuery.trim();
+    final expectedTab = current.tab;
     final nextPage =
         favorites ? current.favoritePage + 1 : current.photoPage + 1;
     state = AsyncData(
@@ -636,7 +641,11 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
                 size: _pageSize,
               );
       final latest = state.asData?.value;
-      if (latest == null || latest.searchQuery.trim() != expectedQuery) return;
+      if (latest == null ||
+          latest.tab != expectedTab ||
+          latest.searchQuery.trim() != expectedQuery) {
+        return;
+      }
       state = AsyncData(
         favorites
             ? latest.copyWith(

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/core/navigation/navigation_extensions.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
+import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_editor_top_bar.dart';
@@ -62,7 +63,7 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
             ),
         error:
             (error, _) => AppErrorView(
-              message: error.toString(),
+              message: describeUserFacingError(error).displayMessage,
               onRetry:
                   () => ref.invalidate(photoDetailProvider(widget.photoId)),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:omninest/core/errors/error_message.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/core/navigation/navigation_extensions.dart';
@@ -34,7 +35,7 @@ class PhotoAlbumDetailPage extends ConsumerWidget {
             ),
         error:
             (error, stackTrace) => AppErrorView(
-              message: error.toString(),
+              message: describeUserFacingError(error).displayMessage,
               onRetry: () => ref.invalidate(photoAlbumDetailProvider(albumId)),
             ),
         loading: () => const AppLoading.grid(),
@@ -212,207 +213,234 @@ class _AlbumDetailBody extends ConsumerWidget {
 
     if (!context.mounted) return;
 
-    final passwordController = TextEditingController();
     String expiryOption = 'never';
 
-    final created = await showDialog<bool>(
+    final password = await showDialog<String>(
       context: context,
       builder:
-          (ctx) => StatefulBuilder(
+          (ctx) => PhotoDialogTextField(
             builder:
-                (ctx, setDialogState) => AlertDialog(
-                  backgroundColor: context.photosColors.surfaceContainerHigh,
-                  title: Text(
-                    AppLocalizations.of(context).photosShareAlbum,
-                    style: TextStyle(color: context.photosColors.onSurface),
-                  ),
-                  content: SizedBox(
-                    width: 400,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 密码字段
-                        TextField(
-                          controller: passwordController,
+                (ctx, passwordController) => StatefulBuilder(
+                  builder:
+                      (ctx, setDialogState) => AlertDialog(
+                        backgroundColor:
+                            context.photosColors.surfaceContainerHigh,
+                        title: Text(
+                          AppLocalizations.of(context).photosShareAlbum,
                           style: TextStyle(
                             color: context.photosColors.onSurface,
                           ),
-                          decoration: InputDecoration(
-                            labelText:
-                                AppLocalizations.of(
-                                  context,
-                                ).photosSharePassword,
-                            hintText:
-                                AppLocalizations.of(
-                                  context,
-                                ).photosSharePasswordHint,
-                            hintStyle: TextStyle(
-                              color: context.photosColors.onSurfaceVariant
-                                  .withValues(alpha: 0.6),
-                            ),
-                          ),
-                          obscureText: true,
                         ),
-                        SizedBox(height: 12),
-                        // 过期时间
-                        Text(
-                          AppLocalizations.of(context).photosShareExpiry,
-                          style: TextStyle(
-                            color: context.photosColors.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        SegmentedButton<String>(
-                          segments: [
-                            ButtonSegment(
-                              value: '1d',
-                              label: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).photosShareExpiry1d,
-                              ),
-                            ),
-                            ButtonSegment(
-                              value: '7d',
-                              label: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).photosShareExpiry7d,
-                              ),
-                            ),
-                            ButtonSegment(
-                              value: '30d',
-                              label: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).photosShareExpiry30d,
-                              ),
-                            ),
-                            ButtonSegment(
-                              value: 'never',
-                              label: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).photosShareExpiryNever,
-                              ),
-                            ),
-                          ],
-                          selected: {expiryOption},
-                          onSelectionChanged:
-                              (v) =>
-                                  setDialogState(() => expiryOption = v.first),
-                          style: ButtonStyle(
-                            foregroundColor: WidgetStateProperty.resolveWith((
-                              states,
-                            ) {
-                              if (states.contains(WidgetState.selected)) {
-                                return context.photosColors.primaryContainer;
-                              }
-                              return context.photosColors.onSurfaceVariant;
-                            }),
-                          ),
-                        ),
-                        // 现有链接
-                        if (shares.isNotEmpty) ...[
-                          SizedBox(height: 16),
-                          Text(
-                            AppLocalizations.of(
-                              context,
-                            ).photosExistingShareLinks,
-                            style: TextStyle(
-                              color: context.photosColors.onSurfaceVariant,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          ...shares.map(
-                            (share) => ListTile(
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(
-                                share.token,
+                        content: SizedBox(
+                          width: 400,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 密码字段
+                              TextField(
+                                controller: passwordController,
                                 style: TextStyle(
                                   color: context.photosColors.onSurface,
-                                  fontSize: 13,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                decoration: InputDecoration(
+                                  labelText:
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosSharePassword,
+                                  hintText:
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosSharePasswordHint,
+                                  hintStyle: TextStyle(
+                                    color: context.photosColors.onSurfaceVariant
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                                obscureText: true,
                               ),
-                              subtitle: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).photosShareAccessCount(share.accessCount),
+                              SizedBox(height: 12),
+                              // 过期时间
+                              Text(
+                                AppLocalizations.of(context).photosShareExpiry,
                                 style: TextStyle(
                                   color: context.photosColors.onSurfaceVariant,
-                                  fontSize: 11,
+                                  fontSize: 13,
                                 ),
                               ),
-                              trailing: IconButton(
-                                tooltip:
-                                    AppLocalizations.of(context).coreDelete,
-                                icon: Icon(
-                                  Icons.delete_outline,
-                                  size: 18,
-                                  color: context.photosColors.danger,
+                              const SizedBox(height: 4),
+                              SegmentedButton<String>(
+                                segments: [
+                                  ButtonSegment(
+                                    value: '1d',
+                                    label: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosShareExpiry1d,
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: '7d',
+                                    label: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosShareExpiry7d,
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: '30d',
+                                    label: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosShareExpiry30d,
+                                    ),
+                                  ),
+                                  ButtonSegment(
+                                    value: 'never',
+                                    label: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosShareExpiryNever,
+                                    ),
+                                  ),
+                                ],
+                                selected: {expiryOption},
+                                onSelectionChanged:
+                                    (v) => setDialogState(
+                                      () => expiryOption = v.first,
+                                    ),
+                                style: ButtonStyle(
+                                  foregroundColor:
+                                      WidgetStateProperty.resolveWith((states) {
+                                        if (states.contains(
+                                          WidgetState.selected,
+                                        )) {
+                                          return context
+                                              .photosColors
+                                              .primaryContainer;
+                                        }
+                                        return context
+                                            .photosColors
+                                            .onSurfaceVariant;
+                                      }),
                                 ),
-                                onPressed: () async {
-                                  try {
-                                    await ref
-                                        .read(
-                                          photoCenterControllerProvider
-                                              .notifier,
-                                        )
-                                        .revokeAlbumShare(share.id);
-                                    if (ctx.mounted) {
-                                      Navigator.pop(ctx, true);
-                                    }
-                                  } on Exception catch (error) {
-                                    if (ctx.mounted) {
-                                      ScaffoldMessenger.of(ctx).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            describeUserFacingError(
-                                              error,
-                                            ).displayMessage,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
                               ),
+                              // 现有链接
+                              if (shares.isNotEmpty) ...[
+                                SizedBox(height: 16),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).photosExistingShareLinks,
+                                  style: TextStyle(
+                                    color:
+                                        context.photosColors.onSurfaceVariant,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                ...shares.map(
+                                  (share) => ListTile(
+                                    dense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      share.token,
+                                      style: TextStyle(
+                                        color: context.photosColors.onSurface,
+                                        fontSize: 13,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    subtitle: Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      ).photosShareAccessCount(
+                                        share.accessCount,
+                                      ),
+                                      style: TextStyle(
+                                        color:
+                                            context
+                                                .photosColors
+                                                .onSurfaceVariant,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    trailing: IconButton(
+                                      tooltip:
+                                          AppLocalizations.of(
+                                            context,
+                                          ).coreDelete,
+                                      icon: Icon(
+                                        Icons.delete_outline,
+                                        size: 18,
+                                        color: context.photosColors.danger,
+                                      ),
+                                      onPressed: () async {
+                                        try {
+                                          await ref
+                                              .read(
+                                                photoCenterControllerProvider
+                                                    .notifier,
+                                              )
+                                              .revokeAlbumShare(share.id);
+                                          if (ctx.mounted) {
+                                            Navigator.pop(ctx, true);
+                                          }
+                                        } on Exception catch (error) {
+                                          if (ctx.mounted) {
+                                            ScaffoldMessenger.of(
+                                              ctx,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  describeUserFacingError(
+                                                    error,
+                                                  ).displayMessage,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text(
+                              AppLocalizations.of(context).photosCancel,
+                            ),
+                          ),
+                          FilledButton(
+                            onPressed:
+                                () => Navigator.pop(
+                                  ctx,
+                                  passwordController.text.trim(),
+                                ),
+                            style: FilledButton.styleFrom(
+                              backgroundColor:
+                                  context.photosColors.primaryContainer,
+                              foregroundColor:
+                                  context.photosColors.onPrimaryContainer,
+                            ),
+                            child: Text(
+                              AppLocalizations.of(context).photosCreateLink,
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(AppLocalizations.of(context).photosCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: context.photosColors.primaryContainer,
-                        foregroundColor:
-                            context.photosColors.onPrimaryContainer,
                       ),
-                      child: Text(
-                        AppLocalizations.of(context).photosCreateLink,
-                      ),
-                    ),
-                  ],
                 ),
           ),
     );
 
-    if (created == true && context.mounted) {
-      final password = passwordController.text.trim();
+    if (password != null && password.isNotEmpty && context.mounted) {
       DateTime? expiresAt;
       if (expiryOption == '1d') {
         expiresAt = DateTime.now().add(const Duration(days: 1));

@@ -604,85 +604,114 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
   }
 
   void _showCreateAlbumDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final descController = TextEditingController();
     showDialog(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            backgroundColor: context.photosColors.surfaceContainerHigh,
-            title: Text(
-              AppLocalizations.of(context).photosNewAlbum,
-              style: TextStyle(color: context.photosColors.onSurface),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  autofocus: true,
-                  style: TextStyle(color: context.photosColors.onSurface),
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).photosAlbumName,
-                    hintText: AppLocalizations.of(context).photosAlbumNameHint,
-                  ),
-                ),
-                SizedBox(height: 12),
-                TextField(
-                  controller: descController,
-                  style: TextStyle(color: context.photosColors.onSurface),
-                  decoration: InputDecoration(
-                    labelText:
-                        AppLocalizations.of(context).photosAlbumDescription,
-                    hintText:
-                        AppLocalizations.of(context).photosAlbumDescriptionHint,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(AppLocalizations.of(context).photosCancel),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) return;
-                  Navigator.pop(ctx);
-                  try {
-                    await ref
-                        .read(photoCenterControllerProvider.notifier)
-                        .createAlbum(
-                          name: name,
-                          description: descController.text.trim(),
-                        );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(
-                              context,
-                            ).photosAlbumCreated(name),
+          (ctx) => PhotoDialogTextField(
+            builder:
+                (ctx, nameController) => PhotoDialogTextField(
+                  builder:
+                      (ctx, descController) => AlertDialog(
+                        backgroundColor:
+                            context.photosColors.surfaceContainerHigh,
+                        title: Text(
+                          AppLocalizations.of(context).photosNewAlbum,
+                          style: TextStyle(
+                            color: context.photosColors.onSurface,
                           ),
                         ),
-                      );
-                    }
-                  } on Exception {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(context).photosCreateFailed,
-                          ),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: nameController,
+                              autofocus: true,
+                              style: TextStyle(
+                                color: context.photosColors.onSurface,
+                              ),
+                              decoration: InputDecoration(
+                                labelText:
+                                    AppLocalizations.of(
+                                      context,
+                                    ).photosAlbumName,
+                                hintText:
+                                    AppLocalizations.of(
+                                      context,
+                                    ).photosAlbumNameHint,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            TextField(
+                              controller: descController,
+                              style: TextStyle(
+                                color: context.photosColors.onSurface,
+                              ),
+                              decoration: InputDecoration(
+                                labelText:
+                                    AppLocalizations.of(
+                                      context,
+                                    ).photosAlbumDescription,
+                                hintText:
+                                    AppLocalizations.of(
+                                      context,
+                                    ).photosAlbumDescriptionHint,
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }
-                  }
-                },
-                child: Text(AppLocalizations.of(context).photosCreate),
-              ),
-            ],
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(
+                              AppLocalizations.of(context).photosCancel,
+                            ),
+                          ),
+                          FilledButton(
+                            onPressed: () async {
+                              final name = nameController.text.trim();
+                              if (name.isEmpty) return;
+                              Navigator.pop(ctx);
+                              try {
+                                await ref
+                                    .read(
+                                      photoCenterControllerProvider.notifier,
+                                    )
+                                    .createAlbum(
+                                      name: name,
+                                      description: descController.text.trim(),
+                                    );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        ).photosAlbumCreated(name),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } on Exception {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(
+                                          context,
+                                        ).photosCreateFailed,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Text(
+                              AppLocalizations.of(context).photosCreate,
+                            ),
+                          ),
+                        ],
+                      ),
+                ),
           ),
     );
   }

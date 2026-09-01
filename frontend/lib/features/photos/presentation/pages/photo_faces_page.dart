@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/core/widgets/app_empty_state.dart';
@@ -27,7 +28,8 @@ class _PhotoFacesPageState extends ConsumerState<PhotoFacesPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(photoCenterControllerProvider.notifier).loadFaceClusters();
     });
   }
@@ -55,7 +57,9 @@ class _PhotoFacesPageState extends ConsumerState<PhotoFacesPage> {
       error:
           (error, _) => Center(
             child: Text(
-              AppLocalizations.of(context).photosLoadFailed(error.toString()),
+              AppLocalizations.of(
+                context,
+              ).photosLoadFailed(describeUserFacingError(error).displayMessage),
               style: TextStyle(color: context.photosColors.onSurfaceVariant),
             ),
           ),
@@ -105,34 +109,39 @@ class _PhotoFacesPageState extends ConsumerState<PhotoFacesPage> {
     String clusterId,
     String currentName,
   ) async {
-    final controller = TextEditingController(text: currentName);
     final name = await showDialog<String>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            backgroundColor: context.photosColors.surfaceContainerHigh,
-            title: Text(
-              AppLocalizations.of(context).photosNamePerson,
-              style: TextStyle(color: context.photosColors.onSurface),
-            ),
-            content: TextField(
-              controller: controller,
-              style: TextStyle(color: context.photosColors.onSurface),
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).photosPersonNameHint,
-              ),
-              autofocus: true,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(AppLocalizations.of(context).photosCancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-                child: Text(AppLocalizations.of(context).photosConfirm),
-              ),
-            ],
+          (ctx) => PhotoDialogTextField(
+            initialText: currentName,
+            builder:
+                (ctx, controller) => AlertDialog(
+                  backgroundColor: context.photosColors.surfaceContainerHigh,
+                  title: Text(
+                    AppLocalizations.of(context).photosNamePerson,
+                    style: TextStyle(color: context.photosColors.onSurface),
+                  ),
+                  content: TextField(
+                    controller: controller,
+                    style: TextStyle(color: context.photosColors.onSurface),
+                    decoration: InputDecoration(
+                      hintText:
+                          AppLocalizations.of(context).photosPersonNameHint,
+                    ),
+                    autofocus: true,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(AppLocalizations.of(context).photosCancel),
+                    ),
+                    FilledButton(
+                      onPressed:
+                          () => Navigator.pop(ctx, controller.text.trim()),
+                      child: Text(AppLocalizations.of(context).photosConfirm),
+                    ),
+                  ],
+                ),
           ),
     );
     if (name != null && name.isNotEmpty && context.mounted) {
@@ -476,8 +485,9 @@ class _ClusterPhotosSheet extends StatelessWidget {
                             key: ValueKey(photo.id),
                             photo: photo,
                             onTap: () {
+                              final router = GoRouter.of(context);
                               Navigator.pop(ctx);
-                              context.push('/photos/${photo.id}');
+                              router.push('/photos/${photo.id}');
                             },
                           );
                         },

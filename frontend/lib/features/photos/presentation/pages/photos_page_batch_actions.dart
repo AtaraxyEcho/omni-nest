@@ -80,40 +80,41 @@ class _BatchActionBar extends StatelessWidget {
   }
 
   Future<void> _showBatchTagDialog(BuildContext context) async {
-    final tagController = TextEditingController();
-    final confirmed = await showDialog<bool>(
+    final tag = await showDialog<String>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            backgroundColor: context.photosColors.surfaceContainerHigh,
-            title: Text(
-              AppLocalizations.of(context).photosBatchAddTag,
-              style: TextStyle(color: context.photosColors.onSurface),
-            ),
-            content: TextField(
-              controller: tagController,
-              autofocus: true,
-              style: TextStyle(color: context.photosColors.onSurface),
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).photosTagName,
-                hintText: AppLocalizations.of(context).photosTagNameHint,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(AppLocalizations.of(context).photosCancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(AppLocalizations.of(context).photosAdd),
-              ),
-            ],
+          (ctx) => PhotoDialogTextField(
+            builder:
+                (ctx, tagController) => AlertDialog(
+                  backgroundColor: context.photosColors.surfaceContainerHigh,
+                  title: Text(
+                    AppLocalizations.of(context).photosBatchAddTag,
+                    style: TextStyle(color: context.photosColors.onSurface),
+                  ),
+                  content: TextField(
+                    controller: tagController,
+                    autofocus: true,
+                    style: TextStyle(color: context.photosColors.onSurface),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).photosTagName,
+                      hintText: AppLocalizations.of(context).photosTagNameHint,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text(AppLocalizations.of(context).photosCancel),
+                    ),
+                    FilledButton(
+                      onPressed:
+                          () => Navigator.pop(ctx, tagController.text.trim()),
+                      child: Text(AppLocalizations.of(context).photosAdd),
+                    ),
+                  ],
+                ),
           ),
     );
-    if (confirmed == true && context.mounted) {
-      final tag = tagController.text.trim();
-      if (tag.isEmpty) return;
+    if (tag != null && tag.trim().isNotEmpty && context.mounted) {
       try {
         final task = await ref
             .read(photoCenterControllerProvider.notifier)

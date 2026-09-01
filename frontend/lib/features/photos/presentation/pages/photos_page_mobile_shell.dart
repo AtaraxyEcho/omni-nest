@@ -164,15 +164,7 @@ class _PhotoTopBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            IconButton(
-              tooltip: AppLocalizations.of(context).photoRegenerateThumbnails,
-              onPressed: () => _handleRegenerateThumbnails(context, ref),
-              icon: Icon(
-                Icons.burst_mode_outlined,
-                color: context.photosColors.onSurfaceVariant,
-                size: 20,
-              ),
-            ),
+            const _RegenerateThumbnailsAction(),
             const SizedBox(width: 4),
             const NotificationIcon(size: 20),
             const SizedBox(width: 8),
@@ -185,99 +177,139 @@ class _PhotoTopBar extends StatelessWidget {
 
   /// 窄屏搜索弹窗
   void _showSearchDialog(BuildContext context) {
-    final dialogController = TextEditingController(text: controller.text);
     showDialog(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            backgroundColor: context.photosColors.surfaceContainerHigh,
-            title: Text(
-              AppLocalizations.of(context).photosSearchPhotos,
-              style: TextStyle(color: context.photosColors.onSurface),
-            ),
-            content: TextField(
-              controller: dialogController,
-              autofocus: true,
-              style: TextStyle(
-                color: context.photosColors.onSurface,
-                fontSize: 14,
-              ),
-              onChanged: (v) {
-                controller.text = v;
-                ref
-                    .read(photoCenterControllerProvider.notifier)
-                    .setSearchQuery(v);
-              },
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: context.photosColors.surfaceContainer,
-                hintText: AppLocalizations.of(context).photosSearchHint,
-                hintStyle: TextStyle(
-                  color: context.photosColors.onSurfaceVariant.withValues(
-                    alpha: 0.6,
+          (ctx) => PhotoDialogTextField(
+            initialText: controller.text,
+            builder:
+                (ctx, dialogController) => AlertDialog(
+                  backgroundColor: context.photosColors.surfaceContainerHigh,
+                  title: Text(
+                    AppLocalizations.of(context).photosSearchPhotos,
+                    style: TextStyle(color: context.photosColors.onSurface),
                   ),
-                ),
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  color: context.photosColors.onSurfaceVariant,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: context.photosColors.primaryContainer.withValues(
-                      alpha: 0.4,
+                  content: TextField(
+                    controller: dialogController,
+                    autofocus: true,
+                    style: TextStyle(
+                      color: context.photosColors.onSurface,
+                      fontSize: 14,
+                    ),
+                    onChanged: (v) {
+                      controller.text = v;
+                      ref
+                          .read(photoCenterControllerProvider.notifier)
+                          .setSearchQuery(v);
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor: context.photosColors.surfaceContainer,
+                      hintText: AppLocalizations.of(context).photosSearchHint,
+                      hintStyle: TextStyle(
+                        color: context.photosColors.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: context.photosColors.onSurfaceVariant,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: context.photosColors.primaryContainer
+                              .withValues(alpha: 0.4),
+                        ),
+                      ),
                     ),
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        controller.clear();
+                        ref
+                            .read(photoCenterControllerProvider.notifier)
+                            .setSearchQuery('');
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(AppLocalizations.of(context).photosClear),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(AppLocalizations.of(context).photosSearch),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  controller.clear();
-                  ref
-                      .read(photoCenterControllerProvider.notifier)
-                      .setSearchQuery('');
-                  Navigator.pop(ctx);
-                },
-                child: Text(AppLocalizations.of(context).photosClear),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(AppLocalizations.of(context).photosSearch),
-              ),
-            ],
           ),
     );
   }
 }
 
-/// 处理重建缩略图操作
-Future<void> _handleRegenerateThumbnails(
-  BuildContext context,
-  WidgetRef ref,
-) async {
-  try {
-    await ref
-        .read(photoCenterControllerProvider.notifier)
-        .regenerateThumbnails();
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).photoRegenerateQueued),
-        ),
-      );
+/// 重建缩略图入口：自持提交状态，避免连续点击叠加任务。
+class _RegenerateThumbnailsAction extends ConsumerStatefulWidget {
+  const _RegenerateThumbnailsAction();
+
+  @override
+  ConsumerState<_RegenerateThumbnailsAction> createState() =>
+      _RegenerateThumbnailsActionState();
+}
+
+class _RegenerateThumbnailsActionState
+    extends ConsumerState<_RegenerateThumbnailsAction> {
+  bool _submitting = false;
+
+  Future<void> _handleRegenerateThumbnails() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    try {
+      await ref
+          .read(photoCenterControllerProvider.notifier)
+          .regenerateThumbnails();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).photoRegenerateQueued),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(describeUserFacingError(error).displayMessage),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
-  } catch (error) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeUserFacingError(error).displayMessage)),
-      );
-    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: AppLocalizations.of(context).photoRegenerateThumbnails,
+      onPressed: _submitting ? null : _handleRegenerateThumbnails,
+      icon:
+          _submitting
+              ? SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: context.photosColors.onSurfaceVariant,
+                ),
+              )
+              : Icon(
+                Icons.burst_mode_outlined,
+                color: context.photosColors.onSurfaceVariant,
+                size: 20,
+              ),
+    );
   }
 }
