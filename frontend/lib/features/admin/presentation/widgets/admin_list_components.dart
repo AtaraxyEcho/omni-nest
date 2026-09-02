@@ -530,3 +530,76 @@ class AdminListEmptyState extends StatelessWidget {
     );
   }
 }
+
+/// 列表加载骨架：以呼吸动画的占位条模拟表头与数据行，替代转圈加载。
+class AdminListSkeleton extends StatefulWidget {
+  const AdminListSkeleton({this.rows = 8, super.key});
+
+  final int rows;
+
+  @override
+  State<AdminListSkeleton> createState() => _AdminListSkeletonState();
+}
+
+class _AdminListSkeletonState extends State<AdminListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final opacity = Tween<double>(
+      begin: 0.35,
+      end: 0.8,
+    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
+
+    Widget bar(double? width, double height) {
+      return FadeTransition(
+        opacity: opacity,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          bar(160, 20),
+          for (var i = 0; i < widget.rows; i++) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                bar(28, 14),
+                const SizedBox(width: 16),
+                Expanded(child: bar(null, 14)),
+                const SizedBox(width: 16),
+                bar(80 + (i % 3) * 30, 14),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

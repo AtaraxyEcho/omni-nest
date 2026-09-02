@@ -390,7 +390,11 @@ class _AuditLogTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return page.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: AdminListSkeleton(),
+          ),
       error: (_, _) => Center(child: Text(l10n.adminLoadFailed(''))),
       data:
           (result) => SingleChildScrollView(
@@ -511,7 +515,11 @@ class _LoginAuditLogTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return page.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: AdminListSkeleton(),
+          ),
       error: (_, _) => Center(child: Text(l10n.adminLoadFailed(''))),
       data:
           (result) => SingleChildScrollView(

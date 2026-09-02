@@ -60,7 +60,11 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
     final taskAsync = ref.watch(adminTaskPageProvider(query));
     final dlqAsync = ref.watch(adminDlqProvider);
     return taskAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: AdminListSkeleton(),
+          ),
       error:
           (_, _) => Center(
             child: Text(AppLocalizations.of(context).adminLoadFailed('')),
@@ -596,7 +600,11 @@ class _DlqTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colors = context.adminColors;
     return state.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: AdminListSkeleton(),
+          ),
       error: (_, _) => Center(child: Text(l10n.adminLoadFailed(''))),
       data: (items) {
         final filtered =

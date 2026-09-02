@@ -67,7 +67,11 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
     );
     final sessionsAsync = ref.watch(adminSessionPageProvider(query));
     return sessionsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading:
+          () => const Padding(
+            padding: EdgeInsets.all(16),
+            child: AdminListSkeleton(),
+          ),
       error:
           (_, _) => Center(
             child: Text(AppLocalizations.of(context).adminLoadFailed('')),
