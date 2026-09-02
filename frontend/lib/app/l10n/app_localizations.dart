@@ -6271,6 +6271,12 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get adminListActions;
 
+  /// No description provided for @adminListIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'#'**
+  String get adminListIndex;
+
   /// No description provided for @adminListSelectedCount.
   ///
   /// In en, this message translates to:

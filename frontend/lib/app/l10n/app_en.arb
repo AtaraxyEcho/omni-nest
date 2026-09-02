@@ -1411,6 +1411,7 @@
   "adminListPrevPage": "Previous page",
   "adminListNextPage": "Next page",
   "adminListActions": "Actions",
+  "adminListIndex": "#",
   "adminListSelectedCount": "{count} selected",
   "@adminListSelectedCount": {
     "placeholder": {

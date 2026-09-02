@@ -3272,6 +3272,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminListActions => '操作';
 
   @override
+  String get adminListIndex => '序号';
+
+  @override
   String adminListSelectedCount(Object count) {
     return '已选 $count 项';
   }

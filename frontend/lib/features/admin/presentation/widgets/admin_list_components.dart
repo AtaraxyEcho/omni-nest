@@ -179,6 +179,8 @@ class AdminDataTable extends StatelessWidget {
     this.onCheckAll,
     this.sort,
     this.onSort,
+    this.showIndex = false,
+    this.indexBase = 0,
     this.minTableWidth = 860,
     this.actionColumnWidth = 168,
     this.rowHeight = 48,
@@ -206,6 +208,12 @@ class AdminDataTable extends StatelessWidget {
   final AdminListSort? sort;
   final void Function(String columnKey, bool ascending)? onSort;
 
+  /// 是否在首列渲染序号列。
+  final bool showIndex;
+
+  /// 序号基数：服务端分页下传入（页码 × 每页条数），行号 = 基数 + 行序 + 1。
+  final int indexBase;
+
   /// 主表最小宽度（低于该宽度出现横向滚动条）。
   final double minTableWidth;
   final double actionColumnWidth;
@@ -213,6 +221,9 @@ class AdminDataTable extends StatelessWidget {
   final Widget? emptyState;
 
   bool get _hasActionColumn => actionsBuilder != null;
+
+  /// 序号列固定宽度。
+  static const _indexColumnWidth = 64.0;
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +235,7 @@ class AdminDataTable extends StatelessWidget {
 
     // 列宽解析：声明 minWidth 的列按固定宽计入；弹性列按 flex 分配
     // 剩余宽度（表宽取 minTableWidth 与固定宽之和的较大者）。
-    var fixedTotal = 0.0;
+    var fixedTotal = showIndex ? _indexColumnWidth : 0.0;
     var flexTotal = 0;
     for (final column in columns) {
       if (column.minWidth != null) {
@@ -339,6 +350,17 @@ class AdminDataTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (showIndex)
+          SizedBox(
+            width: _indexColumnWidth,
+            height: 44,
+            child: Align(
+              child: Text(
+                l10n.adminListIndex,
+                style: _headerStyle(context, colors),
+              ),
+            ),
+          ),
         for (final column in columns)
           SizedBox(
             width: columnWidth(column),
@@ -405,6 +427,17 @@ class AdminDataTable extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (showIndex)
+                    SizedBox(
+                      width: _indexColumnWidth,
+                      height: rowHeight,
+                      child: Align(
+                        child: Text(
+                          '${indexBase + i + 1}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ),
                   for (final column in columns)
                     SizedBox(
                       width: columnWidth(column),

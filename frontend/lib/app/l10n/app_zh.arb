@@ -1285,6 +1285,7 @@
   "adminListPrevPage": "上一页",
   "adminListNextPage": "下一页",
   "adminListActions": "操作",
+  "adminListIndex": "序号",
   "adminListSelectedCount": "已选 {count} 项",
   "@adminListSelectedCount": {
     "placeholder": {

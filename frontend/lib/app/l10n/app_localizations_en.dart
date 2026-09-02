@@ -3386,6 +3386,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminListActions => 'Actions';
 
   @override
+  String get adminListIndex => '#';
+
+  @override
   String adminListSelectedCount(Object count) {
     return '$count selected';
   }
