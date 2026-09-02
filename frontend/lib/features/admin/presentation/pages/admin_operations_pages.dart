@@ -6,7 +6,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/core/theme/motion_token.dart';
 import 'package:omninest/core/widgets/app_slider.dart';
-import 'package:omninest/core/widgets/workbench_panel.dart';
 import 'package:omninest/core/widgets/responsive_breakpoints.dart';
 import 'package:omninest/app/theme/feature/admin_colors.dart';
 import 'package:omninest/core/auth/auth_controller.dart';

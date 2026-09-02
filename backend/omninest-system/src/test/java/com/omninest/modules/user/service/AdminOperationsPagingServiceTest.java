@@ -26,6 +26,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 /**
  * 管理端分页查询服务测试。
@@ -99,11 +100,11 @@ class AdminOperationsPagingServiceTest {
                 eq("web"),
                 eq("%admin%"),
                 any(Instant.class),
-                eq(PageRequest.of(0, 25))
+                eq(PageRequest.of(0, 25, Sort.by(Sort.Direction.DESC, "lastActiveAt")))
         )).thenReturn(new PageImpl<>(List.of(session), PageRequest.of(0, 25), 1));
         when(userRepository.findAllById(Set.of(userId))).thenReturn(List.of(user));
 
-        var result = service.sessionPage(0, 25, "active", "WEB", "admin");
+        var result = service.sessionPage(0, 25, "active", "WEB", "admin", "lastActiveAt");
 
         assertThat(result.items()).extracting("username").containsExactly("admin");
         verify(userRepository).findAllById(Set.of(userId));

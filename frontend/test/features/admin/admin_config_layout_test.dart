@@ -98,7 +98,7 @@ void main() {
     expect(find.text('media.auto-import.enabled'), findsNothing);
     expect(find.text('媒体元数据服务'), findsNothing);
     expect(find.text('共享空间容量上限'), findsOneWidget);
-    expect(find.textContaining('无限制'), findsNWidgets(2));
+    expect(find.textContaining('无限制'), findsNWidgets(3));
     expect(find.textContaining('10.0 GB'), findsOneWidget);
     expect(find.text('MusicBrainz'), findsOneWidget);
     expect(find.text('启用 MusicBrainz'), findsOneWidget);

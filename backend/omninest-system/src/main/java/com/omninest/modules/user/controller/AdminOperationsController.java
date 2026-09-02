@@ -178,9 +178,10 @@ public class AdminOperationsController {
             @RequestParam(defaultValue = "25") int size,
             @RequestParam(defaultValue = "") String status,
             @RequestParam(defaultValue = "") String platform,
-            @RequestParam(defaultValue = "") String query
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "lastActiveAt") String sort
     ) {
-        return ApiResponse.success(adminOperationsPagingService.sessionPage(page, size, status, platform, query));
+        return ApiResponse.success(adminOperationsPagingService.sessionPage(page, size, status, platform, query, sort));
     }
 
     @Operation(summary = "撤销指定会话")

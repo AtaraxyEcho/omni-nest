@@ -6847,6 +6847,42 @@ abstract class AppLocalizations {
   /// **'Last active at'**
   String get adminSessionLastActive;
 
+  /// No description provided for @adminSessionIp.
+  ///
+  /// In en, this message translates to:
+  /// **'IP address'**
+  String get adminSessionIp;
+
+  /// No description provided for @adminResourceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource type'**
+  String get adminResourceType;
+
+  /// No description provided for @adminLogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get adminLogContent;
+
+  /// No description provided for @adminLogTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get adminLogTime;
+
+  /// No description provided for @adminConfigDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get adminConfigDescription;
+
+  /// No description provided for @adminLoginFailureReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure reason'**
+  String get adminLoginFailureReason;
+
   /// No description provided for @adminSessionRevokeReason.
   ///
   /// In en, this message translates to:

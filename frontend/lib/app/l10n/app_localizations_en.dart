@@ -3687,6 +3687,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSessionLastActive => 'Last active at';
 
   @override
+  String get adminSessionIp => 'IP address';
+
+  @override
+  String get adminResourceType => 'Resource type';
+
+  @override
+  String get adminLogContent => 'Description';
+
+  @override
+  String get adminLogTime => 'Time';
+
+  @override
+  String get adminConfigDescription => 'Description';
+
+  @override
+  String get adminLoginFailureReason => 'Failure reason';
+
+  @override
   String get adminSessionRevokeReason => 'Revoke reason';
 
   @override

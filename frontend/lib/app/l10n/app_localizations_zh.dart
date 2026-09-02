@@ -3566,6 +3566,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminSessionLastActive => '最后活跃时间';
 
   @override
+  String get adminSessionIp => 'IP 地址';
+
+  @override
+  String get adminResourceType => '资源类型';
+
+  @override
+  String get adminLogContent => '操作内容';
+
+  @override
+  String get adminLogTime => '时间';
+
+  @override
+  String get adminConfigDescription => '说明';
+
+  @override
+  String get adminLoginFailureReason => '失败原因';
+
+  @override
   String get adminSessionRevokeReason => '强制下线原因';
 
   @override

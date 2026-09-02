@@ -8,7 +8,7 @@ class AdminSessionsPage extends ConsumerStatefulWidget {
 }
 
 class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
-  static const _pageSize = 25;
+  static const _pageSize = 20;
   static const _platforms = <String>[
     'ALL',
     'android',
@@ -73,8 +73,6 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
     final l10n = AppLocalizations.of(context);
     final colors = context.adminColors;
     final activeCount = page.items.where((session) => session.isActive).length;
-    final inactiveCount =
-        page.items.where((session) => session.isInactive).length;
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -87,85 +85,207 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
             color: colors.success,
           ),
         ),
-        const SizedBox(height: 24),
-        _MetricGrid(
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            AdminMetricCard(
-              title: l10n.adminActiveSessionCount,
-              value: activeCount.toString(),
-              detail: l10n.adminCurrentPage,
-              icon: Icons.devices_rounded,
-              accent: colors.success,
+            _SessionFilterDropdown<String>(
+              width: 190,
+              label: l10n.adminFilterStatus,
+              value: _status,
+              items: [
+                DropdownMenuItem(
+                  value: 'ALL',
+                  child: Text(l10n.adminSessionAllStatuses),
+                ),
+                DropdownMenuItem(
+                  value: 'ACTIVE',
+                  child: Text(l10n.adminSessionActiveOnly),
+                ),
+                DropdownMenuItem(
+                  value: 'REVOKED',
+                  child: Text(l10n.adminSessionRevokedOnly),
+                ),
+                DropdownMenuItem(
+                  value: 'EXPIRED',
+                  child: Text(l10n.adminSessionExpiredOnly),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _status = value;
+                    _page = 0;
+                  });
+                }
+              },
             ),
-            AdminMetricCard(
-              title: l10n.adminRevokedCount,
-              value: inactiveCount.toString(),
-              detail: l10n.adminCurrentPage,
-              icon: Icons.block_rounded,
-              accent: colors.error,
+            _SessionFilterDropdown<String>(
+              width: 190,
+              label: l10n.adminFilterPlatform,
+              value: _platform,
+              items: [
+                for (final platform in _platforms)
+                  DropdownMenuItem(
+                    value: platform,
+                    child: Text(platform == 'ALL' ? l10n.adminAll : platform),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _platform = value;
+                    _page = 0;
+                  });
+                }
+              },
+            ),
+            _SessionFilterDropdown<int>(
+              width: 160,
+              label: '',
+              value: _retentionDays,
+              items: [
+                for (final days in const <int>[7, 30, 90, 365])
+                  DropdownMenuItem(
+                    value: days,
+                    child: Text(l10n.adminRetentionDays('$days')),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _retentionDays = value);
+              },
+            ),
+            FilledButton.tonalIcon(
+              onPressed: _cleanupSessions,
+              icon: const Icon(Icons.cleaning_services_outlined),
+              label: Text(l10n.adminCleanup),
             ),
           ],
         ),
-        const SizedBox(height: 24),
-        WorkbenchPanel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.adminSessionList,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 20,
-                  height: 28 / 20,
-                  fontWeight: FontWeight.w700,
+        const SizedBox(height: 20),
+        AdminInfoPanel(
+          title: l10n.adminSessionList,
+          subtitle: l10n.adminSessionListSubtitle,
+          children: [
+            AdminDataTable(
+              showIndex: true,
+              indexBase: page.page * _pageSize,
+              minTableWidth: 980,
+              columns: [
+                AdminListColumn(
+                  key: 'username',
+                  label: l10n.adminUsername,
+                  flex: 2,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.adminSessionListSubtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 13,
-                  height: 20 / 13,
-                  color: colors.onSurfaceVariant,
+                AdminListColumn(
+                  key: 'device',
+                  label: l10n.adminSessionDeviceName,
+                  flex: 2,
                 ),
+                AdminListColumn(
+                  key: 'ip',
+                  label: l10n.adminSessionIp,
+                  minWidth: 130,
+                ),
+                AdminListColumn(
+                  key: 'issuedAt',
+                  label: l10n.adminSessionLoginTime,
+                  minWidth: 150,
+                ),
+                AdminListColumn(
+                  key: 'lastActiveAt',
+                  label: l10n.adminSessionLastActive,
+                  minWidth: 150,
+                ),
+                AdminListColumn(
+                  key: 'status',
+                  label: l10n.adminFilterStatus,
+                  minWidth: 100,
+                ),
+              ],
+              rowCount: page.items.length,
+              emptyState: AdminListEmptyState(
+                message:
+                    _query.isEmpty && _status == 'ALL' && _platform == 'ALL'
+                        ? l10n.adminNoSessions
+                        : l10n.adminNoMatch,
               ),
-              const SizedBox(height: 16),
-              _buildFilters(context),
-              const SizedBox(height: 16),
-              if (page.items.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Center(
-                    child: Text(
-                      _query.isEmpty && _status == 'ALL' && _platform == 'ALL'
-                          ? l10n.adminNoSessions
-                          : l10n.adminNoMatch,
+              rowCellsBuilder: (context, index) {
+                final session = page.items[index];
+                return [
+                  Text(
+                    session.username ?? '-',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      decoration:
+                          session.isInactive
+                              ? TextDecoration.lineThrough
+                              : null,
                     ),
                   ),
-                )
-              else
-                for (final session in page.items) ...[
-                  _SessionTile(
-                    session: session,
-                    onRevoke:
-                        session.isActive ? () => _revokeSession(session) : null,
+                  Text(
+                    session.deviceName ??
+                        session.deviceId ??
+                        session.clientPlatform,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  if (session != page.items.last) const Divider(height: 1),
-                ],
-              const SizedBox(height: 12),
-              AdminPaginationBar(
-                page: page,
-                onPrevious:
-                    page.hasPrevious
-                        ? () => setState(() => _page = page.page - 1)
-                        : null,
-                onNext:
-                    page.hasNext
-                        ? () => setState(() => _page = page.page + 1)
-                        : null,
-              ),
-            ],
-          ),
+                  Text(
+                    session.ipAddress,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Text(
+                    session.issuedAt,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Text(
+                    session.lastActiveAt,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  _sessionStatusTag(context, session),
+                ];
+              },
+              actionsBuilder: (context, index) {
+                final session = page.items[index];
+                return [
+                  IconButton(
+                    tooltip: l10n.adminSessionDetailTitle,
+                    icon: const Icon(Icons.info_outline_rounded, size: 20),
+                    onPressed: () => _showSessionDetail(context, session),
+                  ),
+                  if (session.isActive)
+                    IconButton(
+                      tooltip: l10n.adminRevokeSession,
+                      icon: Icon(
+                        Icons.logout_rounded,
+                        size: 20,
+                        color: context.adminColors.error,
+                      ),
+                      onPressed: () => _revokeSession(session),
+                    ),
+                ];
+              },
+            ),
+            const SizedBox(height: 12),
+            AdminListPaginationBar(
+              currentPage: page.page,
+              totalPages: page.totalPages,
+              totalElements: page.totalElements,
+              rowsPerPage: _pageSize,
+              onPageChanged: (next) => setState(() => _page = next),
+              onRowsPerPageChanged: (_) {},
+            ),
+          ],
         ),
       ],
     );
@@ -175,97 +295,74 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
     return useExpanded ? content : SingleChildScrollView(child: content);
   }
 
-  Widget _buildFilters(BuildContext context) {
+  AdminStatusTag _sessionStatusTag(
+    BuildContext context,
+    AdminSessionItem session,
+  ) {
     final l10n = AppLocalizations.of(context);
-    return Wrap(
-      spacing: 12,
-      runSpacing: 10,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: 190,
-          child: DropdownButtonFormField<String>(
-            initialValue: _status,
-            decoration: InputDecoration(
-              labelText: l10n.adminFilterStatus,
-              isDense: true,
+    if (session.isRevoked) {
+      return AdminStatusTag(
+        label: l10n.adminSessionStatusRevoked,
+        tone: AdminTagTone.error,
+      );
+    }
+    if (session.isExpired) {
+      return AdminStatusTag(
+        label: l10n.adminSessionStatusExpired,
+        tone: AdminTagTone.neutral,
+      );
+    }
+    return AdminStatusTag(
+      label: l10n.adminSessionStatusActive,
+      tone: AdminTagTone.success,
+    );
+  }
+
+  void _showSessionDetail(BuildContext context, AdminSessionItem session) {
+    final l10n = AppLocalizations.of(context);
+    final rows = <(String, String)>[
+      (l10n.adminUsername, session.username ?? '-'),
+      (l10n.adminSessionFieldDeviceId, session.deviceId ?? '-'),
+      (l10n.adminSessionDeviceName, session.deviceName ?? '-'),
+      (l10n.adminFilterPlatform, session.clientPlatform),
+      (l10n.adminSessionIp, session.ipAddress),
+      (l10n.adminSessionLoginTime, session.issuedAt),
+      (l10n.adminSessionExpiresAt, session.expiresAt),
+      (l10n.adminSessionLastActive, session.lastActiveAt),
+      (l10n.adminRevokedLabel, session.revokedAt ?? '-'),
+      (l10n.adminSessionRevokeReason, session.revokeReason ?? '-'),
+    ];
+    showDialog<void>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text(l10n.adminSessionDetailTitle),
+            content: SizedBox(
+              width: 420,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final (label, value) in rows) ...[
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: context.adminColors.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(value, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 8),
+                  ],
+                ],
+              ),
             ),
-            items: [
-              DropdownMenuItem(
-                value: 'ALL',
-                child: Text(l10n.adminSessionAllStatuses),
-              ),
-              DropdownMenuItem(
-                value: 'ACTIVE',
-                child: Text(l10n.adminSessionActiveOnly),
-              ),
-              DropdownMenuItem(
-                value: 'REVOKED',
-                child: Text(l10n.adminSessionRevokedOnly),
-              ),
-              DropdownMenuItem(
-                value: 'EXPIRED',
-                child: Text(l10n.adminSessionExpiredOnly),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.coreClose),
               ),
             ],
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _status = value;
-                  _page = 0;
-                });
-              }
-            },
           ),
-        ),
-        SizedBox(
-          width: 190,
-          child: DropdownButtonFormField<String>(
-            initialValue: _platform,
-            decoration: InputDecoration(
-              labelText: l10n.adminFilterPlatform,
-              isDense: true,
-            ),
-            items: [
-              for (final platform in _platforms)
-                DropdownMenuItem(
-                  value: platform,
-                  child: Text(platform == 'ALL' ? l10n.adminAll : platform),
-                ),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  _platform = value;
-                  _page = 0;
-                });
-              }
-            },
-          ),
-        ),
-        SizedBox(
-          width: 160,
-          child: DropdownButtonFormField<int>(
-            initialValue: _retentionDays,
-            decoration: const InputDecoration(isDense: true),
-            items: [
-              for (final days in const <int>[7, 30, 90, 365])
-                DropdownMenuItem(
-                  value: days,
-                  child: Text(l10n.adminRetentionDays('$days')),
-                ),
-            ],
-            onChanged: (value) {
-              if (value != null) setState(() => _retentionDays = value);
-            },
-          ),
-        ),
-        FilledButton.tonalIcon(
-          onPressed: _cleanupSessions,
-          icon: const Icon(Icons.cleaning_services_outlined),
-          label: Text(l10n.adminCleanup),
-        ),
-      ],
     );
   }
 
@@ -342,58 +439,34 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
   }
 }
 
-class _SessionTile extends StatelessWidget {
-  const _SessionTile({required this.session, this.onRevoke});
+class _SessionFilterDropdown<T> extends StatelessWidget {
+  const _SessionFilterDropdown({
+    required this.width,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
 
-  final AdminSessionItem session;
-  final VoidCallback? onRevoke;
+  final double width;
+  final String label;
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final platformIcon = switch (session.clientPlatform) {
-      'web' => Icons.language_rounded,
-      'android' => Icons.phone_android_rounded,
-      'ios' => Icons.phone_iphone_rounded,
-      'desktop' || 'windows' || 'linux' || 'macos' => Icons.computer_rounded,
-      _ => Icons.device_unknown_rounded,
-    };
-    final statusLabel =
-        session.isRevoked
-            ? l10n.adminRevokedLabel
-            : session.isExpired
-            ? l10n.adminExpiredLabel
-            : l10n.adminSessionActiveOnly;
-    return ListTile(
-      leading: Icon(
-        platformIcon,
-        color:
-            session.isInactive
-                ? context.adminColors.onSurfaceVariant
-                : context.adminColors.primary,
-      ),
-      title: Text(
-        '${session.username ?? ''} · ${session.deviceName ?? session.clientPlatform}',
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          decoration: session.isInactive ? TextDecoration.lineThrough : null,
+    return SizedBox(
+      width: width,
+      child: DropdownButtonFormField<T>(
+        initialValue: value,
+        decoration: InputDecoration(
+          labelText: label.isEmpty ? null : label,
+          isDense: true,
         ),
+        items: items,
+        onChanged: onChanged,
       ),
-      subtitle: Text(
-        '${session.ipAddress} · ${session.clientPlatform} · $statusLabel\n'
-        '${session.expiresAt}',
-      ),
-      trailing:
-          onRevoke == null
-              ? null
-              : IconButton(
-                icon: Icon(
-                  Icons.logout_rounded,
-                  color: context.adminColors.error,
-                ),
-                tooltip: l10n.adminRevokeSession,
-                onPressed: onRevoke,
-              ),
     );
   }
 }

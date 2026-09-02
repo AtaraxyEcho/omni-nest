@@ -71,7 +71,102 @@ class AdminConfigPage extends ConsumerWidget {
               title: group.key,
               subtitle: l10n.adminConfigGroupItemCount(group.value.length),
               children: [
-                for (final item in group.value) _ConfigSettingRow(entry: item),
+                AdminDataTable(
+                  showIndex: true,
+                  minTableWidth: 940,
+                  columns: [
+                    AdminListColumn(
+                      key: 'name',
+                      label: l10n.adminConfigItems,
+                      flex: 2,
+                    ),
+                    AdminListColumn(
+                      key: 'description',
+                      label: l10n.adminConfigDescription,
+                      flex: 3,
+                    ),
+                    AdminListColumn(
+                      key: 'value',
+                      label: l10n.adminConfigValue,
+                      flex: 2,
+                    ),
+                    AdminListColumn(
+                      key: 'updatedAt',
+                      label: l10n.adminTaskUpdatedAt,
+                      minWidth: 150,
+                    ),
+                  ],
+                  rowCount: group.value.length,
+                  emptyState: AdminListEmptyState(
+                    message: l10n.adminNoConfigItems,
+                  ),
+                  rowCellsBuilder: (context, index) {
+                    final item = group.value[index];
+                    final summary = _configValueSummary(l10n, item);
+                    return [
+                      Text(
+                        _configTitle(l10n, item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        _configDescription(l10n, item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Tooltip(
+                        message: summary,
+                        child: Text(
+                          summary,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        item.updatedAt,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ];
+                  },
+                  actionsBuilder: (context, index) {
+                    final entry = group.value[index];
+                    final isBoolean = entry.valueType == 'BOOLEAN';
+                    return [
+                      IconButton.outlined(
+                        onPressed:
+                            () => showDialog<void>(
+                              context: context,
+                              builder:
+                                  (_) => _ConfigHistoryDialog(
+                                    configKey: entry.key,
+                                    configLabel: _configTitle(l10n, entry),
+                                  ),
+                            ),
+                        icon: const Icon(Icons.history_rounded, size: 18),
+                        tooltip: l10n.adminConfigHistory,
+                      ),
+                      if (isBoolean)
+                        _ConfigToggleSwitch(entry: entry)
+                      else
+                        FilledButton.tonalIcon(
+                          onPressed:
+                              entry.editable
+                                  ? () => showDialog<void>(
+                                    context: context,
+                                    builder:
+                                        (_) => _ConfigEditDialog(entry: entry),
+                                  )
+                                  : null,
+                          icon: const Icon(Icons.settings_outlined, size: 18),
+                          label: Text(l10n.adminConfigManage),
+                        ),
+                    ];
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -81,97 +176,52 @@ class AdminConfigPage extends ConsumerWidget {
   }
 }
 
-class _ConfigSettingRow extends ConsumerStatefulWidget {
-  const _ConfigSettingRow({required this.entry});
+class _ConfigToggleSwitch extends ConsumerStatefulWidget {
+  const _ConfigToggleSwitch({required this.entry});
 
   final AdminConfigEntry entry;
 
   @override
-  ConsumerState<_ConfigSettingRow> createState() => _ConfigSettingRowState();
+  ConsumerState<_ConfigToggleSwitch> createState() =>
+      _ConfigToggleSwitchState();
 }
 
-class _ConfigSettingRowState extends ConsumerState<_ConfigSettingRow> {
+class _ConfigToggleSwitchState extends ConsumerState<_ConfigToggleSwitch> {
   bool _saving = false;
-  String? _error;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final entry = widget.entry;
-    final isBoolean = entry.valueType == 'BOOLEAN';
-    final currentValue = entry.value == 'true';
-    final summary = _configValueSummary(l10n, entry);
-    return _InfoRow(
-      leading: _configTitle(l10n, entry),
-      middle: [
-        _configDescription(l10n, entry),
-        summary,
-        if (_error != null) _error!,
-      ].where((value) => value.isNotEmpty).join('\n'),
-      trailing: Wrap(
-        spacing: 8,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          if (_saving)
-            const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          IconButton.outlined(
-            onPressed:
-                _saving
-                    ? null
-                    : () => showDialog<void>(
-                      context: context,
-                      builder:
-                          (_) => _ConfigHistoryDialog(
-                            configKey: entry.key,
-                            configLabel: _configTitle(l10n, entry),
-                          ),
-                    ),
-            icon: const Icon(Icons.history_rounded, size: 18),
-            tooltip: l10n.adminConfigHistory,
-          ),
-          if (isBoolean)
-            Switch(
-              value: currentValue,
-              onChanged:
-                  _saving || !entry.editable ? null : _updateBooleanValue,
-            )
-          else
-            FilledButton.tonalIcon(
-              onPressed:
-                  _saving || !entry.editable
-                      ? null
-                      : () => showDialog<void>(
-                        context: context,
-                        builder: (_) => _ConfigEditDialog(entry: entry),
-                      ),
-              icon: const Icon(Icons.settings_outlined),
-              label: Text(l10n.adminConfigManage),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _updateBooleanValue(bool enabled) async {
-    final actions = ref.read(adminOperationsActionsProvider);
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
-    try {
-      await actions.updateConfig(widget.entry.key, enabled.toString());
-    } catch (error) {
-      if (mounted) {
-        setState(() => _error = error.toString());
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
-    }
+    return _saving
+        ? const SizedBox.square(
+          dimension: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        )
+        : Switch(
+          value: widget.entry.value == 'true',
+          onChanged:
+              !widget.entry.editable
+                  ? null
+                  : (enabled) async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    setState(() => _saving = true);
+                    try {
+                      await ref
+                          .read(adminOperationsActionsProvider)
+                          .updateConfig(widget.entry.key, enabled.toString());
+                    } on Object {
+                      if (mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(l10n.adminOperationFailed)),
+                        );
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() => _saving = false);
+                      }
+                    }
+                  },
+        );
   }
 }
 

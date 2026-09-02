@@ -890,7 +890,7 @@ public class AdminOperationsService {
                 .map(s -> new AdminOperationsDto.SessionItem(
                         s.getId(), s.getUserId(), usernameMap.getOrDefault(s.getUserId(), ""),
                         s.getClientPlatform(), s.getDeviceId(), s.getDeviceName(),
-                        s.getIpAddress(), s.getIssuedAt(), s.getExpiresAt(),
+                        s.getIpAddress(), s.getIssuedAt(), s.getExpiresAt(), s.getLastActiveAt(),
                         s.getRevokedAt(), s.getRevokeReason()))
                 .toList();
     }

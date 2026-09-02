@@ -678,6 +678,7 @@ class AdminSessionItem {
     required this.ipAddress,
     required this.issuedAt,
     required this.expiresAt,
+    required this.lastActiveAt,
     this.username,
     this.deviceId,
     this.deviceName,
@@ -696,6 +697,7 @@ class AdminSessionItem {
       ipAddress: json['ipAddress']?.toString() ?? '',
       issuedAt: json['issuedAt']?.toString() ?? '',
       expiresAt: json['expiresAt']?.toString() ?? '',
+      lastActiveAt: json['lastActiveAt']?.toString() ?? '',
       revokedAt: json['revokedAt']?.toString(),
       revokeReason: json['revokeReason']?.toString(),
     );
@@ -710,6 +712,7 @@ class AdminSessionItem {
   final String ipAddress;
   final String issuedAt;
   final String expiresAt;
+  final String lastActiveAt;
   final String? revokedAt;
   final String? revokeReason;
 

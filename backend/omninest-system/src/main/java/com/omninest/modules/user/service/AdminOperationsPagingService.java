@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,6 +125,7 @@ public class AdminOperationsPagingService {
      * @param status 会话状态
      * @param platform 客户端平台
      * @param query 搜索词
+     * @param sort 排序字段，白名单外的取值回退为最后活跃时间
      * @return 会话分页结果
      */
     @Transactional(readOnly = true)
@@ -132,7 +134,8 @@ public class AdminOperationsPagingService {
             int size,
             String status,
             String platform,
-            String query
+            String query,
+            String sort
     ) {
         int pageIndex = normalizePage(page);
         int pageSize = normalizePageSize(size);
@@ -140,12 +143,17 @@ public class AdminOperationsPagingService {
         String normalizedPlatform = normalizeFilter(platform, false);
         String searchPattern = searchPattern(query);
         Instant now = Instant.now();
+        String sortField = sort == null ? "" : sort.toLowerCase(Locale.ROOT);
+        Sort sortSpec = Sort.by(Sort.Direction.DESC, "lastActiveAt");
+        if ("issuedAt".equals(sortField) || "expiresAt".equals(sortField)) {
+            sortSpec = Sort.by(Sort.Direction.DESC, sortField);
+        }
         Page<AuthActiveSession> result = activeSessionRepository.searchAdminSessions(
                 normalizedStatus,
                 normalizedPlatform,
                 searchPattern,
                 now,
-                PageRequest.of(pageIndex, pageSize)
+                PageRequest.of(pageIndex, pageSize, sortSpec)
         );
         if (result.isEmpty() && pageIndex > 0 && result.getTotalPages() > 0) {
             pageIndex = result.getTotalPages() - 1;
@@ -154,7 +162,7 @@ public class AdminOperationsPagingService {
                     normalizedPlatform,
                     searchPattern,
                     now,
-                    PageRequest.of(pageIndex, pageSize)
+                    PageRequest.of(pageIndex, pageSize, sortSpec)
             );
         }
         return PageResponse.of(toSessionItems(result.getContent()), pageIndex, pageSize, result.getTotalElements());
@@ -230,7 +238,8 @@ public class AdminOperationsPagingService {
         return sessions.stream().map(session -> new AdminOperationsDto.SessionItem(
                 session.getId(), session.getUserId(), usernameMap.getOrDefault(session.getUserId(), ""),
                 session.getClientPlatform(), session.getDeviceId(), session.getDeviceName(), session.getIpAddress(),
-                session.getIssuedAt(), session.getExpiresAt(), session.getRevokedAt(), session.getRevokeReason()
+                session.getIssuedAt(), session.getExpiresAt(), session.getLastActiveAt(),
+                session.getRevokedAt(), session.getRevokeReason()
         )).toList();
     }
 

@@ -247,6 +247,7 @@ public final class AdminOperationsDto {
             @Schema(description = "IP 地址", example = "192.168.1.1") String ipAddress,
             @Schema(description = "签发时间") Instant issuedAt,
             @Schema(description = "过期时间") Instant expiresAt,
+            @Schema(description = "最后活跃时间") Instant lastActiveAt,
             @Schema(description = "吊销时间") Instant revokedAt,
             @Schema(description = "吊销原因") String revokeReason
     ) {

@@ -237,30 +237,85 @@ class _AuditLogTab extends StatelessWidget {
               title: l10n.adminRecentAudit,
               subtitle: l10n.adminRecentAuditSubtitle,
               children: [
-                if (result.items.isEmpty)
-                  _EmptyText(l10n.adminNoAuditLogs)
-                else
-                  for (final item in result.items)
-                    _InfoRow(
-                      leading:
-                          item.description.isEmpty
-                              ? item.action
-                              : item.description,
-                      middle:
-                          '${item.action} · ${item.resourceType} ${item.resourceId ?? ''}\n${item.ipAddress} · ${item.createdAt}',
-                      trailing: const Icon(Icons.receipt_long_outlined),
+                AdminDataTable(
+                  showIndex: true,
+                  indexBase: result.page * 20,
+                  minTableWidth: 960,
+                  columns: [
+                    AdminListColumn(
+                      key: 'action',
+                      label: l10n.adminFilterAction,
+                      minWidth: 160,
                     ),
+                    AdminListColumn(
+                      key: 'content',
+                      label: l10n.adminLogContent,
+                      flex: 2,
+                    ),
+                    AdminListColumn(
+                      key: 'resourceType',
+                      label: l10n.adminResourceType,
+                      minWidth: 110,
+                    ),
+                    AdminListColumn(
+                      key: 'ip',
+                      label: l10n.adminSessionIp,
+                      minWidth: 130,
+                    ),
+                    AdminListColumn(
+                      key: 'createdAt',
+                      label: l10n.adminLogTime,
+                      minWidth: 150,
+                    ),
+                  ],
+                  rowCount: result.items.length,
+                  emptyState: AdminListEmptyState(
+                    message: l10n.adminNoAuditLogs,
+                  ),
+                  rowCellsBuilder: (context, index) {
+                    final item = result.items[index];
+                    return [
+                      Text(
+                        item.action,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        item.description.isEmpty
+                            ? item.action
+                            : item.description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.resourceType,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.ipAddress,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        item.createdAt,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ];
+                  },
+                ),
                 const SizedBox(height: 12),
-                AdminPaginationBar(
-                  page: result,
-                  onPrevious:
-                      result.hasPrevious
-                          ? () => onPageChanged(result.page - 1)
-                          : null,
-                  onNext:
-                      result.hasNext
-                          ? () => onPageChanged(result.page + 1)
-                          : null,
+                AdminListPaginationBar(
+                  currentPage: result.page,
+                  totalPages: result.totalPages,
+                  totalElements: result.totalElements,
+                  rowsPerPage: 20,
+                  onPageChanged: onPageChanged,
+                  onRowsPerPageChanged: (_) {},
                 ),
               ],
             ),
@@ -278,7 +333,6 @@ class _LoginAuditLogTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = context.adminColors;
     return page.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => Center(child: Text(l10n.adminLoadFailed(''))),
@@ -289,38 +343,98 @@ class _LoginAuditLogTab extends StatelessWidget {
               title: l10n.adminLoginLog,
               subtitle: l10n.adminLoginLogSubtitle,
               children: [
-                if (result.items.isEmpty)
-                  _EmptyText(l10n.adminNoLoginLogs)
-                else
-                  for (final item in result.items)
-                    _InfoRow(
-                      leading:
-                          item.loginResult == 'SUCCESS'
-                              ? l10n.adminLoginSuccess
-                              : l10n.adminLoginFailed,
-                      middle:
-                          '${item.username} · ${item.clientPlatform}\n${item.ipAddress} · ${item.failureReason ?? ''} · ${item.createdAt}',
-                      trailing: Icon(
-                        item.loginResult == 'SUCCESS'
-                            ? Icons.check_circle_outline
-                            : Icons.error_outline,
-                        color:
-                            item.loginResult == 'SUCCESS'
-                                ? colors.success
-                                : colors.error,
-                      ),
+                AdminDataTable(
+                  showIndex: true,
+                  indexBase: result.page * 20,
+                  minTableWidth: 960,
+                  columns: [
+                    AdminListColumn(
+                      key: 'username',
+                      label: l10n.adminUsername,
+                      flex: 2,
                     ),
+                    AdminListColumn(
+                      key: 'result',
+                      label: l10n.adminFilterStatus,
+                      minWidth: 100,
+                    ),
+                    AdminListColumn(
+                      key: 'platform',
+                      label: l10n.adminFilterPlatform,
+                      minWidth: 100,
+                    ),
+                    AdminListColumn(
+                      key: 'ip',
+                      label: l10n.adminSessionIp,
+                      minWidth: 130,
+                    ),
+                    AdminListColumn(
+                      key: 'failureReason',
+                      label: l10n.adminLoginFailureReason,
+                      flex: 2,
+                    ),
+                    AdminListColumn(
+                      key: 'createdAt',
+                      label: l10n.adminLogTime,
+                      minWidth: 150,
+                    ),
+                  ],
+                  rowCount: result.items.length,
+                  emptyState: AdminListEmptyState(
+                    message: l10n.adminNoLoginLogs,
+                  ),
+                  rowCellsBuilder: (context, index) {
+                    final item = result.items[index];
+                    final success = item.loginResult == 'SUCCESS';
+                    return [
+                      Text(
+                        item.username,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      AdminStatusTag(
+                        label:
+                            success
+                                ? l10n.adminLoginSuccess
+                                : l10n.adminLoginFailed,
+                        tone:
+                            success ? AdminTagTone.success : AdminTagTone.error,
+                      ),
+                      Text(
+                        item.clientPlatform,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        item.ipAddress,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        item.failureReason ?? '-',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        item.createdAt,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ];
+                  },
+                ),
                 const SizedBox(height: 12),
-                AdminPaginationBar(
-                  page: result,
-                  onPrevious:
-                      result.hasPrevious
-                          ? () => onPageChanged(result.page - 1)
-                          : null,
-                  onNext:
-                      result.hasNext
-                          ? () => onPageChanged(result.page + 1)
-                          : null,
+                AdminListPaginationBar(
+                  currentPage: result.page,
+                  totalPages: result.totalPages,
+                  totalElements: result.totalElements,
+                  rowsPerPage: 20,
+                  onPageChanged: onPageChanged,
+                  onRowsPerPageChanged: (_) {},
                 ),
               ],
             ),
