@@ -3255,6 +3255,60 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminLibrarySourcesSection => '视频库源';
 
   @override
+  String get statusHealthHealthy => '健康';
+
+  @override
+  String get statusHealthUnavailable => '不可达';
+
+  @override
+  String get statusScopePersonal => '个人空间';
+
+  @override
+  String get statusScopeShared => '共享空间';
+
+  @override
+  String get statusProviderLocalFilesystem => '本机文件系统';
+
+  @override
+  String get statusProviderMinio => '对象存储';
+
+  @override
+  String get statusManagementManaged => '托管';
+
+  @override
+  String get statusScanReady => '就绪';
+
+  @override
+  String get statusScanDiscovering => '发现中';
+
+  @override
+  String get statusScanApplying => '应用中';
+
+  @override
+  String get statusScanFailed => '失败';
+
+  @override
+  String get statusScanCancelled => '已取消';
+
+  @override
+  String get statusScanPaused => '已暂停';
+
+  @override
+  String get statusScanPartial => '部分完成';
+
+  @override
+  String get statusScanQueued => '排队中';
+
+  @override
+  String get statusPhaseDiscovery => '发现阶段';
+
+  @override
+  String get statusPhaseReview => '审阅阶段';
+
+  @override
+  String get statusPhaseApply => '应用阶段';
+
+  @override
   String get adminLibrarySourceAdd => '新建库源';
 
   @override
@@ -4916,6 +4970,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoSectionHistory => '观看历史';
+
+  @override
+  String get videoSeriesFeatured => '精选';
 
   @override
   String get videoSectionScrapeQueue => '刮削队列';

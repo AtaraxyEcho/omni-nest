@@ -37,32 +37,15 @@ extension MovieSectionMeta on MovieSection {
       MovieSection.movies => l10n.videoSectionMovies,
       MovieSection.tvShows => l10n.videoSectionTvShows,
       MovieSection.anime => l10n.videoSectionAnime,
-      MovieSection.collections => l10n.videoSectionCollections,
-      MovieSection.recent => l10n.videoSectionRecent,
-      MovieSection.continueWatching => l10n.videoSectionContinueWatching,
-      MovieSection.favorites => l10n.videoSectionFavorites,
-      MovieSection.history => l10n.videoSectionHistory,
-      MovieSection.scrapeQueue => l10n.videoSectionScrapeQueue,
-      MovieSection.metadataManagement => l10n.videoSectionMetadataManagement,
-      MovieSection.transcodeTasks => l10n.videoSectionTranscodeTasks,
-      MovieSection.libraryScan => l10n.videoSectionLibraryScan,
-    };
-  }
-
-  String get title {
-    return switch (this) {
-      MovieSection.movies => 'Movies',
-      MovieSection.tvShows => 'TV Shows',
-      MovieSection.anime => 'Anime',
       MovieSection.collections => 'Collections',
-      MovieSection.recent => 'Recently Added',
+      MovieSection.recent => l10n.videoSectionRecent,
       MovieSection.continueWatching => 'Continue Watching',
-      MovieSection.favorites => 'Favorites',
+      MovieSection.favorites => l10n.videoSectionFavorites,
       MovieSection.history => 'Watch History',
       MovieSection.scrapeQueue => 'Scrape Queue',
       MovieSection.metadataManagement => 'Metadata',
-      MovieSection.transcodeTasks => 'Transcoding',
-      MovieSection.libraryScan => 'Library Scan',
+      MovieSection.transcodeTasks => l10n.videoSectionTranscodeTasks,
+      MovieSection.libraryScan => l10n.videoSectionLibraryScan,
     };
   }
 
@@ -334,7 +317,7 @@ class MovieTopBar extends StatelessWidget {
                                 children: [
                                   Icon(s.icon, size: 18),
                                   const SizedBox(width: 12),
-                                  Text(s.title),
+                                  Text(s.labelOf(AppLocalizations.of(context))),
                                 ],
                               ),
                             ),
@@ -360,7 +343,7 @@ class MovieTopBar extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            section.title,
+            section.labelOf(AppLocalizations.of(context)),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

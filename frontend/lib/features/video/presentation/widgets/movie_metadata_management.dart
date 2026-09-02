@@ -21,7 +21,7 @@ class ScrapeQueueSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MovieSectionHeading(
-          title: 'Scrape Queue',
+          title: AppLocalizations.of(context).videoSectionScrapeQueue,
           subtitle: AppLocalizations.of(context).videoScrapeQueueSubtitle,
         ),
         const SizedBox(height: 22),
@@ -180,7 +180,7 @@ class MetadataManagementSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MovieSectionHeading(
-          title: 'Metadata',
+          title: AppLocalizations.of(context).videoSectionMetadataManagement,
           subtitle: AppLocalizations.of(context).videoMetadataSubtitle,
         ),
         const SizedBox(height: 22),

@@ -6241,6 +6241,114 @@ abstract class AppLocalizations {
   /// **'Video library sources'**
   String get adminLibrarySourcesSection;
 
+  /// No description provided for @statusHealthHealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy'**
+  String get statusHealthHealthy;
+
+  /// No description provided for @statusHealthUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get statusHealthUnavailable;
+
+  /// No description provided for @statusScopePersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal space'**
+  String get statusScopePersonal;
+
+  /// No description provided for @statusScopeShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared space'**
+  String get statusScopeShared;
+
+  /// No description provided for @statusProviderLocalFilesystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Local filesystem'**
+  String get statusProviderLocalFilesystem;
+
+  /// No description provided for @statusProviderMinio.
+  ///
+  /// In en, this message translates to:
+  /// **'Object storage'**
+  String get statusProviderMinio;
+
+  /// No description provided for @statusManagementManaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Managed'**
+  String get statusManagementManaged;
+
+  /// No description provided for @statusScanReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get statusScanReady;
+
+  /// No description provided for @statusScanDiscovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovering'**
+  String get statusScanDiscovering;
+
+  /// No description provided for @statusScanApplying.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying'**
+  String get statusScanApplying;
+
+  /// No description provided for @statusScanFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get statusScanFailed;
+
+  /// No description provided for @statusScanCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusScanCancelled;
+
+  /// No description provided for @statusScanPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get statusScanPaused;
+
+  /// No description provided for @statusScanPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially applied'**
+  String get statusScanPartial;
+
+  /// No description provided for @statusScanQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued'**
+  String get statusScanQueued;
+
+  /// No description provided for @statusPhaseDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery phase'**
+  String get statusPhaseDiscovery;
+
+  /// No description provided for @statusPhaseReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review phase'**
+  String get statusPhaseReview;
+
+  /// No description provided for @statusPhaseApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply phase'**
+  String get statusPhaseApply;
+
   /// No description provided for @adminLibrarySourceAdd.
   ///
   /// In en, this message translates to:
@@ -9306,6 +9414,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watch History'**
   String get videoSectionHistory;
+
+  /// No description provided for @videoSeriesFeatured.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get videoSeriesFeatured;
 
   /// No description provided for @videoSectionScrapeQueue.
   ///

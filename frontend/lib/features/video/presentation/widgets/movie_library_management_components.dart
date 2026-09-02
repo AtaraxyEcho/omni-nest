@@ -379,26 +379,11 @@ String _libraryTypeLabel(AppLocalizations l10n, VideoLibraryType libraryType) {
   };
 }
 
-String _storageHealthLabel(AppLocalizations l10n, String status) {
-  return switch (status) {
-    'AVAILABLE' => l10n.videoStorageAvailable,
-    'UNAVAILABLE' => l10n.videoStorageUnavailable,
-    'DISABLED' => l10n.videoStorageDisabled,
-    _ => status,
-  };
-}
+String _storageHealthLabel(AppLocalizations l10n, String healthStatus) =>
+    healthStatusLabel(l10n, healthStatus);
 
-String _sourceStatusLabel(AppLocalizations l10n, String status) {
-  return switch (status) {
-    'QUEUED' || 'DISCOVERING' || 'APPLYING' => l10n.videoRunning,
-    'READY' => l10n.videoAwaitingReview,
-    'PARTIAL' => l10n.videoSourceDegraded,
-    'CANCELLED' => l10n.videoDiscoveryCancelled,
-    'COMPLETED' => l10n.videoCompleted,
-    'FAILED' => l10n.videoFailed,
-    _ => l10n.videoNeverScanned,
-  };
-}
+String _sourceStatusLabel(AppLocalizations l10n, String status) =>
+    scanStatusLabel(l10n, status);
 
 class _CandidateStatusBadge extends StatelessWidget {
   const _CandidateStatusBadge({required this.status});

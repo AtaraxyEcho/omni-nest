@@ -205,7 +205,9 @@ class _SeriesHeroContentFallback extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _SeriesHeroPill(label: 'Featured'),
+        _SeriesHeroPill(
+          label: AppLocalizations.of(context).videoSeriesFeatured,
+        ),
         SizedBox(height: 12),
         Text(
           'Series Center',
@@ -257,7 +259,9 @@ class _SeriesHeroContent extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _SeriesHeroPill(label: 'Featured'),
+            _SeriesHeroPill(
+              label: AppLocalizations.of(context).videoSeriesFeatured,
+            ),
             _SeriesHeroPill(label: item.year),
             if (item.contentRating != null)
               _SeriesHeroPill(label: item.contentRating!),

@@ -7,6 +7,7 @@ import 'package:omninest/features/video/application/movie_controller.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_common_widgets.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_feedback.dart';
+import 'package:omninest/core/utils/status_labels.dart';
 
 part 'movie_metadata_management.dart';
 part 'movie_task_management.dart';

@@ -26,7 +26,7 @@ class HistorySection extends StatelessWidget {
           children: [
             Expanded(
               child: MovieSectionHeading(
-                title: 'Watch History',
+                title: AppLocalizations.of(context).videoSectionHistory,
                 subtitle: AppLocalizations.of(context).videoHistorySubtitle,
               ),
             ),

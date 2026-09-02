@@ -390,9 +390,12 @@ class LibraryScanSection extends ConsumerWidget {
                         Expanded(
                           flex: 2,
                           child: Text(
-                            AppLocalizations.of(
-                              context,
-                            ).videoSourceScanStatus(source.scanStatus),
+                            AppLocalizations.of(context).videoSourceScanStatus(
+                              scanStatusLabel(
+                                AppLocalizations.of(context),
+                                source.scanStatus,
+                              ),
+                            ),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),

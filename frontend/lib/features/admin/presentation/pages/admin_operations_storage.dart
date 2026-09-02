@@ -284,7 +284,10 @@ class _StorageLocationRow extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               location.enabled
-                  ? location.healthStatus
+                  ? healthStatusLabel(
+                    AppLocalizations.of(context),
+                    location.healthStatus,
+                  )
                   : AppLocalizations.of(context).adminStorageStatusDisabled,
               style: Theme.of(context).textTheme.labelSmall,
             ),
@@ -416,7 +419,12 @@ class _StorageDetailPanel extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              AdminStatusPill(label: location.healthStatus),
+              AdminStatusPill(
+                label: healthStatusLabel(
+                  AppLocalizations.of(context),
+                  location.healthStatus,
+                ),
+              ),
             ],
           ),
           const Divider(height: 24),
@@ -431,12 +439,18 @@ class _StorageDetailPanel extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            fieldLabel(l10n.adminStorageFieldScope, location.scopeType),
+            fieldLabel(
+              l10n.adminStorageFieldScope,
+              scopeTypeLabel(l10n, location.scopeType),
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 6),
           Text(
-            fieldLabel(l10n.adminStorageFieldProvider, location.providerType),
+            fieldLabel(
+              l10n.adminStorageFieldProvider,
+              providerTypeLabel(l10n, location.providerType),
+            ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 6),
@@ -445,11 +459,6 @@ class _StorageDetailPanel extends ConsumerWidget {
               l10n.adminStorageFieldManagement,
               location.managementMode,
             ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            fieldLabel(l10n.adminStorageFieldNode, location.nodeId),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           if (canManage) ...[

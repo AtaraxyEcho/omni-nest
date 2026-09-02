@@ -3369,6 +3369,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminLibrarySourcesSection => 'Video library sources';
 
   @override
+  String get statusHealthHealthy => 'Healthy';
+
+  @override
+  String get statusHealthUnavailable => 'Unavailable';
+
+  @override
+  String get statusScopePersonal => 'Personal space';
+
+  @override
+  String get statusScopeShared => 'Shared space';
+
+  @override
+  String get statusProviderLocalFilesystem => 'Local filesystem';
+
+  @override
+  String get statusProviderMinio => 'Object storage';
+
+  @override
+  String get statusManagementManaged => 'Managed';
+
+  @override
+  String get statusScanReady => 'Ready';
+
+  @override
+  String get statusScanDiscovering => 'Discovering';
+
+  @override
+  String get statusScanApplying => 'Applying';
+
+  @override
+  String get statusScanFailed => 'Failed';
+
+  @override
+  String get statusScanCancelled => 'Cancelled';
+
+  @override
+  String get statusScanPaused => 'Paused';
+
+  @override
+  String get statusScanPartial => 'Partially applied';
+
+  @override
+  String get statusScanQueued => 'Queued';
+
+  @override
+  String get statusPhaseDiscovery => 'Discovery phase';
+
+  @override
+  String get statusPhaseReview => 'Review phase';
+
+  @override
+  String get statusPhaseApply => 'Apply phase';
+
+  @override
   String get adminLibrarySourceAdd => 'Add library source';
 
   @override
@@ -5078,6 +5132,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoSectionHistory => 'Watch History';
+
+  @override
+  String get videoSeriesFeatured => 'Featured';
 
   @override
   String get videoSectionScrapeQueue => 'Scrape Queue';

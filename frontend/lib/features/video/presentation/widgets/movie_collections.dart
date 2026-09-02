@@ -29,7 +29,7 @@ class CollectionsSection extends ConsumerWidget {
           children: [
             Expanded(
               child: MovieSectionHeading(
-                title: 'Collections',
+                title: AppLocalizations.of(context).videoSectionCollections,
                 subtitle: AppLocalizations.of(context).videoCollectionsSubtitle,
               ),
             ),
