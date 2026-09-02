@@ -3430,6 +3430,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'No library sources yet. Create one on an enabled storage location.';
 
   @override
+  String get adminLibrarySourcesSubtitle =>
+      'Create movie, series and anime sources on enabled storage locations.';
+
+  @override
+  String get adminLibraryReviewSubtitle =>
+      'Pick a source to review the scan results and apply them.';
+
+  @override
   String get adminStorageStatusHealthy => 'Healthy';
 
   @override
@@ -7710,6 +7718,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoStorageLocation => 'Storage location';
+
+  @override
+  String get videoSelectLibrarySource => 'Select library source';
+
+  @override
+  String get videoNoAvailableStorageLocation => 'No storage location available';
+
+  @override
+  String get videoNoAvailableStorageLocationHint =>
+      'Add a local storage location and ensure it is enabled before creating a library source.';
 
   @override
   String get videoRelativeDirectory => 'Relative directory';

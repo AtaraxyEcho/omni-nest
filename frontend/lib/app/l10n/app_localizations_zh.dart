@@ -3315,6 +3315,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminLibrarySourcesEmpty => '尚无库源，点击\"新建库源\"在已启用的存储位置上建立';
 
   @override
+  String get adminLibrarySourcesSubtitle => '在已启用的存储位置上建立电影、剧集与动漫库源。';
+
+  @override
+  String get adminLibraryReviewSubtitle => '选择库源后审阅扫描结果并应用入库。';
+
+  @override
   String get adminStorageStatusHealthy => '健康';
 
   @override
@@ -7467,6 +7473,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoStorageLocation => '存储位置';
+
+  @override
+  String get videoSelectLibrarySource => '选择库源';
+
+  @override
+  String get videoNoAvailableStorageLocation => '暂无可用存储位置';
+
+  @override
+  String get videoNoAvailableStorageLocationHint => '请先添加本地存储位置并确保已启用，再创建库源。';
 
   @override
   String get videoRelativeDirectory => '相对目录';

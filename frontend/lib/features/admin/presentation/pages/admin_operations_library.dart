@@ -14,6 +14,36 @@ class _LibrarySourcesSection extends ConsumerWidget {
   final ValueChanged<String> onSourceSelected;
   final String? selectedSourceId;
 
+  Widget _buildAddButton(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool canAdd,
+    List<VideoStorageLocation> locations,
+  ) {
+    final button = FilledButton.tonalIcon(
+      onPressed:
+          canAdd
+              ? () => showDialog<void>(
+                context: context,
+                builder:
+                    (dialogContext) => VideoLibrarySourceDialog(
+                      source: null,
+                      locations: locations,
+                    ),
+              )
+              : null,
+      icon: const Icon(Icons.add_rounded),
+      label: Text(l10n.adminLibrarySourceAdd),
+    );
+    if (canAdd) {
+      return button;
+    }
+    return Tooltip(
+      message: l10n.videoNoAvailableStorageLocationHint,
+      child: button,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -22,35 +52,14 @@ class _LibrarySourcesSection extends ConsumerWidget {
     final locations =
         locationsAsync.asData?.value ?? const <VideoStorageLocation>[];
     final sources = sourcesAsync.asData?.value ?? const <VideoLibrarySource>[];
+    final canAdd = locations.any((location) => location.available);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return AdminInfoPanel(
+      title: l10n.adminLibrarySourcesSection,
+      subtitle: l10n.adminLibrarySourcesSubtitle,
+      trailing:
+          canManage ? _buildAddButton(context, l10n, canAdd, locations) : null,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.adminLibrarySourcesSection,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            if (canManage)
-              FilledButton.tonalIcon(
-                onPressed:
-                    () => showDialog<void>(
-                      context: context,
-                      builder:
-                          (dialogContext) => VideoLibrarySourceDialog(
-                            source: null,
-                            locations: locations,
-                          ),
-                    ),
-                icon: const Icon(Icons.add_rounded),
-                label: Text(l10n.adminLibrarySourceAdd),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
         if (sources.isEmpty)
           Row(
             children: [
@@ -164,34 +173,46 @@ class _LibraryReviewSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final selected =
         sources.where((source) => source.id == selectedSourceId).firstOrNull;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final validSelection =
+        selectedSourceId != null &&
+        sources.any((source) => source.id == selectedSourceId);
+    return AdminInfoPanel(
+      title: l10n.videoSectionLibraryScan,
+      subtitle: l10n.adminLibraryReviewSubtitle,
       children: [
-        Text(
-          l10n.videoSectionLibraryScan,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 12),
         if (sources.isEmpty)
-          Text(
-            l10n.adminLibrarySourcesEmpty,
-            style: Theme.of(context).textTheme.bodyMedium,
+          Row(
+            children: [
+              Icon(
+                Icons.manage_search_rounded,
+                size: 18,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.adminLibrarySourcesEmpty,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
           )
         else ...[
-          DropdownButtonFormField<String>(
-            initialValue: selectedSourceId,
-            items: [
-              for (final source in sources)
-                DropdownMenuItem(value: source.id, child: Text(source.name)),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                onSelectSource(value);
-              }
-            },
-            decoration: InputDecoration(
-              labelText: l10n.videoStorageLocation,
+          SizedBox(
+            width: 320,
+            child: DropdownButtonFormField<String>(
+              initialValue: validSelection ? selectedSourceId : null,
               isDense: true,
+              items: [
+                for (final source in sources)
+                  DropdownMenuItem(value: source.id, child: Text(source.name)),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  onSelectSource(value);
+                }
+              },
+              decoration: InputDecoration(
+                labelText: l10n.videoSelectLibrarySource,
+              ),
             ),
           ),
           const SizedBox(height: 16),

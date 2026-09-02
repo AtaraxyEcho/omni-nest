@@ -30,9 +30,9 @@ class _VideoLibrarySourceDialogState
     final source = widget.source;
     _nameController = TextEditingController(text: source?.name ?? '');
     _pathController = TextEditingController(text: source?.relativeRoot ?? '.');
-    _locationId =
-        source?.storageLocationId ??
-        widget.locations.firstWhere((item) => item.available).id;
+    final firstAvailable =
+        widget.locations.where((location) => location.available).firstOrNull;
+    _locationId = source?.storageLocationId ?? (firstAvailable?.id ?? '');
     _libraryType = source?.libraryType ?? VideoLibraryType.movie;
     _enabled = source?.enabled ?? true;
   }
@@ -47,6 +47,18 @@ class _VideoLibrarySourceDialogState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (_locationId.isEmpty || widget.locations.isEmpty) {
+      return AlertDialog(
+        title: Text(l10n.videoNoAvailableStorageLocation),
+        content: Text(l10n.videoNoAvailableStorageLocationHint),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.coreClose),
+          ),
+        ],
+      );
+    }
     return AlertDialog(
       title: Text(
         widget.source == null
@@ -213,9 +225,11 @@ class _VideoLibrarySourceDialogState
     }
     _pathController.text = selected;
     if (_nameController.text.trim().isEmpty) {
-      final location = widget.locations.firstWhere(
-        (item) => item.id == _locationId,
-      );
+      final location =
+          widget.locations.where((item) => item.id == _locationId).firstOrNull;
+      if (location == null) {
+        return;
+      }
       final name =
           selected == '.'
               ? (location.rootName.trim().isEmpty

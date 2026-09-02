@@ -77,6 +77,7 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
       children: [
         Wrap(
           spacing: 8,
+          runSpacing: 8,
           children: [
             for (final filter in _StorageStatusFilter.values)
               ChoiceChip(

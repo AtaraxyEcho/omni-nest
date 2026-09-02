@@ -6361,6 +6361,18 @@ abstract class AppLocalizations {
   /// **'No library sources yet. Create one on an enabled storage location.'**
   String get adminLibrarySourcesEmpty;
 
+  /// No description provided for @adminLibrarySourcesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create movie, series and anime sources on enabled storage locations.'**
+  String get adminLibrarySourcesSubtitle;
+
+  /// No description provided for @adminLibraryReviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a source to review the scan results and apply them.'**
+  String get adminLibraryReviewSubtitle;
+
   /// No description provided for @adminStorageStatusHealthy.
   ///
   /// In en, this message translates to:
@@ -14041,6 +14053,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage location'**
   String get videoStorageLocation;
+
+  /// No description provided for @videoSelectLibrarySource.
+  ///
+  /// In en, this message translates to:
+  /// **'Select library source'**
+  String get videoSelectLibrarySource;
+
+  /// No description provided for @videoNoAvailableStorageLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'No storage location available'**
+  String get videoNoAvailableStorageLocation;
+
+  /// No description provided for @videoNoAvailableStorageLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a local storage location and ensure it is enabled before creating a library source.'**
+  String get videoNoAvailableStorageLocationHint;
 
   /// No description provided for @videoRelativeDirectory.
   ///

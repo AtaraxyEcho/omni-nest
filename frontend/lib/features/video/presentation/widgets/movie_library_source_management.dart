@@ -57,6 +57,7 @@ class _LocalLibrarySourcesPanelState
             data: (sourceItems) {
               if (sourceItems.isEmpty) {
                 return _MediaLibraryEmptyState(
+                  canAdd: items.any((location) => location.available),
                   onAdd:
                       () => showDialog<void>(
                         context: context,
@@ -366,13 +367,27 @@ class _MediaLibraryCommandBar extends StatelessWidget {
 }
 
 class _MediaLibraryEmptyState extends StatelessWidget {
-  const _MediaLibraryEmptyState({required this.onAdd});
+  const _MediaLibraryEmptyState({required this.canAdd, required this.onAdd});
+
+  /// 无可用存储位置时禁用创建入口，避免对话框打开后无位置可选。
+  final bool canAdd;
 
   final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    Widget addButton = FilledButton.icon(
+      onPressed: canAdd ? onAdd : null,
+      icon: const Icon(Icons.add_rounded),
+      label: Text(l10n.videoAddLibrarySource),
+    );
+    if (!canAdd) {
+      addButton = Tooltip(
+        message: l10n.videoNoAvailableStorageLocationHint,
+        child: addButton,
+      );
+    }
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
@@ -413,11 +428,7 @@ class _MediaLibraryEmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add_rounded),
-            label: Text(l10n.videoAddLibrarySource),
-          ),
+          addButton,
         ],
       ),
     );
