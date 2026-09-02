@@ -50,12 +50,12 @@ class MediaImportBatchResult {
 
 enum MediaImportCompletionState { completed, processing, failed }
 
-
 const List<Duration> _completionConflictRetryDelays = <Duration>[
   Duration(milliseconds: 250),
   Duration(milliseconds: 600),
   Duration(milliseconds: 1200),
 ];
+
 /// 媒体导入取消信号。取消会同时终止当前 HTTP 上传并清理服务端会话。
 class MediaImportCancellationToken {
   final List<VoidCallback> _listeners = <VoidCallback>[];

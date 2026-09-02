@@ -490,8 +490,8 @@ class AdminDataTable extends StatelessWidget {
   }
 }
 
-class AdminPaginationBar extends StatelessWidget {
-  const AdminPaginationBar({
+class AdminListPaginationBar extends StatelessWidget {
+  const AdminListPaginationBar({
     required this.currentPage,
     required this.totalPages,
     required this.totalElements,

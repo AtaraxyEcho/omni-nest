@@ -3524,6 +3524,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminSessionManagement => '会话管理';
 
   @override
+  String get adminSessionStatusActive => '有效';
+
+  @override
+  String get adminSessionStatusRevoked => '已强制下线';
+
+  @override
+  String get adminSessionStatusExpired => '已过期';
+
+  @override
+  String get adminSessionDetailTitle => '会话详情';
+
+  @override
+  String get adminSessionFieldDeviceId => '设备 ID';
+
+  @override
+  String get adminSessionDeviceName => '设备名称';
+
+  @override
+  String get adminSessionLoginTime => '登录时间';
+
+  @override
+  String get adminSessionExpiresAt => '过期时间';
+
+  @override
+  String get adminSessionLastActive => '最后活跃时间';
+
+  @override
+  String get adminSessionRevokeReason => '强制下线原因';
+
+  @override
   String get adminSessionManagementSubtitle => '查看所有用户活跃会话，支持强制踢出。';
 
   @override

@@ -3645,6 +3645,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminSessionManagement => 'Session Management';
 
   @override
+  String get adminSessionStatusActive => 'Active';
+
+  @override
+  String get adminSessionStatusRevoked => 'Force-signed out';
+
+  @override
+  String get adminSessionStatusExpired => 'Expired';
+
+  @override
+  String get adminSessionDetailTitle => 'Session details';
+
+  @override
+  String get adminSessionFieldDeviceId => 'Device ID';
+
+  @override
+  String get adminSessionDeviceName => 'Device name';
+
+  @override
+  String get adminSessionLoginTime => 'Signed in at';
+
+  @override
+  String get adminSessionExpiresAt => 'Expires at';
+
+  @override
+  String get adminSessionLastActive => 'Last active at';
+
+  @override
+  String get adminSessionRevokeReason => 'Revoke reason';
+
+  @override
   String get adminSessionManagementSubtitle =>
       'View all user active sessions, supports forced logout.';
 

@@ -6763,6 +6763,66 @@ abstract class AppLocalizations {
   /// **'Session Management'**
   String get adminSessionManagement;
 
+  /// No description provided for @adminSessionStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminSessionStatusActive;
+
+  /// No description provided for @adminSessionStatusRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Force-signed out'**
+  String get adminSessionStatusRevoked;
+
+  /// No description provided for @adminSessionStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get adminSessionStatusExpired;
+
+  /// No description provided for @adminSessionDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session details'**
+  String get adminSessionDetailTitle;
+
+  /// No description provided for @adminSessionFieldDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID'**
+  String get adminSessionFieldDeviceId;
+
+  /// No description provided for @adminSessionDeviceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get adminSessionDeviceName;
+
+  /// No description provided for @adminSessionLoginTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in at'**
+  String get adminSessionLoginTime;
+
+  /// No description provided for @adminSessionExpiresAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires at'**
+  String get adminSessionExpiresAt;
+
+  /// No description provided for @adminSessionLastActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Last active at'**
+  String get adminSessionLastActive;
+
+  /// No description provided for @adminSessionRevokeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke reason'**
+  String get adminSessionRevokeReason;
+
   /// No description provided for @adminSessionManagementSubtitle.
   ///
   /// In en, this message translates to:
