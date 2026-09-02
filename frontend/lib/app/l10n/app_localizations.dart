@@ -6889,6 +6889,12 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get adminConfigDescription;
 
+  /// No description provided for @adminConfigGroupColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get adminConfigGroupColumn;
+
   /// No description provided for @adminBatchRevokeSessions.
   ///
   /// In en, this message translates to:

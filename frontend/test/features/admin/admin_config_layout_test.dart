@@ -7,7 +7,7 @@ import 'package:omninest/features/admin/domain/admin_operations.dart';
 import 'package:omninest/features/admin/presentation/pages/admin_operations_pages.dart';
 
 void main() {
-  testWidgets('配置中心统一展示并按模块和服务归类且不展示原始键', (tester) async {
+  testWidgets('配置中心统一单表展示分组列且不展示原始键', (tester) async {
     tester.view.physicalSize = const Size(1440, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -100,13 +100,76 @@ void main() {
     expect(find.text('共享空间容量上限'), findsOneWidget);
     expect(find.textContaining('无限制'), findsNWidgets(3));
     expect(find.textContaining('10.0 GB'), findsOneWidget);
-    expect(find.text('MusicBrainz'), findsOneWidget);
     expect(find.text('启用 MusicBrainz'), findsOneWidget);
     expect(find.text('TMDB 服务地址'), findsOneWidget);
     expect(
       find.text('music.metadata-provider.musicbrainz.enabled'),
       findsNothing,
     );
+
+    // 关闭态下拉不渲染菜单项：'MusicBrainz' 仅出现在分组单元格；
+    // '存储与共享空间' 出现在两行分组单元格。
+    expect(find.text('MusicBrainz'), findsOneWidget);
+    expect(find.text('存储与共享空间'), findsNWidgets(2));
+    expect(find.text('分组'), findsWidgets);
+    expect(find.text('每页条数'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('分组筛选下拉过滤配置列表', (tester) async {
+    tester.view.physicalSize = const Size(1440, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const view = AdminConfigManagementView(
+      items: [
+        AdminConfigEntry(
+          key: 'media.auto-import.enabled',
+          value: 'true',
+          valueType: 'BOOLEAN',
+          category: 'media',
+          refreshScope: 'HOT',
+          updatedAt: '2026-08-14T08:00:00Z',
+          surface: 'GENERAL',
+          displayCode: 'config.media.autoImport',
+        ),
+        AdminConfigEntry(
+          key: 'storage.quota.default',
+          value: '10',
+          valueType: 'NUMBER',
+          category: 'storage',
+          refreshScope: 'HOT',
+          updatedAt: '2026-08-14T08:00:00Z',
+          surface: 'GENERAL',
+          displayCode: 'config.storage.defaultQuota',
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: OmniNestTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(
+            body: SingleChildScrollView(child: AdminConfigPage(view: view)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dropdownField = find.byWidgetPredicate(
+      (w) => w is DropdownButtonFormField,
+    );
+    await tester.tap(dropdownField.first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('存储与共享空间').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('自动导入已发现的媒体'), findsNothing);
+    expect(find.text('新用户默认配额'), findsOneWidget);
   });
 }

@@ -3708,6 +3708,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminConfigDescription => 'Description';
 
   @override
+  String get adminConfigGroupColumn => 'Group';
+
+  @override
   String get adminBatchRevokeSessions => 'Force sign out selected';
 
   @override

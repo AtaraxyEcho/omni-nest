@@ -28,6 +28,7 @@ part 'admin_operations_logs_tasks.dart';
 part 'admin_operations_logs_center.dart';
 part 'admin_operations_roles.dart';
 part 'admin_operations_roles_config.dart';
+part 'admin_operations_config_labels.dart';
 part 'admin_operations_storage.dart';
 part 'admin_operations_external_storage.dart';
 part 'admin_operations_library.dart';

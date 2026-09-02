@@ -3587,6 +3587,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminConfigDescription => '说明';
 
   @override
+  String get adminConfigGroupColumn => '分组';
+
+  @override
   String get adminBatchRevokeSessions => '批量强制下线';
 
   @override

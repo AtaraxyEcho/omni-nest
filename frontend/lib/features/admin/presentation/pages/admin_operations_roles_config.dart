@@ -1,26 +1,37 @@
 part of 'admin_operations_pages.dart';
 
-class AdminConfigPage extends ConsumerWidget {
+class AdminConfigPage extends ConsumerStatefulWidget {
   const AdminConfigPage({required this.view, super.key});
 
   final AdminConfigManagementView view;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminConfigPage> createState() => _AdminConfigPageState();
+}
+
+class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
+  int _page = 0;
+  int _pageSize = 20;
+  String _groupFilter = 'ALL';
+  AdminListSort? _configSort;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual<String>(adminSearchProvider, (_, _) {
+      if (!mounted) return;
+      setState(() => _page = 0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final query = ref.watch(adminSearchProvider).toLowerCase();
-    final filtered =
-        view.items.where((item) {
-            if (_isRemovedConfigKey(item.key)) {
-              return false;
-            }
-            if (query.isNotEmpty &&
-                !item.key.toLowerCase().contains(query) &&
-                !_configTitle(l10n, item).toLowerCase().contains(query)) {
-              return false;
-            }
-            return true;
-          }).toList()
+    final all =
+        widget.view.items
+            .where((item) => !_isRemovedConfigKey(item.key))
+            .toList()
           ..sort((a, b) {
             final categoryOrder = _configCategoryOrder(
               a.category,
@@ -30,10 +41,27 @@ class AdminConfigPage extends ConsumerWidget {
             }
             return a.key.compareTo(b.key);
           });
-    final groups = <String, List<AdminConfigEntry>>{};
-    for (final item in filtered) {
-      groups.putIfAbsent(_configGroup(l10n, item), () => []).add(item);
-    }
+    final groupNames =
+        all.map((item) => _configGroup(l10n, item)).toSet().toList()..sort();
+    final groupFiltered =
+        _groupFilter == 'ALL'
+            ? all
+            : all
+                .where((item) => _configGroup(l10n, item) == _groupFilter)
+                .toList();
+    final searched =
+        query.isEmpty
+            ? groupFiltered
+            : groupFiltered.where((item) {
+              return item.key.toLowerCase().contains(query) ||
+                  _configTitle(l10n, item).toLowerCase().contains(query);
+            }).toList();
+    final sorted = _applySort(searched, l10n);
+    final totalPages = (sorted.length / _pageSize).ceil();
+    final currentPage = totalPages == 0 ? 0 : _page.clamp(0, totalPages - 1);
+    final pageItems =
+        sorted.skip(currentPage * _pageSize).take(_pageSize).toList();
+
     return _PageEntrance(
       children: [
         AdminPageHeader(
@@ -44,7 +72,7 @@ class AdminConfigPage extends ConsumerWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               AdminStatusPill(
-                label: l10n.adminConfigGroupItemCount(filtered.length),
+                label: l10n.adminConfigGroupItemCount(sorted.length),
               ),
               IconButton.filledTonal(
                 onPressed: () => ref.invalidate(adminConfigsProvider),
@@ -54,125 +82,222 @@ class AdminConfigPage extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        if (groups.isEmpty)
-          AdminInfoPanel(
-            title: l10n.adminConfigItemList,
-            subtitle: l10n.adminConfigItemListSubtitle,
-            children: [
-              _EmptyText(
-                query.isEmpty ? l10n.adminNoConfigItems : l10n.adminNoMatch,
-              ),
-            ],
-          )
-        else
-          for (final group in groups.entries) ...[
-            AdminInfoPanel(
-              title: group.key,
-              subtitle: l10n.adminConfigGroupItemCount(group.value.length),
-              children: [
-                AdminDataTable(
-                  showIndex: true,
-                  minTableWidth: 940,
-                  columns: [
-                    AdminListColumn(
-                      key: 'name',
-                      label: l10n.adminConfigItems,
-                      flex: 2,
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          children: [
+            _SessionFilterDropdown<String>(
+              width: 190,
+              label: l10n.adminConfigGroupColumn,
+              value: _groupFilter,
+              items: [
+                DropdownMenuItem(value: 'ALL', child: Text(l10n.adminAll)),
+                for (final name in groupNames)
+                  DropdownMenuItem(
+                    value: name,
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    AdminListColumn(
-                      key: 'description',
-                      label: l10n.adminConfigDescription,
-                      flex: 3,
-                    ),
-                    AdminListColumn(
-                      key: 'value',
-                      label: l10n.adminConfigValue,
-                      flex: 2,
-                    ),
-                    AdminListColumn(
-                      key: 'updatedAt',
-                      label: l10n.adminTaskUpdatedAt,
-                      minWidth: 150,
-                    ),
-                  ],
-                  rowCount: group.value.length,
-                  emptyState: AdminListEmptyState(
-                    message: l10n.adminNoConfigItems,
                   ),
-                  rowCellsBuilder: (context, index) {
-                    final item = group.value[index];
-                    final summary = _configValueSummary(l10n, item);
-                    return [
-                      Text(
-                        _configTitle(l10n, item),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        _configDescription(l10n, item),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Tooltip(
-                        message: summary,
-                        child: Text(
-                          summary,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        item.updatedAt,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ];
-                  },
-                  actionsBuilder: (context, index) {
-                    final entry = group.value[index];
-                    final isBoolean = entry.valueType == 'BOOLEAN';
-                    return [
-                      IconButton.outlined(
-                        onPressed:
-                            () => showDialog<void>(
-                              context: context,
-                              builder:
-                                  (_) => _ConfigHistoryDialog(
-                                    configKey: entry.key,
-                                    configLabel: _configTitle(l10n, entry),
-                                  ),
-                            ),
-                        icon: const Icon(Icons.history_rounded, size: 18),
-                        tooltip: l10n.adminConfigHistory,
-                      ),
-                      if (isBoolean)
-                        _ConfigToggleSwitch(entry: entry)
-                      else
-                        FilledButton.tonalIcon(
-                          onPressed:
-                              entry.editable
-                                  ? () => showDialog<void>(
-                                    context: context,
-                                    builder:
-                                        (_) => _ConfigEditDialog(entry: entry),
-                                  )
-                                  : null,
-                          icon: const Icon(Icons.settings_outlined, size: 18),
-                          label: Text(l10n.adminConfigManage),
-                        ),
-                    ];
-                  },
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _groupFilter = value;
+                    _page = 0;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        AdminInfoPanel(
+          title: l10n.adminConfigItemList,
+          subtitle: l10n.adminConfigItemListSubtitle,
+          children: [
+            AdminDataTable(
+              showIndex: true,
+              indexBase: currentPage * _pageSize,
+              minTableWidth: 1040,
+              sort: _configSort,
+              onSort:
+                  (key, ascending) => setState(() {
+                    _configSort = AdminListSort(
+                      columnKey: key,
+                      ascending: ascending,
+                    );
+                  }),
+              columns: [
+                AdminListColumn(
+                  key: 'group',
+                  label: l10n.adminConfigGroupColumn,
+                  minWidth: 120,
+                  sortable: true,
+                ),
+                AdminListColumn(
+                  key: 'name',
+                  label: l10n.adminConfigItems,
+                  flex: 2,
+                  sortable: true,
+                ),
+                AdminListColumn(
+                  key: 'description',
+                  label: l10n.adminConfigDescription,
+                  flex: 3,
+                ),
+                AdminListColumn(
+                  key: 'value',
+                  label: l10n.adminConfigValue,
+                  flex: 2,
+                  sortable: true,
+                ),
+                AdminListColumn(
+                  key: 'updatedAt',
+                  label: l10n.adminTaskUpdatedAt,
+                  minWidth: 150,
+                  sortable: true,
                 ),
               ],
+              rowCount: pageItems.length,
+              emptyState: AdminListEmptyState(
+                message:
+                    query.isEmpty && _groupFilter == 'ALL'
+                        ? l10n.adminNoConfigItems
+                        : l10n.adminNoMatch,
+              ),
+              rowCellsBuilder: (context, index) {
+                final item = pageItems[index];
+                final summary = _configValueSummary(l10n, item);
+                return [
+                  Text(
+                    _configGroup(l10n, item),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Text(
+                    _configTitle(l10n, item),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    _configDescription(l10n, item),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Tooltip(
+                    message: summary,
+                    child: Text(
+                      summary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    item.updatedAt,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ];
+              },
+              actionsBuilder: (context, index) {
+                final entry = pageItems[index];
+                final isBoolean = entry.valueType == 'BOOLEAN';
+                return [
+                  IconButton.outlined(
+                    onPressed:
+                        () => showDialog<void>(
+                          context: context,
+                          builder:
+                              (_) => _ConfigHistoryDialog(
+                                configKey: entry.key,
+                                configLabel: _configTitle(l10n, entry),
+                              ),
+                        ),
+                    icon: const Icon(Icons.history_rounded, size: 18),
+                    tooltip: l10n.adminConfigHistory,
+                  ),
+                  if (isBoolean)
+                    _ConfigToggleSwitch(entry: entry)
+                  else
+                    FilledButton.tonalIcon(
+                      onPressed:
+                          entry.editable
+                              ? () => showDialog<void>(
+                                context: context,
+                                builder: (_) => _ConfigEditDialog(entry: entry),
+                              )
+                              : null,
+                      icon: const Icon(Icons.settings_outlined, size: 18),
+                      label: Text(l10n.adminConfigManage),
+                    ),
+                ];
+              },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            AdminListPaginationBar(
+              currentPage: currentPage,
+              totalPages: totalPages == 0 ? 1 : totalPages,
+              totalElements: sorted.length,
+              rowsPerPage: _pageSize,
+              onPageChanged: (next) => setState(() => _page = next),
+              onRowsPerPageChanged: _changePageSize,
+            ),
           ],
+        ),
       ],
     );
+  }
+
+  /// 客户端排序：按列键比较，平局时回退默认的模块与键顺序。
+  List<AdminConfigEntry> _applySort(
+    List<AdminConfigEntry> items,
+    AppLocalizations l10n,
+  ) {
+    final sort = _configSort;
+    if (sort == null) {
+      return items;
+    }
+    int compare(AdminConfigEntry a, AdminConfigEntry b) {
+      final int result = switch (sort.columnKey) {
+        'group' => _configGroup(l10n, a).compareTo(_configGroup(l10n, b)),
+        'name' => _configTitle(l10n, a).compareTo(_configTitle(l10n, b)),
+        'value' => _configValueSummary(
+          l10n,
+          a,
+        ).compareTo(_configValueSummary(l10n, b)),
+        'updatedAt' => a.updatedAt.compareTo(b.updatedAt),
+        _ => 0,
+      };
+      if (result != 0) {
+        return result;
+      }
+      final categoryOrder = _configCategoryOrder(
+        a.category,
+      ).compareTo(_configCategoryOrder(b.category));
+      if (categoryOrder != 0) {
+        return categoryOrder;
+      }
+      return a.key.compareTo(b.key);
+    }
+
+    return items
+      ..sort((a, b) => sort.ascending ? compare(a, b) : compare(b, a));
+  }
+
+  /// 调整每页条数：重置回第一页。
+  void _changePageSize(int size) {
+    setState(() {
+      _pageSize = size;
+      _page = 0;
+    });
   }
 }
 
@@ -223,454 +348,6 @@ class _ConfigToggleSwitchState extends ConsumerState<_ConfigToggleSwitch> {
                   },
         );
   }
-}
-
-bool _isRemovedConfigKey(String key) {
-  return const {
-    'media.metadata-providers.enabled',
-    'reader.metadata-providers.enabled',
-    'reader.metadata-provider.open-library.timeout-seconds',
-    'reader.metadata-provider.open-library.max-results',
-    'music.metadata-providers.enabled',
-    'music.metadata-provider.musicbrainz.request-delay-ms',
-    'music.platform.netease.request-delay-ms',
-    'photo.geo.cache-enabled',
-    'upload.bandwidth.max-parts-per-second',
-    'upload.bandwidth.burst-capacity',
-    'security.clamav.timeout-millis',
-    'file.local-media.enabled',
-    'file.local-media.max-files-per-scan',
-    'file.local-media.max-scan-depth',
-  }.contains(key);
-}
-
-int _configCategoryOrder(String category) {
-  return switch (category) {
-    'media' => 0,
-    'reader' => 1,
-    'music' => 2,
-    'photo' => 3,
-    'storage' => 4,
-    'upload' => 5,
-    'security' => 6,
-    'weather' => 7,
-    _ => 8,
-  };
-}
-
-String _configGroup(AppLocalizations l10n, AdminConfigEntry entry) {
-  if (_startsWithAny(entry.key, const [
-    'music.musicbrainz',
-    'music.metadata-provider.musicbrainz',
-  ])) {
-    return l10n.adminConfigProviderMusicBrainz;
-  }
-  if (_startsWithAny(entry.key, const [
-    'media.tmdb',
-    'media.metadata-provider.tmdb',
-  ])) {
-    return l10n.adminConfigProviderTmdb;
-  }
-  if (_startsWithAny(entry.key, const [
-    'media.subtitle',
-    'media.subtitle.opensubtitles',
-  ])) {
-    return l10n.adminConfigProviderOpenSubtitles;
-  }
-  if (_startsWithAny(entry.key, const [
-    'reader.gbooks',
-    'reader.metadata-provider.google-books',
-  ])) {
-    return l10n.adminConfigProviderGoogleBooks;
-  }
-  if (_startsWithAny(entry.key, const [
-    'reader.openlib',
-    'reader.metadata-provider.open-library',
-  ])) {
-    return l10n.adminConfigProviderOpenLibrary;
-  }
-  if (entry.key.startsWith('photo.ai')) {
-    return l10n.adminConfigProviderPhotoAi;
-  }
-  if (_startsWithAny(entry.key, const [
-    'music.netease',
-    'music.platform.netease',
-  ])) {
-    return l10n.adminConfigProviderNetease;
-  }
-  if (_startsWithAny(entry.key, const ['music.qq', 'music.platform.qq'])) {
-    return l10n.adminConfigProviderQqMusic;
-  }
-  if (entry.key.startsWith('weather.qweather')) {
-    return l10n.adminConfigProviderQWeather;
-  }
-  return switch (entry.category) {
-    'media' => l10n.adminConfigGroupMedia,
-    'reader' => l10n.adminConfigGroupReader,
-    'music' => l10n.adminConfigGroupMusic,
-    'photo' => l10n.adminConfigGroupPhotos,
-    'storage' => l10n.adminConfigGroupStorage,
-    'upload' => l10n.adminConfigGroupUpload,
-    'security' => l10n.adminConfigGroupSecurity,
-    'weather' => l10n.adminConfigGroupWeather,
-    _ => l10n.adminConfigGroupOther,
-  };
-}
-
-bool _startsWithAny(String value, List<String> prefixes) {
-  return prefixes.any(value.startsWith);
-}
-
-String _configTitle(AppLocalizations l10n, AdminConfigEntry entry) {
-  final keyTitle =
-      <String, String>{
-        'media.tmdb.enabled': l10n.adminConfigTmdbEnabled,
-        'media.metadata-provider.tmdb.enabled': l10n.adminConfigTmdbEnabled,
-        'media.tmdb.token': l10n.adminConfigTmdbAccessToken,
-        'media.metadata-provider.tmdb.access-token':
-            l10n.adminConfigTmdbAccessToken,
-        'media.tmdb.key': l10n.adminConfigTmdbApiKey,
-        'media.metadata-provider.tmdb.api-key': l10n.adminConfigTmdbApiKey,
-        'media.tmdb.url': l10n.adminConfigTmdbBaseUrl,
-        'media.metadata-provider.tmdb.base-url': l10n.adminConfigTmdbBaseUrl,
-        'media.tmdb.lang': l10n.adminConfigTmdbLanguage,
-        'media.metadata-provider.tmdb.language': l10n.adminConfigTmdbLanguage,
-        'media.tmdb.timeout': l10n.adminConfigTmdbTimeout,
-        'media.metadata-provider.tmdb.timeout-seconds':
-            l10n.adminConfigTmdbTimeout,
-        'media.tmdb.strategy': l10n.adminConfigTmdbStrategy,
-        'media.metadata-provider.tmdb.search-queries-strategy':
-            l10n.adminConfigTmdbStrategy,
-        'media.tmdb.limit': l10n.adminConfigTmdbLimit,
-        'media.metadata-provider.tmdb.max-results': l10n.adminConfigTmdbLimit,
-        'media.tmdb.adult': l10n.adminConfigTmdbAdult,
-        'media.metadata-provider.tmdb.include-adult': l10n.adminConfigTmdbAdult,
-        'media.transcode.enabled': l10n.adminConfigMediaTranscode,
-        'transcode.enabled': l10n.adminConfigMediaTranscode,
-        'media.import.enabled': l10n.adminConfigMediaAutoImport,
-        'media.auto-import.enabled': l10n.adminConfigMediaAutoImport,
-        'media.subtitle.key': l10n.adminConfigOpenSubtitlesApiKey,
-        'media.subtitle.opensubtitles-api-key':
-            l10n.adminConfigOpenSubtitlesApiKey,
-        'reader.gbooks.enabled': l10n.adminConfigReaderGoogleBooksEnabled,
-        'reader.metadata-provider.google-books.enabled':
-            l10n.adminConfigReaderGoogleBooksEnabled,
-        'reader.gbooks.url': l10n.adminConfigReaderGoogleBooksUrl,
-        'reader.metadata-provider.google-books.base-url':
-            l10n.adminConfigReaderGoogleBooksUrl,
-        'reader.gbooks.lang': l10n.adminConfigReaderGoogleBooksLanguage,
-        'reader.metadata-provider.google-books.language':
-            l10n.adminConfigReaderGoogleBooksLanguage,
-        'reader.gbooks.limit': l10n.adminConfigReaderGoogleBooksLimit,
-        'reader.metadata-provider.google-books.max-results':
-            l10n.adminConfigReaderGoogleBooksLimit,
-        'reader.gbooks.timeout': l10n.adminConfigReaderGoogleBooksTimeout,
-        'reader.metadata-provider.google-books.timeout-seconds':
-            l10n.adminConfigReaderGoogleBooksTimeout,
-        'reader.gbooks.key': l10n.adminConfigReaderGoogleBooksApiKey,
-        'reader.metadata-provider.google-books.api-key':
-            l10n.adminConfigReaderGoogleBooksApiKey,
-        'reader.openlib.enabled': l10n.adminConfigReaderOpenLibraryEnabled,
-        'reader.metadata-provider.open-library.enabled':
-            l10n.adminConfigReaderOpenLibraryEnabled,
-        'reader.openlib.url': l10n.adminConfigReaderOpenLibraryUrl,
-        'reader.metadata-provider.open-library.base-url':
-            l10n.adminConfigReaderOpenLibraryUrl,
-        'reader.openlib.lang': l10n.adminConfigReaderOpenLibraryLanguage,
-        'reader.metadata-provider.open-library.language':
-            l10n.adminConfigReaderOpenLibraryLanguage,
-        'reader.import.enabled': l10n.adminConfigReaderAutoImport,
-        'reader.auto-import.enabled': l10n.adminConfigReaderAutoImport,
-        'music.musicbrainz.enabled': l10n.adminConfigMusicBrainzEnabled,
-        'music.metadata-provider.musicbrainz.enabled':
-            l10n.adminConfigMusicBrainzEnabled,
-        'music.import.enabled': l10n.adminConfigMusicAutoImport,
-        'music.auto-import.enabled': l10n.adminConfigMusicAutoImport,
-        'music.musicbrainz.url': l10n.adminConfigMusicBrainzBaseUrl,
-        'music.metadata-provider.musicbrainz.base-url':
-            l10n.adminConfigMusicBrainzBaseUrl,
-        'music.musicbrainz.ua': l10n.adminConfigMusicBrainzUserAgent,
-        'music.metadata-provider.musicbrainz.user-agent':
-            l10n.adminConfigMusicBrainzUserAgent,
-        'music.musicbrainz.cover-url': l10n.adminConfigMusicBrainzCoverUrl,
-        'music.metadata-provider.musicbrainz.cover-base-url':
-            l10n.adminConfigMusicBrainzCoverUrl,
-        'music.online.enabled': l10n.adminConfigMusicOnlineEnabled,
-        'music.platform.online.enabled': l10n.adminConfigMusicOnlineEnabled,
-        'music.netease.enabled': l10n.adminConfigNeteaseEnabled,
-        'music.platform.netease.enabled': l10n.adminConfigNeteaseEnabled,
-        'music.netease.url': l10n.adminConfigNeteaseBaseUrl,
-        'music.platform.netease.base-url': l10n.adminConfigNeteaseBaseUrl,
-        'music.netease.hosts': l10n.adminConfigNeteaseHosts,
-        'music.platform.netease.playback-host-suffixes':
-            l10n.adminConfigNeteaseHosts,
-        'music.qq.enabled': l10n.adminConfigQqEnabled,
-        'music.platform.qq.enabled': l10n.adminConfigQqEnabled,
-        'music.qq.u-url': l10n.adminConfigQqUUrl,
-        'music.platform.qq.u-url': l10n.adminConfigQqUUrl,
-        'music.qq.c-url': l10n.adminConfigQqCUrl,
-        'music.platform.qq.c-url': l10n.adminConfigQqCUrl,
-        'music.qq.hosts': l10n.adminConfigQqHosts,
-        'music.platform.qq.playback-host-suffixes': l10n.adminConfigQqHosts,
-        'photo.ai.enabled': l10n.adminConfigPhotoAiEnabled,
-        'photo.ai.url': l10n.adminConfigPhotoAiEndpoint,
-        'photo.ai.endpoint': l10n.adminConfigPhotoAiEndpoint,
-        'photo.ai.timeout': l10n.adminConfigPhotoAiTimeout,
-        'photo.ai.timeout-seconds': l10n.adminConfigPhotoAiTimeout,
-        'photo.backup': l10n.adminConfigPhotoBackup,
-        'photo.backup.enabled': l10n.adminConfigPhotoBackup,
-        'photo.geo.rate': l10n.adminConfigPhotoGeoRate,
-        'photo.geo.rate-limit-per-second': l10n.adminConfigPhotoGeoRate,
-        'storage.quota.default': l10n.adminConfigDefaultQuota,
-        'storage.quota.default.gb': l10n.adminConfigDefaultQuota,
-        'storage.quota.warning': l10n.adminConfigQuotaWarning,
-        'storage.quota.warning.percent': l10n.adminConfigQuotaWarning,
-        'share.enabled': l10n.adminConfigSharedSpace,
-        'shared_space.enabled': l10n.adminConfigSharedSpace,
-        'share.max-bytes': l10n.adminConfigSharedSpaceLimit,
-        'shared_space.max_bytes': l10n.adminConfigSharedSpaceLimit,
-        'upload.rate.enabled': l10n.adminConfigUploadRateEnabled,
-        'upload.bandwidth.enabled': l10n.adminConfigUploadRateEnabled,
-        'security.rate-limit': l10n.adminConfigSecurityRateLimit,
-        'rate-limit.default-limit': l10n.adminConfigSecurityRateLimit,
-        'clamav.enabled': l10n.adminConfigClamavEnabled,
-        'security.clamav.enabled': l10n.adminConfigClamavEnabled,
-        'clamav.host': l10n.adminConfigClamavHost,
-        'security.clamav.host': l10n.adminConfigClamavHost,
-        'clamav.port': l10n.adminConfigClamavPort,
-        'security.clamav.port': l10n.adminConfigClamavPort,
-        'weather.enabled': l10n.adminConfigWeather,
-        'weather.qweather.project': l10n.adminConfigQWeatherProjectId,
-        'weather.qweather.project-id': l10n.adminConfigQWeatherProjectId,
-        'weather.qweather.credential': l10n.adminConfigQWeatherCredentialId,
-        'weather.qweather.credential-id': l10n.adminConfigQWeatherCredentialId,
-        'weather.qweather.url': l10n.adminConfigQWeatherBaseUrl,
-        'weather.qweather.base-url': l10n.adminConfigQWeatherBaseUrl,
-        'weather.qweather.key': l10n.adminConfigQWeatherPrivateKey,
-        'weather.qweather.private-key': l10n.adminConfigQWeatherPrivateKey,
-        'weather.location': l10n.adminConfigWeatherLocation,
-      }[entry.key];
-  if (keyTitle != null) {
-    return keyTitle;
-  }
-  return switch (entry.displayCode) {
-    'config.media.autoImport' => l10n.adminConfigMediaAutoImport,
-    'config.photo.backup' => l10n.adminConfigPhotoBackup,
-    'config.storage.defaultQuota' => l10n.adminConfigDefaultQuota,
-    'config.storage.warningPercent' => l10n.adminConfigQuotaWarning,
-    'config.storage.sharedSpace' => l10n.adminConfigSharedSpace,
-    'config.storage.sharedSpaceLimit' => l10n.adminConfigSharedSpaceLimit,
-    'config.storage.localMedia' => l10n.adminConfigLocalMedia,
-    'config.weather.enabled' => l10n.adminConfigWeather,
-    'config.integration.musicbrainz.enabled' =>
-      l10n.adminConfigMusicBrainzEnabled,
-    'config.integration.tmdb.enabled' => l10n.adminConfigTmdbEnabled,
-    'config.integration.tmdb.apiKey' => l10n.adminConfigTmdbApiKey,
-    'config.integration.tmdb.accessToken' => l10n.adminConfigTmdbAccessToken,
-    'config.integration.tmdb.language' => l10n.adminConfigTmdbLanguage,
-    'config.integration.tmdb.includeAdult' => l10n.adminConfigTmdbAdult,
-    'config.integration.opensubtitles.apiKey' =>
-      l10n.adminConfigOpenSubtitlesApiKey,
-    'config.integration.photoAi.enabled' => l10n.adminConfigPhotoAiEnabled,
-    'config.integration.netease.enabled' => l10n.adminConfigNeteaseEnabled,
-    'config.integration.qq.enabled' => l10n.adminConfigQqEnabled,
-    'config.integration.qweather.projectId' =>
-      l10n.adminConfigQWeatherProjectId,
-    'config.integration.qweather.credentialId' =>
-      l10n.adminConfigQWeatherCredentialId,
-    'config.integration.qweather.privateKey' =>
-      l10n.adminConfigQWeatherPrivateKey,
-    _ => l10n.adminConfigUnknownItem,
-  };
-}
-
-String _configDescription(AppLocalizations l10n, AdminConfigEntry entry) {
-  final keyDescription =
-      <String, String>{
-        'storage.quota.default': l10n.adminConfigQuotaUnlimitedDescription,
-        'storage.quota.default.gb': l10n.adminConfigQuotaUnlimitedDescription,
-        'share.max-bytes': l10n.adminConfigQuotaUnlimitedDescription,
-        'shared_space.max_bytes': l10n.adminConfigQuotaUnlimitedDescription,
-        'media.tmdb.url': l10n.adminConfigEndpointDescription,
-        'media.metadata-provider.tmdb.base-url':
-            l10n.adminConfigEndpointDescription,
-        'music.musicbrainz.url': l10n.adminConfigEndpointDescription,
-        'music.metadata-provider.musicbrainz.base-url':
-            l10n.adminConfigEndpointDescription,
-        'weather.qweather.url': l10n.adminConfigEndpointDescription,
-        'weather.qweather.base-url': l10n.adminConfigEndpointDescription,
-        'music.netease.url': l10n.adminConfigEndpointDescription,
-        'music.platform.netease.base-url': l10n.adminConfigEndpointDescription,
-        'music.qq.u-url': l10n.adminConfigEndpointDescription,
-        'music.platform.qq.u-url': l10n.adminConfigEndpointDescription,
-        'music.qq.c-url': l10n.adminConfigEndpointDescription,
-        'music.platform.qq.c-url': l10n.adminConfigEndpointDescription,
-        'photo.ai.url': l10n.adminConfigEndpointDescription,
-        'photo.ai.endpoint': l10n.adminConfigEndpointDescription,
-        'reader.gbooks.url': l10n.adminConfigEndpointDescription,
-        'reader.metadata-provider.google-books.base-url':
-            l10n.adminConfigEndpointDescription,
-        'reader.openlib.url': l10n.adminConfigEndpointDescription,
-        'reader.metadata-provider.open-library.base-url':
-            l10n.adminConfigEndpointDescription,
-        'weather.location': l10n.adminConfigWeatherLocationDescription,
-        'media.tmdb.lang': l10n.adminConfigTmdbLanguageDescription,
-        'media.metadata-provider.tmdb.language':
-            l10n.adminConfigTmdbLanguageDescription,
-        'media.tmdb.adult': l10n.adminConfigTmdbAdultDescription,
-        'media.metadata-provider.tmdb.include-adult':
-            l10n.adminConfigTmdbAdultDescription,
-        'media.tmdb.key': l10n.adminConfigCredentialDescription,
-        'media.tmdb.token': l10n.adminConfigCredentialDescription,
-        'media.metadata-provider.tmdb.api-key':
-            l10n.adminConfigCredentialDescription,
-        'media.metadata-provider.tmdb.access-token':
-            l10n.adminConfigCredentialDescription,
-        'media.subtitle.key': l10n.adminConfigCredentialDescription,
-        'media.subtitle.opensubtitles-api-key':
-            l10n.adminConfigCredentialDescription,
-        'reader.gbooks.key': l10n.adminConfigCredentialDescription,
-        'reader.metadata-provider.google-books.api-key':
-            l10n.adminConfigCredentialDescription,
-        'weather.qweather.key': l10n.adminConfigCredentialDescription,
-        'weather.qweather.private-key': l10n.adminConfigCredentialDescription,
-        'weather.qweather.project':
-            l10n.adminConfigProviderIdentifierDescription,
-        'weather.qweather.project-id':
-            l10n.adminConfigProviderIdentifierDescription,
-        'weather.qweather.credential':
-            l10n.adminConfigProviderIdentifierDescription,
-        'weather.qweather.credential-id':
-            l10n.adminConfigProviderIdentifierDescription,
-        'media.tmdb.timeout': l10n.adminConfigInternalNumericDescription,
-        'media.metadata-provider.tmdb.timeout-seconds':
-            l10n.adminConfigInternalNumericDescription,
-        'media.tmdb.limit': l10n.adminConfigInternalNumericDescription,
-        'media.metadata-provider.tmdb.max-results':
-            l10n.adminConfigInternalNumericDescription,
-        'reader.gbooks.timeout': l10n.adminConfigInternalNumericDescription,
-        'reader.metadata-provider.google-books.timeout-seconds':
-            l10n.adminConfigInternalNumericDescription,
-        'reader.gbooks.limit': l10n.adminConfigInternalNumericDescription,
-        'reader.metadata-provider.google-books.max-results':
-            l10n.adminConfigInternalNumericDescription,
-        'photo.ai.timeout': l10n.adminConfigInternalNumericDescription,
-        'photo.ai.timeout-seconds': l10n.adminConfigInternalNumericDescription,
-        'media.tmdb.strategy': l10n.adminConfigTmdbStrategyDescription,
-        'media.metadata-provider.tmdb.search-queries-strategy':
-            l10n.adminConfigTmdbStrategyDescription,
-        'media.import.enabled': l10n.adminConfigMediaAutoImportDescription,
-        'media.auto-import.enabled': l10n.adminConfigMediaAutoImportDescription,
-        'media.transcode.enabled': l10n.adminConfigMediaTranscodeDescription,
-        'transcode.enabled': l10n.adminConfigMediaTranscodeDescription,
-        'reader.import.enabled': l10n.adminConfigReaderAutoImportDescription,
-        'reader.auto-import.enabled':
-            l10n.adminConfigReaderAutoImportDescription,
-        'music.import.enabled': l10n.adminConfigMusicAutoImportDescription,
-        'music.auto-import.enabled': l10n.adminConfigMusicAutoImportDescription,
-        'photo.geo.rate': l10n.adminConfigPhotoGeoRateDescription,
-        'photo.geo.rate-limit-per-second':
-            l10n.adminConfigPhotoGeoRateDescription,
-        'upload.rate.enabled': l10n.adminConfigUploadRateDescription,
-        'upload.bandwidth.enabled': l10n.adminConfigUploadRateDescription,
-        'security.rate-limit': l10n.adminConfigSecurityRateLimitDescription,
-        'rate-limit.default-limit':
-            l10n.adminConfigSecurityRateLimitDescription,
-        'music.musicbrainz.ua': l10n.adminConfigMusicBrainzUserAgentDescription,
-        'music.metadata-provider.musicbrainz.user-agent':
-            l10n.adminConfigMusicBrainzUserAgentDescription,
-        'music.musicbrainz.cover-url': l10n.adminConfigEndpointDescription,
-        'music.metadata-provider.musicbrainz.cover-base-url':
-            l10n.adminConfigEndpointDescription,
-        'music.netease.hosts': l10n.adminConfigHostSuffixesDescription,
-        'music.platform.netease.playback-host-suffixes':
-            l10n.adminConfigHostSuffixesDescription,
-        'music.qq.hosts': l10n.adminConfigHostSuffixesDescription,
-        'music.platform.qq.playback-host-suffixes':
-            l10n.adminConfigHostSuffixesDescription,
-      }[entry.key];
-  if (keyDescription != null) {
-    return keyDescription;
-  }
-  return switch (entry.displayCode) {
-    'config.media.autoImport' => l10n.adminConfigMediaAutoImportDescription,
-    'config.photo.backup' => l10n.adminConfigPhotoBackupDescription,
-    'config.storage.defaultQuota' => l10n.adminConfigDefaultQuotaDescription,
-    'config.storage.warningPercent' => l10n.adminConfigQuotaWarningDescription,
-    'config.storage.sharedSpace' => l10n.adminConfigSharedSpaceDescription,
-    'config.storage.sharedSpaceLimit' =>
-      l10n.adminConfigSharedSpaceLimitDescription,
-    'config.storage.localMedia' => l10n.adminConfigLocalMediaDescription,
-    'config.weather.enabled' => l10n.adminConfigWeatherDescription,
-    'config.integration.tmdb.language' =>
-      l10n.adminConfigTmdbLanguageDescription,
-    'config.integration.tmdb.includeAdult' =>
-      l10n.adminConfigTmdbAdultDescription,
-    'config.integration.qweather.projectId' ||
-    'config.integration.qweather.credentialId' =>
-      l10n.adminConfigProviderIdentifierDescription,
-    'config.integration.tmdb.apiKey' ||
-    'config.integration.tmdb.accessToken' ||
-    'config.integration.opensubtitles.apiKey' ||
-    'config.integration.qweather.privateKey' =>
-      l10n.adminConfigCredentialDescription,
-    _ => l10n.adminConfigProviderToggleDescription,
-  };
-}
-
-String _configValueSummary(AppLocalizations l10n, AdminConfigEntry entry) {
-  if (_isSensitiveConfigEntry(entry)) {
-    return entry.sensitiveConfigured
-        ? l10n.adminConfigSecretConfigured
-        : l10n.adminConfigNeedsSetup;
-  }
-  if (entry.valueType == 'BOOLEAN') {
-    return entry.value == 'true' ? l10n.adminEnabled : l10n.adminDisabled;
-  }
-  if (_isQuotaConfigEntry(entry) && _isUnlimitedQuota(entry)) {
-    return l10n.adminConfigUnlimited;
-  }
-  if (entry.value.isEmpty) {
-    return l10n.adminConfigNeedsSetup;
-  }
-  return l10n.adminConfigCurrentValue(
-    _formatConfigValue(entry.key, entry.value),
-  );
-}
-
-bool _isQuotaConfigEntry(AdminConfigEntry entry) {
-  return entry.key == 'storage.quota.default' ||
-      entry.key == 'storage.quota.default.gb' ||
-      entry.key == 'share.max-bytes' ||
-      entry.key == 'shared_space.max_bytes';
-}
-
-bool _isUnlimitedQuota(AdminConfigEntry entry) {
-  final value = double.tryParse(entry.value);
-  return value != null && value <= 0;
-}
-
-bool _isSensitiveConfigEntry(AdminConfigEntry entry) {
-  const sensitiveDisplayCodes = {
-    'config.integration.tmdb.apiKey',
-    'config.integration.tmdb.accessToken',
-    'config.integration.opensubtitles.apiKey',
-    'config.integration.qweather.privateKey',
-  };
-  const sensitiveKeys = {
-    'media.tmdb.key',
-    'media.tmdb.token',
-    'media.subtitle.key',
-    'reader.gbooks.key',
-    'weather.qweather.key',
-    'media.metadata-provider.tmdb.api-key',
-    'media.metadata-provider.tmdb.access-token',
-    'media.subtitle.opensubtitles-api-key',
-    'reader.metadata-provider.google-books.api-key',
-    'weather.qweather.private-key',
-  };
-  return sensitiveDisplayCodes.contains(entry.displayCode) ||
-      sensitiveKeys.contains(entry.key);
 }
 
 class _ConfigEditDialog extends ConsumerStatefulWidget {

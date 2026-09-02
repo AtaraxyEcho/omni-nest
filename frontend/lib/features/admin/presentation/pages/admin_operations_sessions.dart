@@ -588,6 +588,7 @@ class _SessionFilterDropdown<T> extends StatelessWidget {
       width: width,
       child: DropdownButtonFormField<T>(
         initialValue: value,
+        isExpanded: true,
         decoration: InputDecoration(
           labelText: label.isEmpty ? null : label,
           isDense: true,

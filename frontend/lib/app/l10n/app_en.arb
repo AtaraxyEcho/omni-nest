@@ -1535,6 +1535,7 @@
   "adminLogContent": "Description",
   "adminLogTime": "Time",
   "adminConfigDescription": "Description",
+  "adminConfigGroupColumn": "Group",
   "adminBatchRevokeSessions": "Force sign out selected",
   "adminBatchRetryTasks": "Retry selected",
   "adminBatchClearSelection": "Clear selection",
