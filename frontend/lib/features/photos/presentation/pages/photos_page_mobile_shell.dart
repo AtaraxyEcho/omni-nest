@@ -293,6 +293,19 @@ class _RegenerateThumbnailsActionState
 
   @override
   Widget build(BuildContext context) {
+    // 重建缩略图为照片管理操作，无 photo:admin 权限时隐藏入口。
+    final canRegenerate =
+        ref
+            .watch(authSessionProvider)
+            .asData
+            ?.value
+            .user
+            ?.permissions
+            .contains('photo:admin') ??
+        false;
+    if (!canRegenerate) {
+      return const SizedBox.shrink();
+    }
     return IconButton(
       tooltip: AppLocalizations.of(context).photoRegenerateThumbnails,
       onPressed: _submitting ? null : _handleRegenerateThumbnails,

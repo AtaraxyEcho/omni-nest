@@ -6,6 +6,7 @@ import 'package:omninest/app/theme/mobile_layout_tokens.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/core/theme/motion_token.dart';
 import 'package:omninest/core/widgets/app_empty_state.dart';
