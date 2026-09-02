@@ -28,6 +28,7 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
     columnKey: 'lastActiveAt',
     ascending: false,
   );
+  final Set<int> _selectedSessions = <int>{};
   int _retentionDays = 30;
   Timer? _searchTimer;
 
@@ -124,6 +125,7 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                   setState(() {
                     _status = value;
                     _page = 0;
+                    _selectedSessions.clear();
                   });
                 }
               },
@@ -144,12 +146,13 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                   setState(() {
                     _platform = value;
                     _page = 0;
+                    _selectedSessions.clear();
                   });
                 }
               },
             ),
             _SessionFilterDropdown<int>(
-              width: 160,
+              width: 190,
               label: '',
               value: _retentionDays,
               items: [
@@ -175,6 +178,16 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
           title: l10n.adminSessionList,
           subtitle: l10n.adminSessionListSubtitle,
           children: [
+            if (_selectedSessions.isNotEmpty) ...[
+              _AdminBatchBar(
+                count: _selectedSessions.length,
+                actionLabel: l10n.adminBatchRevokeSessions,
+                actionIcon: Icons.logout_rounded,
+                onAction: () => _batchRevoke(page),
+                onClear: () => setState(() => _selectedSessions.clear()),
+              ),
+              const SizedBox(height: 8),
+            ],
             AdminDataTable(
               showIndex: true,
               indexBase: page.page * _pageSize,
@@ -222,8 +235,36 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                     ascending: ascending,
                   );
                   _page = 0;
+                  _selectedSessions.clear();
                 });
               },
+              showCheckboxes: true,
+              isChecked: (index) => _selectedSessions.contains(index),
+              isCheckDisabled: (index) => !page.items[index].isActive,
+              onRowCheck:
+                  (index, value) => setState(() {
+                    value
+                        ? _selectedSessions.add(index)
+                        : _selectedSessions.remove(index);
+                  }),
+              onCheckAll: (value) {
+                setState(() {
+                  _selectedSessions.clear();
+                  if (value) {
+                    for (var i = 0; i < page.items.length; i++) {
+                      if (page.items[i].isActive) _selectedSessions.add(i);
+                    }
+                  }
+                });
+              },
+              allChecked:
+                  page.items.any((item) => item.isActive) &&
+                  _selectedSessions.length ==
+                      page.items.where((item) => item.isActive).length,
+              someChecked:
+                  _selectedSessions.isNotEmpty &&
+                  _selectedSessions.length <
+                      page.items.where((item) => item.isActive).length,
               rowCount: page.items.length,
               emptyState: AdminListEmptyState(
                 message:
@@ -301,7 +342,11 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
               totalPages: page.totalPages,
               totalElements: page.totalElements,
               rowsPerPage: _pageSize,
-              onPageChanged: (next) => setState(() => _page = next),
+              onPageChanged:
+                  (next) => setState(() {
+                    _page = next;
+                    _selectedSessions.clear();
+                  }),
               onRowsPerPageChanged: (_) {},
             ),
           ],
@@ -383,6 +428,61 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
             ],
           ),
     );
+  }
+
+  /// 批量强制下线选中的会话：确认后逐条执行，失败项跳过。
+  Future<void> _batchRevoke(AdminPage<AdminSessionItem> page) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: Text(l10n.adminBatchConfirmTitle),
+            content: Text(
+              l10n.adminBatchConfirmMessage('${_selectedSessions.length}'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.coreCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(l10n.coreConfirm),
+              ),
+            ],
+          ),
+    );
+    if (confirmed != true || !mounted) return;
+    final ids = <String>[
+      for (final index in _selectedSessions)
+        if (index >= 0 &&
+            index < page.items.length &&
+            page.items[index].isActive)
+          page.items[index].id,
+    ];
+    try {
+      final result = await ref
+          .read(adminOperationsActionsProvider)
+          .batchRevokeSessions(ids);
+      if (!mounted) return;
+      setState(() => _selectedSessions.clear());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.adminBatchCompleted(
+              result.successCount,
+              result.failedIds.length,
+            ),
+          ),
+        ),
+      );
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.adminOperationFailed)));
+    }
   }
 
   Future<void> _revokeSession(AdminSessionItem session) async {

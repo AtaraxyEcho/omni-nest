@@ -6889,6 +6889,42 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get adminConfigDescription;
 
+  /// No description provided for @adminBatchRevokeSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Force sign out selected'**
+  String get adminBatchRevokeSessions;
+
+  /// No description provided for @adminBatchRetryTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry selected'**
+  String get adminBatchRetryTasks;
+
+  /// No description provided for @adminBatchClearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get adminBatchClearSelection;
+
+  /// No description provided for @adminBatchCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch finished: {success} succeeded, {failed} failed'**
+  String adminBatchCompleted(Object success, Object failed);
+
+  /// No description provided for @adminBatchConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm batch operation'**
+  String get adminBatchConfirmTitle;
+
+  /// No description provided for @adminBatchConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This applies to {count} selected items one by one; failed items are skipped.'**
+  String adminBatchConfirmMessage(Object count);
+
   /// No description provided for @adminCsvExported.
   ///
   /// In en, this message translates to:

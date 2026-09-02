@@ -3708,6 +3708,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminConfigDescription => 'Description';
 
   @override
+  String get adminBatchRevokeSessions => 'Force sign out selected';
+
+  @override
+  String get adminBatchRetryTasks => 'Retry selected';
+
+  @override
+  String get adminBatchClearSelection => 'Clear selection';
+
+  @override
+  String adminBatchCompleted(Object success, Object failed) {
+    return 'Batch finished: $success succeeded, $failed failed';
+  }
+
+  @override
+  String get adminBatchConfirmTitle => 'Confirm batch operation';
+
+  @override
+  String adminBatchConfirmMessage(Object count) {
+    return 'This applies to $count selected items one by one; failed items are skipped.';
+  }
+
+  @override
   String get adminCsvExported => 'Current page exported';
 
   @override

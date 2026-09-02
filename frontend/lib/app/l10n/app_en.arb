@@ -1535,6 +1535,23 @@
   "adminLogContent": "Description",
   "adminLogTime": "Time",
   "adminConfigDescription": "Description",
+  "adminBatchRevokeSessions": "Force sign out selected",
+  "adminBatchRetryTasks": "Retry selected",
+  "adminBatchClearSelection": "Clear selection",
+  "adminBatchCompleted": "Batch finished: {success} succeeded, {failed} failed",
+  "@adminBatchCompleted": {
+    "placeholders": {
+      "success": {},
+      "failed": {}
+    }
+  },
+  "adminBatchConfirmTitle": "Confirm batch operation",
+  "adminBatchConfirmMessage": "This applies to {count} selected items one by one; failed items are skipped.",
+  "@adminBatchConfirmMessage": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "adminCsvExported": "Current page exported",
   "adminLoginFailureReason": "Failure reason",
   "adminSessionRevokeReason": "Revoke reason",

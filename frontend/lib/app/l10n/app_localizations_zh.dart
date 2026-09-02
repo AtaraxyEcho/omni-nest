@@ -3587,6 +3587,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminConfigDescription => '说明';
 
   @override
+  String get adminBatchRevokeSessions => '批量强制下线';
+
+  @override
+  String get adminBatchRetryTasks => '批量重试';
+
+  @override
+  String get adminBatchClearSelection => '取消选择';
+
+  @override
+  String adminBatchCompleted(Object success, Object failed) {
+    return '批量操作完成：成功 $success 项，失败 $failed 项';
+  }
+
+  @override
+  String get adminBatchConfirmTitle => '确认批量操作';
+
+  @override
+  String adminBatchConfirmMessage(Object count) {
+    return '将对选中的 $count 项逐条执行该操作，失败项会跳过。';
+  }
+
+  @override
   String get adminCsvExported => '已导出当前页';
 
   @override

@@ -25,6 +25,7 @@ import 'package:omninest/features/admin/presentation/widgets/admin_list_componen
 import 'package:omninest/features/admin/application/admin_log_csv.dart';
 part 'admin_operations_monitoring.dart';
 part 'admin_operations_logs_tasks.dart';
+part 'admin_operations_logs_center.dart';
 part 'admin_operations_roles.dart';
 part 'admin_operations_roles_config.dart';
 part 'admin_operations_storage.dart';

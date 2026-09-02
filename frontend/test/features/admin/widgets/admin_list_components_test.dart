@@ -110,4 +110,43 @@ void main() {
     await tester.pump();
     expect(find.text('empty-hint'), findsOneWidget);
   });
+
+  testWidgets('复选框列渲染并回调勾选与禁用', (tester) async {
+    final checked = <int>{0};
+    final toggled = <(int, bool)>[];
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: OmniNestTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Scaffold(
+            body: AdminDataTable(
+              columns: const [AdminListColumn(key: 'name', label: '名称')],
+              rowCount: 3,
+              rowCellsBuilder: (context, index) => [Text('row-$index')],
+              showCheckboxes: true,
+              isChecked: (index) => checked.contains(index),
+              isCheckDisabled: (index) => index == 2,
+              onRowCheck: (index, value) => toggled.add((index, value)),
+              allChecked: false,
+              someChecked: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // 表头全选框 + 三行复选框；禁用行无法交互。
+    expect(find.byType(Checkbox), findsNWidgets(4));
+    await tester.tap(find.byType(Checkbox).last);
+    await tester.pump();
+    expect(toggled, isEmpty, reason: '禁用行点击不产生回调');
+
+    await tester.tap(find.byType(Checkbox).at(1));
+    await tester.pump();
+    expect(toggled, contains((0, false)), reason: '行复选框可勾选回调');
+  });
 }

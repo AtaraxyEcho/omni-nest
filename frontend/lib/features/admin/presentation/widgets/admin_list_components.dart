@@ -174,6 +174,7 @@ class AdminDataTable extends StatelessWidget {
     this.showCheckboxes = false,
     this.isChecked,
     this.onRowCheck,
+    this.isCheckDisabled,
     this.allChecked = false,
     this.someChecked = false,
     this.onCheckAll,
@@ -201,6 +202,9 @@ class AdminDataTable extends StatelessWidget {
   final bool showCheckboxes;
   final bool Function(int index)? isChecked;
   final void Function(int index, bool value)? onRowCheck;
+
+  /// 行复选框禁用判定（如不可执行批量操作的行）；为空时全部可勾选。
+  final bool Function(int index)? isCheckDisabled;
   final bool allChecked;
   final bool someChecked;
   final void Function(bool value)? onCheckAll;
@@ -225,6 +229,9 @@ class AdminDataTable extends StatelessWidget {
   /// 序号列固定宽度。
   static const _indexColumnWidth = 64.0;
 
+  /// 复选框列固定宽度。
+  static const _checkColumnWidth = 48.0;
+
   @override
   Widget build(BuildContext context) {
     if (rowCount == 0 && emptyState != null) {
@@ -235,7 +242,9 @@ class AdminDataTable extends StatelessWidget {
 
     // 列宽解析：声明 minWidth 的列按固定宽计入；弹性列按 flex 分配
     // 剩余宽度（表宽取 minTableWidth 与固定宽之和的较大者）。
-    var fixedTotal = showIndex ? _indexColumnWidth : 0.0;
+    var fixedTotal =
+        (showIndex ? _indexColumnWidth : 0.0) +
+        (showCheckboxes ? _checkColumnWidth : 0.0);
     var flexTotal = 0;
     for (final column in columns) {
       if (column.minWidth != null) {
@@ -264,13 +273,7 @@ class AdminDataTable extends StatelessWidget {
     if (_hasActionColumn) {
       headerMainTable = _withActionCell(
         headerMainTable,
-        showCheckboxes
-            ? Checkbox(
-              tristate: true,
-              value: allChecked ? true : (someChecked ? null : false),
-              onChanged: (value) => onCheckAll?.call(value == true),
-            )
-            : Text(l10n.adminListActions, style: _headerStyle(context, colors)),
+        Text(l10n.adminListActions, style: _headerStyle(context, colors)),
         colors,
       );
       rowsMainTable = _withActionCell(
@@ -350,6 +353,18 @@ class AdminDataTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (showCheckboxes)
+          SizedBox(
+            width: _checkColumnWidth,
+            height: 44,
+            child: Center(
+              child: Checkbox(
+                tristate: true,
+                value: allChecked ? true : (someChecked ? null : false),
+                onChanged: (value) => onCheckAll?.call(value == true),
+              ),
+            ),
+          ),
         if (showIndex)
           SizedBox(
             width: _indexColumnWidth,
@@ -427,6 +442,20 @@ class AdminDataTable extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (showCheckboxes)
+                    SizedBox(
+                      width: _checkColumnWidth,
+                      height: rowHeight,
+                      child: Center(
+                        child: Checkbox(
+                          value: isChecked!(i),
+                          onChanged:
+                              (isCheckDisabled?.call(i) ?? false)
+                                  ? null
+                                  : (value) => onRowCheck!(i, value ?? false),
+                        ),
+                      ),
+                    ),
                   if (showIndex)
                     SizedBox(
                       width: _indexColumnWidth,
