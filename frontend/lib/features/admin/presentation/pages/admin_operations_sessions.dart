@@ -24,6 +24,10 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
   String _platform = 'ALL';
   String _query = '';
   int _page = 0;
+  AdminListSort _sessionSort = const AdminListSort(
+    columnKey: 'lastActiveAt',
+    ascending: false,
+  );
   int _retentionDays = 30;
   Timer? _searchTimer;
 
@@ -57,6 +61,8 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
       status: _status,
       platform: _platform,
       query: _query,
+      sort: _sessionSort.columnKey,
+      dir: _sessionSort.ascending ? 'asc' : 'desc',
     );
     final sessionsAsync = ref.watch(adminSessionPageProvider(query));
     return sessionsAsync.when(
@@ -178,6 +184,7 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                   key: 'username',
                   label: l10n.adminUsername,
                   flex: 2,
+                  sortable: true,
                 ),
                 AdminListColumn(
                   key: 'device',
@@ -193,11 +200,13 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                   key: 'issuedAt',
                   label: l10n.adminSessionLoginTime,
                   minWidth: 150,
+                  sortable: true,
                 ),
                 AdminListColumn(
                   key: 'lastActiveAt',
                   label: l10n.adminSessionLastActive,
                   minWidth: 150,
+                  sortable: true,
                 ),
                 AdminListColumn(
                   key: 'status',
@@ -205,6 +214,16 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                   minWidth: 100,
                 ),
               ],
+              sort: _sessionSort,
+              onSort: (key, ascending) {
+                setState(() {
+                  _sessionSort = AdminListSort(
+                    columnKey: key,
+                    ascending: ascending,
+                  );
+                  _page = 0;
+                });
+              },
               rowCount: page.items.length,
               emptyState: AdminListEmptyState(
                 message:

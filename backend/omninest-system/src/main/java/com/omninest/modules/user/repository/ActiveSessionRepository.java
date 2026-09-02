@@ -71,7 +71,6 @@ public interface ActiveSessionRepository extends JpaRepository<AuthActiveSession
                 or lower(coalesce(session.deviceId, '')) like :searchPattern
                 or lower(coalesce(session.ipAddress, '')) like :searchPattern
               )
-            order by session.createdAt desc, session.id desc
             """,
             countQuery = """
                     select count(session) from AuthActiveSession session, AuthUser user

@@ -82,6 +82,8 @@ class AdminOperationsApi {
     String status = '',
     String taskType = '',
     String query = '',
+    String sort = 'updatedAt',
+    String dir = 'desc',
   }) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/admin/tasks/page',
@@ -91,6 +93,8 @@ class AdminOperationsApi {
         'status': status,
         'taskType': taskType,
         'query': query,
+        'sort': sort,
+        'dir': dir,
       },
     );
     return AdminPage.fromJson(
@@ -140,6 +144,8 @@ class AdminOperationsApi {
     required int size,
     String action = '',
     String query = '',
+    String sort = 'createdAt',
+    String dir = 'desc',
   }) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/admin/logs/page',
@@ -148,6 +154,8 @@ class AdminOperationsApi {
         'size': size,
         'action': action,
         'query': query,
+        'sort': sort,
+        'dir': dir,
       },
     );
     return AdminPage.fromJson(parseData(response.data), AdminAuditLog.fromJson);
@@ -339,6 +347,8 @@ class AdminOperationsApi {
     String status = '',
     String platform = '',
     String query = '',
+    String sort = 'lastActiveAt',
+    String dir = 'desc',
   }) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/admin/sessions/page',
@@ -348,6 +358,8 @@ class AdminOperationsApi {
         'status': status,
         'platform': platform,
         'query': query,
+        'sort': sort,
+        'dir': dir,
       },
     );
     return AdminPage.fromJson(
@@ -385,6 +397,8 @@ class AdminOperationsApi {
     String result = '',
     String platform = '',
     String query = '',
+    String sort = 'createdAt',
+    String dir = 'desc',
   }) async {
     final response = await apiClient.dio.get<Map<String, dynamic>>(
       '/admin/login-audit/page',
@@ -394,6 +408,8 @@ class AdminOperationsApi {
         'result': result,
         'platform': platform,
         'query': query,
+        'sort': sort,
+        'dir': dir,
       },
     );
     return AdminPage.fromJson(

@@ -86,9 +86,11 @@ public class AdminOperationsController {
             @RequestParam(defaultValue = "25") int size,
             @RequestParam(defaultValue = "") String status,
             @RequestParam(defaultValue = "") String taskType,
-            @RequestParam(defaultValue = "") String query
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "updatedAt") String sort,
+            @RequestParam(defaultValue = "desc") String dir
     ) {
-        return ApiResponse.success(adminOperationsPagingService.taskPage(page, size, status, taskType, query));
+        return ApiResponse.success(adminOperationsPagingService.taskPage(page, size, status, taskType, query, sort, dir));
     }
 
     @Operation(summary = "重试失败任务")
@@ -112,9 +114,11 @@ public class AdminOperationsController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
             @RequestParam(defaultValue = "") String action,
-            @RequestParam(defaultValue = "") String query
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String dir
     ) {
-        return ApiResponse.success(adminOperationsPagingService.logPage(page, size, action, query));
+        return ApiResponse.success(adminOperationsPagingService.logPage(page, size, action, query, sort, dir));
     }
 
     @Operation(summary = "获取系统监控数据")
@@ -179,9 +183,10 @@ public class AdminOperationsController {
             @RequestParam(defaultValue = "") String status,
             @RequestParam(defaultValue = "") String platform,
             @RequestParam(defaultValue = "") String query,
-            @RequestParam(defaultValue = "lastActiveAt") String sort
+            @RequestParam(defaultValue = "lastActiveAt") String sort,
+            @RequestParam(defaultValue = "desc") String dir
     ) {
-        return ApiResponse.success(adminOperationsPagingService.sessionPage(page, size, status, platform, query, sort));
+        return ApiResponse.success(adminOperationsPagingService.sessionPage(page, size, status, platform, query, sort, dir));
     }
 
     @Operation(summary = "撤销指定会话")
@@ -217,9 +222,11 @@ public class AdminOperationsController {
             @RequestParam(defaultValue = "25") int size,
             @RequestParam(defaultValue = "") String result,
             @RequestParam(defaultValue = "") String platform,
-            @RequestParam(defaultValue = "") String query
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String dir
     ) {
-        return ApiResponse.success(adminOperationsPagingService.loginAuditPage(page, size, result, platform, query));
+        return ApiResponse.success(adminOperationsPagingService.loginAuditPage(page, size, result, platform, query, sort, dir));
     }
 
     @Operation(summary = "清理操作审计日志")

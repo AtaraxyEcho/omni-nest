@@ -16,6 +16,14 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   String _loginResult = 'ALL';
   int _auditPage = 0;
   int _loginPage = 0;
+  AdminListSort _auditSort = const AdminListSort(
+    columnKey: 'createdAt',
+    ascending: false,
+  );
+  AdminListSort _loginSort = const AdminListSort(
+    columnKey: 'createdAt',
+    ascending: false,
+  );
   int _retentionDays = 30;
 
   @override
@@ -56,6 +64,8 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
       size: 20,
       action: _auditAction,
       query: _query,
+      sort: _auditSort.columnKey,
+      dir: _auditSort.ascending ? 'asc' : 'desc',
     );
     final loginQuery = (
       page: _loginPage,
@@ -63,6 +73,8 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
       result: _loginResult,
       platform: 'ALL',
       query: _query,
+      sort: _loginSort.columnKey,
+      dir: _loginSort.ascending ? 'asc' : 'desc',
     );
     final auditAsync = ref.watch(adminLogPageProvider(auditQuery));
     final loginAsync = ref.watch(adminLoginAuditPageProvider(loginQuery));
@@ -137,16 +149,37 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
               onRetentionChanged:
                   (value) => setState(() => _retentionDays = value),
               onCleanup: _cleanupCurrentLog,
+              onExport: _exportCurrentPageAsCsv,
             ),
             const SizedBox(height: 16),
             _buildTabView(
               _AuditLogTab(
                 page: auditAsync,
                 onPageChanged: (page) => setState(() => _auditPage = page),
+                sort: _auditSort,
+                onSort: (key, ascending) {
+                  setState(() {
+                    _auditSort = AdminListSort(
+                      columnKey: key,
+                      ascending: ascending,
+                    );
+                    _auditPage = 0;
+                  });
+                },
               ),
               _LoginAuditLogTab(
                 page: loginAsync,
                 onPageChanged: (page) => setState(() => _loginPage = page),
+                sort: _loginSort,
+                onSort: (key, ascending) {
+                  setState(() {
+                    _loginSort = AdminListSort(
+                      columnKey: key,
+                      ascending: ascending,
+                    );
+                    _loginPage = 0;
+                  });
+                },
               ),
               useExpanded: _useExpanded(constraints),
             ),
@@ -176,6 +209,109 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
     return useExpanded
         ? Expanded(child: tabView)
         : SizedBox(height: 520, child: tabView);
+  }
+
+  /// 将当前激活 Tab 的当前页导出为 CSV 文件。
+  Future<void> _exportCurrentPageAsCsv() async {
+    final l10n = AppLocalizations.of(context);
+    final isAudit = _tabController.index == 0;
+    final suggestedName =
+        isAudit ? 'omninest-audit-logs.csv' : 'omninest-login-audits.csv';
+    try {
+      final csv = isAudit ? _buildAuditCsv(l10n) : _buildLoginCsv(l10n);
+      final savedPath = await saveAdminCsvToDisk(
+        suggestedName: suggestedName,
+        csv: csv,
+      );
+      if (!mounted || savedPath == null) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.adminCsvExported)));
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.adminOperationFailed)));
+    }
+  }
+
+  String _buildAuditCsv(AppLocalizations l10n) {
+    final pageData =
+        ref
+            .read(
+              adminLogPageProvider((
+                page: _auditPage,
+                size: 20,
+                action: _auditAction,
+                query: _query,
+                sort: _auditSort.columnKey,
+                dir: _auditSort.ascending ? 'asc' : 'desc',
+              )),
+            )
+            .asData
+            ?.value;
+    final items = pageData?.items ?? const <AdminAuditLog>[];
+    return adminCsvDocument(
+      header: [
+        l10n.adminFilterAction,
+        l10n.adminLogContent,
+        l10n.adminResourceType,
+        l10n.adminSessionIp,
+        l10n.adminLogTime,
+      ],
+      rows: [
+        for (final item in items)
+          [
+            item.action,
+            item.description.isEmpty ? item.action : item.description,
+            item.resourceType,
+            item.ipAddress,
+            item.createdAt,
+          ],
+      ],
+    );
+  }
+
+  String _buildLoginCsv(AppLocalizations l10n) {
+    final pageData =
+        ref
+            .read(
+              adminLoginAuditPageProvider((
+                page: _loginPage,
+                size: 20,
+                result: _loginResult,
+                platform: 'ALL',
+                query: _query,
+                sort: _loginSort.columnKey,
+                dir: _loginSort.ascending ? 'asc' : 'desc',
+              )),
+            )
+            .asData
+            ?.value;
+    final items = pageData?.items ?? const <AdminLoginAuditItem>[];
+    return adminCsvDocument(
+      header: [
+        l10n.adminUsername,
+        l10n.adminFilterStatus,
+        l10n.adminFilterPlatform,
+        l10n.adminSessionIp,
+        l10n.adminLoginFailureReason,
+        l10n.adminLogTime,
+      ],
+      rows: [
+        for (final item in items)
+          [
+            item.username,
+            item.loginResult == 'SUCCESS'
+                ? l10n.adminLoginSuccess
+                : l10n.adminLoginFailed,
+            item.clientPlatform,
+            item.ipAddress,
+            item.failureReason ?? '',
+            item.createdAt,
+          ],
+      ],
+    );
   }
 
   Future<void> _cleanupCurrentLog() async {
@@ -219,10 +355,17 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
 }
 
 class _AuditLogTab extends StatelessWidget {
-  const _AuditLogTab({required this.page, required this.onPageChanged});
+  const _AuditLogTab({
+    required this.page,
+    required this.onPageChanged,
+    required this.sort,
+    required this.onSort,
+  });
 
   final AsyncValue<AdminPage<AdminAuditLog>> page;
   final ValueChanged<int> onPageChanged;
+  final AdminListSort sort;
+  final void Function(String columnKey, bool ascending) onSort;
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +389,7 @@ class _AuditLogTab extends StatelessWidget {
                       key: 'action',
                       label: l10n.adminFilterAction,
                       minWidth: 160,
+                      sortable: true,
                     ),
                     AdminListColumn(
                       key: 'content',
@@ -266,8 +410,11 @@ class _AuditLogTab extends StatelessWidget {
                       key: 'createdAt',
                       label: l10n.adminLogTime,
                       minWidth: 150,
+                      sortable: true,
                     ),
                   ],
+                  sort: sort,
+                  onSort: onSort,
                   rowCount: result.items.length,
                   emptyState: AdminListEmptyState(
                     message: l10n.adminNoAuditLogs,
@@ -325,10 +472,17 @@ class _AuditLogTab extends StatelessWidget {
 }
 
 class _LoginAuditLogTab extends StatelessWidget {
-  const _LoginAuditLogTab({required this.page, required this.onPageChanged});
+  const _LoginAuditLogTab({
+    required this.page,
+    required this.onPageChanged,
+    required this.sort,
+    required this.onSort,
+  });
 
   final AsyncValue<AdminPage<AdminLoginAuditItem>> page;
   final ValueChanged<int> onPageChanged;
+  final AdminListSort sort;
+  final void Function(String columnKey, bool ascending) onSort;
 
   @override
   Widget build(BuildContext context) {
@@ -352,6 +506,7 @@ class _LoginAuditLogTab extends StatelessWidget {
                       key: 'username',
                       label: l10n.adminUsername,
                       flex: 2,
+                      sortable: true,
                     ),
                     AdminListColumn(
                       key: 'result',
@@ -377,8 +532,11 @@ class _LoginAuditLogTab extends StatelessWidget {
                       key: 'createdAt',
                       label: l10n.adminLogTime,
                       minWidth: 150,
+                      sortable: true,
                     ),
                   ],
+                  sort: sort,
+                  onSort: onSort,
                   rowCount: result.items.length,
                   emptyState: AdminListEmptyState(
                     message: l10n.adminNoLoginLogs,
@@ -458,6 +616,10 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
   String _status = 'ALL';
   String _taskType = 'ALL';
   int _page = 0;
+  AdminListSort _taskSort = const AdminListSort(
+    columnKey: 'updatedAt',
+    ascending: false,
+  );
 
   @override
   void initState() {
@@ -491,6 +653,8 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
       status: _status,
       taskType: _taskType,
       query: _query,
+      sort: _taskSort.columnKey,
+      dir: _taskSort.ascending ? 'asc' : 'desc',
     );
     final taskAsync = ref.watch(adminTaskPageProvider(query));
     final dlqAsync = ref.watch(adminDlqProvider);
@@ -611,6 +775,13 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
             page: page,
             onPageChanged: (value) => setState(() => _page = value),
             onRetry: _retryTask,
+            sort: _taskSort,
+            onSort: (key, ascending) {
+              setState(() {
+                _taskSort = AdminListSort(columnKey: key, ascending: ascending);
+                _page = 0;
+              });
+            },
           ),
           _DlqTab(query: _query, state: dlqAsync),
           useExpanded: useExpanded,
@@ -653,11 +824,15 @@ class _TaskListTab extends StatelessWidget {
     required this.page,
     required this.onPageChanged,
     required this.onRetry,
+    required this.sort,
+    required this.onSort,
   });
 
   final AdminPage<AdminTaskRecord> page;
   final ValueChanged<int> onPageChanged;
   final void Function(String taskId) onRetry;
+  final AdminListSort sort;
+  final void Function(String columnKey, bool ascending) onSort;
 
   @override
   Widget build(BuildContext context) {
@@ -693,14 +868,35 @@ class _TaskListTab extends StatelessWidget {
               showIndex: true,
               indexBase: page.page * 20,
               minTableWidth: 1040,
-              columns: const [
-                AdminListColumn(key: 'taskType', label: '任务类型'),
-                AdminListColumn(key: 'description', label: '任务名称'),
-                AdminListColumn(key: 'progress', label: '进度'),
-                AdminListColumn(key: 'status', label: '执行状态'),
-                AdminListColumn(key: 'error', label: '错误摘要'),
-                AdminListColumn(key: 'updatedAt', label: '更新时间'),
+              columns: [
+                AdminListColumn(
+                  key: 'taskType',
+                  label: l10n.adminFilterTaskType,
+                  sortable: true,
+                ),
+                AdminListColumn(key: 'description', label: l10n.adminTaskName),
+                AdminListColumn(
+                  key: 'progress',
+                  label: l10n.adminProgress,
+                  sortable: true,
+                ),
+                AdminListColumn(
+                  key: 'status',
+                  label: l10n.adminTaskExecutionStatus,
+                  sortable: true,
+                ),
+                AdminListColumn(
+                  key: 'error',
+                  label: l10n.adminTaskErrorSummary,
+                ),
+                AdminListColumn(
+                  key: 'updatedAt',
+                  label: l10n.adminTaskUpdatedAt,
+                  sortable: true,
+                ),
               ],
+              sort: sort,
+              onSort: onSort,
               rowCount: page.items.length,
               emptyState: AdminListEmptyState(
                 message: l10n.adminNoBackgroundTasks,
@@ -829,6 +1025,7 @@ class _AdminRecordFilterBar extends StatelessWidget {
     required this.retentionDays,
     required this.onRetentionChanged,
     required this.onCleanup,
+    required this.onExport,
     super.key,
   });
 
@@ -840,6 +1037,7 @@ class _AdminRecordFilterBar extends StatelessWidget {
   final int retentionDays;
   final ValueChanged<int> onRetentionChanged;
   final VoidCallback onCleanup;
+  final VoidCallback onExport;
 
   @override
   Widget build(BuildContext context) {
@@ -889,6 +1087,11 @@ class _AdminRecordFilterBar extends StatelessWidget {
           onPressed: onCleanup,
           icon: const Icon(Icons.cleaning_services_outlined),
           label: Text(l10n.adminCleanup),
+        ),
+        FilledButton.tonalIcon(
+          onPressed: onExport,
+          icon: const Icon(Icons.file_download_outlined),
+          label: Text(l10n.adminListExportCsv),
         ),
       ],
     );

@@ -2822,6 +2822,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTaskUpdatedAt => 'Updated at';
 
   @override
+  String get adminTaskName => 'Task name';
+
+  @override
+  String get adminTaskExecutionStatus => 'Status';
+
+  @override
   String get adminTaskListSubtitle =>
       'Failed, cancelled and DLQ status support re-queue.';
 
@@ -3700,6 +3706,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminConfigDescription => 'Description';
+
+  @override
+  String get adminCsvExported => 'Current page exported';
 
   @override
   String get adminLoginFailureReason => 'Failure reason';

@@ -55,7 +55,6 @@ public interface AuthLoginAuditRepository extends JpaRepository<AuthLoginAudit, 
                 or lower(coalesce(audit.deviceName, '')) like :searchPattern
                 or lower(coalesce(audit.userAgent, '')) like :searchPattern
               )
-            order by audit.createdAt desc, audit.id desc
             """,
             countQuery = """
                     select count(audit) from AuthLoginAudit audit

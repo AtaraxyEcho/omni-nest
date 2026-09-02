@@ -54,7 +54,9 @@ class TaskRecordAdminRepositoryTest {
                 25,
                 "FAILED",
                 "FILE_INDEX",
-                "%index%"
+                "%index%",
+                "updated_at",
+                false
         );
 
         Mockito.verify(query).setFirstResult(50);

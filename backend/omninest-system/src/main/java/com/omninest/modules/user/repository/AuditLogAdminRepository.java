@@ -54,7 +54,6 @@ public interface AuditLogAdminRepository extends JpaRepository<AuditLog, UUID> {
                 or lower(audit.resourceType) like :searchPattern
                 or lower(coalesce(audit.ipAddress, '')) like :searchPattern
               )
-            order by audit.createdAt desc, audit.id desc
             """,
             countQuery = """
                     select count(audit) from AuditLog audit

@@ -24,6 +24,8 @@ void main() {
             status: 'ALL',
             taskType: 'ALL',
             query: '',
+            sort: 'updatedAt',
+            dir: 'desc',
           )).overrideWith(
             (ref) async => AdminPage<AdminTaskRecord>(
               items: [
@@ -75,6 +77,8 @@ void main() {
             size: 20,
             action: 'ALL',
             query: '',
+            sort: 'createdAt',
+            dir: 'desc',
           )).overrideWith(
             (ref) async => const AdminPage<AdminAuditLog>(
               items: [],
@@ -90,6 +94,8 @@ void main() {
             result: 'ALL',
             platform: 'ALL',
             query: '',
+            sort: 'createdAt',
+            dir: 'desc',
           )).overrideWith(
             (ref) async => const AdminPage<AdminLoginAuditItem>(
               items: [],

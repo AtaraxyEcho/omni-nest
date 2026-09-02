@@ -54,10 +54,10 @@ class AdminOperationsPagingServiceTest {
                 taskId, "FILE_INDEX", "FAILED", 40, "file.index", "失败", 2,
                 Instant.parse("2026-08-25T08:00:00Z"), Instant.parse("2026-08-25T08:01:00Z")
         });
-        when(taskRepository.findPage(0, 100, "FAILED", "FILE_INDEX", "%index%"))
+        when(taskRepository.findPage(0, 100, "FAILED", "FILE_INDEX", "%index%", "updated_at", false))
                 .thenReturn(new TaskRecordAdminRepository.TaskPage(rows, 101));
 
-        var result = service.taskPage(-1, 500, "failed", "file_index", " INDEX ");
+        var result = service.taskPage(-1, 500, "failed", "file_index", " INDEX ", "updatedAt", "desc");
 
         assertThat(result.page()).isZero();
         assertThat(result.size()).isEqualTo(100);
@@ -73,12 +73,15 @@ class AdminOperationsPagingServiceTest {
         audit.setAction("ADMIN_CONFIG_UPDATE");
         audit.setResourceType("config_entries");
         audit.setCreatedAt(Instant.parse("2026-08-25T08:00:00Z"));
-        when(auditRepository.searchAdminLogs("ADMIN_CONFIG_UPDATE", "%config%", PageRequest.of(9, 25)))
-                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(9, 25), 26));
-        when(auditRepository.searchAdminLogs("ADMIN_CONFIG_UPDATE", "%config%", PageRequest.of(1, 25)))
-                .thenReturn(new PageImpl<>(List.of(audit), PageRequest.of(1, 25), 26));
+        Sort defaultSort = Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
+        when(auditRepository.searchAdminLogs(
+                "ADMIN_CONFIG_UPDATE", "%config%", PageRequest.of(9, 25, defaultSort)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(9, 25, defaultSort), 26));
+        when(auditRepository.searchAdminLogs(
+                "ADMIN_CONFIG_UPDATE", "%config%", PageRequest.of(1, 25, defaultSort)))
+                .thenReturn(new PageImpl<>(List.of(audit), PageRequest.of(1, 25, defaultSort), 26));
 
-        var result = service.logPage(9, 25, "admin_config_update", "config");
+        var result = service.logPage(9, 25, "admin_config_update", "config", "createdAt", "desc");
 
         assertThat(result.page()).isEqualTo(1);
         assertThat(result.items()).extracting("id").containsExactly(audit.getId());
@@ -100,11 +103,12 @@ class AdminOperationsPagingServiceTest {
                 eq("web"),
                 eq("%admin%"),
                 any(Instant.class),
-                eq(PageRequest.of(0, 25, Sort.by(Sort.Direction.DESC, "lastActiveAt")))
+                eq(PageRequest.of(
+                        0, 25, Sort.by(Sort.Direction.DESC, "lastActiveAt").and(Sort.by(Sort.Direction.DESC, "id"))))
         )).thenReturn(new PageImpl<>(List.of(session), PageRequest.of(0, 25), 1));
         when(userRepository.findAllById(Set.of(userId))).thenReturn(List.of(user));
 
-        var result = service.sessionPage(0, 25, "active", "WEB", "admin", "lastActiveAt");
+        var result = service.sessionPage(0, 25, "active", "WEB", "admin", "lastActiveAt", "desc");
 
         assertThat(result.items()).extracting("username").containsExactly("admin");
         verify(userRepository).findAllById(Set.of(userId));
@@ -120,18 +124,44 @@ class AdminOperationsPagingServiceTest {
         audit.setClientPlatform("android");
         audit.setCreatedAt(Instant.parse("2026-08-25T08:00:00Z"));
         when(loginAuditRepository.searchAdminAudits(
-                "FAILED", "android", "%admin%", PageRequest.of(0, 25)
+                eq("FAILED"),
+                eq("android"),
+                eq("%admin%"),
+                eq(PageRequest.of(
+                        0, 25, Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"))))
         )).thenReturn(new PageImpl<>(List.of(audit), PageRequest.of(0, 25), 1));
 
-        var result = service.loginAuditPage(0, 25, "failed", "ANDROID", "admin");
+        var result = service.loginAuditPage(0, 25, "failed", "ANDROID", "admin", "createdAt", "desc");
 
         assertThat(result.items()).extracting("loginResult").containsExactly("FAILED");
     }
 
     @Test
     void pageQueriesRejectExcessiveSearchLength() {
-        assertThatThrownBy(() -> service.logPage(0, 25, "", "x".repeat(201)))
+        assertThatThrownBy(() -> service.logPage(0, 25, "", "x".repeat(201), "createdAt", "desc"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("200");
+    }
+
+    @Test
+    void logPageSortWhitelistFallsBackForUnknownField() {
+        Sort whitelisted = Sort.by(Sort.Direction.ASC, "action").and(Sort.by(Sort.Direction.DESC, "id"));
+        when(auditRepository.searchAdminLogs(eq(""), eq(""), eq(PageRequest.of(0, 25, whitelisted))))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 25, whitelisted), 0));
+
+        var result = service.logPage(0, 25, "", "", "action", "asc");
+
+        assertThat(result.items()).isEmpty();
+    }
+
+    @Test
+    void logPageSortUnknownFieldFallsBackToDefault() {
+        Sort defaultSort = Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"));
+        when(auditRepository.searchAdminLogs(eq(""), eq(""), eq(PageRequest.of(0, 25, defaultSort))))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 25, defaultSort), 0));
+
+        var result = service.logPage(0, 25, "", "", "evil;drop", "asc");
+
+        assertThat(result.items()).isEmpty();
     }
 }

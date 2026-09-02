@@ -1,13 +1,45 @@
 typedef AdminTaskPageQuery =
-    ({int page, int size, String status, String taskType, String query});
+    ({
+      int page,
+      int size,
+      String status,
+      String taskType,
+      String query,
+      String sort,
+      String dir,
+    });
 
-typedef AdminLogPageQuery = ({int page, int size, String action, String query});
+typedef AdminLogPageQuery =
+    ({
+      int page,
+      int size,
+      String action,
+      String query,
+      String sort,
+      String dir,
+    });
 
 typedef AdminSessionPageQuery =
-    ({int page, int size, String status, String platform, String query});
+    ({
+      int page,
+      int size,
+      String status,
+      String platform,
+      String query,
+      String sort,
+      String dir,
+    });
 
 typedef AdminLoginAuditPageQuery =
-    ({int page, int size, String result, String platform, String query});
+    ({
+      int page,
+      int size,
+      String result,
+      String platform,
+      String query,
+      String sort,
+      String dir,
+    });
 
 class AdminPage<T> {
   const AdminPage({

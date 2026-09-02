@@ -2747,6 +2747,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminTaskUpdatedAt => '更新时间';
 
   @override
+  String get adminTaskName => '任务名称';
+
+  @override
+  String get adminTaskExecutionStatus => '执行状态';
+
+  @override
   String get adminTaskListSubtitle => '失败、取消、死信状态支持重新入队。';
 
   @override
@@ -3579,6 +3585,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminConfigDescription => '说明';
+
+  @override
+  String get adminCsvExported => '已导出当前页';
 
   @override
   String get adminLoginFailureReason => '失败原因';

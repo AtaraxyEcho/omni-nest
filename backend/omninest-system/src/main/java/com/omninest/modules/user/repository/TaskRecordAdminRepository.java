@@ -60,10 +60,20 @@ public class TaskRecordAdminRepository {
      * @param status 任务状态，空字符串表示不限
      * @param taskType 任务类型，空字符串表示不限
      * @param searchPattern 模糊搜索模式，空字符串表示不限
+     * @param sortColumn 排序列，仅允许白名单内的列名
+     * @param ascending 是否升序
      * @return 任务分页投影
      */
     @SuppressWarnings("unchecked")
-    public TaskPage findPage(int page, int size, String status, String taskType, String searchPattern) {
+    public TaskPage findPage(
+            int page,
+            int size,
+            String status,
+            String taskType,
+            String searchPattern,
+            String sortColumn,
+            boolean ascending
+    ) {
         String filters = """
                 where (:status = '' or status = :status)
                   and (:taskType = '' or task_type = :taskType)
@@ -79,7 +89,7 @@ public class TaskRecordAdminRepository {
                 select id, task_type, status, progress, routing_key,
                        error_summary, retry_count, created_at, updated_at
                 from omni.sys_tasks
-                """ + filters + "order by updated_at desc, id desc");
+                """ + filters + taskOrderClause(sortColumn, ascending));
         bindPageFilters(contentQuery, status, taskType, searchPattern);
         int boundedSize = Math.min(Math.max(1, size), MAX_PAGE_SIZE);
         contentQuery.setFirstResult(Math.max(0, page) * boundedSize);
@@ -160,6 +170,20 @@ public class TaskRecordAdminRepository {
      * @param items 当前页任务
      * @param totalElements 筛选后的总数量
      */
+    /**
+     * 任务排序白名单：仅允许固定列，防止动态排序注入。
+     */
+    private static final java.util.Set<String> TASK_ORDERABLE_COLUMNS =
+            java.util.Set.of("updated_at", "created_at", "progress", "task_type", "status");
+
+    /**
+     * 构建任务排序子句：列不在白名单时回退为更新时间，并追加 id 倒序兜底。
+     */
+    private String taskOrderClause(String column, boolean ascending) {
+        String safe = TASK_ORDERABLE_COLUMNS.contains(column) ? column : "updated_at";
+        return "order by " + safe + (ascending ? " asc" : " desc") + ", id desc";
+    }
+
     public record TaskPage(List<Object[]> items, long totalElements) {
     }
 }

@@ -56,6 +56,8 @@ final adminTaskPageProvider = FutureProvider.autoDispose
             status: query.status == 'ALL' ? '' : query.status,
             taskType: query.taskType == 'ALL' ? '' : query.taskType,
             query: query.query,
+            sort: query.sort,
+            dir: query.dir,
           );
     });
 
@@ -76,6 +78,8 @@ final adminLogPageProvider = FutureProvider.autoDispose
             size: query.size,
             action: query.action == 'ALL' ? '' : query.action,
             query: query.query,
+            sort: query.sort,
+            dir: query.dir,
           );
     });
 
@@ -116,6 +120,8 @@ final adminSessionPageProvider = FutureProvider.autoDispose
             status: query.status == 'ALL' ? '' : query.status,
             platform: query.platform == 'ALL' ? '' : query.platform,
             query: query.query,
+            sort: query.sort,
+            dir: query.dir,
           );
     });
 
@@ -136,6 +142,8 @@ final adminLoginAuditPageProvider = FutureProvider.autoDispose
             result: query.result == 'ALL' ? '' : query.result,
             platform: query.platform == 'ALL' ? '' : query.platform,
             query: query.query,
+            sort: query.sort,
+            dir: query.dir,
           );
     });
 

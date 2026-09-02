@@ -65,21 +65,27 @@ public class AdminOperationsPagingService {
             int size,
             String status,
             String taskType,
-            String query
+            String query,
+            String sort,
+            String dir
     ) {
         int pageIndex = normalizePage(page);
         int pageSize = normalizePageSize(size);
         String normalizedStatus = normalizeFilter(status, true);
         String normalizedTaskType = normalizeFilter(taskType, true);
         String searchPattern = searchPattern(query);
+        String sortColumn = taskSortColumn(sort);
+        boolean ascending = "asc".equalsIgnoreCase(dir);
         TaskRecordAdminRepository.TaskPage result = taskRecordRepository.findPage(
-                pageIndex, pageSize, normalizedStatus, normalizedTaskType, searchPattern
+                pageIndex, pageSize, normalizedStatus, normalizedTaskType, searchPattern,
+                sortColumn, ascending
         );
         int totalPages = totalPages(result.totalElements(), pageSize);
         if (result.items().isEmpty() && pageIndex > 0 && totalPages > 0) {
             pageIndex = totalPages - 1;
             result = taskRecordRepository.findPage(
-                    pageIndex, pageSize, normalizedStatus, normalizedTaskType, searchPattern
+                    pageIndex, pageSize, normalizedStatus, normalizedTaskType, searchPattern,
+                    sortColumn, ascending
             );
         }
         return PageResponse.of(toTaskItems(result.items()), pageIndex, pageSize, result.totalElements());
@@ -99,19 +105,22 @@ public class AdminOperationsPagingService {
             int page,
             int size,
             String action,
-            String query
+            String query,
+            String sort,
+            String dir
     ) {
         int pageIndex = normalizePage(page);
         int pageSize = normalizePageSize(size);
         String normalizedAction = normalizeFilter(action, true);
         String searchPattern = searchPattern(query);
+        Sort sortSpec = adminSort(sort, dir, Map.of("createdat", "createdAt", "action", "action"), "createdat");
         Page<AuditLog> result = auditLogRepository.searchAdminLogs(
-                normalizedAction, searchPattern, PageRequest.of(pageIndex, pageSize)
+                normalizedAction, searchPattern, PageRequest.of(pageIndex, pageSize, sortSpec)
         );
         if (result.isEmpty() && pageIndex > 0 && result.getTotalPages() > 0) {
             pageIndex = result.getTotalPages() - 1;
             result = auditLogRepository.searchAdminLogs(
-                    normalizedAction, searchPattern, PageRequest.of(pageIndex, pageSize)
+                    normalizedAction, searchPattern, PageRequest.of(pageIndex, pageSize, sortSpec)
             );
         }
         return PageResponse.of(toAuditItems(result.getContent()), pageIndex, pageSize, result.getTotalElements());
@@ -135,7 +144,8 @@ public class AdminOperationsPagingService {
             String status,
             String platform,
             String query,
-            String sort
+            String sort,
+            String dir
     ) {
         int pageIndex = normalizePage(page);
         int pageSize = normalizePageSize(size);
@@ -143,11 +153,12 @@ public class AdminOperationsPagingService {
         String normalizedPlatform = normalizeFilter(platform, false);
         String searchPattern = searchPattern(query);
         Instant now = Instant.now();
-        String sortField = sort == null ? "" : sort.toLowerCase(Locale.ROOT);
-        Sort sortSpec = Sort.by(Sort.Direction.DESC, "lastActiveAt");
-        if ("issuedAt".equals(sortField) || "expiresAt".equals(sortField)) {
-            sortSpec = Sort.by(Sort.Direction.DESC, sortField);
-        }
+        Sort sortSpec = adminSort(sort, dir, Map.of(
+                "lastactiveat", "lastActiveAt",
+                "issuedat", "issuedAt",
+                "expiresat", "expiresAt",
+                "username", "user.username"
+        ), "lastactiveat");
         Page<AuthActiveSession> result = activeSessionRepository.searchAdminSessions(
                 normalizedStatus,
                 normalizedPlatform,
@@ -184,20 +195,23 @@ public class AdminOperationsPagingService {
             int size,
             String result,
             String platform,
-            String query
+            String query,
+            String sort,
+            String dir
     ) {
         int pageIndex = normalizePage(page);
         int pageSize = normalizePageSize(size);
         String normalizedResult = normalizeFilter(result, true);
         String normalizedPlatform = normalizeFilter(platform, false);
         String searchPattern = searchPattern(query);
+        Sort sortSpec = adminSort(sort, dir, Map.of("createdat", "createdAt", "username", "username"), "createdat");
         Page<AuthLoginAudit> auditPage = loginAuditRepository.searchAdminAudits(
-                normalizedResult, normalizedPlatform, searchPattern, PageRequest.of(pageIndex, pageSize)
+                normalizedResult, normalizedPlatform, searchPattern, PageRequest.of(pageIndex, pageSize, sortSpec)
         );
         if (auditPage.isEmpty() && pageIndex > 0 && auditPage.getTotalPages() > 0) {
             pageIndex = auditPage.getTotalPages() - 1;
             auditPage = loginAuditRepository.searchAdminAudits(
-                    normalizedResult, normalizedPlatform, searchPattern, PageRequest.of(pageIndex, pageSize)
+                    normalizedResult, normalizedPlatform, searchPattern, PageRequest.of(pageIndex, pageSize, sortSpec)
             );
         }
         return PageResponse.of(
@@ -249,6 +263,29 @@ public class AdminOperationsPagingService {
                 audit.getClientPlatform(), audit.getIpAddress(), audit.getUserAgent(),
                 audit.getFailureReason(), audit.getCreatedAt()
         )).toList();
+    }
+
+    /**
+     * 构建管理端分页排序：字段仅允许白名单，方向由 dir 决定（默认倒序），并追加 id 倒序兜底。
+     */
+    private Sort adminSort(String sort, String dir, Map<String, String> whitelist, String defaultField) {
+        String requested = sort == null ? "" : sort.toLowerCase(Locale.ROOT);
+        String property = whitelist.getOrDefault(requested, whitelist.get(defaultField));
+        Sort.Direction direction = "asc".equalsIgnoreCase(dir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        return Sort.by(direction, property).and(Sort.by(Sort.Direction.DESC, "id"));
+    }
+
+    /**
+     * 任务排序白名单：仅允许映射到固定 SQL 列的字段，其余回退为更新时间。
+     */
+    private String taskSortColumn(String sort) {
+        return switch (sort == null ? "" : sort.toLowerCase(Locale.ROOT)) {
+            case "progress" -> "progress";
+            case "tasktype" -> "task_type";
+            case "status" -> "status";
+            case "createdat" -> "created_at";
+            default -> "updated_at";
+        };
     }
 
     private int normalizePage(int page) {

@@ -5251,6 +5251,18 @@ abstract class AppLocalizations {
   /// **'Updated at'**
   String get adminTaskUpdatedAt;
 
+  /// No description provided for @adminTaskName.
+  ///
+  /// In en, this message translates to:
+  /// **'Task name'**
+  String get adminTaskName;
+
+  /// No description provided for @adminTaskExecutionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get adminTaskExecutionStatus;
+
   /// No description provided for @adminTaskListSubtitle.
   ///
   /// In en, this message translates to:
@@ -6876,6 +6888,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Description'**
   String get adminConfigDescription;
+
+  /// No description provided for @adminCsvExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Current page exported'**
+  String get adminCsvExported;
 
   /// No description provided for @adminLoginFailureReason.
   ///
