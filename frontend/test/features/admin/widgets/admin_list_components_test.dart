@@ -48,6 +48,8 @@ void main() {
                       : null,
               sort: sort,
               onSort: onSort,
+              showIndex: true,
+              indexBase: 20,
             ),
           ),
         ),
@@ -58,6 +60,7 @@ void main() {
 
   testWidgets('表格渲染行与固定操作列', (tester) async {
     await pumpTable(tester, rowCount: 3, onSort: (columnKey, ascending) {});
+    expect(find.text('21'), findsOneWidget, reason: '分页基数下的序号');
     expect(find.text('row-0'), findsOneWidget);
     expect(find.text('row-2'), findsOneWidget);
     expect(find.byIcon(Icons.more_vert_rounded), findsNWidgets(3));
