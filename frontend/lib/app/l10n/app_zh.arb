@@ -111,7 +111,7 @@
   "setupStatusFailed": "无法读取安装状态",
   "setupCreateFailed": "创建超级管理员失败",
   "setupSecureNotice": "安装令牌仅用于本次初始化，不会保存在客户端。",
-  "adminSearchHint": "搜索管理数据…",
+  "adminSearchHint": "搜索…",
   "adminNoMatch": "未找到匹配数据。",
   "notificationTitle": "通知",
   "notificationTitleWithCount": "通知 ({count})",
@@ -1272,6 +1272,33 @@
   "adminNoDlqTasks": "暂无死信任务",
   "adminNoErrorSummary": "无错误摘要",
   "adminStorageManagement": "存储管理",
+  "adminListEmpty": "暂无数据，可调整筛选条件",
+  "adminListRowsPerPage": "每页条数",
+  "adminListPageOf": "第 {current}/{total} 页",
+  "@adminListPageOf": {
+    "placeholder": {
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "adminListPrevPage": "上一页",
+  "adminListNextPage": "下一页",
+  "adminListActions": "操作",
+  "adminListSelectedCount": "已选 {count} 项",
+  "@adminListSelectedCount": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminListSelectAll": "全选",
+  "adminListExpandFilters": "展开筛选",
+  "adminListCollapseFilters": "收起筛选",
+  "adminListSortAsc": "升序",
+  "adminListSortDesc": "降序",
+  "adminListExportCsv": "导出 CSV",
   "adminLibrarySourcesSection": "视频库源",
   "statusHealthHealthy": "健康",
   "statusHealthUnavailable": "不可达",

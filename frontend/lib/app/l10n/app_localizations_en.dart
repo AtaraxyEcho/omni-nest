@@ -297,7 +297,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The setup token is only used for initialization and is not stored on this device.';
 
   @override
-  String get adminSearchHint => 'Search admin data…';
+  String get adminSearchHint => 'Search…';
 
   @override
   String get adminNoMatch => 'No matching data found.';
@@ -3364,6 +3364,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminStorageManagement => 'Storage Management';
+
+  @override
+  String get adminListEmpty => 'No data. Try adjusting the filters.';
+
+  @override
+  String get adminListRowsPerPage => 'Rows per page';
+
+  @override
+  String adminListPageOf(Object current, Object total) {
+    return 'Page $current of $total';
+  }
+
+  @override
+  String get adminListPrevPage => 'Previous page';
+
+  @override
+  String get adminListNextPage => 'Next page';
+
+  @override
+  String get adminListActions => 'Actions';
+
+  @override
+  String adminListSelectedCount(Object count) {
+    return '$count selected';
+  }
+
+  @override
+  String get adminListSelectAll => 'Select all';
+
+  @override
+  String get adminListExpandFilters => 'Expand filters';
+
+  @override
+  String get adminListCollapseFilters => 'Collapse filters';
+
+  @override
+  String get adminListSortAsc => 'Ascending';
+
+  @override
+  String get adminListSortDesc => 'Descending';
+
+  @override
+  String get adminListExportCsv => 'Export CSV';
 
   @override
   String get adminLibrarySourcesSection => 'Video library sources';

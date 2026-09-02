@@ -641,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search admin data…'**
+  /// **'Search…'**
   String get adminSearchHint;
 
   /// No description provided for @adminNoMatch.
@@ -6234,6 +6234,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Storage Management'**
   String get adminStorageManagement;
+
+  /// No description provided for @adminListEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No data. Try adjusting the filters.'**
+  String get adminListEmpty;
+
+  /// No description provided for @adminListRowsPerPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows per page'**
+  String get adminListRowsPerPage;
+
+  /// No description provided for @adminListPageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {current} of {total}'**
+  String adminListPageOf(Object current, Object total);
+
+  /// No description provided for @adminListPrevPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get adminListPrevPage;
+
+  /// No description provided for @adminListNextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get adminListNextPage;
+
+  /// No description provided for @adminListActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get adminListActions;
+
+  /// No description provided for @adminListSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String adminListSelectedCount(Object count);
+
+  /// No description provided for @adminListSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get adminListSelectAll;
+
+  /// No description provided for @adminListExpandFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand filters'**
+  String get adminListExpandFilters;
+
+  /// No description provided for @adminListCollapseFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse filters'**
+  String get adminListCollapseFilters;
+
+  /// No description provided for @adminListSortAsc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get adminListSortAsc;
+
+  /// No description provided for @adminListSortDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get adminListSortDesc;
+
+  /// No description provided for @adminListExportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get adminListExportCsv;
 
   /// No description provided for @adminLibrarySourcesSection.
   ///

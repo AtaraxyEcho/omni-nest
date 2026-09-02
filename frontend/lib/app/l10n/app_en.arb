@@ -111,7 +111,7 @@
   "setupStatusFailed": "Unable to read setup status",
   "setupCreateFailed": "Failed to create super administrator",
   "setupSecureNotice": "The setup token is only used for initialization and is not stored on this device.",
-  "adminSearchHint": "Search admin data…",
+  "adminSearchHint": "Search…",
   "adminNoMatch": "No matching data found.",
   "notificationTitle": "Notifications",
   "notificationTitleWithCount": "Notifications ({count})",
@@ -1398,6 +1398,33 @@
   "adminNoDlqTasks": "No DLQ tasks",
   "adminNoErrorSummary": "No error summary",
   "adminStorageManagement": "Storage Management",
+  "adminListEmpty": "No data. Try adjusting the filters.",
+  "adminListRowsPerPage": "Rows per page",
+  "adminListPageOf": "Page {current} of {total}",
+  "@adminListPageOf": {
+    "placeholder": {
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "adminListPrevPage": "Previous page",
+  "adminListNextPage": "Next page",
+  "adminListActions": "Actions",
+  "adminListSelectedCount": "{count} selected",
+  "@adminListSelectedCount": {
+    "placeholder": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminListSelectAll": "Select all",
+  "adminListExpandFilters": "Expand filters",
+  "adminListCollapseFilters": "Collapse filters",
+  "adminListSortAsc": "Ascending",
+  "adminListSortDesc": "Descending",
+  "adminListExportCsv": "Export CSV",
   "adminLibrarySourcesSection": "Video library sources",
   "statusHealthHealthy": "Healthy",
   "statusHealthUnavailable": "Unavailable",

@@ -290,7 +290,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get setupSecureNotice => '安装令牌仅用于本次初始化，不会保存在客户端。';
 
   @override
-  String get adminSearchHint => '搜索管理数据…';
+  String get adminSearchHint => '搜索…';
 
   @override
   String get adminNoMatch => '未找到匹配数据。';
@@ -3250,6 +3250,49 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminStorageManagement => '存储管理';
+
+  @override
+  String get adminListEmpty => '暂无数据，可调整筛选条件';
+
+  @override
+  String get adminListRowsPerPage => '每页条数';
+
+  @override
+  String adminListPageOf(Object current, Object total) {
+    return '第 $current/$total 页';
+  }
+
+  @override
+  String get adminListPrevPage => '上一页';
+
+  @override
+  String get adminListNextPage => '下一页';
+
+  @override
+  String get adminListActions => '操作';
+
+  @override
+  String adminListSelectedCount(Object count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String get adminListSelectAll => '全选';
+
+  @override
+  String get adminListExpandFilters => '展开筛选';
+
+  @override
+  String get adminListCollapseFilters => '收起筛选';
+
+  @override
+  String get adminListSortAsc => '升序';
+
+  @override
+  String get adminListSortDesc => '降序';
+
+  @override
+  String get adminListExportCsv => '导出 CSV';
 
   @override
   String get adminLibrarySourcesSection => '视频库源';
