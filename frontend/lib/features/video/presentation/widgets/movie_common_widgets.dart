@@ -280,7 +280,7 @@ class PosterHeroImage extends StatelessWidget {
 }
 
 class DetailBackdropFallback extends StatelessWidget {
-  const DetailBackdropFallback();
+  const DetailBackdropFallback({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -326,6 +326,7 @@ class DetailHeroPoster extends StatelessWidget {
     required this.posterUrl,
     required this.screenWidth,
     required this.placeholderIcon,
+    super.key,
   });
 
   final String? posterUrl;
@@ -376,7 +377,7 @@ class DetailHeroPoster extends StatelessWidget {
 }
 
 class DetailHeroPill extends StatelessWidget {
-  const DetailHeroPill({required this.label});
+  const DetailHeroPill({required this.label, super.key});
 
   final String label;
 
@@ -404,7 +405,7 @@ class DetailHeroPill extends StatelessWidget {
 }
 
 class DetailGenreChip extends StatelessWidget {
-  const DetailGenreChip({required this.label});
+  const DetailGenreChip({required this.label, super.key});
 
   final String label;
 
