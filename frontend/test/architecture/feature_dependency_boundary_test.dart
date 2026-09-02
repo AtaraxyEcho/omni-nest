@@ -2,7 +2,12 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _allowedViolations = <String>{};
+const _allowedViolations = <String>{
+  // admin 媒体库段区按产品决策内嵌视频库源对话框，跨 feature 表现层依赖为受控例外。
+  'CROSS_FEATURE_INTERNAL '
+      'lib/features/admin/presentation/pages/admin_operations_pages.dart -> '
+      'package:omninest/features/video/presentation/widgets/movie_management.dart',
+};
 const _maxProductionSourceLines = 1200;
 
 void main() {
