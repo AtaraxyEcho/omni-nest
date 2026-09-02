@@ -961,9 +961,7 @@ class MovieCenterController extends AsyncNotifier<MovieCenterState> {
         MovieSection.favorites => _api.favorites(),
         MovieSection.history => _api.history(),
         MovieSection.collections => _api.collections(),
-        MovieSection.scrapeQueue ||
-        MovieSection.transcodeTasks ||
-        MovieSection.libraryScan => _api.tasks(),
+        MovieSection.management => _api.tasks(),
         _ => Future<Object?>.value(null),
       };
       if (!ref.mounted || _sectionLoadGenerations[section] != generation) {
@@ -1003,9 +1001,7 @@ class MovieCenterController extends AsyncNotifier<MovieCenterState> {
           loadedSections: loaded,
           loadingSections: stillLoading,
         ),
-        MovieSection.scrapeQueue ||
-        MovieSection.transcodeTasks ||
-        MovieSection.libraryScan => latest.copyWith(
+        MovieSection.management => latest.copyWith(
           tasks: result as List<MovieTask>,
           loadedSections: loaded,
           loadingSections: stillLoading,

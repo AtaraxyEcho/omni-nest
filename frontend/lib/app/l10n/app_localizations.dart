@@ -9517,41 +9517,17 @@ abstract class AppLocalizations {
   /// **'Featured'**
   String get videoSeriesFeatured;
 
-  /// No description provided for @videoSectionScrapeQueue.
-  ///
-  /// In en, this message translates to:
-  /// **'Scrape Queue'**
-  String get videoSectionScrapeQueue;
-
   /// No description provided for @videoSectionMetadataManagement.
   ///
   /// In en, this message translates to:
   /// **'Metadata'**
   String get videoSectionMetadataManagement;
 
-  /// No description provided for @videoSectionTranscodeTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'Transcoding'**
-  String get videoSectionTranscodeTasks;
-
   /// No description provided for @videoSectionLibraryScan.
   ///
   /// In en, this message translates to:
   /// **'Media Library Management'**
   String get videoSectionLibraryScan;
-
-  /// No description provided for @videoSourceScanStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan status: {status}'**
-  String videoSourceScanStatus(Object status);
-
-  /// No description provided for @videoSourceScannedCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items imported'**
-  String videoSourceScannedCount(Object count);
 
   /// No description provided for @videoSidebarGroupLibrary.
   ///
@@ -10009,6 +9985,66 @@ abstract class AppLocalizations {
   /// **'Pending'**
   String get videoPendingScrape;
 
+  /// No description provided for @videoSectionMovieAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Movie management'**
+  String get videoSectionMovieAdmin;
+
+  /// No description provided for @videoMovieAdminSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage metadata, scraping and transcoding for your library.'**
+  String get videoMovieAdminSubtitle;
+
+  /// No description provided for @videoMovieAdminEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No movies match the current filters.'**
+  String get videoMovieAdminEmpty;
+
+  /// No description provided for @videoLibraryFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get videoLibraryFilterAll;
+
+  /// No description provided for @videoPreviousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get videoPreviousPage;
+
+  /// No description provided for @videoNextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get videoNextPage;
+
+  /// No description provided for @videoTaskProgressDialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Task progress'**
+  String get videoTaskProgressDialog;
+
+  /// No description provided for @videoSnackViewProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'View progress'**
+  String get videoSnackViewProgress;
+
+  /// No description provided for @videoAdminLibrarySources.
+  ///
+  /// In en, this message translates to:
+  /// **'Library sources'**
+  String get videoAdminLibrarySources;
+
+  /// No description provided for @videoSeriesEpisodeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} episodes'**
+  String videoSeriesEpisodeCount(Object count);
+
   /// No description provided for @videoMatchFailed.
   ///
   /// In en, this message translates to:
@@ -10321,12 +10357,6 @@ abstract class AppLocalizations {
   /// **'No media items here yet.'**
   String get videoNoMediaItems;
 
-  /// No description provided for @videoScrapeQueueSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'View pending or failed metadata scrape tasks, can re-create scrape task for individual items.'**
-  String get videoScrapeQueueSubtitle;
-
   /// No description provided for @videoTaskSubmitted.
   ///
   /// In en, this message translates to:
@@ -10345,30 +10375,6 @@ abstract class AppLocalizations {
   /// **'Submitting'**
   String get videoSubmitting;
 
-  /// No description provided for @videoScrapeTaskSubmitted.
-  ///
-  /// In en, this message translates to:
-  /// **'Scrape task submitted'**
-  String get videoScrapeTaskSubmitted;
-
-  /// No description provided for @videoNoScrapeItems.
-  ///
-  /// In en, this message translates to:
-  /// **'No scrape items to process.'**
-  String get videoNoScrapeItems;
-
-  /// No description provided for @videoSeasonNumber.
-  ///
-  /// In en, this message translates to:
-  /// **'Season {number}'**
-  String videoSeasonNumber(Object number);
-
-  /// No description provided for @videoEpisodesPending.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} episodes pending'**
-  String videoEpisodesPending(Object count);
-
   /// No description provided for @videoEdit.
   ///
   /// In en, this message translates to:
@@ -10381,24 +10387,6 @@ abstract class AppLocalizations {
   /// **'NFO'**
   String get videoNfo;
 
-  /// No description provided for @videoParseComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Video parsing complete'**
-  String get videoParseComplete;
-
-  /// No description provided for @videoMetadataSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Admins can manually edit title, overview, poster, cast and rating, and lock auto-scrape results.'**
-  String get videoMetadataSubtitle;
-
-  /// No description provided for @videoNoMetadata.
-  ///
-  /// In en, this message translates to:
-  /// **'No manageable media metadata.'**
-  String get videoNoMetadata;
-
   /// No description provided for @videoEpisodeStatus.
   ///
   /// In en, this message translates to:
@@ -10410,54 +10398,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parse'**
   String get videoParse;
-
-  /// No description provided for @videoTranscodeSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Create video transcode or audio extraction tasks for specified movies, and view task progress.'**
-  String get videoTranscodeSubtitle;
-
-  /// No description provided for @videoTranscodeSubmitted.
-  ///
-  /// In en, this message translates to:
-  /// **'Transcode task submitted'**
-  String get videoTranscodeSubmitted;
-
-  /// No description provided for @videoAudioExtractSubmitted.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio extraction task submitted'**
-  String get videoAudioExtractSubmitted;
-
-  /// No description provided for @videoNoTranscodeMedia.
-  ///
-  /// In en, this message translates to:
-  /// **'No transcodable media.'**
-  String get videoNoTranscodeMedia;
-
-  /// No description provided for @videoAudioExtractRecords.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio Extraction Records'**
-  String get videoAudioExtractRecords;
-
-  /// No description provided for @videoAudioExtractSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-triggered when audio codec is incompatible, can also manually retry.'**
-  String get videoAudioExtractSubtitle;
-
-  /// No description provided for @videoTranscodeRecords.
-  ///
-  /// In en, this message translates to:
-  /// **'Video Transcode Records'**
-  String get videoTranscodeRecords;
-
-  /// No description provided for @videoTranscodeRecordsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Shows video transcode task status, progress and failure summary.'**
-  String get videoTranscodeRecordsSubtitle;
 
   /// No description provided for @videoTranscode.
   ///
@@ -10525,12 +10465,6 @@ abstract class AppLocalizations {
   /// **'Dead Letter Queue'**
   String get videoDeadLetterQueue;
 
-  /// No description provided for @videoLibraryScanSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Discover local media by source, review candidates, then add only what you select. Discovery never calls TMDB.'**
-  String get videoLibraryScanSubtitle;
-
   /// No description provided for @videoIncrementalScan.
   ///
   /// In en, this message translates to:
@@ -10560,18 +10494,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Full scan complete'**
   String get videoFullScanComplete;
-
-  /// No description provided for @videoRecentScanRecords.
-  ///
-  /// In en, this message translates to:
-  /// **'Recent Discovery and Import Runs'**
-  String get videoRecentScanRecords;
-
-  /// No description provided for @videoRecentScanSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Review local discovery, selected imports, and existing managed-library scan tasks.'**
-  String get videoRecentScanSubtitle;
 
   /// No description provided for @videoNfoPreviewTitle.
   ///

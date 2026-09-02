@@ -2275,26 +2275,8 @@
   "videoSectionFavorites": "Favorites",
   "videoSectionHistory": "Watch History",
   "videoSeriesFeatured": "Featured",
-  "videoSectionScrapeQueue": "Scrape Queue",
   "videoSectionMetadataManagement": "Metadata",
-  "videoSectionTranscodeTasks": "Transcoding",
   "videoSectionLibraryScan": "Media Library Management",
-  "videoSourceScanStatus": "Scan status: {status}",
-  "@videoSourceScanStatus": {
-    "placeholder": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "videoSourceScannedCount": "{count} items imported",
-  "@videoSourceScannedCount": {
-    "placeholder": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "videoSidebarGroupLibrary": "Media Library",
   "videoSidebarGroupMine": "My Media",
   "videoSidebarGroupManagement": "Management Tools",
@@ -2393,6 +2375,21 @@
   "videoType": "Type",
   "videoMatched": "Matched",
   "videoPendingScrape": "Pending",
+  "videoSectionMovieAdmin": "Movie management",
+  "videoMovieAdminSubtitle": "Manage metadata, scraping and transcoding for your library.",
+  "videoMovieAdminEmpty": "No movies match the current filters.",
+  "videoLibraryFilterAll": "All",
+  "videoPreviousPage": "Previous page",
+  "videoNextPage": "Next page",
+  "videoTaskProgressDialog": "Task progress",
+  "videoSnackViewProgress": "View progress",
+  "videoAdminLibrarySources": "Library sources",
+  "videoSeriesEpisodeCount": "{count} episodes",
+  "@videoSeriesEpisodeCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "videoMatchFailed": "Match Failed",
   "videoManualEdit": "Manual Edit",
   "videoOverview": "Overview",
@@ -2470,29 +2467,11 @@
   "videoSortReleaseDate": "Release Date",
   "videoSortTitle": "Title",
   "videoNoMediaItems": "No media items here yet.",
-  "videoScrapeQueueSubtitle": "View pending or failed metadata scrape tasks, can re-create scrape task for individual items.",
   "videoTaskSubmitted": "Task Submitted",
   "videoRetry": "Retry",
   "videoSubmitting": "Submitting",
-  "videoScrapeTaskSubmitted": "Scrape task submitted",
-  "videoNoScrapeItems": "No scrape items to process.",
-  "videoSeasonNumber": "Season {number}",
-  "@videoSeasonNumber": {
-    "placeholders": {
-      "number": {}
-    }
-  },
-  "videoEpisodesPending": "{count} episodes pending",
-  "@videoEpisodesPending": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "videoEdit": "Edit",
   "videoNfo": "NFO",
-  "videoParseComplete": "Video parsing complete",
-  "videoMetadataSubtitle": "Admins can manually edit title, overview, poster, cast and rating, and lock auto-scrape results.",
-  "videoNoMetadata": "No manageable media metadata.",
   "videoEpisodeStatus": "Series - {count} episodes - {status}",
   "@videoEpisodeStatus": {
     "placeholders": {
@@ -2501,14 +2480,6 @@
     }
   },
   "videoParse": "Parse",
-  "videoTranscodeSubtitle": "Create video transcode or audio extraction tasks for specified movies, and view task progress.",
-  "videoTranscodeSubmitted": "Transcode task submitted",
-  "videoAudioExtractSubmitted": "Audio extraction task submitted",
-  "videoNoTranscodeMedia": "No transcodable media.",
-  "videoAudioExtractRecords": "Audio Extraction Records",
-  "videoAudioExtractSubtitle": "Auto-triggered when audio codec is incompatible, can also manually retry.",
-  "videoTranscodeRecords": "Video Transcode Records",
-  "videoTranscodeRecordsSubtitle": "Shows video transcode task status, progress and failure summary.",
   "videoTranscode": "Video Transcode",
   "videoAudioExtract": "Audio Extract",
   "videoNoTasks": "No tasks.",
@@ -2520,14 +2491,11 @@
   "videoFailed": "Failed",
   "videoCancelled": "Cancelled",
   "videoDeadLetterQueue": "Dead Letter Queue",
-  "videoLibraryScanSubtitle": "Discover local media by source, review candidates, then add only what you select. Discovery never calls TMDB.",
   "videoIncrementalScan": "Incremental Scan",
   "videoScanning": "Scanning",
   "videoIncrementalScanComplete": "Incremental scan complete",
   "videoFullScan": "Full Scan",
   "videoFullScanComplete": "Full scan complete",
-  "videoRecentScanRecords": "Recent Discovery and Import Runs",
-  "videoRecentScanSubtitle": "Review local discovery, selected imports, and existing managed-library scan tasks.",
   "videoNfoPreviewTitle": "NFO - {title}",
   "@videoNfoPreviewTitle": {
     "placeholders": {

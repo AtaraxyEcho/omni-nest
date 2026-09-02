@@ -5191,26 +5191,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoSeriesFeatured => 'Featured';
 
   @override
-  String get videoSectionScrapeQueue => 'Scrape Queue';
-
-  @override
   String get videoSectionMetadataManagement => 'Metadata';
 
   @override
-  String get videoSectionTranscodeTasks => 'Transcoding';
-
-  @override
   String get videoSectionLibraryScan => 'Media Library Management';
-
-  @override
-  String videoSourceScanStatus(Object status) {
-    return 'Scan status: $status';
-  }
-
-  @override
-  String videoSourceScannedCount(Object count) {
-    return '$count items imported';
-  }
 
   @override
   String get videoSidebarGroupLibrary => 'Media Library';
@@ -5454,6 +5438,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoPendingScrape => 'Pending';
 
   @override
+  String get videoSectionMovieAdmin => 'Movie management';
+
+  @override
+  String get videoMovieAdminSubtitle =>
+      'Manage metadata, scraping and transcoding for your library.';
+
+  @override
+  String get videoMovieAdminEmpty => 'No movies match the current filters.';
+
+  @override
+  String get videoLibraryFilterAll => 'All';
+
+  @override
+  String get videoPreviousPage => 'Previous page';
+
+  @override
+  String get videoNextPage => 'Next page';
+
+  @override
+  String get videoTaskProgressDialog => 'Task progress';
+
+  @override
+  String get videoSnackViewProgress => 'View progress';
+
+  @override
+  String get videoAdminLibrarySources => 'Library sources';
+
+  @override
+  String videoSeriesEpisodeCount(Object count) {
+    return '$count episodes';
+  }
+
+  @override
   String get videoMatchFailed => 'Match Failed';
 
   @override
@@ -5626,10 +5643,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoNoMediaItems => 'No media items here yet.';
 
   @override
-  String get videoScrapeQueueSubtitle =>
-      'View pending or failed metadata scrape tasks, can re-create scrape task for individual items.';
-
-  @override
   String get videoTaskSubmitted => 'Task Submitted';
 
   @override
@@ -5639,36 +5652,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoSubmitting => 'Submitting';
 
   @override
-  String get videoScrapeTaskSubmitted => 'Scrape task submitted';
-
-  @override
-  String get videoNoScrapeItems => 'No scrape items to process.';
-
-  @override
-  String videoSeasonNumber(Object number) {
-    return 'Season $number';
-  }
-
-  @override
-  String videoEpisodesPending(Object count) {
-    return '$count episodes pending';
-  }
-
-  @override
   String get videoEdit => 'Edit';
 
   @override
   String get videoNfo => 'NFO';
-
-  @override
-  String get videoParseComplete => 'Video parsing complete';
-
-  @override
-  String get videoMetadataSubtitle =>
-      'Admins can manually edit title, overview, poster, cast and rating, and lock auto-scrape results.';
-
-  @override
-  String get videoNoMetadata => 'No manageable media metadata.';
 
   @override
   String videoEpisodeStatus(Object count, Object status) {
@@ -5677,33 +5664,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoParse => 'Parse';
-
-  @override
-  String get videoTranscodeSubtitle =>
-      'Create video transcode or audio extraction tasks for specified movies, and view task progress.';
-
-  @override
-  String get videoTranscodeSubmitted => 'Transcode task submitted';
-
-  @override
-  String get videoAudioExtractSubmitted => 'Audio extraction task submitted';
-
-  @override
-  String get videoNoTranscodeMedia => 'No transcodable media.';
-
-  @override
-  String get videoAudioExtractRecords => 'Audio Extraction Records';
-
-  @override
-  String get videoAudioExtractSubtitle =>
-      'Auto-triggered when audio codec is incompatible, can also manually retry.';
-
-  @override
-  String get videoTranscodeRecords => 'Video Transcode Records';
-
-  @override
-  String get videoTranscodeRecordsSubtitle =>
-      'Shows video transcode task status, progress and failure summary.';
 
   @override
   String get videoTranscode => 'Video Transcode';
@@ -5739,10 +5699,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoDeadLetterQueue => 'Dead Letter Queue';
 
   @override
-  String get videoLibraryScanSubtitle =>
-      'Discover local media by source, review candidates, then add only what you select. Discovery never calls TMDB.';
-
-  @override
   String get videoIncrementalScan => 'Incremental Scan';
 
   @override
@@ -5756,13 +5712,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoFullScanComplete => 'Full scan complete';
-
-  @override
-  String get videoRecentScanRecords => 'Recent Discovery and Import Runs';
-
-  @override
-  String get videoRecentScanSubtitle =>
-      'Review local discovery, selected imports, and existing managed-library scan tasks.';
 
   @override
   String videoNfoPreviewTitle(Object title) {

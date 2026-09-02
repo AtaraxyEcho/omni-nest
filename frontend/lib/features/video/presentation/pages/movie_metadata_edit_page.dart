@@ -22,7 +22,7 @@ class MovieMetadataEditPage extends ConsumerWidget {
     return detail.when(
       data:
           (item) => MovieShell(
-            section: MovieSection.metadataManagement,
+            section: MovieSection.management,
             onSectionSelected: (section) {
               ref
                   .read(movieCenterControllerProvider.notifier)

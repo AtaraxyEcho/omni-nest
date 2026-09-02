@@ -129,13 +129,13 @@ void main() {
     }
 
     await pumpSidebar(false);
-    expect(find.text('媒体库管理'), findsNothing);
+    expect(find.text('影片管理'), findsNothing);
     expect(find.text('管理工具'), findsNothing);
 
     await pumpSidebar(true);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
-    expect(find.text('媒体库管理'), findsOneWidget);
+    expect(find.text('影片管理'), findsOneWidget);
     expect(find.text('管理工具'), findsOneWidget);
   });
 }

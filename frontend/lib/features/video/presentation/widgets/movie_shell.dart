@@ -42,10 +42,7 @@ extension MovieSectionMeta on MovieSection {
       MovieSection.continueWatching => 'Continue Watching',
       MovieSection.favorites => l10n.videoSectionFavorites,
       MovieSection.history => 'Watch History',
-      MovieSection.scrapeQueue => 'Scrape Queue',
-      MovieSection.metadataManagement => 'Metadata',
-      MovieSection.transcodeTasks => l10n.videoSectionTranscodeTasks,
-      MovieSection.libraryScan => l10n.videoSectionLibraryScan,
+      MovieSection.management => l10n.videoSectionMovieAdmin,
     };
   }
 
@@ -59,19 +56,13 @@ extension MovieSectionMeta on MovieSection {
       MovieSection.continueWatching => Icons.play_circle_outline_rounded,
       MovieSection.favorites => Icons.favorite_rounded,
       MovieSection.history => Icons.manage_history_rounded,
-      MovieSection.scrapeQueue => Icons.manage_search_rounded,
-      MovieSection.metadataManagement => Icons.edit_note_rounded,
-      MovieSection.transcodeTasks => Icons.video_settings_rounded,
-      MovieSection.libraryScan => Icons.sync_rounded,
+      MovieSection.management => Icons.admin_panel_settings_outlined,
     };
   }
 
   bool get requiresManagementRole {
     return switch (this) {
-      MovieSection.scrapeQueue ||
-      MovieSection.metadataManagement ||
-      MovieSection.transcodeTasks ||
-      MovieSection.libraryScan => true,
+      MovieSection.management => true,
       _ => false,
     };
   }
@@ -104,12 +95,7 @@ const Map<MovieSidebarGroup, List<MovieSection>> movieSidebarGroups = {
     MovieSection.favorites,
     MovieSection.history,
   ],
-  MovieSidebarGroup.management: [
-    MovieSection.scrapeQueue,
-    MovieSection.metadataManagement,
-    MovieSection.transcodeTasks,
-    MovieSection.libraryScan,
-  ],
+  MovieSidebarGroup.management: [MovieSection.management],
 };
 
 class MovieShell extends ConsumerStatefulWidget {

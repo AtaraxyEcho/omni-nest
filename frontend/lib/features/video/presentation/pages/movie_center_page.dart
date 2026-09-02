@@ -56,7 +56,7 @@ class MovieCenterPage extends ConsumerWidget {
                 childOwnsScroll:
                     visibleState.section == MovieSection.movies ||
                     visibleState.section == MovieSection.recent ||
-                    visibleState.section == MovieSection.libraryScan,
+                    visibleState.section == MovieSection.management,
                 onSectionSelected:
                     ref
                         .read(movieCenterControllerProvider.notifier)
@@ -221,12 +221,7 @@ class _MovieContent extends ConsumerWidget {
             () =>
                 ref.read(movieCenterControllerProvider.notifier).clearHistory(),
       ),
-      MovieSection.scrapeQueue => ScrapeQueueSection(state: state),
-      MovieSection.metadataManagement => MetadataManagementSection(
-        items: state.movies,
-      ),
-      MovieSection.transcodeTasks => TranscodeTasksSection(state: state),
-      MovieSection.libraryScan => LibraryScanSection(state: state),
+      MovieSection.management => const MovieAdminSection(),
     };
   }
 }

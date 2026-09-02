@@ -19,16 +19,16 @@ void main() {
 
     container
         .read(movieCenterControllerProvider.notifier)
-        .selectSection(MovieSection.libraryScan);
+        .selectSection(MovieSection.management);
     expect(
       container.read(movieCenterControllerProvider).requireValue.section,
-      MovieSection.libraryScan,
+      MovieSection.management,
     );
 
     container.invalidate(movieCenterControllerProvider);
     final rebuilt = await container.read(movieCenterControllerProvider.future);
 
-    expect(rebuilt.section, MovieSection.libraryScan);
+    expect(rebuilt.section, MovieSection.management);
   });
 
   test('controller 重建期间写入的分区偏好在 build 完成后恢复', () async {
@@ -39,11 +39,11 @@ void main() {
     // controller 重建完成后据此恢复而不是回到电影页。
     container
         .read(movieCenterSectionProvider.notifier)
-        .select(MovieSection.libraryScan);
+        .select(MovieSection.management);
     container.invalidate(movieCenterControllerProvider);
     final rebuilt = await container.read(movieCenterControllerProvider.future);
 
-    expect(rebuilt.section, MovieSection.libraryScan);
+    expect(rebuilt.section, MovieSection.management);
   });
 
   test('同一完成态扫描 run 只触发一次中心数据重载', () async {

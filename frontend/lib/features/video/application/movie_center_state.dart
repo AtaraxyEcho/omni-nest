@@ -26,10 +26,7 @@ enum MovieSection {
   continueWatching,
   favorites,
   history,
-  scrapeQueue,
-  metadataManagement,
-  transcodeTasks,
-  libraryScan,
+  management,
 }
 
 enum MovieLibraryFilter { all, matched, pending, failed, recent }
@@ -203,8 +200,6 @@ class MovieCenterState {
           return animeSeries.any((s) => s.id == item.seriesId);
         }).toList(),
       MovieSection.recent => recentItems,
-      MovieSection.scrapeQueue =>
-        movies.where((item) => item.metadataStatus != 'MATCHED').toList(),
       MovieSection.favorites => favoriteItems,
       _ => movies,
     };

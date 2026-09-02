@@ -5027,26 +5027,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoSeriesFeatured => '精选';
 
   @override
-  String get videoSectionScrapeQueue => '刮削队列';
-
-  @override
   String get videoSectionMetadataManagement => '元数据管理';
 
   @override
-  String get videoSectionTranscodeTasks => '转码任务';
-
-  @override
   String get videoSectionLibraryScan => '媒体库管理';
-
-  @override
-  String videoSourceScanStatus(Object status) {
-    return '扫描状态：$status';
-  }
-
-  @override
-  String videoSourceScannedCount(Object count) {
-    return '已入库 $count 项';
-  }
 
   @override
   String get videoSidebarGroupLibrary => '媒体库';
@@ -5285,6 +5269,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoPendingScrape => '待刮削';
 
   @override
+  String get videoSectionMovieAdmin => '影片管理';
+
+  @override
+  String get videoMovieAdminSubtitle => '统一管理影片的元数据、刮削与转码操作。';
+
+  @override
+  String get videoMovieAdminEmpty => '没有符合条件的影片。';
+
+  @override
+  String get videoLibraryFilterAll => '全部';
+
+  @override
+  String get videoPreviousPage => '上一页';
+
+  @override
+  String get videoNextPage => '下一页';
+
+  @override
+  String get videoTaskProgressDialog => '任务进度';
+
+  @override
+  String get videoSnackViewProgress => '查看进度';
+
+  @override
+  String get videoAdminLibrarySources => '库源配置';
+
+  @override
+  String videoSeriesEpisodeCount(Object count) {
+    return '$count 集';
+  }
+
+  @override
   String get videoMatchFailed => '匹配失败';
 
   @override
@@ -5451,9 +5467,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoNoMediaItems => '这里还没有媒体条目。';
 
   @override
-  String get videoScrapeQueueSubtitle => '查看正在等待或失败的元数据刮削任务，可对单个条目重新创建刮削任务。';
-
-  @override
   String get videoTaskSubmitted => '任务已提交';
 
   @override
@@ -5463,35 +5476,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoSubmitting => '提交中';
 
   @override
-  String get videoScrapeTaskSubmitted => '刮削任务已提交';
-
-  @override
-  String get videoNoScrapeItems => '当前没有需要处理的刮削条目。';
-
-  @override
-  String videoSeasonNumber(Object number) {
-    return '第 $number 季';
-  }
-
-  @override
-  String videoEpisodesPending(Object count) {
-    return '$count 集待处理';
-  }
-
-  @override
   String get videoEdit => '编辑';
 
   @override
   String get videoNfo => 'NFO';
-
-  @override
-  String get videoParseComplete => '视频解析完成';
-
-  @override
-  String get videoMetadataSubtitle => '管理员可手动编辑标题、简介、海报、演员和评分，并锁定自动刮削结果。';
-
-  @override
-  String get videoNoMetadata => '暂无可管理的媒体元数据。';
 
   @override
   String videoEpisodeStatus(Object count, Object status) {
@@ -5500,30 +5488,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoParse => '解析';
-
-  @override
-  String get videoTranscodeSubtitle => '为指定影片创建视频转码或音频提取任务，并查看任务进度。';
-
-  @override
-  String get videoTranscodeSubmitted => '转码任务已提交';
-
-  @override
-  String get videoAudioExtractSubmitted => '音频提取任务已提交';
-
-  @override
-  String get videoNoTranscodeMedia => '暂无可转码媒体。';
-
-  @override
-  String get videoAudioExtractRecords => '音频提取记录';
-
-  @override
-  String get videoAudioExtractSubtitle => '音频编码不兼容时自动触发，也可手动重试。';
-
-  @override
-  String get videoTranscodeRecords => '视频转码记录';
-
-  @override
-  String get videoTranscodeRecordsSubtitle => '展示视频转码任务状态、进度和失败摘要。';
 
   @override
   String get videoTranscode => '视频转码';
@@ -5559,9 +5523,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoDeadLetterQueue => '死信队列';
 
   @override
-  String get videoLibraryScanSubtitle => '按来源发现本地媒体，审核候选后再按需加入；发现阶段不会调用 TMDB。';
-
-  @override
   String get videoIncrementalScan => '增量扫描';
 
   @override
@@ -5575,12 +5536,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoFullScanComplete => '全量扫描已完成';
-
-  @override
-  String get videoRecentScanRecords => '最近发现与入库记录';
-
-  @override
-  String get videoRecentScanSubtitle => '展示本地来源发现、审核入库和既有托管媒体扫描任务。';
 
   @override
   String videoNfoPreviewTitle(Object title) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
@@ -9,8 +11,8 @@ import 'package:omninest/features/video/presentation/widgets/movie_common_widget
 import 'package:omninest/features/video/presentation/widgets/movie_feedback.dart';
 import 'package:omninest/core/utils/status_labels.dart';
 
-part 'movie_metadata_management.dart';
-part 'movie_task_management.dart';
+part 'movie_admin_list.dart';
+part 'movie_admin_tasks.dart';
 part 'movie_library_source_rail.dart';
 part 'movie_library_access_management.dart';
 part 'movie_library_source_management.dart';
