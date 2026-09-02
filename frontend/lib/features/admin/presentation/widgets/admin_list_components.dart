@@ -4,6 +4,9 @@
 /// 与视觉词汇一致；行高固定以支持"横向滚动 + 右侧固定操作列"。
 library;
 
+import 'dart:math' as math;
+
+import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 
@@ -164,7 +167,8 @@ class AdminFilterBar extends StatelessWidget {
 }
 
 /// 高密度数据表格：固定行高、横向滚动、右侧固定操作列、可选多选列、
-/// 可排序表头。行内容与操作列由调用方以 builder 提供。
+/// 可排序表头。内部基于 data_table_2 的 [DataTable2]：列宽分配、横向
+/// 滚动与行 hover/选中态由其维护，本类只保留页面侧的稳定 API。
 class AdminDataTable extends StatelessWidget {
   const AdminDataTable({
     required this.columns,
@@ -205,6 +209,7 @@ class AdminDataTable extends StatelessWidget {
 
   /// 行复选框禁用判定（如不可执行批量操作的行）；为空时全部可勾选。
   final bool Function(int index)? isCheckDisabled;
+
   final bool allChecked;
   final bool someChecked;
   final void Function(bool value)? onCheckAll;
@@ -218,7 +223,7 @@ class AdminDataTable extends StatelessWidget {
   /// 序号基数：服务端分页下传入（页码 × 每页条数），行号 = 基数 + 行序 + 1。
   final int indexBase;
 
-  /// 主表最小宽度（低于该宽度出现横向滚动条）。
+  /// 主表最小宽度（低于该宽度表格内部出现横向滚动条）。
   final double minTableWidth;
   final double actionColumnWidth;
   final double rowHeight;
@@ -226,11 +231,11 @@ class AdminDataTable extends StatelessWidget {
 
   bool get _hasActionColumn => actionsBuilder != null;
 
-  /// 序号列固定宽度。
-  static const _indexColumnWidth = 64.0;
-
   /// 复选框列固定宽度。
   static const _checkColumnWidth = 48.0;
+
+  /// 序号列固定宽度。
+  static const _indexColumnWidth = 64.0;
 
   @override
   Widget build(BuildContext context) {
@@ -240,287 +245,188 @@ class AdminDataTable extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final colors = Theme.of(context).colorScheme;
 
-    // 列宽解析：声明 minWidth 的列按固定宽计入；弹性列按 flex 分配
-    // 剩余宽度（表宽取 minTableWidth 与固定宽之和的较大者）。
-    var fixedTotal =
-        (showIndex ? _indexColumnWidth : 0.0) +
-        (showCheckboxes ? _checkColumnWidth : 0.0);
-    var flexTotal = 0;
+    final leadingCount = (showCheckboxes ? 1 : 0) + (showIndex ? 1 : 0);
+    int? sortIndex;
+    if (sort != null) {
+      final position = columns.indexWhere(
+        (column) => column.key == sort!.columnKey,
+      );
+      if (position >= 0 && columns[position].sortable) {
+        sortIndex = position + leadingCount;
+      }
+    }
+
+    var fixedWidthTotal = 0.0;
     for (final column in columns) {
       if (column.minWidth != null) {
-        fixedTotal += column.minWidth!;
-      } else {
-        flexTotal += column.flex;
+        fixedWidthTotal += column.minWidth!;
       }
     }
-    final tableWidth = fixedTotal > minTableWidth ? fixedTotal : minTableWidth;
-    final remaining = tableWidth - fixedTotal;
-    double columnWidth(AdminListColumn column) {
-      if (column.minWidth != null) {
-        return column.minWidth!;
-      }
-      return flexTotal == 0 ? 0 : remaining * (column.flex / flexTotal);
-    }
 
-    Widget headerMainTable = _buildHeaderTable(
-      context,
-      colors,
-      columnWidth,
-      l10n: l10n,
-    );
-    Widget rowsMainTable = _buildRowsTable(context, colors, columnWidth);
-
-    if (_hasActionColumn) {
-      headerMainTable = _withActionCell(
-        headerMainTable,
-        SizedBox(
-          height: 44,
-          child: Align(
-            child: Text(
-              l10n.adminListActions,
-              style: _headerStyle(context, colors),
-            ),
-          ),
-        ),
-        colors,
-      );
-      rowsMainTable = _withActionCell(
-        rowsMainTable,
-        _buildActionCells(context),
-        colors,
-      );
-    }
-
-    // 滚动内容宽度 = 主表宽 + 固定操作列宽，否则操作列溢出被裁剪
-    final scrollContentWidth =
-        tableWidth + (_hasActionColumn ? actionColumnWidth : 0);
-    Widget scrollable(Widget child) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: SizedBox(width: scrollContentWidth, child: child),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: colors.surfaceContainerLow,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-          ),
-          child: scrollable(headerMainTable),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: colors.outlineVariant),
-              right: BorderSide(color: colors.outlineVariant),
-              bottom: BorderSide(color: colors.outlineVariant),
-            ),
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(10),
-            ),
-          ),
-          child: scrollable(rowsMainTable),
-        ),
-      ],
-    );
-  }
-
-  /// 主表右侧拼接固定操作列单元。
-  Widget _withActionCell(Widget table, Widget actionCell, ColorScheme colors) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: table),
-        Container(
-          width: actionColumnWidth,
-          decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: colors.outlineVariant)),
-          ),
-          alignment: Alignment.topCenter,
-          child: actionCell,
-        ),
-      ],
-    );
-  }
-
-  TextStyle? _headerStyle(BuildContext context, ColorScheme colors) =>
-      Theme.of(context).textTheme.labelLarge?.copyWith(
-        color: colors.onSurface,
-        fontWeight: FontWeight.w700,
-      );
-
-  Widget _buildHeaderTable(
-    BuildContext context,
-    ColorScheme colors,
-    double Function(AdminListColumn column) columnWidth, {
-    required AppLocalizations l10n,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+    final dataTable = DataTable2(
+      columns: [
         if (showCheckboxes)
-          SizedBox(
-            width: _checkColumnWidth,
-            height: 44,
-            child: Center(
+          DataColumn2(
+            fixedWidth: _checkColumnWidth,
+            label: Center(
               child: Checkbox(
                 tristate: true,
                 value: allChecked ? true : (someChecked ? null : false),
-                onChanged: (value) => onCheckAll?.call(value == true),
+                onChanged:
+                    onCheckAll == null
+                        ? null
+                        : (value) => onCheckAll!(value == true),
               ),
             ),
           ),
         if (showIndex)
-          SizedBox(
-            width: _indexColumnWidth,
-            height: 44,
-            child: Align(
-              child: Text(
-                l10n.adminListIndex,
-                style: _headerStyle(context, colors),
-              ),
-            ),
+          DataColumn2(
+            fixedWidth: _indexColumnWidth,
+            label: Text(l10n.adminListIndex, style: _headerStyle(context)),
           ),
         for (final column in columns)
-          SizedBox(
-            width: columnWidth(column),
-            height: 44,
-            child: Align(
-              alignment:
-                  column.numeric ? Alignment.centerRight : Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _headerChild(context, column, colors, l10n),
-              ),
-            ),
+          DataColumn2(
+            fixedWidth: column.minWidth,
+            size: _columnSizeFor(column.flex),
+            numeric: column.numeric,
+            label: Text(column.label, style: _headerStyle(context)),
+            onSort:
+                column.sortable && onSort != null
+                    ? (index, ascending) => onSort!(column.key, ascending)
+                    : null,
           ),
       ],
-    );
-  }
-
-  Widget _headerChild(
-    BuildContext context,
-    AdminListColumn column,
-    ColorScheme colors,
-    AppLocalizations l10n,
-  ) {
-    if (!column.sortable) {
-      return Text(column.label, style: _headerStyle(context, colors));
-    }
-    final isSorted = sort?.columnKey == column.key;
-    final ascending = isSorted ? sort!.ascending : false;
-    return InkWell(
-      borderRadius: BorderRadius.circular(6),
-      onTap: () => onSort?.call(column.key, isSorted ? !ascending : true),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(column.label, style: _headerStyle(context, colors)),
-          Icon(
-            isSorted
-                ? (ascending
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded)
-                : Icons.unfold_more_rounded,
-            size: 14,
-            color: isSorted ? colors.primary : colors.outline,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRowsTable(
-    BuildContext context,
-    ColorScheme colors,
-    double Function(AdminListColumn column) columnWidth,
-  ) {
-    final cellsByRow = <int, List<Widget>>{
-      for (var i = 0; i < rowCount; i++) i: rowCellsBuilder(context, i),
-    };
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      rows: [
         for (var i = 0; i < rowCount; i++)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (showCheckboxes)
-                    SizedBox(
-                      width: _checkColumnWidth,
-                      height: rowHeight,
-                      child: Center(
-                        child: Checkbox(
-                          value: isChecked!(i),
-                          onChanged:
-                              (isCheckDisabled?.call(i) ?? false)
-                                  ? null
-                                  : (value) => onRowCheck!(i, value ?? false),
-                        ),
+          DataRow(
+            selected: showCheckboxes && (isChecked?.call(i) ?? false),
+            cells: [
+              if (showCheckboxes)
+                DataCell(
+                  SizedBox(
+                    width: _checkColumnWidth,
+                    child: Center(
+                      child: Checkbox(
+                        value: isChecked!(i),
+                        onChanged:
+                            (isCheckDisabled?.call(i) ?? false)
+                                ? null
+                                : (value) => onRowCheck!(i, value ?? false),
                       ),
                     ),
-                  if (showIndex)
-                    SizedBox(
-                      width: _indexColumnWidth,
-                      height: rowHeight,
-                      child: Align(
-                        child: Text(
-                          '${indexBase + i + 1}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
+                  ),
+                ),
+              if (showIndex)
+                DataCell(
+                  Text(
+                    '${indexBase + i + 1}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
                     ),
-                  for (final column in columns)
-                    SizedBox(
-                      width: columnWidth(column),
-                      height: rowHeight,
-                      child: Align(
-                        alignment:
-                            column.numeric
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: cellsByRow[i]![columns.indexOf(column)],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              Divider(height: 1, color: colors.outlineVariant),
+                  ),
+                ),
+              for (final cell in rowCellsBuilder(context, i)) DataCell(cell),
             ],
           ),
       ],
+      minWidth: math.max(minTableWidth, fixedWidthTotal),
+      headingRowHeight: 44,
+      dataRowHeight: rowHeight,
+      columnSpacing: 24,
+      horizontalMargin: 12,
+      dividerThickness: 1,
+      smRatio: 0.5,
+      lmRatio: 1.5,
+      sortColumnIndex: sortIndex,
+      sortAscending: sort?.ascending ?? false,
+      sortArrowIconColor: colors.primary,
+      showCheckboxColumn: false,
+      showHeadingCheckBox: false,
+    );
+
+    // DataTable2 内部使用 Flexible(tight) 布局，必须给定有界高度；
+    // 其分隔线绘制在行边界上不占用高度，总高 = 表头 44 + 行数 × 行高。
+    final tableHeight = 44.0 + rowCount * rowHeight;
+    final boundedTable = SizedBox(height: tableHeight, child: dataTable);
+    Widget tableArea = boundedTable;
+    if (_hasActionColumn) {
+      tableArea = Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: boundedTable),
+          Container(
+            width: actionColumnWidth,
+            decoration: BoxDecoration(
+              border: Border(left: BorderSide(color: colors.outlineVariant)),
+            ),
+            child: _buildActionColumn(context, colors),
+          ),
+        ],
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: tableArea,
     );
   }
 
-  Widget _buildActionCells(BuildContext context) {
+  /// flex 数值映射到 DataTable2 的 S/M/L 档位；配合 smRatio 0.5、
+  /// lmRatio 1.5 保持 1:2:3 的既有列宽比例。
+  ColumnSize _columnSizeFor(int flex) {
+    if (flex <= 1) {
+      return ColumnSize.S;
+    }
+    if (flex == 2) {
+      return ColumnSize.M;
+    }
+    return ColumnSize.L;
+  }
+
+  TextStyle? _headerStyle(BuildContext context) =>
+      Theme.of(context).textTheme.labelLarge?.copyWith(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontWeight: FontWeight.w700,
+      );
+
+  /// 右侧固定操作列：表头标签与每行操作内容。分隔线绘制在行底边（不占
+  /// 高度），与主表 DataTable2 的行边界分隔线对齐。
+  Widget _buildActionColumn(BuildContext context, ColorScheme colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        SizedBox(
+          height: 44,
+          child: Align(
+            child: Text(
+              AppLocalizations.of(context).adminListActions,
+              style: _headerStyle(context),
+            ),
+          ),
+        ),
         for (var i = 0; i < rowCount; i++)
-          Column(
-            children: [
-              SizedBox(
-                height: rowHeight,
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: actionsBuilder!(context, i),
-                  ),
+          SizedBox(
+            height: rowHeight,
+            child: Container(
+              decoration:
+                  i == rowCount - 1
+                      ? null
+                      : BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: colors.outlineVariant),
+                        ),
+                      ),
+              child: Align(
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: actionsBuilder!(context, i),
                 ),
               ),
-              Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ],
+            ),
           ),
       ],
     );

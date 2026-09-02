@@ -53,6 +53,7 @@ dependencies:
   xml: ^6.6.1
   archive: ^3.6.1
   gbk_codec: ^0.4.0
+  data_table_2: ^2.7.2
 
 dev_dependencies:
   flutter_test:

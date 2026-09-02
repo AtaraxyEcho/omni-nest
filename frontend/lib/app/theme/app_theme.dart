@@ -306,7 +306,15 @@ class OmniNestTheme {
       ),
       dataTableTheme: DataTableThemeData(
         headingRowColor: WidgetStatePropertyAll(colors.surfaceContainerLow),
-        dataRowColor: WidgetStatePropertyAll(colors.surface),
+        dataRowColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colors.primary.withValues(alpha: 0.08);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return colors.onSurface.withValues(alpha: 0.04);
+          }
+          return colors.surface;
+        }),
         headingTextStyle: textTheme.labelLarge?.copyWith(
           color: colors.onSurface,
           fontWeight: FontWeight.w700,
