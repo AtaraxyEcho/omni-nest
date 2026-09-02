@@ -1,4 +1,3 @@
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,12 +41,11 @@ class _BatchProgressDialogState extends ConsumerState<BatchProgressDialog> {
         }
         return;
       }
-      final location = await getSaveLocation(suggestedName: ticket.fileName);
-      if (location == null) return;
-      await controller.downloadBatchArchive(ticket, location.path);
+      final savedPath = await controller.saveBatchArchiveToDisk(ticket);
+      if (savedPath == null) return;
       if (messenger.mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text(l10n.photosArchiveSaved(location.path))),
+          SnackBar(content: Text(l10n.photosArchiveSaved(savedPath))),
         );
       }
     } on Exception {

@@ -89,6 +89,20 @@ mixin PhotoCenterControllerCommands on AsyncNotifier<PhotoCenterState> {
     String destinationPath,
   ) => _repo.downloadBatchArchive(ticket, destinationPath);
 
+  /// 弹出系统保存对话框并下载批量 ZIP 到所选位置。
+  ///
+  /// 返回保存路径；用户取消选择时返回 null。
+  Future<String?> saveBatchArchiveToDisk(
+    PhotoBatchDownloadTicket ticket,
+  ) async {
+    final location = await getSaveLocation(suggestedName: ticket.fileName);
+    if (location == null) {
+      return null;
+    }
+    await _repo.downloadBatchArchive(ticket, location.path);
+    return location.path;
+  }
+
   /// 应用编辑操作
   Future<PhotoEditVersion> applyEdit(
     String photoId,
