@@ -5221,6 +5221,36 @@ abstract class AppLocalizations {
   /// **'Task List'**
   String get adminTaskList;
 
+  /// No description provided for @adminTaskStatusRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get adminTaskStatusRunning;
+
+  /// No description provided for @adminTaskStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get adminTaskStatusCompleted;
+
+  /// No description provided for @adminTaskStatusDlq.
+  ///
+  /// In en, this message translates to:
+  /// **'Dead letter'**
+  String get adminTaskStatusDlq;
+
+  /// No description provided for @adminTaskErrorSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Error summary'**
+  String get adminTaskErrorSummary;
+
+  /// No description provided for @adminTaskUpdatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated at'**
+  String get adminTaskUpdatedAt;
+
   /// No description provided for @adminTaskListSubtitle.
   ///
   /// In en, this message translates to:

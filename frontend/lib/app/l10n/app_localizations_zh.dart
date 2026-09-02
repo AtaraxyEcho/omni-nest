@@ -2732,6 +2732,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminTaskList => '任务列表';
 
   @override
+  String get adminTaskStatusRunning => '运行中';
+
+  @override
+  String get adminTaskStatusCompleted => '成功';
+
+  @override
+  String get adminTaskStatusDlq => '死信';
+
+  @override
+  String get adminTaskErrorSummary => '错误摘要';
+
+  @override
+  String get adminTaskUpdatedAt => '更新时间';
+
+  @override
   String get adminTaskListSubtitle => '失败、取消、死信状态支持重新入队。';
 
   @override

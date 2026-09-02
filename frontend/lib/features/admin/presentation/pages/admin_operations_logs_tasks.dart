@@ -53,13 +53,13 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   Widget build(BuildContext context) {
     final auditQuery = (
       page: _auditPage,
-      size: 25,
+      size: 20,
       action: _auditAction,
       query: _query,
     );
     final loginQuery = (
       page: _loginPage,
-      size: 25,
+      size: 20,
       result: _loginResult,
       platform: 'ALL',
       query: _query,
@@ -373,7 +373,7 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
   Widget build(BuildContext context) {
     final query = (
       page: _page,
-      size: 25,
+      size: 20,
       status: _status,
       taskType: _taskType,
       query: _query,
@@ -548,7 +548,24 @@ class _TaskListTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = context.adminColors;
+    AdminTagTone taskStatusToneFor(String status) => switch (status) {
+      'COMPLETED' => AdminTagTone.success,
+      'RUNNING' => AdminTagTone.info,
+      'FAILED' || 'DLQ' => AdminTagTone.error,
+      _ => AdminTagTone.neutral,
+    };
+
+    String taskStatusLabelFor(AppLocalizations l10n, String status) =>
+        switch (status) {
+          'RUNNING' => l10n.adminTaskStatusRunning,
+          'COMPLETED' => l10n.adminTaskStatusCompleted,
+          'DLQ' => l10n.adminTaskStatusDlq,
+          'FAILED' => l10n.statusScanFailed,
+          'CANCELLED' => l10n.statusScanCancelled,
+          'QUEUED' => l10n.statusScanQueued,
+          _ => status,
+        };
+
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 16),
       child: AdminInfoPanel(
@@ -556,37 +573,96 @@ class _TaskListTab extends StatelessWidget {
         subtitle: l10n.adminTaskListSubtitle,
         children: [
           if (page.items.isEmpty)
-            _EmptyText(l10n.adminNoBackgroundTasks)
+            AdminListEmptyState(message: l10n.adminNoBackgroundTasks)
           else
-            for (final item in page.items)
-              _InfoRow(
-                leading:
-                    item.description.isEmpty ? item.taskType : item.description,
-                middle:
-                    '${item.taskType} · ${item.routingKey ?? l10n.adminNotSet}\n${l10n.adminProgress} ${item.progress}% · ${l10n.adminRetry} ${item.retryCount} · ${item.updatedAt}',
-                trailing: Wrap(
-                  spacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    AdminStatusPill(
-                      label: item.status,
-                      color: _statusColor(item.status, colors),
-                    ),
-                    if (item.canRetry)
-                      FilledButton.tonalIcon(
-                        onPressed: () => onRetry(item.id),
-                        icon: const Icon(Icons.replay_rounded),
-                        label: Text(l10n.adminRetry),
-                      ),
-                  ],
-                ),
+            AdminDataTable(
+              showIndex: true,
+              indexBase: page.page * 20,
+              minTableWidth: 1040,
+              columns: const [
+                AdminListColumn(key: 'taskType', label: '任务类型'),
+                AdminListColumn(key: 'description', label: '任务名称'),
+                AdminListColumn(key: 'progress', label: '进度'),
+                AdminListColumn(key: 'status', label: '执行状态'),
+                AdminListColumn(key: 'error', label: '错误摘要'),
+                AdminListColumn(key: 'updatedAt', label: '更新时间'),
+              ],
+              rowCount: page.items.length,
+              emptyState: AdminListEmptyState(
+                message: l10n.adminNoBackgroundTasks,
               ),
+              rowCellsBuilder: (context, index) {
+                final item = page.items[index];
+                return [
+                  Text(
+                    item.taskType,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    item.description.isEmpty ? item.id : item.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(
+                    width: 110,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: item.progress / 100,
+                            minHeight: 6,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${item.progress}%',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  AdminStatusTag(
+                    label: taskStatusLabelFor(l10n, item.status),
+                    tone: taskStatusToneFor(item.status),
+                  ),
+                  Tooltip(
+                    message: item.errorSummary ?? '-',
+                    child: Text(
+                      item.errorSummary ?? '-',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  Text(
+                    item.updatedAt,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ];
+              },
+              actionsBuilder:
+                  (context, index) =>
+                      page.items[index].canRetry
+                          ? [
+                            IconButton(
+                              tooltip: l10n.adminRetry,
+                              icon: const Icon(Icons.replay_rounded, size: 20),
+                              onPressed: () => onRetry(page.items[index].id),
+                            ),
+                          ]
+                          : const [],
+            ),
           const SizedBox(height: 12),
-          AdminPaginationBar(
-            page: page,
-            onPrevious:
-                page.hasPrevious ? () => onPageChanged(page.page - 1) : null,
-            onNext: page.hasNext ? () => onPageChanged(page.page + 1) : null,
+          AdminListPaginationBar(
+            currentPage: page.page,
+            totalPages: page.totalPages,
+            totalElements: page.totalElements,
+            rowsPerPage: 20,
+            onPageChanged: onPageChanged,
+            onRowsPerPageChanged: (_) {},
           ),
         ],
       ),

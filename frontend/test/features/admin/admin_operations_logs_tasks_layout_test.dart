@@ -20,7 +20,7 @@ void main() {
         overrides: [
           adminTaskPageProvider((
             page: 0,
-            size: 25,
+            size: 20,
             status: 'ALL',
             taskType: 'ALL',
             query: '',
@@ -40,7 +40,7 @@ void main() {
                 ),
               ],
               page: 0,
-              size: 25,
+              size: 20,
               totalElements: 1,
               totalPages: 1,
             ),
@@ -72,21 +72,21 @@ void main() {
         overrides: [
           adminLogPageProvider((
             page: 0,
-            size: 25,
+            size: 20,
             action: 'ALL',
             query: '',
           )).overrideWith(
             (ref) async => const AdminPage<AdminAuditLog>(
               items: [],
               page: 0,
-              size: 25,
+              size: 20,
               totalElements: 0,
               totalPages: 0,
             ),
           ),
           adminLoginAuditPageProvider((
             page: 0,
-            size: 25,
+            size: 20,
             result: 'ALL',
             platform: 'ALL',
             query: '',
@@ -94,7 +94,7 @@ void main() {
             (ref) async => const AdminPage<AdminLoginAuditItem>(
               items: [],
               page: 0,
-              size: 25,
+              size: 20,
               totalElements: 0,
               totalPages: 0,
             ),

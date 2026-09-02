@@ -2807,6 +2807,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTaskList => 'Task List';
 
   @override
+  String get adminTaskStatusRunning => 'Running';
+
+  @override
+  String get adminTaskStatusCompleted => 'Completed';
+
+  @override
+  String get adminTaskStatusDlq => 'Dead letter';
+
+  @override
+  String get adminTaskErrorSummary => 'Error summary';
+
+  @override
+  String get adminTaskUpdatedAt => 'Updated at';
+
+  @override
   String get adminTaskListSubtitle =>
       'Failed, cancelled and DLQ status support re-queue.';
 
