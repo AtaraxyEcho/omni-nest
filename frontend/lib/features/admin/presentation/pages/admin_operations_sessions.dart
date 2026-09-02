@@ -8,7 +8,7 @@ class AdminSessionsPage extends ConsumerStatefulWidget {
 }
 
 class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
-  static const _pageSize = 20;
+  int _pageSize = 20;
   static const _platforms = <String>[
     'ALL',
     'android',
@@ -347,7 +347,7 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                     _page = next;
                     _selectedSessions.clear();
                   }),
-              onRowsPerPageChanged: (_) {},
+              onRowsPerPageChanged: _changePageSize,
             ),
           ],
         ),
@@ -428,6 +428,15 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
             ],
           ),
     );
+  }
+
+  /// 调整每页条数：重置回第一页并清空批量选择。
+  void _changePageSize(int size) {
+    setState(() {
+      _pageSize = size;
+      _page = 0;
+      _selectedSessions.clear();
+    });
   }
 
   /// 批量强制下线选中的会话：确认后逐条执行，失败项跳过。

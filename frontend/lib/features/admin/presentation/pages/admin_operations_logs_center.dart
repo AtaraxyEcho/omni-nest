@@ -17,6 +17,7 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   String _loginResult = 'ALL';
   int _auditPage = 0;
   int _loginPage = 0;
+  int _pageSize = 20;
   AdminListSort _auditSort = const AdminListSort(
     columnKey: 'createdAt',
     ascending: false,
@@ -62,7 +63,7 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   Widget build(BuildContext context) {
     final auditQuery = (
       page: _auditPage,
-      size: 20,
+      size: _pageSize,
       action: _auditAction,
       query: _query,
       sort: _auditSort.columnKey,
@@ -70,7 +71,7 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
     );
     final loginQuery = (
       page: _loginPage,
-      size: 20,
+      size: _pageSize,
       result: _loginResult,
       platform: 'ALL',
       query: _query,
@@ -157,6 +158,8 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
               _AuditLogTab(
                 page: auditAsync,
                 onPageChanged: (page) => setState(() => _auditPage = page),
+                pageSize: _pageSize,
+                onRowsPerPageChanged: _changePageSize,
                 sort: _auditSort,
                 onSort: (key, ascending) {
                   setState(() {
@@ -171,6 +174,8 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
               _LoginAuditLogTab(
                 page: loginAsync,
                 onPageChanged: (page) => setState(() => _loginPage = page),
+                pageSize: _pageSize,
+                onRowsPerPageChanged: _changePageSize,
                 sort: _loginSort,
                 onSort: (key, ascending) {
                   setState(() {
@@ -210,6 +215,15 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
     return useExpanded
         ? Expanded(child: tabView)
         : SizedBox(height: 520, child: tabView);
+  }
+
+  /// 调整每页条数：重置两个 Tab 回第一页。
+  void _changePageSize(int size) {
+    setState(() {
+      _pageSize = size;
+      _auditPage = 0;
+      _loginPage = 0;
+    });
   }
 
   /// 将当前激活 Tab 的当前页导出为 CSV 文件。
@@ -361,12 +375,16 @@ class _AuditLogTab extends StatelessWidget {
     required this.onPageChanged,
     required this.sort,
     required this.onSort,
+    required this.pageSize,
+    required this.onRowsPerPageChanged,
   });
 
   final AsyncValue<AdminPage<AdminAuditLog>> page;
   final ValueChanged<int> onPageChanged;
   final AdminListSort sort;
   final void Function(String columnKey, bool ascending) onSort;
+  final int pageSize;
+  final ValueChanged<int> onRowsPerPageChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -383,7 +401,7 @@ class _AuditLogTab extends StatelessWidget {
               children: [
                 AdminDataTable(
                   showIndex: true,
-                  indexBase: result.page * 20,
+                  indexBase: result.page * pageSize,
                   minTableWidth: 960,
                   columns: [
                     AdminListColumn(
@@ -461,9 +479,9 @@ class _AuditLogTab extends StatelessWidget {
                   currentPage: result.page,
                   totalPages: result.totalPages,
                   totalElements: result.totalElements,
-                  rowsPerPage: 20,
+                  rowsPerPage: pageSize,
                   onPageChanged: onPageChanged,
-                  onRowsPerPageChanged: (_) {},
+                  onRowsPerPageChanged: onRowsPerPageChanged,
                 ),
               ],
             ),
@@ -478,12 +496,16 @@ class _LoginAuditLogTab extends StatelessWidget {
     required this.onPageChanged,
     required this.sort,
     required this.onSort,
+    required this.pageSize,
+    required this.onRowsPerPageChanged,
   });
 
   final AsyncValue<AdminPage<AdminLoginAuditItem>> page;
   final ValueChanged<int> onPageChanged;
   final AdminListSort sort;
   final void Function(String columnKey, bool ascending) onSort;
+  final int pageSize;
+  final ValueChanged<int> onRowsPerPageChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -500,7 +522,7 @@ class _LoginAuditLogTab extends StatelessWidget {
               children: [
                 AdminDataTable(
                   showIndex: true,
-                  indexBase: result.page * 20,
+                  indexBase: result.page * pageSize,
                   minTableWidth: 960,
                   columns: [
                     AdminListColumn(
@@ -591,9 +613,9 @@ class _LoginAuditLogTab extends StatelessWidget {
                   currentPage: result.page,
                   totalPages: result.totalPages,
                   totalElements: result.totalElements,
-                  rowsPerPage: 20,
+                  rowsPerPage: pageSize,
                   onPageChanged: onPageChanged,
-                  onRowsPerPageChanged: (_) {},
+                  onRowsPerPageChanged: onRowsPerPageChanged,
                 ),
               ],
             ),

@@ -84,6 +84,55 @@ void main() {
     expect(receivedAscending, isFalse, reason: '已升序再点应变降序');
   });
 
+  testWidgets('表头各列与序号同行横向对齐', (tester) async {
+    await pumpTable(tester, rowCount: 2, onSort: (columnKey, ascending) {});
+    final nameHeader = tester.getRect(find.text('名称'));
+    final indexHeader = tester.getRect(find.text('序号'));
+    final actionHeader = tester.getRect(find.text('操作'));
+    expect(
+      indexHeader.top,
+      closeTo(nameHeader.top, 0.5),
+      reason: '序号表头必须与列头同一行',
+    );
+    expect(
+      actionHeader.top,
+      closeTo(nameHeader.top, 0.5),
+      reason: '操作表头必须与列头同一行',
+    );
+    expect(indexHeader.left, lessThan(nameHeader.left), reason: '序号列在数据列之前');
+  });
+
+  testWidgets('切换每页条数回调新档位', (tester) async {
+    int? received;
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: OmniNestTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Scaffold(
+            body: AdminListPaginationBar(
+              currentPage: 0,
+              totalPages: 5,
+              totalElements: 100,
+              rowsPerPage: 20,
+              onPageChanged: (_) {},
+              onRowsPerPageChanged: (value) => received = value,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byType(DropdownButton<int>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('50').last);
+    await tester.pumpAndSettle();
+    expect(received, 50);
+  });
+
   testWidgets('空态渲染占位提示', (tester) async {
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;

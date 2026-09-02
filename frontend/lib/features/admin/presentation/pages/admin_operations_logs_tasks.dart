@@ -15,6 +15,7 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
   String _status = 'ALL';
   String _taskType = 'ALL';
   int _page = 0;
+  int _pageSize = 20;
   AdminListSort _taskSort = const AdminListSort(
     columnKey: 'updatedAt',
     ascending: false,
@@ -49,7 +50,7 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
   Widget build(BuildContext context) {
     final query = (
       page: _page,
-      size: 20,
+      size: _pageSize,
       status: _status,
       taskType: _taskType,
       query: _query,
@@ -66,6 +67,15 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
           ),
       data: (page) => _buildPage(context, page, dlqAsync),
     );
+  }
+
+  /// 调整每页条数：重置回第一页并清空批量选择。
+  void _changePageSize(int size) {
+    setState(() {
+      _pageSize = size;
+      _page = 0;
+      _selectedTasks.clear();
+    });
   }
 
   /// 批量重试选中的任务：确认后逐条执行，失败项跳过。
@@ -236,6 +246,8 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
                   _selectedTasks.clear();
                 }),
             onRetry: _retryTask,
+            pageSize: _pageSize,
+            onRowsPerPageChanged: _changePageSize,
             sort: _taskSort,
             onSort: (key, ascending) {
               setState(() {
@@ -305,6 +317,8 @@ class _TaskListTab extends StatelessWidget {
     required this.page,
     required this.onPageChanged,
     required this.onRetry,
+    required this.pageSize,
+    required this.onRowsPerPageChanged,
     required this.sort,
     required this.onSort,
     required this.selectedIndexes,
@@ -317,6 +331,8 @@ class _TaskListTab extends StatelessWidget {
   final AdminPage<AdminTaskRecord> page;
   final ValueChanged<int> onPageChanged;
   final void Function(String taskId) onRetry;
+  final int pageSize;
+  final ValueChanged<int> onRowsPerPageChanged;
   final AdminListSort sort;
   final void Function(String columnKey, bool ascending) onSort;
   final Set<int> selectedIndexes;
@@ -379,7 +395,7 @@ class _TaskListTab extends StatelessWidget {
                   selectedIndexes.isNotEmpty &&
                   selectedIndexes.length < selectableCount,
               showIndex: true,
-              indexBase: page.page * 20,
+              indexBase: page.page * pageSize,
               minTableWidth: 1040,
               columns: [
                 AdminListColumn(
@@ -483,9 +499,9 @@ class _TaskListTab extends StatelessWidget {
             currentPage: page.page,
             totalPages: page.totalPages,
             totalElements: page.totalElements,
-            rowsPerPage: 20,
+            rowsPerPage: pageSize,
+            onRowsPerPageChanged: onRowsPerPageChanged,
             onPageChanged: onPageChanged,
-            onRowsPerPageChanged: (_) {},
           ),
         ],
       ),

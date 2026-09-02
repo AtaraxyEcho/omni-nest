@@ -273,7 +273,15 @@ class AdminDataTable extends StatelessWidget {
     if (_hasActionColumn) {
       headerMainTable = _withActionCell(
         headerMainTable,
-        Text(l10n.adminListActions, style: _headerStyle(context, colors)),
+        SizedBox(
+          height: 44,
+          child: Align(
+            child: Text(
+              l10n.adminListActions,
+              style: _headerStyle(context, colors),
+            ),
+          ),
+        ),
         colors,
       );
       rowsMainTable = _withActionCell(
@@ -350,8 +358,8 @@ class AdminDataTable extends StatelessWidget {
     double Function(AdminListColumn column) columnWidth, {
     required AppLocalizations l10n,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showCheckboxes)
           SizedBox(
