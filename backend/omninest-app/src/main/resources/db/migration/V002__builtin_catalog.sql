@@ -116,7 +116,7 @@ SELECT '53e2e138-59b7-4fa6-988f-58554f34b8d3', permission.id
 FROM omni.auth_permissions permission
 WHERE permission.code IN (
     'profile:read', 'profile:write', 'file:read', 'file:write',
-    'media:read', 'media:write', 'photo:read', 'photo:write', 'photo:admin', 'task:read'
+    'media:read', 'media:write', 'photo:read', 'photo:write', 'task:read'
 );
 
 -- 管理员包含成员权限和用户管理权限，但不包含系统配置修改权限。
