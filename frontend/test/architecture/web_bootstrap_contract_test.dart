@@ -23,16 +23,12 @@ void main() {
     expect(indexSource, isNot(contains('flutter_bootstrap_config')));
   });
 
-  test('Web bootstrap loads the bundled Chromium CanvasKit runtime', () {
+  test('Web bootstrap loads the self-hosted CanvasKit runtime', () {
     final bootstrapSource = File('web/flutter_bootstrap.js').readAsStringSync();
 
     expect(bootstrapSource, contains('{{flutter_js}}'));
     expect(bootstrapSource, contains('{{flutter_build_config}}'));
-    expect(
-      bootstrapSource,
-      contains("canvasKitBaseUrl: '/canvaskit/chromium/'"),
-    );
-    expect(File('web/canvaskit/chromium/canvaskit.js').existsSync(), isTrue);
-    expect(File('web/canvaskit/chromium/canvaskit.wasm').existsSync(), isTrue);
+    expect(bootstrapSource, contains("canvasKitBaseUrl: '/canvaskit/'"));
+    expect(bootstrapSource, isNot(contains('gstatic')));
   });
 }

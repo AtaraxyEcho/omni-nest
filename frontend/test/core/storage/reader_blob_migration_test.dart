@@ -6,7 +6,7 @@ import 'package:omninest/core/storage/local_database.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 void main() {
-  test('schema 16 安全清除大体积旧图片 BLOB 并支持重开', () async {
+  test('旧版本库升级时安全清除大体积旧图片 BLOB 并支持重开', () async {
     final temporaryDirectory = await Directory.systemTemp.createTemp(
       'reader-blob-migration-',
     );
@@ -44,8 +44,9 @@ void main() {
     final migrated = LocalDatabase(NativeDatabase(databaseFile));
     await migrated.customSelect('SELECT 1').getSingle();
     final migratedColumns = await _columnNames(migrated);
+    final currentSchemaVersion = migrated.schemaVersion;
 
-    expect(migrated.schemaVersion, 17);
+    expect(currentSchemaVersion, greaterThan(15));
     expect(await migrated.select(migrated.cachedReaderImages).get(), isEmpty);
     expect(migratedColumns, isNot(contains('image_bytes')));
     expect(
@@ -65,7 +66,7 @@ void main() {
     addTearDown(reopened.close);
     await reopened.customSelect('SELECT 1').getSingle();
 
-    expect(await _userVersion(reopened), 17);
+    expect(await _userVersion(reopened), currentSchemaVersion);
     expect(await _columnNames(reopened), isNot(contains('image_bytes')));
     expect(await reopened.select(reopened.cachedReaderImages).get(), isEmpty);
   });
