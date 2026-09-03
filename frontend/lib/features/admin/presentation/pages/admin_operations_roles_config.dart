@@ -87,14 +87,14 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
           spacing: 12,
           runSpacing: 10,
           children: [
-            AdminDropdown<String>(
+            AppDropdown<String>(
               width: 190,
               label: l10n.adminConfigGroupColumn,
               value: _groupFilter,
               items: [
-                AdminDropdownItem(value: 'ALL', label: l10n.adminAll),
+                AppDropdownItem(value: 'ALL', label: l10n.adminAll),
                 for (final name in groupNames)
-                  AdminDropdownItem(value: name, label: name),
+                  AppDropdownItem(value: name, label: name),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -424,7 +424,7 @@ class _ConfigEditDialogState extends ConsumerState<_ConfigEditDialog> {
                 },
               )
             else if (widget.entry.allowedValues.isNotEmpty)
-              AdminDropdown<String>(
+              AppDropdown<String>(
                 value:
                     widget.entry.allowedValues.contains(widget.entry.value)
                         ? widget.entry.value
@@ -432,7 +432,7 @@ class _ConfigEditDialogState extends ConsumerState<_ConfigEditDialog> {
                 label: l10n.adminConfigValue,
                 items: [
                   for (final value in widget.entry.allowedValues)
-                    AdminDropdownItem(value: value, label: value),
+                    AppDropdownItem(value: value, label: value),
                 ],
                 onChanged: (value) {
                   if (value != null) {

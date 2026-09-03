@@ -7,6 +7,7 @@ import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
 import 'package:omninest/core/widgets/workbench_panel.dart';
 import 'package:omninest/features/video/application/movie_controller.dart';
+import 'package:omninest/app/widgets/app_dropdown.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_feedback.dart';
 import 'package:omninest/features/video/presentation/widgets/movie_shell.dart';
@@ -365,38 +366,25 @@ class _MetadataFieldsPanel extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 720;
-          final statusField = DropdownButtonFormField<String>(
-            // ignore: deprecated_member_use — controlled dropdown requires `value`
+          final statusField = AppDropdown<String>(
             value: metadataStatus,
-            dropdownColor: context.videoColors.surfaceContainerHighest,
-            decoration: _inputDecoration(
-              context,
-              AppLocalizations.of(context).videoMetadataStatus,
-            ),
-            style: TextStyle(
-              color: context.videoColors.onSurface,
-              fontSize: 14,
-            ),
+            label: AppLocalizations.of(context).videoMetadataStatus,
             items: [
-              DropdownMenuItem(
+              AppDropdownItem(
                 value: 'MANUAL',
-                child: Text(AppLocalizations.of(context).videoManualLock),
+                label: AppLocalizations.of(context).videoManualLock,
               ),
-              DropdownMenuItem(
+              AppDropdownItem(
                 value: 'MATCHED',
-                child: Text(AppLocalizations.of(context).videoMatched),
+                label: AppLocalizations.of(context).videoMatched,
               ),
-              DropdownMenuItem(
+              AppDropdownItem(
                 value: 'PENDING',
-                child: Text(
-                  AppLocalizations.of(context).videoPendingRecognition,
-                ),
+                label: AppLocalizations.of(context).videoPendingRecognition,
               ),
-              DropdownMenuItem(
+              AppDropdownItem(
                 value: 'FAILED',
-                child: Text(
-                  AppLocalizations.of(context).videoRecognitionFailed,
-                ),
+                label: AppLocalizations.of(context).videoRecognitionFailed,
               ),
             ],
             onChanged: onStatusChanged,

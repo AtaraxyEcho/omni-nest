@@ -567,35 +567,30 @@ class _StorageLocationWizardState
               ),
             ),
             const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              initialValue: _mountKey,
-              items:
-                  widget.mounts
-                      .map(
-                        (mount) => DropdownMenuItem<String>(
-                          value: mount.mountKey,
-                          enabled: mount.available,
-                          child: Text(
-                            mount.available
-                                ? mount.displayName
-                                : '${mount.displayName} (${mount.mountKey})',
-                          ),
-                        ),
-                      )
-                      .toList(),
+            AppDropdown<String>(
+              value: _mountKey ?? '',
+              items: [
+                for (final mount in widget.mounts)
+                  AppDropdownItem(
+                    value: mount.mountKey,
+                    label:
+                        mount.available
+                            ? mount.displayName
+                            : '${mount.displayName} (${mount.mountKey})',
+                    enabled: mount.available,
+                  ),
+              ],
               onChanged:
                   _saving
                       ? null
                       : (value) {
                         setState(() {
-                          _mountKey = value;
+                          _mountKey = value!;
                           _parent = null;
                         });
                       },
-              decoration: InputDecoration(
-                labelText: l10n.adminMountKey,
-                helperText: l10n.adminMountKeyHint,
-              ),
+              label: l10n.adminMountKey,
+              helperText: l10n.adminMountKeyHint,
             ),
             const SizedBox(height: 14),
             Row(

@@ -126,7 +126,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.byType(AdminDropdown<int>));
+    await tester.tap(find.byType(AppDropdown<int>));
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(

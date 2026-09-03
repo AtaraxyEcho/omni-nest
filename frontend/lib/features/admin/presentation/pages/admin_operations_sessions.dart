@@ -112,24 +112,24 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
           runSpacing: 10,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            AdminDropdown<String>(
+            AppDropdown<String>(
               width: 190,
               label: l10n.adminFilterStatus,
               value: _status,
               items: [
-                AdminDropdownItem(
+                AppDropdownItem(
                   value: 'ALL',
                   label: l10n.adminSessionAllStatuses,
                 ),
-                AdminDropdownItem(
+                AppDropdownItem(
                   value: 'ACTIVE',
                   label: l10n.adminSessionActiveOnly,
                 ),
-                AdminDropdownItem(
+                AppDropdownItem(
                   value: 'REVOKED',
                   label: l10n.adminSessionRevokedOnly,
                 ),
-                AdminDropdownItem(
+                AppDropdownItem(
                   value: 'EXPIRED',
                   label: l10n.adminSessionExpiredOnly,
                 ),
@@ -144,13 +144,13 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                 }
               },
             ),
-            AdminDropdown<String>(
+            AppDropdown<String>(
               width: 190,
               label: l10n.adminFilterPlatform,
               value: _platform,
               items: [
                 for (final platform in _platforms)
-                  AdminDropdownItem(
+                  AppDropdownItem(
                     value: platform,
                     label: platform == 'ALL' ? l10n.adminAll : platform,
                   ),
@@ -165,12 +165,12 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                 }
               },
             ),
-            AdminDropdown<int>(
+            AppDropdown<int>(
               width: 190,
               value: _retentionDays,
               items: [
                 for (final days in const <int>[7, 30, 90, 365])
-                  AdminDropdownItem(
+                  AppDropdownItem(
                     value: days,
                     label: l10n.adminRetentionDays('$days'),
                   ),

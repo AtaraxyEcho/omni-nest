@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/files_colors.dart';
 import 'package:omninest/features/files/domain/file_manager_models.dart';
+import 'package:omninest/app/widgets/app_dropdown.dart';
 
 Map<String, String> _providerLabels(AppLocalizations l10n) => {
   'S3': l10n.filesS3Compatible,
@@ -206,21 +207,13 @@ class _ExternalStorageAccountDialogState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropdownButtonFormField<String>(
-                initialValue: _provider,
-                decoration: InputDecoration(
-                  labelText: l10n.filesStorageType,
-                  isDense: true,
-                ),
-                items:
-                    _providerLabels(l10n).entries
-                        .map(
-                          (e) => DropdownMenuItem(
-                            value: e.key,
-                            child: Text(e.value),
-                          ),
-                        )
-                        .toList(),
+              AppDropdown<String>(
+                value: _provider,
+                label: l10n.filesStorageType,
+                items: [
+                  for (final e in _providerLabels(l10n).entries)
+                    AppDropdownItem(value: e.key, label: e.value),
+                ],
                 onChanged:
                     isEdit
                         ? null
@@ -277,16 +270,13 @@ class _ExternalStorageAccountDialogState
     final l10n = AppLocalizations.of(context);
     return switch (_provider) {
       'S3' => [
-        DropdownButtonFormField<String>(
-          initialValue: _s3ProviderType,
-          decoration: InputDecoration(
-            labelText: l10n.filesS3Provider,
-            isDense: true,
-          ),
-          items:
-              _s3ProviderTypes
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+        AppDropdown<String>(
+          value: _s3ProviderType,
+          label: l10n.filesS3Provider,
+          items: [
+            for (final e in _s3ProviderTypes)
+              AppDropdownItem(value: e, label: e),
+          ],
           onChanged: (v) {
             if (v != null) setState(() => _s3ProviderType = v);
           },
@@ -336,16 +326,12 @@ class _ExternalStorageAccountDialogState
         ),
       ],
       'WEBDAV' => [
-        DropdownButtonFormField<String>(
-          initialValue: _webdavVendor,
-          decoration: InputDecoration(
-            labelText: l10n.filesServiceType,
-            isDense: true,
-          ),
-          items:
-              _webdavVendors
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+        AppDropdown<String>(
+          value: _webdavVendor,
+          label: l10n.filesServiceType,
+          items: [
+            for (final e in _webdavVendors) AppDropdownItem(value: e, label: e),
+          ],
           onChanged: (v) {
             if (v != null) setState(() => _webdavVendor = v);
           },

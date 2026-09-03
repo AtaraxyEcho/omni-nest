@@ -265,17 +265,14 @@ class _ExternalStorageDialogState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<String>(
-              initialValue: _provider,
-              decoration: InputDecoration(labelText: l10n.adminType),
+            AppDropdown<String>(
+              value: _provider,
+              label: l10n.adminType,
               items: [
-                const DropdownMenuItem(value: 'S3', child: Text('S3')),
-                const DropdownMenuItem(value: 'WEBDAV', child: Text('WebDAV')),
-                const DropdownMenuItem(value: 'SMB', child: Text('SMB')),
-                DropdownMenuItem(
-                  value: 'LOCAL',
-                  child: Text(l10n.adminLocalMount),
-                ),
+                const AppDropdownItem(value: 'S3', label: 'S3'),
+                const AppDropdownItem(value: 'WEBDAV', label: 'WebDAV'),
+                const AppDropdownItem(value: 'SMB', label: 'SMB'),
+                AppDropdownItem(value: 'LOCAL', label: l10n.adminLocalMount),
               ],
               onChanged: (value) {
                 if (value != null) {

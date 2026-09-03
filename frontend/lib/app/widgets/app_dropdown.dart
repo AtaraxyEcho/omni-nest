@@ -1,30 +1,38 @@
 import 'package:flutter/material.dart';
 
-/// 管理端统一下拉选项描述。
-class AdminDropdownItem<T> {
-  const AdminDropdownItem({required this.value, required this.label});
+/// 全局统一下拉选项描述。
+class AppDropdownItem<T> {
+  const AppDropdownItem({
+    required this.value,
+    required this.label,
+    this.enabled = true,
+  });
 
   final T value;
   final String label;
+
+  /// 禁用项在菜单中置灰且不可选择。
+  final bool enabled;
 }
 
-/// 管理端统一下拉选择：闭合态无边框填充式（聚焦主色描边 + 旋转箭头），
+/// 全局统一下拉选择：闭合态无边框填充式（聚焦主色描边 + 旋转箭头），
 /// 展开菜单基于 Material 3 的 [MenuAnchor]——锚点定位、自动上下翻转、
 /// 外部点击关闭与键盘导航均由框架保证；视觉上为圆角投影面板、选项
 /// hover 高亮、选中项主色加粗并打勾。管理端所有下拉统一使用本控件。
-class AdminDropdown<T> extends StatefulWidget {
-  const AdminDropdown({
+class AppDropdown<T> extends StatefulWidget {
+  const AppDropdown({
     required this.value,
     required this.items,
     required this.onChanged,
     this.label,
     this.width,
     this.suffixText,
+    this.helperText,
     super.key,
   });
 
   final T value;
-  final List<AdminDropdownItem<T>> items;
+  final List<AppDropdownItem<T>> items;
   final ValueChanged<T?>? onChanged;
 
   /// 浮动标签；为空时不显示。
@@ -34,11 +42,14 @@ class AdminDropdown<T> extends StatefulWidget {
   final double? width;
   final String? suffixText;
 
+  /// 字段下方的辅助说明。
+  final String? helperText;
+
   @override
-  State<AdminDropdown<T>> createState() => _AdminDropdownState<T>();
+  State<AppDropdown<T>> createState() => _AppDropdownState<T>();
 }
 
-class _AdminDropdownState<T> extends State<AdminDropdown<T>> {
+class _AppDropdownState<T> extends State<AppDropdown<T>> {
   final MenuController _menu = MenuController();
   final FocusNode _focusNode = FocusNode();
   bool _focused = false;
@@ -105,6 +116,7 @@ class _AdminDropdownState<T> extends State<AdminDropdown<T>> {
                 isFocused: _focused || isOpen,
                 decoration: InputDecoration(
                   labelText: widget.label,
+                  helperText: widget.helperText,
                   suffixText:
                       widget.suffixText == null || widget.suffixText!.isEmpty
                           ? null
@@ -148,7 +160,7 @@ class _AdminDropdownState<T> extends State<AdminDropdown<T>> {
         menuChildren: [
           for (var i = 0; i < widget.items.length; i++)
             MenuItemButton(
-              onPressed: () => _select(i),
+              onPressed: widget.items[i].enabled ? () => _select(i) : null,
               style: ButtonStyle(
                 padding: const WidgetStatePropertyAll(
                   EdgeInsets.symmetric(horizontal: 12),

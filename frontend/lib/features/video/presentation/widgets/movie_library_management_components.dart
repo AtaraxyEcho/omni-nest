@@ -75,17 +75,16 @@ class _VideoLibrarySourceDialogState
               decoration: InputDecoration(labelText: l10n.videoSourceName),
             ),
             const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              initialValue: _locationId,
-              decoration: InputDecoration(labelText: l10n.videoStorageLocation),
+            AppDropdown<String>(
+              value: _locationId,
+              label: l10n.videoStorageLocation,
               items: [
                 for (final location in widget.locations)
-                  DropdownMenuItem(
+                  AppDropdownItem(
                     value: location.id,
+                    label:
+                        '${location.name} · ${_storageHealthLabel(l10n, location.healthStatus)}',
                     enabled: location.available,
-                    child: Text(
-                      '${location.name} · ${_storageHealthLabel(l10n, location.healthStatus)}',
-                    ),
                   ),
               ],
               onChanged:
@@ -101,17 +100,15 @@ class _VideoLibrarySourceDialogState
                       : null,
             ),
             const SizedBox(height: 14),
-            DropdownButtonFormField<VideoLibraryType>(
-              initialValue: _libraryType,
-              decoration: InputDecoration(
-                labelText: l10n.videoLibraryType,
-                helperText: l10n.videoLibraryTypeHint,
-              ),
+            AppDropdown<VideoLibraryType>(
+              value: _libraryType,
+              label: l10n.videoLibraryType,
+              helperText: l10n.videoLibraryTypeHint,
               items: [
                 for (final type in VideoLibraryType.values)
-                  DropdownMenuItem(
+                  AppDropdownItem(
                     value: type,
-                    child: Text(_libraryTypeLabel(l10n, type)),
+                    label: _libraryTypeLabel(l10n, type),
                   ),
               ],
               onChanged:

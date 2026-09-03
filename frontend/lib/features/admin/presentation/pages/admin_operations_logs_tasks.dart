@@ -584,12 +584,12 @@ class _TaskFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 220,
-      child: AdminDropdown<String>(
+      child: AppDropdown<String>(
         value: value,
         label: label,
         items: [
           for (final option in options)
-            AdminDropdownItem(value: option, label: optionLabel(option)),
+            AppDropdownItem(value: option, label: optionLabel(option)),
         ],
         onChanged: (next) {
           if (next != null) onChanged(next);

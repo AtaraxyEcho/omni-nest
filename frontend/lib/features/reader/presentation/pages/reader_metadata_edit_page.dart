@@ -1,3 +1,4 @@
+import 'package:omninest/app/widgets/app_dropdown.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -452,64 +453,23 @@ class _ReaderMetadataEditPageState
 
   Widget _buildSerialStatusDropdown() {
     final l10n = AppLocalizations.of(context);
-    return DropdownButtonFormField<String>(
-      initialValue: _serialStatus,
-      items:
-          _serialStatuses
-              .map(
-                (s) => DropdownMenuItem(
-                  value: s,
-                  child: Text(
-                    switch (s) {
-                      'ONGOING' => l10n.readerStatusOngoing,
-                      'COMPLETED' => l10n.readerStatusCompleted,
-                      _ => l10n.readerStatusUnknown,
-                    },
-                    style: TextStyle(
-                      color: context.readerColors.onSurface,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
+    return AppDropdown<String>(
+      value: _serialStatus,
+      label: l10n.readerLabelSerialStatus,
+      items: [
+        for (final s in _serialStatuses)
+          AppDropdownItem(
+            value: s,
+            label: switch (s) {
+              'ONGOING' => l10n.readerStatusOngoing,
+              'COMPLETED' => l10n.readerStatusCompleted,
+              _ => l10n.readerStatusUnknown,
+            },
+          ),
+      ],
       onChanged: (v) {
         if (v != null) setState(() => _serialStatus = v);
       },
-      decoration: InputDecoration(
-        labelText: l10n.readerLabelSerialStatus,
-        labelStyle: TextStyle(
-          color: context.readerColors.onSurfaceVariant.withValues(alpha: 0.8),
-          fontSize: 13,
-        ),
-        filled: true,
-        fillColor: context.readerColors.surfaceContainerHigh.withValues(
-          alpha: 0.5,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: context.readerColors.outlineVariant.withValues(alpha: 0.3),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: context.readerColors.outlineVariant.withValues(alpha: 0.3),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 1.5,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-      ),
     );
   }
 

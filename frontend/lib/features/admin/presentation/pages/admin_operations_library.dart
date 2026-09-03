@@ -198,21 +198,18 @@ class _LibraryReviewSection extends ConsumerWidget {
         else ...[
           SizedBox(
             width: 320,
-            child: DropdownButtonFormField<String>(
-              initialValue: validSelection ? selectedSourceId : null,
-              isDense: true,
+            child: AppDropdown<String>(
+              value: validSelection ? selectedSourceId! : '',
+              label: l10n.videoSelectLibrarySource,
               items: [
                 for (final source in sources)
-                  DropdownMenuItem(value: source.id, child: Text(source.name)),
+                  AppDropdownItem(value: source.id, label: source.name),
               ],
               onChanged: (value) {
                 if (value != null) {
                   onSelectSource(value);
                 }
               },
-              decoration: InputDecoration(
-                labelText: l10n.videoSelectLibrarySource,
-              ),
             ),
           ),
           const SizedBox(height: 16),

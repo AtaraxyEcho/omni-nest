@@ -9,9 +9,9 @@ import 'dart:math' as math;
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:omninest/features/admin/presentation/widgets/admin_dropdown.dart';
+import 'package:omninest/app/widgets/app_dropdown.dart';
 
-export 'package:omninest/features/admin/presentation/widgets/admin_dropdown.dart';
+export 'package:omninest/app/widgets/app_dropdown.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 
 /// 状态标签语义色。
@@ -618,12 +618,12 @@ class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
                 children: [
                   SizedBox(
                     width: 92,
-                    child: AdminDropdown<int>(
+                    child: AppDropdown<int>(
                       value: widget.rowsPerPage,
                       items: [
                         for (final choice
                             in AdminListPaginationBar._rowsPerPageChoices)
-                          AdminDropdownItem(value: choice, label: '$choice'),
+                          AppDropdownItem(value: choice, label: '$choice'),
                       ],
                       onChanged: (value) {
                         if (value != null) {
@@ -640,6 +640,10 @@ class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
                   IconButton(
                     onPressed:
                         current > 0 ? () => widget.onPageChanged(0) : null,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                      padding: EdgeInsets.zero,
+                    ),
                     icon: const Icon(Icons.first_page_rounded),
                     tooltip: l10n.adminListFirstPage,
                     color: disabledColor,
@@ -649,6 +653,10 @@ class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
                         current > 0
                             ? () => widget.onPageChanged(current - 1)
                             : null,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                      padding: EdgeInsets.zero,
+                    ),
                     icon: const Icon(Icons.chevron_left_rounded),
                     tooltip: l10n.adminListPrevPage,
                     color: disabledColor,
@@ -669,6 +677,10 @@ class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
                         current < total - 1
                             ? () => widget.onPageChanged(current + 1)
                             : null,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                      padding: EdgeInsets.zero,
+                    ),
                     icon: const Icon(Icons.chevron_right_rounded),
                     tooltip: l10n.adminListNextPage,
                     color: disabledColor,
@@ -678,6 +690,10 @@ class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
                         current < total - 1
                             ? () => widget.onPageChanged(total - 1)
                             : null,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(44, 44),
+                      padding: EdgeInsets.zero,
+                    ),
                     icon: const Icon(Icons.last_page_rounded),
                     tooltip: l10n.adminListLastPage,
                     color: disabledColor,

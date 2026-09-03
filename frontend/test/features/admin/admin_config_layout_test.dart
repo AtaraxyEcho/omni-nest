@@ -5,7 +5,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/features/admin/domain/admin_operations.dart';
 import 'package:omninest/features/admin/presentation/pages/admin_operations_pages.dart';
-import 'package:omninest/features/admin/presentation/widgets/admin_dropdown.dart';
+import 'package:omninest/app/widgets/app_dropdown.dart';
 import 'package:omninest/features/admin/presentation/widgets/admin_list_components.dart';
 
 void main() {
@@ -114,14 +114,14 @@ void main() {
     expect(find.text('MusicBrainz'), findsOneWidget);
     expect(find.text('存储与共享空间'), findsNWidgets(2));
     expect(find.text('分组'), findsWidgets);
-    // 每页条数选择器：统一 AdminDropdown，默认 10。
+    // 每页条数选择器：统一 AppDropdown，默认 10。
     final pageSizeDropdown =
         find
-            .byWidgetPredicate((w) => w is AdminDropdown<int>)
+            .byWidgetPredicate((w) => w is AppDropdown<int>)
             .evaluate()
             .toList();
     expect(pageSizeDropdown, hasLength(1));
-    expect((pageSizeDropdown.first.widget as AdminDropdown<int>).value, 10);
+    expect((pageSizeDropdown.first.widget as AppDropdown<int>).value, 10);
     expect(tester.takeException(), isNull);
   });
 
@@ -171,7 +171,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final dropdownField = find.byWidgetPredicate(
-      (w) => w is AdminDropdown<String>,
+      (w) => w is AppDropdown<String>,
     );
     await tester.tap(dropdownField.first);
     await tester.pumpAndSettle();
