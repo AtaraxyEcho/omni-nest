@@ -137,6 +137,7 @@ class _AdminMonitoringPageState extends State<AdminMonitoringPage>
         _fadeSlide(
           1,
           _MetricGrid(
+            mainAxisExtent: 176,
             children: [
               AdminMetricCard(
                 title: l10n.adminServiceStatus,

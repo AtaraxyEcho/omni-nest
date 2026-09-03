@@ -129,20 +129,23 @@ class AdminExternalStoragePage extends ConsumerWidget {
 }
 
 class _MetricGrid extends StatelessWidget {
-  const _MetricGrid({required this.children});
+  const _MetricGrid({required this.children, this.mainAxisExtent = 128});
 
   final List<Widget> children;
+
+  /// 单卡固定高度；内容较多的页面（如监控页含 supporting 行）可调大。
+  final double mainAxisExtent;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 980 ? 3 : 1;
+        final columns = constraints.maxWidth >= 560 ? 3 : 1;
         return GridView.count(
           crossAxisCount: columns,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: columns == 1 ? 3.2 : 1.7,
+          mainAxisExtent: mainAxisExtent,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: children,
