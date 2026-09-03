@@ -8,6 +8,7 @@ import 'dart:math' as math;
 
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 
 /// 状态标签语义色。
@@ -433,7 +434,10 @@ class AdminDataTable extends StatelessWidget {
   }
 }
 
-class AdminListPaginationBar extends StatelessWidget {
+/// 列表分页控件：总条数与当前范围、每页条数选择、首页/末页与上/下页、
+/// 数字页码（总页数 > 7 时折叠省略号）、页码跳转（总页数 > 5 时出现）
+/// 与翻页加载状态。布局用 [Wrap] 承载，窄屏自动折行不溢出。
+class AdminListPaginationBar extends StatefulWidget {
   const AdminListPaginationBar({
     required this.currentPage,
     required this.totalPages,
@@ -441,9 +445,11 @@ class AdminListPaginationBar extends StatelessWidget {
     required this.rowsPerPage,
     required this.onPageChanged,
     required this.onRowsPerPageChanged,
+    this.busy = false,
     super.key,
   });
 
+  /// 当前页码（0 基）。
   final int currentPage;
   final int totalPages;
   final int totalElements;
@@ -451,54 +457,260 @@ class AdminListPaginationBar extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
   final ValueChanged<int> onRowsPerPageChanged;
 
+  /// 翻页/筛选刷新中：数据仍在展示，控件上显示细进度与转圈提示。
+  final bool busy;
+
   static const _rowsPerPageChoices = [10, 20, 50, 100];
+
+  @override
+  State<AdminListPaginationBar> createState() => _AdminListPaginationBarState();
+}
+
+class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
+  final TextEditingController _jumpController = TextEditingController();
+
+  @override
+  void didUpdateWidget(AdminListPaginationBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentPage != widget.currentPage) {
+      _jumpController.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    _jumpController.dispose();
+    super.dispose();
+  }
+
+  /// 计算可见页码（0 基）：总页数 ≤ 7 全量展示；否则固定首末页与当前页
+  /// ±1，缺口以 null（省略号）填充。
+  List<int?> _visiblePages() {
+    final total = widget.totalPages;
+    if (total <= 0) {
+      return const <int?>[];
+    }
+    final current = widget.currentPage.clamp(0, total - 1);
+    if (total <= 7) {
+      return List<int?>.generate(total, (index) => index);
+    }
+    final marks =
+        <int>{
+            0,
+            total - 1,
+            current - 1,
+            current,
+            current + 1,
+          }.where((page) => page >= 0 && page < total).toList()
+          ..sort();
+    final result = <int?>[];
+    for (var i = 0; i < marks.length; i++) {
+      if (i > 0 && marks[i] - marks[i - 1] > 1) {
+        result.add(null);
+      }
+      result.add(marks[i]);
+    }
+    return result;
+  }
+
+  void _submitJump(String value) {
+    final target = int.tryParse(value.trim());
+    if (target == null) {
+      return;
+    }
+    final clamped = (target - 1).clamp(0, widget.totalPages - 1);
+    widget.onPageChanged(clamped);
+    _jumpController.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = Theme.of(context).colorScheme;
+    final total = widget.totalPages;
+    final current = total <= 0 ? 0 : widget.currentPage.clamp(0, total - 1);
+    final rangeStart = current * widget.rowsPerPage + 1;
+    final rangeEnd = ((current + 1) * widget.rowsPerPage).clamp(
+      0,
+      widget.totalElements,
+    );
+    final disabledColor = colors.onSurfaceVariant;
+
+    Widget pageChip(int page) {
+      final selected = page == current;
+      return InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: selected ? null : () => widget.onPageChanged(page),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: selected ? colors.primary.withValues(alpha: 0.12) : null,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${page + 1}',
+            style: TextStyle(
+              color: selected ? colors.primary : colors.onSurface,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$totalElements', style: Theme.of(context).textTheme.bodySmall),
-          const Spacer(),
-          Text(
-            l10n.adminListRowsPerPage,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(width: 8),
-          DropdownButton<int>(
-            value: rowsPerPage,
-            items: [
-              for (final choice in _rowsPerPageChoices)
-                DropdownMenuItem(value: choice, child: Text('$choice')),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.adminListTotalCount(widget.totalElements),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  if (widget.totalElements > 0) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.adminListRange(rangeStart, rangeEnd),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (widget.busy) ...[
+                    const SizedBox(width: 8),
+                    SizedBox.square(
+                      dimension: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.adminListRowsPerPage,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 8),
+                  DropdownButton<int>(
+                    value: widget.rowsPerPage,
+                    items: [
+                      for (final choice
+                          in AdminListPaginationBar._rowsPerPageChoices)
+                        DropdownMenuItem(value: choice, child: Text('$choice')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        widget.onRowsPerPageChanged(value);
+                      }
+                    },
+                    underline: const SizedBox.shrink(),
+                    isDense: true,
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed:
+                        current > 0 ? () => widget.onPageChanged(0) : null,
+                    icon: const Icon(Icons.first_page_rounded),
+                    tooltip: l10n.adminListFirstPage,
+                    color: disabledColor,
+                  ),
+                  IconButton(
+                    onPressed:
+                        current > 0
+                            ? () => widget.onPageChanged(current - 1)
+                            : null,
+                    icon: const Icon(Icons.chevron_left_rounded),
+                    tooltip: l10n.adminListPrevPage,
+                    color: disabledColor,
+                  ),
+                  for (final page in _visiblePages())
+                    page == null
+                        ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Text(
+                            '…',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: disabledColor),
+                          ),
+                        )
+                        : pageChip(page),
+                  IconButton(
+                    onPressed:
+                        current < total - 1
+                            ? () => widget.onPageChanged(current + 1)
+                            : null,
+                    icon: const Icon(Icons.chevron_right_rounded),
+                    tooltip: l10n.adminListNextPage,
+                    color: disabledColor,
+                  ),
+                  IconButton(
+                    onPressed:
+                        current < total - 1
+                            ? () => widget.onPageChanged(total - 1)
+                            : null,
+                    icon: const Icon(Icons.last_page_rounded),
+                    tooltip: l10n.adminListLastPage,
+                    color: disabledColor,
+                  ),
+                  if (total > 5) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.adminListJumpTo,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(width: 4),
+                    SizedBox(
+                      width: 64,
+                      child: TextField(
+                        controller: _jumpController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: Theme.of(context).textTheme.bodySmall,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 10,
+                          ),
+                          suffixText:
+                              l10n.adminListPageUnit.isEmpty
+                                  ? null
+                                  : l10n.adminListPageUnit,
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 0,
+                            minHeight: 0,
+                          ),
+                        ),
+                        onSubmitted: _submitJump,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
-            onChanged: (value) {
-              if (value != null) {
-                onRowsPerPageChanged(value);
-              }
-            },
-            underline: const SizedBox.shrink(),
-            isDense: true,
-          ),
-          const SizedBox(width: 12),
-          IconButton(
-            onPressed:
-                currentPage > 0 ? () => onPageChanged(currentPage - 1) : null,
-            icon: const Icon(Icons.chevron_left_rounded),
-            tooltip: l10n.adminListPrevPage,
-          ),
-          Text(
-            l10n.adminListPageOf(currentPage + 1, totalPages),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          IconButton(
-            onPressed:
-                currentPage < totalPages - 1
-                    ? () => onPageChanged(currentPage + 1)
-                    : null,
-            icon: const Icon(Icons.chevron_right_rounded),
-            tooltip: l10n.adminListNextPage,
           ),
         ],
       ),

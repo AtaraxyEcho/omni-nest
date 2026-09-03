@@ -1409,6 +1409,23 @@
   "adminLogContent": "操作内容",
   "adminLogTime": "时间",
   "adminConfigDescription": "说明",
+  "adminListTotalCount": "共 {count} 条",
+  "@adminListTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "adminListRange": "第 {start}-{end} 条",
+  "@adminListRange": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "adminListFirstPage": "首页",
+  "adminListLastPage": "末页",
+  "adminListJumpTo": "跳至",
+  "adminListPageUnit": "页",
   "adminConfigGroupColumn": "分组",
   "adminBatchRevokeSessions": "批量强制下线",
   "adminBatchRetryTasks": "批量重试",

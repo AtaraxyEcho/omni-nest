@@ -20,7 +20,7 @@ void main() {
         overrides: [
           adminTaskPageProvider((
             page: 0,
-            size: 20,
+            size: 10,
             status: 'ALL',
             taskType: 'ALL',
             query: '',
@@ -42,7 +42,7 @@ void main() {
                 ),
               ],
               page: 0,
-              size: 20,
+              size: 10,
               totalElements: 1,
               totalPages: 1,
             ),
@@ -74,7 +74,7 @@ void main() {
         overrides: [
           adminTaskPageProvider((
             page: 0,
-            size: 20,
+            size: 10,
             status: 'ALL',
             taskType: 'ALL',
             query: '',
@@ -107,7 +107,7 @@ void main() {
                 ),
               ],
               page: 0,
-              size: 20,
+              size: 10,
               totalElements: 2,
               totalPages: 1,
             ),
@@ -129,10 +129,15 @@ void main() {
     final checkboxes = find.byType(Checkbox);
     expect(checkboxes, findsNWidgets(3));
 
-    final scrollable = find
-        .ancestor(of: checkboxes.at(1), matching: find.byType(Scrollable))
-        .first;
-    await tester.scrollUntilVisible(checkboxes.at(1), -200, scrollable: scrollable);
+    final scrollable =
+        find
+            .ancestor(of: checkboxes.at(1), matching: find.byType(Scrollable))
+            .first;
+    await tester.scrollUntilVisible(
+      checkboxes.at(1),
+      -200,
+      scrollable: scrollable,
+    );
 
     await tester.tap(checkboxes.at(2));
     await tester.pump();
@@ -155,7 +160,7 @@ void main() {
         overrides: [
           adminLogPageProvider((
             page: 0,
-            size: 20,
+            size: 10,
             action: 'ALL',
             query: '',
             sort: 'createdAt',
@@ -164,14 +169,14 @@ void main() {
             (ref) async => const AdminPage<AdminAuditLog>(
               items: [],
               page: 0,
-              size: 20,
+              size: 10,
               totalElements: 0,
               totalPages: 0,
             ),
           ),
           adminLoginAuditPageProvider((
             page: 0,
-            size: 20,
+            size: 10,
             result: 'ALL',
             platform: 'ALL',
             query: '',
@@ -181,7 +186,7 @@ void main() {
             (ref) async => const AdminPage<AdminLoginAuditItem>(
               items: [],
               page: 0,
-              size: 20,
+              size: 10,
               totalElements: 0,
               totalPages: 0,
             ),

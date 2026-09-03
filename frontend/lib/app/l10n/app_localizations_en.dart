@@ -3708,6 +3708,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminConfigDescription => 'Description';
 
   @override
+  String adminListTotalCount(Object count) {
+    return '$count items';
+  }
+
+  @override
+  String adminListRange(Object start, Object end) {
+    return 'Items $start-$end';
+  }
+
+  @override
+  String get adminListFirstPage => 'First page';
+
+  @override
+  String get adminListLastPage => 'Last page';
+
+  @override
+  String get adminListJumpTo => 'Go to';
+
+  @override
+  String get adminListPageUnit => '';
+
+  @override
   String get adminConfigGroupColumn => 'Group';
 
   @override

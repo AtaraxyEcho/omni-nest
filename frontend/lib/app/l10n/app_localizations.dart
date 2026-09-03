@@ -6889,6 +6889,42 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get adminConfigDescription;
 
+  /// No description provided for @adminListTotalCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String adminListTotalCount(Object count);
+
+  /// No description provided for @adminListRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Items {start}-{end}'**
+  String adminListRange(Object start, Object end);
+
+  /// No description provided for @adminListFirstPage.
+  ///
+  /// In en, this message translates to:
+  /// **'First page'**
+  String get adminListFirstPage;
+
+  /// No description provided for @adminListLastPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Last page'**
+  String get adminListLastPage;
+
+  /// No description provided for @adminListJumpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get adminListJumpTo;
+
+  /// No description provided for @adminListPageUnit.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get adminListPageUnit;
+
   /// No description provided for @adminConfigGroupColumn.
   ///
   /// In en, this message translates to:

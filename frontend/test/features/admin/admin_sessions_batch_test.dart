@@ -31,7 +31,7 @@ void main() {
 
     const query = (
       page: 0,
-      size: 20,
+      size: 10,
       status: 'ALL',
       platform: 'ALL',
       query: '',
@@ -48,7 +48,7 @@ void main() {
                 _session(id: 'revoked-1', revokedAt: '2026-09-01T09:00:00Z'),
               ],
               page: 0,
-              size: 20,
+              size: 10,
               totalElements: 2,
               totalPages: 1,
             ),

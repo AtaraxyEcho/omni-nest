@@ -15,7 +15,10 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
   String _status = 'ALL';
   String _taskType = 'ALL';
   int _page = 0;
-  int _pageSize = 20;
+  int _pageSize = 10;
+
+  /// 最近一次成功加载的任务页数据：翻页/筛选刷新期间沿用旧数据避免闪烁。
+  AdminPage<AdminTaskRecord>? _lastTaskPage;
   AdminListSort _taskSort = const AdminListSort(
     columnKey: 'updatedAt',
     ascending: false,
@@ -59,18 +62,21 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
     );
     final taskAsync = ref.watch(adminTaskPageProvider(query));
     final dlqAsync = ref.watch(adminDlqProvider);
-    return taskAsync.when(
-      loading:
-          () => const Padding(
+    if (taskAsync.hasValue) {
+      _lastTaskPage = taskAsync.value;
+    }
+    final page = taskAsync.value ?? _lastTaskPage;
+    if (page == null) {
+      return taskAsync.hasError
+          ? Center(
+            child: Text(AppLocalizations.of(context).adminLoadFailed('')),
+          )
+          : const Padding(
             padding: EdgeInsets.all(16),
             child: AdminListSkeleton(),
-          ),
-      error:
-          (_, _) => Center(
-            child: Text(AppLocalizations.of(context).adminLoadFailed('')),
-          ),
-      data: (page) => _buildPage(context, page, dlqAsync),
-    );
+          );
+    }
+    return _buildPage(context, page, dlqAsync, busy: taskAsync.isLoading);
   }
 
   /// 调整每页条数：重置回第一页并清空批量选择。
@@ -140,8 +146,9 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
   Widget _buildPage(
     BuildContext context,
     AdminPage<AdminTaskRecord> page,
-    AsyncValue<List<AdminDlqTask>> dlqAsync,
-  ) {
+    AsyncValue<List<AdminDlqTask>> dlqAsync, {
+    required bool busy,
+  }) {
     final l10n = AppLocalizations.of(context);
     final colors = context.adminColors;
     final taskTypes =
@@ -252,6 +259,7 @@ class _AdminTasksPageState extends ConsumerState<AdminTasksPage>
             onRetry: _retryTask,
             pageSize: _pageSize,
             onRowsPerPageChanged: _changePageSize,
+            busy: busy,
             sort: _taskSort,
             onSort: (key, ascending) {
               setState(() {
@@ -323,6 +331,7 @@ class _TaskListTab extends StatelessWidget {
     required this.onRetry,
     required this.pageSize,
     required this.onRowsPerPageChanged,
+    required this.busy,
     required this.sort,
     required this.onSort,
     required this.selectedIndexes,
@@ -337,6 +346,7 @@ class _TaskListTab extends StatelessWidget {
   final void Function(String taskId) onRetry;
   final int pageSize;
   final ValueChanged<int> onRowsPerPageChanged;
+  final bool busy;
   final AdminListSort sort;
   final void Function(String columnKey, bool ascending) onSort;
   final Set<int> selectedIndexes;
@@ -505,6 +515,7 @@ class _TaskListTab extends StatelessWidget {
             totalElements: page.totalElements,
             rowsPerPage: pageSize,
             onRowsPerPageChanged: onRowsPerPageChanged,
+            busy: busy,
             onPageChanged: onPageChanged,
           ),
         ],

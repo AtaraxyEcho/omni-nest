@@ -11,7 +11,7 @@ class AdminConfigPage extends ConsumerStatefulWidget {
 
 class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
   int _page = 0;
-  int _pageSize = 20;
+  int _pageSize = 10;
   String _groupFilter = 'ALL';
   AdminListSort? _configSort;
 
@@ -211,7 +211,7 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                 final entry = pageItems[index];
                 final isBoolean = entry.valueType == 'BOOLEAN';
                 return [
-                  IconButton.outlined(
+                  IconButton(
                     onPressed:
                         () => showDialog<void>(
                           context: context,
@@ -221,13 +221,13 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                                 configLabel: _configTitle(l10n, entry),
                               ),
                         ),
-                    icon: const Icon(Icons.history_rounded, size: 18),
+                    icon: const Icon(Icons.history_rounded, size: 20),
                     tooltip: l10n.adminConfigHistory,
                   ),
                   if (isBoolean)
                     _ConfigToggleSwitch(entry: entry)
                   else
-                    FilledButton.tonalIcon(
+                    IconButton(
                       onPressed:
                           entry.editable
                               ? () => showDialog<void>(
@@ -235,8 +235,8 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                                 builder: (_) => _ConfigEditDialog(entry: entry),
                               )
                               : null,
-                      icon: const Icon(Icons.settings_outlined, size: 18),
-                      label: Text(l10n.adminConfigManage),
+                      icon: const Icon(Icons.settings_outlined, size: 20),
+                      tooltip: l10n.adminConfigManage,
                     ),
                 ];
               },

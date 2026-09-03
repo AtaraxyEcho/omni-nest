@@ -8,7 +8,10 @@ class AdminSessionsPage extends ConsumerStatefulWidget {
 }
 
 class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
-  int _pageSize = 20;
+  int _pageSize = 10;
+
+  /// 最近一次成功加载的会话页数据：翻页/筛选刷新期间沿用旧数据避免闪烁。
+  AdminPage<AdminSessionItem>? _lastSessionsPage;
   static const _platforms = <String>[
     'ALL',
     'android',
@@ -66,21 +69,28 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
       dir: _sessionSort.ascending ? 'asc' : 'desc',
     );
     final sessionsAsync = ref.watch(adminSessionPageProvider(query));
-    return sessionsAsync.when(
-      loading:
-          () => const Padding(
+    if (sessionsAsync.hasValue) {
+      _lastSessionsPage = sessionsAsync.value;
+    }
+    final page = sessionsAsync.value ?? _lastSessionsPage;
+    if (page == null) {
+      return sessionsAsync.hasError
+          ? Center(
+            child: Text(AppLocalizations.of(context).adminLoadFailed('')),
+          )
+          : const Padding(
             padding: EdgeInsets.all(16),
             child: AdminListSkeleton(),
-          ),
-      error:
-          (_, _) => Center(
-            child: Text(AppLocalizations.of(context).adminLoadFailed('')),
-          ),
-      data: (page) => _buildPage(context, page),
-    );
+          );
+    }
+    return _buildPage(context, page, busy: sessionsAsync.isLoading);
   }
 
-  Widget _buildPage(BuildContext context, AdminPage<AdminSessionItem> page) {
+  Widget _buildPage(
+    BuildContext context,
+    AdminPage<AdminSessionItem> page, {
+    required bool busy,
+  }) {
     final l10n = AppLocalizations.of(context);
     final colors = context.adminColors;
     final activeCount = page.items.where((session) => session.isActive).length;
@@ -346,6 +356,7 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
               totalPages: page.totalPages,
               totalElements: page.totalElements,
               rowsPerPage: _pageSize,
+              busy: busy,
               onPageChanged:
                   (next) => setState(() {
                     _page = next;

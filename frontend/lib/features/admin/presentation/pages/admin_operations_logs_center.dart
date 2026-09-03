@@ -17,7 +17,11 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   String _loginResult = 'ALL';
   int _auditPage = 0;
   int _loginPage = 0;
-  int _pageSize = 20;
+  int _pageSize = 10;
+
+  /// 最近一次成功加载的审计/登录页数据：刷新期间沿用旧数据避免闪烁。
+  AdminPage<AdminAuditLog>? _lastAuditPage;
+  AdminPage<AdminLoginAuditItem>? _lastLoginPage;
   AdminListSort _auditSort = const AdminListSort(
     columnKey: 'createdAt',
     ascending: false,
@@ -80,8 +84,14 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
     );
     final auditAsync = ref.watch(adminLogPageProvider(auditQuery));
     final loginAsync = ref.watch(adminLoginAuditPageProvider(loginQuery));
-    final auditPage = auditAsync.asData?.value;
-    final loginPage = loginAsync.asData?.value;
+    if (auditAsync.hasValue) {
+      _lastAuditPage = auditAsync.value;
+    }
+    if (loginAsync.hasValue) {
+      _lastLoginPage = loginAsync.value;
+    }
+    final auditPage = auditAsync.value ?? _lastAuditPage;
+    final loginPage = loginAsync.value ?? _lastLoginPage;
     final currentTotal =
         _tabController.index == 0
             ? auditPage?.totalElements ?? 0
@@ -156,7 +166,9 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
             const SizedBox(height: 16),
             _buildTabView(
               _AuditLogTab(
-                page: auditAsync,
+                page: auditPage,
+                busy: auditAsync.isLoading,
+                failed: auditAsync.hasError && auditPage == null,
                 onPageChanged: (page) => setState(() => _auditPage = page),
                 pageSize: _pageSize,
                 onRowsPerPageChanged: _changePageSize,
@@ -172,7 +184,9 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
                 },
               ),
               _LoginAuditLogTab(
-                page: loginAsync,
+                page: loginPage,
+                busy: loginAsync.isLoading,
+                failed: loginAsync.hasError && loginPage == null,
                 onPageChanged: (page) => setState(() => _loginPage = page),
                 pageSize: _pageSize,
                 onRowsPerPageChanged: _changePageSize,
@@ -251,21 +265,8 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   }
 
   String _buildAuditCsv(AppLocalizations l10n) {
-    final pageData =
-        ref
-            .read(
-              adminLogPageProvider((
-                page: _auditPage,
-                size: 20,
-                action: _auditAction,
-                query: _query,
-                sort: _auditSort.columnKey,
-                dir: _auditSort.ascending ? 'asc' : 'desc',
-              )),
-            )
-            .asData
-            ?.value;
-    final items = pageData?.items ?? const <AdminAuditLog>[];
+    // 导出与当前可见页一致：直接使用缓存的最近成功页数据。
+    final items = _lastAuditPage?.items ?? const <AdminAuditLog>[];
     return adminCsvDocument(
       header: [
         l10n.adminFilterAction,
@@ -288,22 +289,7 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
   }
 
   String _buildLoginCsv(AppLocalizations l10n) {
-    final pageData =
-        ref
-            .read(
-              adminLoginAuditPageProvider((
-                page: _loginPage,
-                size: 20,
-                result: _loginResult,
-                platform: 'ALL',
-                query: _query,
-                sort: _loginSort.columnKey,
-                dir: _loginSort.ascending ? 'asc' : 'desc',
-              )),
-            )
-            .asData
-            ?.value;
-    final items = pageData?.items ?? const <AdminLoginAuditItem>[];
+    final items = _lastLoginPage?.items ?? const <AdminLoginAuditItem>[];
     return adminCsvDocument(
       header: [
         l10n.adminUsername,
@@ -372,6 +358,8 @@ class _AdminLogsPageState extends ConsumerState<AdminLogsPage>
 class _AuditLogTab extends StatelessWidget {
   const _AuditLogTab({
     required this.page,
+    required this.busy,
+    required this.failed,
     required this.onPageChanged,
     required this.sort,
     required this.onSort,
@@ -379,7 +367,9 @@ class _AuditLogTab extends StatelessWidget {
     required this.onRowsPerPageChanged,
   });
 
-  final AsyncValue<AdminPage<AdminAuditLog>> page;
+  final AdminPage<AdminAuditLog>? page;
+  final bool busy;
+  final bool failed;
   final ValueChanged<int> onPageChanged;
   final AdminListSort sort;
   final void Function(String columnKey, bool ascending) onSort;
@@ -389,107 +379,104 @@ class _AuditLogTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return page.when(
-      loading:
-          () => const Padding(
+    final result = page;
+    if (result == null) {
+      return failed
+          ? Center(child: Text(l10n.adminLoadFailed('')))
+          : const Padding(
             padding: EdgeInsets.all(16),
             child: AdminListSkeleton(),
-          ),
-      error: (_, _) => Center(child: Text(l10n.adminLoadFailed(''))),
-      data:
-          (result) => SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: AdminInfoPanel(
-              title: l10n.adminRecentAudit,
-              subtitle: l10n.adminRecentAuditSubtitle,
-              children: [
-                AdminDataTable(
-                  showIndex: true,
-                  indexBase: result.page * pageSize,
-                  minTableWidth: 960,
-                  columns: [
-                    AdminListColumn(
-                      key: 'action',
-                      label: l10n.adminFilterAction,
-                      minWidth: 160,
-                      sortable: true,
-                    ),
-                    AdminListColumn(
-                      key: 'content',
-                      label: l10n.adminLogContent,
-                      flex: 2,
-                    ),
-                    AdminListColumn(
-                      key: 'resourceType',
-                      label: l10n.adminResourceType,
-                      minWidth: 110,
-                    ),
-                    AdminListColumn(
-                      key: 'ip',
-                      label: l10n.adminSessionIp,
-                      minWidth: 130,
-                    ),
-                    AdminListColumn(
-                      key: 'createdAt',
-                      label: l10n.adminLogTime,
-                      minWidth: 150,
-                      sortable: true,
-                    ),
-                  ],
-                  sort: sort,
-                  onSort: onSort,
-                  rowCount: result.items.length,
-                  emptyState: AdminListEmptyState(
-                    message: l10n.adminNoAuditLogs,
-                  ),
-                  rowCellsBuilder: (context, index) {
-                    final item = result.items[index];
-                    return [
-                      Text(
-                        item.action,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        item.description.isEmpty
-                            ? item.action
-                            : item.description,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        item.resourceType,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        item.ipAddress,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        item.createdAt,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ];
-                  },
+          );
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AdminInfoPanel(
+        title: l10n.adminRecentAudit,
+        subtitle: l10n.adminRecentAuditSubtitle,
+        children: [
+          AdminDataTable(
+            showIndex: true,
+            indexBase: result.page * pageSize,
+            minTableWidth: 960,
+            columns: [
+              AdminListColumn(
+                key: 'action',
+                label: l10n.adminFilterAction,
+                minWidth: 160,
+                sortable: true,
+              ),
+              AdminListColumn(
+                key: 'content',
+                label: l10n.adminLogContent,
+                flex: 2,
+              ),
+              AdminListColumn(
+                key: 'resourceType',
+                label: l10n.adminResourceType,
+                minWidth: 110,
+              ),
+              AdminListColumn(
+                key: 'ip',
+                label: l10n.adminSessionIp,
+                minWidth: 130,
+              ),
+              AdminListColumn(
+                key: 'createdAt',
+                label: l10n.adminLogTime,
+                minWidth: 150,
+                sortable: true,
+              ),
+            ],
+            sort: sort,
+            onSort: onSort,
+            rowCount: result.items.length,
+            emptyState: AdminListEmptyState(message: l10n.adminNoAuditLogs),
+            rowCellsBuilder: (context, index) {
+              final item = result.items[index];
+              return [
+                Text(
+                  item.action,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 12),
-                AdminListPaginationBar(
-                  currentPage: result.page,
-                  totalPages: result.totalPages,
-                  totalElements: result.totalElements,
-                  rowsPerPage: pageSize,
-                  onPageChanged: onPageChanged,
-                  onRowsPerPageChanged: onRowsPerPageChanged,
+                Text(
+                  item.description.isEmpty ? item.action : item.description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+                Text(
+                  item.resourceType,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  item.ipAddress,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Text(
+                  item.createdAt,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ];
+            },
           ),
+          const SizedBox(height: 12),
+          AdminListPaginationBar(
+            currentPage: result.page,
+            totalPages: result.totalPages,
+            totalElements: result.totalElements,
+            rowsPerPage: pageSize,
+            onPageChanged: onPageChanged,
+            onRowsPerPageChanged: onRowsPerPageChanged,
+            busy: busy,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -497,6 +484,8 @@ class _AuditLogTab extends StatelessWidget {
 class _LoginAuditLogTab extends StatelessWidget {
   const _LoginAuditLogTab({
     required this.page,
+    required this.busy,
+    required this.failed,
     required this.onPageChanged,
     required this.sort,
     required this.onSort,
@@ -504,7 +493,9 @@ class _LoginAuditLogTab extends StatelessWidget {
     required this.onRowsPerPageChanged,
   });
 
-  final AsyncValue<AdminPage<AdminLoginAuditItem>> page;
+  final AdminPage<AdminLoginAuditItem>? page;
+  final bool busy;
+  final bool failed;
   final ValueChanged<int> onPageChanged;
   final AdminListSort sort;
   final void Function(String columnKey, bool ascending) onSort;
@@ -514,120 +505,116 @@ class _LoginAuditLogTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return page.when(
-      loading:
-          () => const Padding(
+    final result = page;
+    if (result == null) {
+      return failed
+          ? Center(child: Text(l10n.adminLoadFailed('')))
+          : const Padding(
             padding: EdgeInsets.all(16),
             child: AdminListSkeleton(),
-          ),
-      error: (_, _) => Center(child: Text(l10n.adminLoadFailed(''))),
-      data:
-          (result) => SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: AdminInfoPanel(
-              title: l10n.adminLoginLog,
-              subtitle: l10n.adminLoginLogSubtitle,
-              children: [
-                AdminDataTable(
-                  showIndex: true,
-                  indexBase: result.page * pageSize,
-                  minTableWidth: 960,
-                  columns: [
-                    AdminListColumn(
-                      key: 'username',
-                      label: l10n.adminUsername,
-                      flex: 2,
-                      sortable: true,
-                    ),
-                    AdminListColumn(
-                      key: 'result',
-                      label: l10n.adminFilterStatus,
-                      minWidth: 100,
-                    ),
-                    AdminListColumn(
-                      key: 'platform',
-                      label: l10n.adminFilterPlatform,
-                      minWidth: 100,
-                    ),
-                    AdminListColumn(
-                      key: 'ip',
-                      label: l10n.adminSessionIp,
-                      minWidth: 130,
-                    ),
-                    AdminListColumn(
-                      key: 'failureReason',
-                      label: l10n.adminLoginFailureReason,
-                      flex: 2,
-                    ),
-                    AdminListColumn(
-                      key: 'createdAt',
-                      label: l10n.adminLogTime,
-                      minWidth: 150,
-                      sortable: true,
-                    ),
-                  ],
-                  sort: sort,
-                  onSort: onSort,
-                  rowCount: result.items.length,
-                  emptyState: AdminListEmptyState(
-                    message: l10n.adminNoLoginLogs,
-                  ),
-                  rowCellsBuilder: (context, index) {
-                    final item = result.items[index];
-                    final success = item.loginResult == 'SUCCESS';
-                    return [
-                      Text(
-                        item.username,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      AdminStatusTag(
-                        label:
-                            success
-                                ? l10n.adminLoginSuccess
-                                : l10n.adminLoginFailed,
-                        tone:
-                            success ? AdminTagTone.success : AdminTagTone.error,
-                      ),
-                      Text(
-                        item.clientPlatform,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        item.ipAddress,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        item.failureReason ?? '-',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      Text(
-                        item.createdAt,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ];
-                  },
+          );
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AdminInfoPanel(
+        title: l10n.adminLoginLog,
+        subtitle: l10n.adminLoginLogSubtitle,
+        children: [
+          AdminDataTable(
+            showIndex: true,
+            indexBase: result.page * pageSize,
+            minTableWidth: 960,
+            columns: [
+              AdminListColumn(
+                key: 'username',
+                label: l10n.adminUsername,
+                flex: 2,
+                sortable: true,
+              ),
+              AdminListColumn(
+                key: 'result',
+                label: l10n.adminFilterStatus,
+                minWidth: 100,
+              ),
+              AdminListColumn(
+                key: 'platform',
+                label: l10n.adminFilterPlatform,
+                minWidth: 100,
+              ),
+              AdminListColumn(
+                key: 'ip',
+                label: l10n.adminSessionIp,
+                minWidth: 130,
+              ),
+              AdminListColumn(
+                key: 'failureReason',
+                label: l10n.adminLoginFailureReason,
+                flex: 2,
+              ),
+              AdminListColumn(
+                key: 'createdAt',
+                label: l10n.adminLogTime,
+                minWidth: 150,
+                sortable: true,
+              ),
+            ],
+            sort: sort,
+            onSort: onSort,
+            rowCount: result.items.length,
+            emptyState: AdminListEmptyState(message: l10n.adminNoLoginLogs),
+            rowCellsBuilder: (context, index) {
+              final item = result.items[index];
+              final success = item.loginResult == 'SUCCESS';
+              return [
+                Text(
+                  item.username,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 12),
-                AdminListPaginationBar(
-                  currentPage: result.page,
-                  totalPages: result.totalPages,
-                  totalElements: result.totalElements,
-                  rowsPerPage: pageSize,
-                  onPageChanged: onPageChanged,
-                  onRowsPerPageChanged: onRowsPerPageChanged,
+                AdminStatusTag(
+                  label:
+                      success ? l10n.adminLoginSuccess : l10n.adminLoginFailed,
+                  tone: success ? AdminTagTone.success : AdminTagTone.error,
                 ),
-              ],
-            ),
+                Text(
+                  item.clientPlatform,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  item.ipAddress,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Text(
+                  item.failureReason ?? '-',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Text(
+                  item.createdAt,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ];
+            },
           ),
+          const SizedBox(height: 12),
+          AdminListPaginationBar(
+            currentPage: result.page,
+            totalPages: result.totalPages,
+            totalElements: result.totalElements,
+            rowsPerPage: pageSize,
+            onPageChanged: onPageChanged,
+            onRowsPerPageChanged: onRowsPerPageChanged,
+            busy: busy,
+          ),
+        ],
+      ),
     );
   }
 }

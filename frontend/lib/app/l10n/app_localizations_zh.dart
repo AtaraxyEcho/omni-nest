@@ -3587,6 +3587,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminConfigDescription => '说明';
 
   @override
+  String adminListTotalCount(Object count) {
+    return '共 $count 条';
+  }
+
+  @override
+  String adminListRange(Object start, Object end) {
+    return '第 $start-$end 条';
+  }
+
+  @override
+  String get adminListFirstPage => '首页';
+
+  @override
+  String get adminListLastPage => '末页';
+
+  @override
+  String get adminListJumpTo => '跳至';
+
+  @override
+  String get adminListPageUnit => '页';
+
+  @override
   String get adminConfigGroupColumn => '分组';
 
   @override

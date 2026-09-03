@@ -1535,6 +1535,23 @@
   "adminLogContent": "Description",
   "adminLogTime": "Time",
   "adminConfigDescription": "Description",
+  "adminListTotalCount": "{count} items",
+  "@adminListTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "adminListRange": "Items {start}-{end}",
+  "@adminListRange": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "adminListFirstPage": "First page",
+  "adminListLastPage": "Last page",
+  "adminListJumpTo": "Go to",
+  "adminListPageUnit": "",
   "adminConfigGroupColumn": "Group",
   "adminBatchRevokeSessions": "Force sign out selected",
   "adminBatchRetryTasks": "Retry selected",
