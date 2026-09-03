@@ -1539,9 +1539,12 @@
   "adminStorageOpenDetail": "Details",
   "adminStorageColumnType": "Type",
   "adminStorageMountsSection": "Local mount locations",
+  "adminLibraryColumnName": "Name",
   "adminLibraryColumnLocation": "Location · Root",
   "adminLibraryColumnScanStatus": "Scan status",
   "adminLibraryColumnLastScan": "Last scan",
+  "adminLibraryManageInfoSection": "Library info",
+  "adminLibraryManageReviewSection": "Discovery & review",
   "adminLibraryLastScanSummary": "Found {found} · Created {created} · Missing {missing}",
   "@adminLibraryLastScanSummary": {
     "placeholders": {

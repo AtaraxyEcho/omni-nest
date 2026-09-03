@@ -1,9 +1,21 @@
 part of 'movie_management.dart';
 
+/// 媒体库审阅工作区：展示扫描 run 概览与媒体树，支持勾选候选并入库。
+///
+/// 媒体树为父子嵌套列表：文件夹节点原地展开并懒加载子节点，叶子节点
+/// 直接勾选；不再使用右侧详情面板与面包屑钻取。[treeHeight] 为媒体树
+/// 可视区高度，调用方按宿主窗口高度调整；默认值适配电影模块管理面板。
 class MediaLibraryReviewWorkspace extends ConsumerStatefulWidget {
-  const MediaLibraryReviewWorkspace({required this.source, super.key});
+  const MediaLibraryReviewWorkspace({
+    required this.source,
+    this.treeHeight = 460,
+    super.key,
+  });
 
   final VideoLibrarySource source;
+
+  /// 媒体树可视区高度；媒体树在该固定高度内滚动。
+  final double treeHeight;
 
   @override
   ConsumerState<MediaLibraryReviewWorkspace> createState() =>
@@ -12,8 +24,6 @@ class MediaLibraryReviewWorkspace extends ConsumerStatefulWidget {
 
 class MediaLibraryReviewWorkspaceState
     extends ConsumerState<MediaLibraryReviewWorkspace> {
-  final List<MediaScanTreeNode> _ancestors = [];
-  MediaScanTreeNode? _focusedNode;
   String? _runId;
   int? _selectionRevision;
   int _page = 0;
@@ -23,8 +33,6 @@ class MediaLibraryReviewWorkspaceState
   void didUpdateWidget(covariant MediaLibraryReviewWorkspace oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.source.id != widget.source.id) {
-      _ancestors.clear();
-      _focusedNode = null;
       _runId = null;
       _selectionRevision = null;
       _page = 0;
@@ -41,8 +49,6 @@ class MediaLibraryReviewWorkspaceState
         setState(() {
           _runId = nextRun.id;
           _selectionRevision = nextRun.selectionRevision;
-          _ancestors.clear();
-          _focusedNode = null;
           _page = 0;
         });
       } else if (nextRun != null &&
@@ -100,13 +106,8 @@ class MediaLibraryReviewWorkspaceState
       );
     }
 
-    final parentNodeId = _ancestors.isEmpty ? null : _ancestors.last.nodeId;
     final tree = ref.watch(
-      mediaScanTreeProvider((
-        runId: run.id,
-        parentNodeId: parentNodeId,
-        page: _page,
-      )),
+      mediaScanTreeProvider((runId: run.id, parentNodeId: null, page: _page)),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,106 +137,54 @@ class MediaLibraryReviewWorkspaceState
     );
   }
 
+  /// 媒体树容器：固定高度内滚动的父子嵌套列表，根层分页条置于容器下方。
   Widget _buildTree(
     BuildContext context,
     AppLocalizations l10n,
     MediaScanRun run,
     MediaPage<MediaScanTreeNode> page,
   ) {
-    final list = _MediaTreeList(
-      nodes: page.items,
-      focusedNodeId: _focusedNode?.nodeId,
-      canSelect: run.reviewable && !_mutating,
-      onFocus: (node) => setState(() => _focusedNode = node),
-      onOpen: (node) {
-        setState(() {
-          _ancestors.add(node);
-          _focusedNode = null;
-          _page = 0;
-        });
-      },
-      onToggle: (node, selected) => _toggle(run, node.nodeId, selected),
-    );
+    final canSelect = run.reviewable && !_mutating;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _ReviewBreadcrumbs(
-          ancestors: _ancestors,
-          onRoot: () {
-            setState(() {
-              _ancestors.clear();
-              _focusedNode = null;
-              _page = 0;
-            });
-          },
-          onAncestor: (index) {
-            setState(() {
-              _ancestors.removeRange(index + 1, _ancestors.length);
-              _focusedNode = null;
-              _page = 0;
-            });
-          },
-        ),
-        const SizedBox(height: 10),
-        if (page.items.isEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-            decoration: BoxDecoration(
-              color: context.videoColors.surfaceContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              l10n.videoNoCandidates,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.videoColors.onSurfaceVariant),
-            ),
-          )
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 760) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: context.videoColors.surfaceContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: list,
-                );
-              }
-              return SizedBox(
-                height: 420,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: context.videoColors.surfaceContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: list,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: context.videoColors.surfaceContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: _MediaTreeNodeDetails(node: _focusedNode),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+        Container(
+          height: widget.treeHeight,
+          decoration: BoxDecoration(
+            color: context.videoColors.surfaceContainer,
+            borderRadius: BorderRadius.circular(12),
           ),
+          clipBehavior: Clip.antiAlias,
+          child:
+              page.items.isEmpty
+                  ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        l10n.videoNoCandidates,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: context.videoColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  )
+                  : ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    children: [
+                      for (final node in page.items)
+                        _MediaTreeNodeTile(
+                          run: run,
+                          node: node,
+                          level: 0,
+                          canSelect: canSelect,
+                          onToggle:
+                              (node, selected) =>
+                                  _toggle(run, node.nodeId, selected),
+                        ),
+                    ],
+                  ),
+        ),
         if (page.totalPages > 1)
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -276,8 +225,9 @@ class MediaLibraryReviewWorkspaceState
       }
       setState(() {
         _selectionRevision = summary.revision;
-        _focusedNode = null;
       });
+      // 勾选会影响任意已展开层级的聚合状态，整体失效以刷新嵌套树。
+      ref.invalidate(mediaScanTreeProvider);
     } on Exception catch (error) {
       if (mounted) {
         showMovieFeedback(context, movieErrorMessage(error), isError: true);
@@ -501,67 +451,107 @@ class _ReviewMetric extends StatelessWidget {
   }
 }
 
-class _MediaTreeList extends StatelessWidget {
-  const _MediaTreeList({
-    required this.nodes,
-    required this.focusedNodeId,
+/// 媒体树父子嵌套节点：文件夹节点原地展开并按页懒加载子节点，勾选走
+/// 后端聚合选择接口；叶子节点展示匹配状态徽标。缩进在五层后封顶。
+class _MediaTreeNodeTile extends ConsumerStatefulWidget {
+  const _MediaTreeNodeTile({
+    required this.run,
+    required this.node,
+    required this.level,
     required this.canSelect,
-    required this.onFocus,
-    required this.onOpen,
     required this.onToggle,
   });
 
-  final List<MediaScanTreeNode> nodes;
-  final String? focusedNodeId;
+  final MediaScanRun run;
+  final MediaScanTreeNode node;
+  final int level;
   final bool canSelect;
-  final ValueChanged<MediaScanTreeNode> onFocus;
-  final ValueChanged<MediaScanTreeNode> onOpen;
   final void Function(MediaScanTreeNode node, bool selected) onToggle;
 
   @override
+  ConsumerState<_MediaTreeNodeTile> createState() => _MediaTreeNodeTileState();
+}
+
+class _MediaTreeNodeTileState extends ConsumerState<_MediaTreeNodeTile> {
+  static const _indentStep = 18.0;
+  static const _maxIndent = 90.0;
+
+  bool _expanded = false;
+  int _childPage = 0;
+
+  double get _indent {
+    final raw = widget.level * _indentStep;
+    return raw > _maxIndent ? _maxIndent : raw;
+  }
+
+  void _toggleExpanded() {
+    setState(() {
+      _expanded = !_expanded;
+      _childPage = 0;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      itemCount: nodes.length,
-      separatorBuilder:
-          (_, _) => Divider(
-            height: 1,
-            indent: 54,
-            color: context.videoColors.outlineVariant.withValues(alpha: 0.2),
-          ),
-      itemBuilder: (context, index) {
-        final node = nodes[index];
-        final selected = node.selectionState == 'ALL';
-        final partial = node.selectionState == 'PARTIAL';
-        final focused = focusedNodeId == node.nodeId;
-        return Material(
-          color:
-              focused
-                  ? context.videoColors.primaryContainer
-                  : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          child: ListTile(
-            minTileHeight: 56,
-            contentPadding: const EdgeInsetsDirectional.fromSTEB(8, 2, 6, 2),
-            onTap: () => onFocus(node),
-            leading: Checkbox(
-              tristate: true,
-              value: partial ? null : selected,
-              onChanged:
-                  canSelect
-                      ? (value) => onToggle(node, value ?? !selected)
-                      : null,
+    final l10n = AppLocalizations.of(context);
+    final colors = context.videoColors;
+    final node = widget.node;
+    final selected = node.selectionState == 'ALL';
+    final partial = node.selectionState == 'PARTIAL';
+    final childAsync =
+        _expanded
+            ? ref.watch(
+              mediaScanTreeProvider((
+                runId: widget.run.id,
+                parentNodeId: node.nodeId,
+                page: _childPage,
+              )),
+            )
+            : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: node.hasChildren ? _toggleExpanded : null,
+          child: Container(
+            padding: EdgeInsetsDirectional.fromSTEB(_indent + 8, 4, 10, 4),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: colors.outlineVariant.withValues(alpha: 0.2),
+                ),
+              ),
             ),
-            title: Row(
+            child: Row(
               children: [
+                SizedBox(
+                  width: 24,
+                  child:
+                      node.hasChildren
+                          ? AnimatedRotation(
+                            turns: _expanded ? 0.25 : 0,
+                            duration: const Duration(milliseconds: 150),
+                            child: Icon(
+                              Icons.chevron_right_rounded,
+                              size: 20,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          )
+                          : null,
+                ),
+                Checkbox(
+                  tristate: true,
+                  value: partial ? null : selected,
+                  onChanged:
+                      widget.canSelect
+                          ? (value) => widget.onToggle(node, value ?? !selected)
+                          : null,
+                ),
+                const SizedBox(width: 4),
                 Icon(
                   _mediaTreeNodeIcon(node.nodeType),
                   size: 18,
-                  color:
-                      focused
-                          ? context.videoColors.onPrimaryContainer
-                          : context.videoColors.onSurfaceVariant,
+                  color: colors.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -569,198 +559,113 @@ class _MediaTreeList extends StatelessWidget {
                     node.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color:
-                          focused
-                              ? context.videoColors.onPrimaryContainer
-                              : context.videoColors.onSurface,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
-              ],
-            ),
-            subtitle: Text(
-              node.subtitle?.trim().isNotEmpty == true
-                  ? node.subtitle!
-                  : AppLocalizations.of(
-                    context,
-                  ).videoDiscoveryCandidates(node.candidateCount),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color:
-                    focused
-                        ? context.videoColors.onPrimaryContainer.withValues(
-                          alpha: 0.76,
-                        )
-                        : context.videoColors.onSurfaceVariant,
-                fontSize: 11,
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!node.hasChildren || node.issueCount > 0)
-                  _CandidateStatusBadge(status: node.matchStatus),
                 if (node.hasChildren) ...[
-                  const SizedBox(width: 4),
-                  IconButton(
-                    onPressed: () => onOpen(node),
-                    tooltip: node.title,
-                    icon: const Icon(Icons.chevron_right_rounded),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.videoDiscoveryCandidates(node.candidateCount),
+                    style: TextStyle(
+                      color: colors.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
                   ),
+                ],
+                if (!node.hasChildren || node.issueCount > 0) ...[
+                  const SizedBox(width: 8),
+                  _CandidateStatusBadge(status: node.matchStatus),
                 ],
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-}
-
-class _MediaTreeNodeDetails extends StatelessWidget {
-  const _MediaTreeNodeDetails({required this.node});
-
-  final MediaScanTreeNode? node;
-
-  @override
-  Widget build(BuildContext context) {
-    final current = node;
-    if (current == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.touch_app_outlined,
-              size: 36,
-              color: context.videoColors.onSurfaceVariant,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              AppLocalizations.of(context).videoCandidateDetailsHint,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.videoColors.onSurfaceVariant,
-                fontSize: 12,
-                height: 17 / 12,
-              ),
-            ),
-          ],
         ),
-      );
-    }
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: context.videoColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
+        if (_expanded)
+          childAsync!.when(
+            loading:
+                () => Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(
+                    _indent + 40,
+                    10,
+                    16,
+                    10,
+                  ),
+                  child: const LinearProgressIndicator(minHeight: 2),
                 ),
-                child: Icon(
-                  _mediaTreeNodeIcon(current.nodeType),
-                  color: context.videoColors.onPrimaryContainer,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  current.title,
-                  style: TextStyle(
-                    color: context.videoColors.onSurface,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
+            error:
+                (error, _) => Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(
+                    _indent + 40,
+                    8,
+                    16,
+                    8,
+                  ),
+                  child: Text(
+                    l10n.videoLoadTreeFailed,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _CandidateStatusBadge(status: current.matchStatus),
-              _DetailCountBadge(
-                icon: Icons.inventory_2_outlined,
-                label: AppLocalizations.of(
-                  context,
-                ).videoDiscoveryCandidates(current.candidateCount),
-              ),
-              if (current.issueCount > 0)
-                _DetailCountBadge(
-                  icon: Icons.report_problem_outlined,
-                  label: AppLocalizations.of(
-                    context,
-                  ).videoDiscoveryIssues(current.issueCount),
-                  issue: true,
+            data:
+                (page) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final child in page.items)
+                      _MediaTreeNodeTile(
+                        run: widget.run,
+                        node: child,
+                        level: widget.level + 1,
+                        canSelect: widget.canSelect,
+                        onToggle: widget.onToggle,
+                      ),
+                    if (page.totalPages > 1)
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(
+                          _indent + 40,
+                          2,
+                          12,
+                          2,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              onPressed:
+                                  page.page > 0
+                                      ? () => setState(() => _childPage--)
+                                      : null,
+                              tooltip:
+                                  MaterialLocalizations.of(
+                                    context,
+                                  ).previousPageTooltip,
+                              iconSize: 18,
+                              icon: const Icon(Icons.chevron_left_rounded),
+                            ),
+                            Text(
+                              '${page.page + 1} / ${page.totalPages}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            IconButton(
+                              onPressed:
+                                  page.page + 1 < page.totalPages
+                                      ? () => setState(() => _childPage++)
+                                      : null,
+                              tooltip:
+                                  MaterialLocalizations.of(
+                                    context,
+                                  ).nextPageTooltip,
+                              iconSize: 18,
+                              icon: const Icon(Icons.chevron_right_rounded),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-            ],
           ),
-          if (current.subtitle != null) ...[
-            const SizedBox(height: 16),
-            SelectableText(
-              current.subtitle!,
-              style: TextStyle(
-                color: context.videoColors.onSurfaceVariant,
-                height: 20 / 14,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailCountBadge extends StatelessWidget {
-  const _DetailCountBadge({
-    required this.icon,
-    required this.label,
-    this.issue = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool issue;
-
-  @override
-  Widget build(BuildContext context) {
-    final color =
-        issue
-            ? Theme.of(context).colorScheme.error
-            : context.videoColors.onSurfaceVariant;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

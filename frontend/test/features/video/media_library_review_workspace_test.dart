@@ -140,4 +140,87 @@ void main() {
     expect(find.byIcon(Icons.error_outline_rounded), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('文件夹节点原地展开懒加载子节点', (tester) async {
+    const folderPage = MediaPage<MediaScanTreeNode>(
+      items: [
+        MediaScanTreeNode(
+          nodeId: 'folder-1',
+          nodeType: 'DIRECTORY',
+          title: '剧集A',
+          hasChildren: true,
+          childCount: 1,
+          candidateCount: 2,
+          selectedCount: 0,
+          issueCount: 0,
+          selectionState: 'NONE',
+        ),
+      ],
+      page: 0,
+      size: 50,
+      totalElements: 1,
+      totalPages: 1,
+    );
+    const childPage = MediaPage<MediaScanTreeNode>(
+      items: [
+        MediaScanTreeNode(
+          nodeId: 'file-1',
+          nodeType: 'FILE',
+          title: '第1集.mkv',
+          hasChildren: false,
+          childCount: 0,
+          candidateCount: 1,
+          selectedCount: 0,
+          issueCount: 0,
+          selectionState: 'NONE',
+          matchStatus: 'NEW',
+        ),
+      ],
+      page: 0,
+      size: 50,
+      totalElements: 1,
+      totalPages: 1,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          latestMediaScanRunProvider(
+            'movie',
+          ).overrideWith((ref) => Stream.value(_readyRun)),
+          mediaScanTreeProvider((
+            runId: 'run-1',
+            parentNodeId: null,
+            page: 0,
+          )).overrideWith((ref) async => folderPage),
+          mediaScanTreeProvider((
+            runId: 'run-1',
+            parentNodeId: 'folder-1',
+            page: 0,
+          )).overrideWith((ref) async => childPage),
+        ],
+        child: MaterialApp(
+          theme: OmniNestTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: MediaLibraryReviewWorkspace(source: _source),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text('剧集A'), findsOneWidget);
+    expect(find.text('第1集.mkv'), findsNothing);
+    await tester.tap(find.text('剧集A'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('第1集.mkv'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

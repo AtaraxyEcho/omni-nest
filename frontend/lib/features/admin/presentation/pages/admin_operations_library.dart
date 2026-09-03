@@ -2,7 +2,6 @@ part of 'admin_operations_pages.dart';
 
 // ── 媒体库管理段区 ──────────────────────────────────────────────────────
 
-/// 视频库源分区：建立在已启用存储位置上的影视库源。
 /// 上次扫描摘要：从未扫描或全零时显示占位符。
 String _lastScanSummary(AppLocalizations l10n, VideoLibrarySource source) {
   if (source.scanStatus == 'NEVER_SCANNED' ||
@@ -42,6 +41,16 @@ AdminTagTone _scanStatusTone(String status) {
   };
 }
 
+/// 库类型展示名。
+String _libraryTypeLabel(AppLocalizations l10n, VideoLibraryType libraryType) {
+  return switch (libraryType) {
+    VideoLibraryType.movie => l10n.videoLibraryTypeMovie,
+    VideoLibraryType.tvSeries => l10n.videoLibraryTypeTvSeries,
+    VideoLibraryType.anime => l10n.videoLibraryTypeAnime,
+    VideoLibraryType.root => l10n.videoLibraryTypeRoot,
+  };
+}
+
 class _LibrarySourcesSection extends ConsumerStatefulWidget {
   const _LibrarySourcesSection({required this.canManage});
 
@@ -56,9 +65,6 @@ class _LibrarySourcesSectionState
     extends ConsumerState<_LibrarySourcesSection> {
   /// 正在执行"发现更新"扫描的库源，用于行内按钮转圈与禁用。
   String? _scanningSourceId;
-
-  /// 当前展开的库源（父子嵌套列表的单开语义）。
-  String? _expandedSourceId;
 
   bool get canManage => widget.canManage;
 
@@ -185,6 +191,16 @@ class _LibrarySourcesSectionState
     );
   }
 
+  /// 打开媒体库管理窗口：父子嵌套布局承载库源信息与审阅工作区。
+  void _openManageWindow(VideoLibrarySource source, String locationName) {
+    showDialog<void>(
+      context: context,
+      builder:
+          (dialogContext) =>
+              _LibraryManageWindow(source: source, locationName: locationName),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -219,193 +235,338 @@ class _LibrarySourcesSectionState
         if (canManage) _buildAddButton(context, l10n, canAdd, locations),
       ],
       children: [
-        if (filtered.isEmpty)
-          AdminListEmptyState(
+        AdminDataTable(
+          showIndex: true,
+          minTableWidth: 1080,
+          // 4 个操作按钮在触控密度下需 4×48，默认 168 宽度会横向溢出。
+          actionColumnWidth: 200,
+          rowCount: filtered.length,
+          onRowTap:
+              (index) => _openManageWindow(
+                filtered[index],
+                locationName(filtered[index]),
+              ),
+          emptyState: AdminListEmptyState(
             message:
                 query.isEmpty
                     ? l10n.adminLibrarySourcesEmpty
                     : l10n.adminNoMatch,
-          )
-        else
-          for (final source in filtered)
-            _LibrarySourceBlock(
-              source: source,
-              locationName: locationName(source),
-              expanded: _expandedSourceId == source.id,
-              scanning: _scanningSourceId == source.id,
-              canManage: canManage,
-              onToggle:
-                  () => setState(() {
-                    _expandedSourceId =
-                        _expandedSourceId == source.id ? null : source.id;
-                  }),
-              onDiscover: () => _discoverUpdates(source),
-              onAccess: () => _openAccessDialog(source),
-              onEdit: () => _editSource(source, locations),
-              onDelete: () => _deleteSource(source),
+          ),
+          columns: [
+            AdminListColumn(
+              key: 'name',
+              label: l10n.adminLibraryColumnName,
+              flex: 2,
             ),
+            AdminListColumn(
+              key: 'location',
+              label: l10n.adminLibraryColumnLocation,
+              flex: 2,
+            ),
+            AdminListColumn(
+              key: 'type',
+              label: l10n.videoLibraryType,
+              minWidth: 100,
+            ),
+            AdminListColumn(
+              key: 'scanStatus',
+              label: l10n.adminLibraryColumnScanStatus,
+              minWidth: 110,
+            ),
+            AdminListColumn(
+              key: 'lastScan',
+              label: l10n.adminLibraryColumnLastScan,
+              minWidth: 200,
+            ),
+            AdminListColumn(
+              key: 'status',
+              label: l10n.adminFilterStatus,
+              minWidth: 90,
+            ),
+          ],
+          rowCellsBuilder: (context, index) {
+            final source = filtered[index];
+            return [
+              Text(
+                source.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                '${locationName(source)} · ${source.relativeRoot}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Text(
+                _libraryTypeLabel(l10n, source.libraryType),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              AdminStatusTag(
+                label: _scanStatusLabel(l10n, source.scanStatus),
+                tone: _scanStatusTone(source.scanStatus),
+              ),
+              Text(
+                _lastScanSummary(l10n, source),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              AdminStatusTag(
+                label:
+                    source.enabled
+                        ? l10n.adminStatusEnabled
+                        : l10n.adminStatusDisabled,
+                tone:
+                    source.enabled
+                        ? AdminTagTone.success
+                        : AdminTagTone.neutral,
+              ),
+            ];
+          },
+          actionsBuilder: (context, index) {
+            final source = filtered[index];
+            final scanning = _scanningSourceId == source.id;
+            return [
+              IconButton(
+                tooltip: l10n.adminLibraryDiscoverUpdates,
+                icon:
+                    scanning
+                        ? const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.manage_search_rounded, size: 20),
+                onPressed:
+                    canManage && source.enabled && !scanning
+                        ? () => _discoverUpdates(source)
+                        : null,
+              ),
+              IconButton(
+                tooltip: l10n.adminLibraryAccessTitle,
+                icon: const Icon(Icons.people_outline_rounded, size: 20),
+                onPressed: canManage ? () => _openAccessDialog(source) : null,
+              ),
+              IconButton(
+                tooltip: l10n.videoEditLibrarySource,
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                onPressed:
+                    canManage ? () => _editSource(source, locations) : null,
+              ),
+              IconButton(
+                tooltip: l10n.adminLibraryDeleteSourceTitle,
+                icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                onPressed: canManage ? () => _deleteSource(source) : null,
+              ),
+            ];
+          },
+        ),
       ],
     );
   }
 }
 
-/// 库源父子嵌套块：父行为摘要行，点击展开嵌套的审阅工作区与操作区。
-class _LibrarySourceBlock extends StatelessWidget {
-  const _LibrarySourceBlock({
+/// 媒体库管理窗口：父子嵌套布局。
+///
+/// 顶层为"库源信息"与"发现与审阅"两个可折叠父区，子内容整体缩进；
+/// 窗口内容超出最大高度时整体滚动，审阅工作区按窗口高度自适应树高，
+/// 避免有界高度溢出。
+class _LibraryManageWindow extends StatefulWidget {
+  const _LibraryManageWindow({
     required this.source,
     required this.locationName,
-    required this.expanded,
-    required this.scanning,
-    required this.canManage,
-    required this.onToggle,
-    required this.onDiscover,
-    required this.onAccess,
-    required this.onEdit,
-    required this.onDelete,
   });
 
   final VideoLibrarySource source;
   final String locationName;
-  final bool expanded;
-  final bool scanning;
-  final bool canManage;
-  final VoidCallback onToggle;
-  final VoidCallback onDiscover;
-  final VoidCallback onAccess;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+
+  @override
+  State<_LibraryManageWindow> createState() => _LibraryManageWindowState();
+}
+
+class _LibraryManageWindowState extends State<_LibraryManageWindow> {
+  bool _infoExpanded = true;
+  bool _reviewExpanded = true;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: onToggle,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    final source = widget.source;
+    // 窗口最大高 85% 屏高，扣除头部、信息区与审阅摘要后为媒体树高度，
+    // 下限保证树区至少可见数行，上限避免大屏过度拉伸。
+    final treeHeight = ((MediaQuery.sizeOf(context).height * 0.85) - 330).clamp(
+      280.0,
+      520.0,
+    );
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 920,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 8, 10),
               child: Row(
                 children: [
-                  AnimatedRotation(
-                    turns: expanded ? 0.25 : 0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      source.name,
+                      '${l10n.videoSectionLibraryScan} · ${source.name}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  AdminStatusTag(
-                    label: _scanStatusLabel(l10n, source.scanStatus),
-                    tone: _scanStatusTone(source.scanStatus),
-                  ),
-                  const SizedBox(width: 10),
-                  AdminStatusTag(
-                    label:
-                        source.enabled
-                            ? l10n.adminStatusEnabled
-                            : l10n.adminStatusDisabled,
-                    tone:
-                        source.enabled
-                            ? AdminTagTone.success
-                            : AdminTagTone.neutral,
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: l10n.coreClose,
+                    icon: const Icon(Icons.close_rounded),
                   ),
                 ],
               ),
             ),
-          ),
-          if (expanded)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(40, 12, 16, 16),
-              color: colors.surfaceContainerLow.withValues(alpha: 0.5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${l10n.videoLibraryType}：${_libraryTypeLabel(l10n, source.libraryType)} · $locationName · ${source.relativeRoot}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _lastScanSummary(l10n, source),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      scanning
-                          ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : FilledButton.tonalIcon(
-                            onPressed: source.enabled ? onDiscover : null,
-                            icon: const Icon(
-                              Icons.manage_search_rounded,
-                              size: 18,
+            const Divider(height: 1),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ManageSectionParent(
+                      title: l10n.adminLibraryManageInfoSection,
+                      expanded: _infoExpanded,
+                      onToggle:
+                          () => setState(() => _infoExpanded = !_infoExpanded),
+                      trailing: [
+                        AdminStatusTag(
+                          label: _scanStatusLabel(l10n, source.scanStatus),
+                          tone: _scanStatusTone(source.scanStatus),
+                        ),
+                        AdminStatusTag(
+                          label:
+                              source.enabled
+                                  ? l10n.adminStatusEnabled
+                                  : l10n.adminStatusDisabled,
+                          tone:
+                              source.enabled
+                                  ? AdminTagTone.success
+                                  : AdminTagTone.neutral,
+                        ),
+                      ],
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(40, 4, 20, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${l10n.videoLibraryType}：${_libraryTypeLabel(l10n, source.libraryType)} · ${widget.locationName} · ${source.relativeRoot}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            label: Text(l10n.adminLibraryDiscoverUpdates),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${l10n.adminLibraryColumnLastScan}：${_lastScanSummary(l10n, source)}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(
+                      height: 1,
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                    _ManageSectionParent(
+                      title: l10n.adminLibraryManageReviewSection,
+                      expanded: _reviewExpanded,
+                      onToggle:
+                          () => setState(
+                            () => _reviewExpanded = !_reviewExpanded,
                           ),
-                      OutlinedButton.icon(
-                        onPressed: onAccess,
-                        icon: const Icon(
-                          Icons.people_outline_rounded,
-                          size: 18,
-                        ),
-                        label: Text(l10n.adminLibraryAccessTitle),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: onEdit,
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        label: Text(l10n.videoEditLibrarySource),
-                      ),
-                      IconButton(
-                        tooltip: l10n.adminLibraryDeleteSourceTitle,
-                        onPressed: onDelete,
-                        icon: const Icon(
-                          Icons.delete_outline_rounded,
-                          size: 20,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        child: MediaLibraryReviewWorkspace(
+                          source: source,
+                          treeHeight: treeHeight,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  MediaLibraryReviewWorkspace(source: source),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 库类型展示名。
-String _libraryTypeLabel(AppLocalizations l10n, VideoLibraryType libraryType) {
-  return switch (libraryType) {
-    VideoLibraryType.movie => l10n.videoLibraryTypeMovie,
-    VideoLibraryType.tvSeries => l10n.videoLibraryTypeTvSeries,
-    VideoLibraryType.anime => l10n.videoLibraryTypeAnime,
-    VideoLibraryType.root => l10n.videoLibraryTypeRoot,
-  };
+/// 管理窗口父子嵌套父行：展开箭头 + 标题 + 可选状态标签，子内容整体
+/// 缩进展示，点击父行切换折叠。
+class _ManageSectionParent extends StatelessWidget {
+  const _ManageSectionParent({
+    required this.title,
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+    this.trailing = const <Widget>[],
+  });
+
+  final String title;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final List<Widget> trailing;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: onToggle,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                AnimatedRotation(
+                  turns: expanded ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                for (var i = 0; i < trailing.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  trailing[i],
+                ],
+              ],
+            ),
+          ),
+        ),
+        if (expanded) child,
+      ],
+    );
+  }
 }

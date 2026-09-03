@@ -17,31 +17,34 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 /// 状态标签语义色。
 enum AdminTagTone { success, warning, error, info, neutral }
 
-/// 语义色对应的标签配色。
+/// 语义色对应的标签配色：前景取语义基色并在暗色主题下提亮，背景为
+/// 前景低透明底色，附同色描边，保证明暗两套主题下的可读性一致。
 extension AdminTagToneColor on AdminTagTone {
-  Color foreground(BuildContext context) => switch (this) {
-    AdminTagTone.success => Colors.green.shade700,
-    AdminTagTone.warning => Colors.orange.shade800,
+  Color _base(BuildContext context) => switch (this) {
+    AdminTagTone.success =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.green.shade400
+          : Colors.green.shade700,
+    AdminTagTone.warning =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.orange.shade400
+          : Colors.orange.shade800,
     AdminTagTone.error => Theme.of(context).colorScheme.error,
     AdminTagTone.info => Theme.of(context).colorScheme.primary,
-    AdminTagTone.neutral => Theme.of(context).colorScheme.outline,
+    AdminTagTone.neutral => Theme.of(context).colorScheme.onSurfaceVariant,
   };
 
-  Color background(BuildContext context) => switch (this) {
-    AdminTagTone.success => Colors.green.shade50,
-    AdminTagTone.warning => Colors.orange.shade50,
-    AdminTagTone.error => Theme.of(
-      context,
-    ).colorScheme.error.withValues(alpha: 0.08),
-    AdminTagTone.info => Theme.of(
-      context,
-    ).colorScheme.primary.withValues(alpha: 0.08),
-    AdminTagTone.neutral =>
-      Theme.of(context).colorScheme.surfaceContainerHighest,
-  };
+  Color foreground(BuildContext context) => _base(context);
+
+  Color background(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? _base(context).withValues(alpha: 0.16)
+          : _base(context).withValues(alpha: 0.1);
+
+  Color border(BuildContext context) => _base(context).withValues(alpha: 0.28);
 }
 
-/// 语义化状态标签。
+/// 语义化状态标签：状态点 + 文本，胶囊描边样式。
 class AdminStatusTag extends StatelessWidget {
   const AdminStatusTag({
     required this.label,
@@ -54,20 +57,36 @@ class AdminStatusTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = tone.foreground(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: BoxDecoration(
         color: tone.background(context),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.border(context)),
       ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: tone.foreground(context),
-          fontWeight: FontWeight.w700,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+                height: 1,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -307,7 +307,7 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
       children: [
         AdminDataTable(
           showIndex: true,
-          minTableWidth: 960,
+          minTableWidth: 1120,
           rowCount: locations.length,
           emptyState: AdminListEmptyState(message: l10n.adminStorageEmptyList),
           onRowTap:
@@ -327,7 +327,7 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
             AdminListColumn(
               key: 'type',
               label: l10n.adminStorageColumnType,
-              minWidth: 100,
+              minWidth: 96,
             ),
             AdminListColumn(
               key: 'mountKey',
@@ -337,17 +337,17 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
             AdminListColumn(
               key: 'root',
               label: l10n.adminStorageColumnRoot,
-              flex: 2,
+              flex: 3,
             ),
             AdminListColumn(
               key: 'status',
               label: l10n.adminFilterStatus,
-              minWidth: 100,
+              minWidth: 96,
             ),
             AdminListColumn(
               key: 'health',
               label: l10n.adminStorageColumnHealth,
-              minWidth: 110,
+              minWidth: 104,
             ),
           ],
           rowCellsBuilder: (context, index) {

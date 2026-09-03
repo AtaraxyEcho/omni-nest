@@ -3720,6 +3720,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminStorageMountsSection => 'Local mount locations';
 
   @override
+  String get adminLibraryColumnName => 'Name';
+
+  @override
   String get adminLibraryColumnLocation => 'Location · Root';
 
   @override
@@ -3727,6 +3730,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminLibraryColumnLastScan => 'Last scan';
+
+  @override
+  String get adminLibraryManageInfoSection => 'Library info';
+
+  @override
+  String get adminLibraryManageReviewSection => 'Discovery & review';
 
   @override
   String adminLibraryLastScanSummary(

@@ -6913,6 +6913,12 @@ abstract class AppLocalizations {
   /// **'Local mount locations'**
   String get adminStorageMountsSection;
 
+  /// No description provided for @adminLibraryColumnName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get adminLibraryColumnName;
+
   /// No description provided for @adminLibraryColumnLocation.
   ///
   /// In en, this message translates to:
@@ -6930,6 +6936,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Last scan'**
   String get adminLibraryColumnLastScan;
+
+  /// No description provided for @adminLibraryManageInfoSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Library info'**
+  String get adminLibraryManageInfoSection;
+
+  /// No description provided for @adminLibraryManageReviewSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery & review'**
+  String get adminLibraryManageReviewSection;
 
   /// No description provided for @adminLibraryLastScanSummary.
   ///

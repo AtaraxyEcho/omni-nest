@@ -3599,6 +3599,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminStorageMountsSection => '本地挂载位置';
 
   @override
+  String get adminLibraryColumnName => '库名称';
+
+  @override
   String get adminLibraryColumnLocation => '存储位置 · 根目录';
 
   @override
@@ -3606,6 +3609,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminLibraryColumnLastScan => '上次扫描';
+
+  @override
+  String get adminLibraryManageInfoSection => '库源信息';
+
+  @override
+  String get adminLibraryManageReviewSection => '发现与审阅';
 
   @override
   String adminLibraryLastScanSummary(

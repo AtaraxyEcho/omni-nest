@@ -45,7 +45,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('review workspace exposes candidate hierarchy and details', (
+  testWidgets('review workspace exposes candidate hierarchy inline', (
     tester,
   ) async {
     await _pumpLibrary(
@@ -53,6 +53,8 @@ void main() {
       size: const Size(1280, 900),
       reviewRun: _readyRun,
       reviewPage: _reviewPage,
+      reviewChildNodeId: 'SERIES:1',
+      reviewChildPage: _reviewChildPage,
     );
 
     final scanReviewTab = find.descendant(
@@ -63,15 +65,16 @@ void main() {
     await tester.tap(scanReviewTab);
     await tester.pumpAndSettle();
 
+    // 媒体树为父子嵌套列表：根层节点直接可见，无右侧详情面板。
     expect(find.text('候选电影'), findsOneWidget);
     expect(find.text('示例剧集'), findsOneWidget);
-    expect(find.textContaining('选择左侧候选'), findsOneWidget);
+    expect(find.textContaining('选择左侧候选'), findsNothing);
 
-    await tester.tap(find.text('候选电影'));
+    // 文件夹节点原地展开懒加载子节点。
+    await tester.tap(find.text('示例剧集'));
     await tester.pumpAndSettle();
 
-    expect(find.text('候选电影'), findsNWidgets(2));
-    expect(find.textContaining('选择左侧候选'), findsNothing);
+    expect(find.text('示例剧集 第1集'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -146,6 +149,8 @@ Future<void> _pumpLibrary(
   bool darkMode = false,
   MediaScanRun? reviewRun,
   MediaPage<MediaScanTreeNode>? reviewPage,
+  String? reviewChildNodeId,
+  MediaPage<MediaScanTreeNode>? reviewChildPage,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -206,6 +211,14 @@ Future<void> _pumpLibrary(
             parentNodeId: null,
             page: 0,
           )).overrideWith((ref) async => reviewPage),
+        if (reviewRun != null &&
+            reviewChildNodeId != null &&
+            reviewChildPage != null)
+          mediaScanTreeProvider((
+            runId: reviewRun.id,
+            parentNodeId: reviewChildNodeId,
+            page: 0,
+          )).overrideWith((ref) async => reviewChildPage),
       ],
       child: MaterialApp(
         theme: darkMode ? OmniNestTheme.dark() : OmniNestTheme.light(),
@@ -288,6 +301,27 @@ const _readyRun = MediaScanRun(
   selectedCount: 3,
   appliedCount: 0,
   failedCount: 0,
+);
+
+const _reviewChildPage = MediaPage<MediaScanTreeNode>(
+  items: [
+    MediaScanTreeNode(
+      nodeId: 'EPISODE:1',
+      nodeType: 'FILE',
+      title: '示例剧集 第1集',
+      hasChildren: false,
+      childCount: 0,
+      candidateCount: 1,
+      selectedCount: 1,
+      issueCount: 0,
+      selectionState: 'ALL',
+      matchStatus: 'NEW',
+    ),
+  ],
+  page: 0,
+  size: 100,
+  totalElements: 1,
+  totalPages: 1,
 );
 
 const _reviewPage = MediaPage<MediaScanTreeNode>(
