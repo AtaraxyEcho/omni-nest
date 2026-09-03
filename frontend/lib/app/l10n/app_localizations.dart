@@ -6931,6 +6931,12 @@ abstract class AppLocalizations {
   /// **'Group'**
   String get adminConfigGroupColumn;
 
+  /// No description provided for @adminConfigToggleColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle'**
+  String get adminConfigToggleColumn;
+
   /// No description provided for @adminBatchRevokeSessions.
   ///
   /// In en, this message translates to:

@@ -653,16 +653,12 @@ class _AdminRecordFilterBar extends StatelessWidget {
       children: [
         SizedBox(
           width: 220,
-          child: DropdownButtonFormField<String>(
-            initialValue: value,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: label, isDense: true),
+          child: AdminDropdown<String>(
+            value: value,
+            label: label,
             items: [
               for (final option in options)
-                DropdownMenuItem(
-                  value: option,
-                  child: Text(optionLabel(option)),
-                ),
+                AdminDropdownItem(value: option, label: optionLabel(option)),
             ],
             onChanged: (next) {
               if (next != null) onChanged(next);
@@ -671,15 +667,13 @@ class _AdminRecordFilterBar extends StatelessWidget {
         ),
         SizedBox(
           width: 160,
-          child: DropdownButtonFormField<int>(
-            initialValue: retentionDays,
-            isExpanded: true,
-            decoration: const InputDecoration(isDense: true),
+          child: AdminDropdown<int>(
+            value: retentionDays,
             items: [
               for (final days in const <int>[7, 30, 90, 365])
-                DropdownMenuItem(
+                AdminDropdownItem(
                   value: days,
-                  child: Text(l10n.adminRetentionDays('$days')),
+                  label: l10n.adminRetentionDays('$days'),
                 ),
             ],
             onChanged: (next) {

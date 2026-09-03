@@ -5,6 +5,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/features/admin/domain/admin_operations.dart';
 import 'package:omninest/features/admin/presentation/pages/admin_operations_pages.dart';
+import 'package:omninest/features/admin/presentation/widgets/admin_list_components.dart';
 
 void main() {
   testWidgets('配置中心统一单表展示分组列且不展示原始键', (tester) async {
@@ -112,7 +113,13 @@ void main() {
     expect(find.text('MusicBrainz'), findsOneWidget);
     expect(find.text('存储与共享空间'), findsNWidgets(2));
     expect(find.text('分组'), findsWidgets);
-    expect(find.text('每页条数'), findsOneWidget);
+    // 每页条数选择器：统一 AdminDropdown，默认 10。
+    final pageSizeDropdown = find
+        .byWidgetPredicate((w) => w is AdminDropdown<int>)
+        .evaluate()
+        .toList();
+    expect(pageSizeDropdown, hasLength(1));
+    expect((pageSizeDropdown.first.widget as AdminDropdown<int>).value, 10);
     expect(tester.takeException(), isNull);
   });
 

@@ -347,8 +347,15 @@ class AdminDataTable extends StatelessWidget {
 
     // DataTable2 内部使用 Flexible(tight) 布局，必须给定有界高度；
     // 其分隔线绘制在行边界上不占用高度，总高 = 表头 44 + 行数 × 行高。
+    // ClipRRect 保证表头与行背景按圆角裁切。
     final tableHeight = 44.0 + rowCount * rowHeight;
-    final boundedTable = SizedBox(height: tableHeight, child: dataTable);
+    final boundedTable = SizedBox(
+      height: tableHeight,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: dataTable,
+      ),
+    );
     Widget tableArea = boundedTable;
     if (_hasActionColumn) {
       tableArea = Row(
@@ -365,12 +372,15 @@ class AdminDataTable extends StatelessWidget {
         ],
       );
     }
+    // 边框放在 foregroundDecoration：行背景为不透明色，若用 decoration
+    // 绘制边框会被行背景盖住，导致边线与圆角显示不全。
     return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.outlineVariant),
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
       clipBehavior: Clip.antiAlias,
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.outlineVariant),
+      ),
       child: tableArea,
     );
   }
@@ -393,8 +403,9 @@ class AdminDataTable extends StatelessWidget {
         fontWeight: FontWeight.w700,
       );
 
-  /// 右侧固定操作列：表头标签与每行操作内容。分隔线绘制在行底边（不占
-  /// 高度），与主表 DataTable2 的行边界分隔线对齐。
+  /// 右侧固定操作列：表头标签与每行操作内容。分隔线绘制在行顶边（除
+  /// 首行外，不占高度），与主表 DataTable2 绘制在行边界上的分隔线处于
+  /// 同一 Y 坐标，保证横贯整表宽度的连续基线。
   Widget _buildActionColumn(BuildContext context, ColorScheme colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -413,11 +424,11 @@ class AdminDataTable extends StatelessWidget {
             height: rowHeight,
             child: Container(
               decoration:
-                  i == rowCount - 1
+                  i == 0
                       ? null
                       : BoxDecoration(
                         border: Border(
-                          bottom: BorderSide(color: colors.outlineVariant),
+                          top: BorderSide(color: colors.outlineVariant),
                         ),
                       ),
               child: Align(
@@ -431,6 +442,81 @@ class AdminDataTable extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// 管理端统一下拉选项描述。
+class AdminDropdownItem<T> {
+  const AdminDropdownItem({required this.value, required this.label});
+
+  final T value;
+  final String label;
+}
+
+/// 管理端统一下拉选择：描边圆角、密集高度、选中项与菜单项省略，
+/// 避免长文本把固定宽字段撑爆。管理端所有下拉统一使用本控件。
+class AdminDropdown<T> extends StatelessWidget {
+  const AdminDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.label,
+    this.width,
+    this.suffixText,
+    super.key,
+  });
+
+  final T value;
+  final List<AdminDropdownItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+
+  /// 浮动标签；为空时不显示。
+  final String? label;
+
+  /// 固定宽度；为空时由父级约束决定。
+  final double? width;
+  final String? suffixText;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: color),
+    );
+    Widget field = DropdownButtonFormField<T>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText:
+            suffixText == null || suffixText!.isEmpty ? null : suffixText,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        border: border(colors.outlineVariant),
+        enabledBorder: border(colors.outlineVariant),
+        focusedBorder: border(colors.primary),
+      ),
+      items: [
+        for (final item in items)
+          DropdownMenuItem(
+            value: item.value,
+            child: Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: onChanged,
+    );
+    if (width != null) {
+      field = SizedBox(width: width, child: field);
+    }
+    return field;
   }
 }
 
@@ -602,25 +688,21 @@ class _AdminListPaginationBarState extends State<AdminListPaginationBar> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    l10n.adminListRowsPerPage,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 8),
-                  DropdownButton<int>(
-                    value: widget.rowsPerPage,
-                    items: [
-                      for (final choice
-                          in AdminListPaginationBar._rowsPerPageChoices)
-                        DropdownMenuItem(value: choice, child: Text('$choice')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        widget.onRowsPerPageChanged(value);
-                      }
-                    },
-                    underline: const SizedBox.shrink(),
-                    isDense: true,
+                  SizedBox(
+                    width: 92,
+                    child: AdminDropdown<int>(
+                      value: widget.rowsPerPage,
+                      items: [
+                        for (final choice
+                            in AdminListPaginationBar._rowsPerPageChoices)
+                          AdminDropdownItem(value: choice, label: '$choice'),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          widget.onRowsPerPageChanged(value);
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),

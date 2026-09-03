@@ -112,26 +112,26 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
           runSpacing: 10,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _SessionFilterDropdown<String>(
+            AdminDropdown<String>(
               width: 190,
               label: l10n.adminFilterStatus,
               value: _status,
               items: [
-                DropdownMenuItem(
+                AdminDropdownItem(
                   value: 'ALL',
-                  child: Text(l10n.adminSessionAllStatuses),
+                  label: l10n.adminSessionAllStatuses,
                 ),
-                DropdownMenuItem(
+                AdminDropdownItem(
                   value: 'ACTIVE',
-                  child: Text(l10n.adminSessionActiveOnly),
+                  label: l10n.adminSessionActiveOnly,
                 ),
-                DropdownMenuItem(
+                AdminDropdownItem(
                   value: 'REVOKED',
-                  child: Text(l10n.adminSessionRevokedOnly),
+                  label: l10n.adminSessionRevokedOnly,
                 ),
-                DropdownMenuItem(
+                AdminDropdownItem(
                   value: 'EXPIRED',
-                  child: Text(l10n.adminSessionExpiredOnly),
+                  label: l10n.adminSessionExpiredOnly,
                 ),
               ],
               onChanged: (value) {
@@ -144,15 +144,15 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                 }
               },
             ),
-            _SessionFilterDropdown<String>(
+            AdminDropdown<String>(
               width: 190,
               label: l10n.adminFilterPlatform,
               value: _platform,
               items: [
                 for (final platform in _platforms)
-                  DropdownMenuItem(
+                  AdminDropdownItem(
                     value: platform,
-                    child: Text(platform == 'ALL' ? l10n.adminAll : platform),
+                    label: platform == 'ALL' ? l10n.adminAll : platform,
                   ),
               ],
               onChanged: (value) {
@@ -165,15 +165,14 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
                 }
               },
             ),
-            _SessionFilterDropdown<int>(
+            AdminDropdown<int>(
               width: 190,
-              label: '',
               value: _retentionDays,
               items: [
                 for (final days in const <int>[7, 30, 90, 365])
-                  DropdownMenuItem(
+                  AdminDropdownItem(
                     value: days,
-                    child: Text(l10n.adminRetentionDays('$days')),
+                    label: l10n.adminRetentionDays('$days'),
                   ),
               ],
               onChanged: (value) {
@@ -579,38 +578,5 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.adminLoadFailed(''))));
     }
-  }
-}
-
-class _SessionFilterDropdown<T> extends StatelessWidget {
-  const _SessionFilterDropdown({
-    required this.width,
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  final double width;
-  final String label;
-  final T value;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: DropdownButtonFormField<T>(
-        initialValue: value,
-        isExpanded: true,
-        decoration: InputDecoration(
-          labelText: label.isEmpty ? null : label,
-          isDense: true,
-        ),
-        items: items,
-        onChanged: onChanged,
-      ),
-    );
   }
 }

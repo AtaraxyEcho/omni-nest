@@ -20,6 +20,55 @@ bool _isRemovedConfigKey(String key) {
   }.contains(key);
 }
 
+/// 分组排列序号：provider 前缀分组在前，其余按模块类别顺序，
+/// 保证统一表格内同组相邻、组间按稳定顺序排列。
+int _configGroupOrder(AdminConfigEntry entry) {
+  final key = entry.key;
+  if (_startsWithAny(key, const [
+    'music.musicbrainz',
+    'music.metadata-provider.musicbrainz',
+  ])) {
+    return 0;
+  }
+  if (_startsWithAny(key, const [
+    'media.tmdb',
+    'media.metadata-provider.tmdb',
+  ])) {
+    return 1;
+  }
+  if (_startsWithAny(key, const [
+    'media.subtitle',
+    'media.subtitle.opensubtitles',
+  ])) {
+    return 2;
+  }
+  if (_startsWithAny(key, const [
+    'reader.gbooks',
+    'reader.metadata-provider.google-books',
+  ])) {
+    return 3;
+  }
+  if (_startsWithAny(key, const [
+    'reader.openlib',
+    'reader.metadata-provider.open-library',
+  ])) {
+    return 4;
+  }
+  if (key.startsWith('photo.ai')) {
+    return 5;
+  }
+  if (_startsWithAny(key, const ['music.netease', 'music.platform.netease'])) {
+    return 6;
+  }
+  if (_startsWithAny(key, const ['music.qq', 'music.platform.qq'])) {
+    return 7;
+  }
+  if (key.startsWith('weather.qweather')) {
+    return 8;
+  }
+  return 9 + _configCategoryOrder(entry.category);
+}
+
 int _configCategoryOrder(String category) {
   return switch (category) {
     'media' => 0,

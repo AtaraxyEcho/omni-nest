@@ -33,11 +33,11 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
             .where((item) => !_isRemovedConfigKey(item.key))
             .toList()
           ..sort((a, b) {
-            final categoryOrder = _configCategoryOrder(
-              a.category,
-            ).compareTo(_configCategoryOrder(b.category));
-            if (categoryOrder != 0) {
-              return categoryOrder;
+            final groupOrder = _configGroupOrder(
+              a,
+            ).compareTo(_configGroupOrder(b));
+            if (groupOrder != 0) {
+              return groupOrder;
             }
             return a.key.compareTo(b.key);
           });
@@ -87,21 +87,14 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
           spacing: 12,
           runSpacing: 10,
           children: [
-            _SessionFilterDropdown<String>(
+            AdminDropdown<String>(
               width: 190,
               label: l10n.adminConfigGroupColumn,
               value: _groupFilter,
               items: [
-                DropdownMenuItem(value: 'ALL', child: Text(l10n.adminAll)),
+                AdminDropdownItem(value: 'ALL', label: l10n.adminAll),
                 for (final name in groupNames)
-                  DropdownMenuItem(
-                    value: name,
-                    child: Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  AdminDropdownItem(value: name, label: name),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -122,7 +115,7 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
             AdminDataTable(
               showIndex: true,
               indexBase: currentPage * _pageSize,
-              minTableWidth: 1040,
+              minTableWidth: 1120,
               sort: _configSort,
               onSort:
                   (key, ascending) => setState(() {
@@ -154,6 +147,11 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                   label: l10n.adminConfigValue,
                   flex: 2,
                   sortable: true,
+                ),
+                AdminListColumn(
+                  key: 'toggle',
+                  label: l10n.adminConfigToggleColumn,
+                  minWidth: 90,
                 ),
                 AdminListColumn(
                   key: 'updatedAt',
@@ -199,6 +197,7 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  _configToggleCell(context, item),
                   Text(
                     item.updatedAt,
                     maxLines: 1,
@@ -209,7 +208,6 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
               },
               actionsBuilder: (context, index) {
                 final entry = pageItems[index];
-                final isBoolean = entry.valueType == 'BOOLEAN';
                 return [
                   IconButton(
                     onPressed:
@@ -224,20 +222,17 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                     icon: const Icon(Icons.history_rounded, size: 20),
                     tooltip: l10n.adminConfigHistory,
                   ),
-                  if (isBoolean)
-                    _ConfigToggleSwitch(entry: entry)
-                  else
-                    IconButton(
-                      onPressed:
-                          entry.editable
-                              ? () => showDialog<void>(
-                                context: context,
-                                builder: (_) => _ConfigEditDialog(entry: entry),
-                              )
-                              : null,
-                      icon: const Icon(Icons.settings_outlined, size: 20),
-                      tooltip: l10n.adminConfigManage,
-                    ),
+                  IconButton(
+                    onPressed:
+                        entry.editable
+                            ? () => showDialog<void>(
+                              context: context,
+                              builder: (_) => _ConfigEditDialog(entry: entry),
+                            )
+                            : null,
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    tooltip: l10n.adminEdit,
+                  ),
                 ];
               },
             ),
@@ -279,11 +274,9 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
       if (result != 0) {
         return result;
       }
-      final categoryOrder = _configCategoryOrder(
-        a.category,
-      ).compareTo(_configCategoryOrder(b.category));
-      if (categoryOrder != 0) {
-        return categoryOrder;
+      final groupOrder = _configGroupOrder(a).compareTo(_configGroupOrder(b));
+      if (groupOrder != 0) {
+        return groupOrder;
       }
       return a.key.compareTo(b.key);
     }
@@ -298,6 +291,21 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
       _pageSize = size;
       _page = 0;
     });
+  }
+
+  /// 开关列单元格：布尔配置显示开关，其余显示占位符。
+  Widget _configToggleCell(BuildContext context, AdminConfigEntry entry) {
+    if (entry.valueType != 'BOOLEAN') {
+      return Center(
+        child: Text(
+          '—',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: context.adminColors.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+    return _ConfigToggleSwitch(entry: entry);
   }
 }
 
@@ -444,15 +452,12 @@ class _ConfigEditDialogState extends ConsumerState<_ConfigEditDialog> {
               const SizedBox(height: 12),
             ],
             if (_isBoolConfig)
-              DropdownButtonFormField<String>(
-                initialValue: _boolValue,
-                decoration: InputDecoration(labelText: l10n.adminConfigValue),
+              AdminDropdown<String>(
+                value: _boolValue,
+                label: l10n.adminConfigValue,
                 items: [
-                  DropdownMenuItem(value: 'true', child: Text(l10n.adminTrue)),
-                  DropdownMenuItem(
-                    value: 'false',
-                    child: Text(l10n.adminFalse),
-                  ),
+                  AdminDropdownItem(value: 'true', label: l10n.adminTrue),
+                  AdminDropdownItem(value: 'false', label: l10n.adminFalse),
                 ],
                 onChanged: (v) {
                   if (v != null) setState(() => _boolValue = v);
@@ -488,15 +493,15 @@ class _ConfigEditDialogState extends ConsumerState<_ConfigEditDialog> {
                 },
               )
             else if (widget.entry.allowedValues.isNotEmpty)
-              DropdownButtonFormField<String>(
-                initialValue:
+              AdminDropdown<String>(
+                value:
                     widget.entry.allowedValues.contains(widget.entry.value)
                         ? widget.entry.value
-                        : null,
-                decoration: InputDecoration(labelText: l10n.adminConfigValue),
+                        : widget.entry.allowedValues.first,
+                label: l10n.adminConfigValue,
                 items: [
                   for (final value in widget.entry.allowedValues)
-                    DropdownMenuItem(value: value, child: Text(value)),
+                    AdminDropdownItem(value: value, label: value),
                 ],
                 onChanged: (value) {
                   if (value != null) {
