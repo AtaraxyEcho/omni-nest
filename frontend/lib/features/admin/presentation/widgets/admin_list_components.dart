@@ -455,6 +455,9 @@ class AdminDropdownItem<T> {
 
 /// 管理端统一下拉选择：描边圆角、密集高度、选中项与菜单项省略，
 /// 避免长文本把固定宽字段撑爆。管理端所有下拉统一使用本控件。
+/// 管理端统一下拉选择：闭合态为无边框填充式（聚焦主色描边 + 旋转箭头），
+/// 展开菜单为圆角面板（面板同源底色、选项 hover 高亮、选中项打勾）。
+/// 管理端所有下拉统一使用本控件，避免长文本把固定宽字段撑爆。
 class AdminDropdown<T> extends StatelessWidget {
   const AdminDropdown({
     required this.value,
@@ -480,34 +483,57 @@ class AdminDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    OutlineInputBorder border(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: color),
-    );
     Widget field = DropdownButtonFormField<T>(
       initialValue: value,
       isExpanded: true,
+      dropdownColor: colors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(10),
+      elevation: 8,
+      menuMaxHeight: 320,
+      itemHeight: 48,
+      icon: Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: colors.onSurfaceVariant,
+      ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: colors.onSurface),
+      selectedItemBuilder: (context) {
+        return [
+          for (final item in items)
+            Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ];
+      },
       decoration: InputDecoration(
         labelText: label,
         suffixText:
             suffixText == null || suffixText!.isEmpty ? null : suffixText,
-        isDense: true,
+        filled: true,
+        fillColor: colors.surfaceContainerLow.withValues(alpha: 0.6),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
+          horizontal: 14,
+          vertical: 12,
         ),
-        border: border(colors.outlineVariant),
-        enabledBorder: border(colors.outlineVariant),
-        focusedBorder: border(colors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: colors.primary, width: 1.5),
+        ),
       ),
       items: [
         for (final item in items)
           DropdownMenuItem(
             value: item.value,
-            child: Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: _AdminDropdownOption(
+              label: item.label,
+              selected: item.value == value,
             ),
           ),
       ],
@@ -517,6 +543,61 @@ class AdminDropdown<T> extends StatelessWidget {
       field = SizedBox(width: width, child: field);
     }
     return field;
+  }
+}
+
+/// 展开菜单中的单个选项：hover 高亮、选中项主色加粗并带勾选标记。
+class _AdminDropdownOption extends StatefulWidget {
+  const _AdminDropdownOption({required this.label, required this.selected});
+
+  final String label;
+  final bool selected;
+
+  @override
+  State<_AdminDropdownOption> createState() => _AdminDropdownOptionState();
+}
+
+class _AdminDropdownOptionState extends State<_AdminDropdownOption> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color:
+              _hovered
+                  ? colors.onSurface.withValues(alpha: 0.06)
+                  : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: widget.selected ? colors.primary : colors.onSurface,
+                  fontWeight:
+                      widget.selected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (widget.selected)
+              Icon(Icons.check_rounded, size: 16, color: colors.primary),
+          ],
+        ),
+      ),
+    );
   }
 }
 
