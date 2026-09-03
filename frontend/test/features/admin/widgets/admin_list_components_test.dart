@@ -128,7 +128,12 @@ void main() {
 
     await tester.tap(find.byType(AdminDropdown<int>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('50').last);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(MenuItemButton),
+        matching: find.text('50'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(received, 50);
   });

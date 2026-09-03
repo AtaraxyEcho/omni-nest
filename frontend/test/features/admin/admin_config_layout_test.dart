@@ -5,6 +5,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/features/admin/domain/admin_operations.dart';
 import 'package:omninest/features/admin/presentation/pages/admin_operations_pages.dart';
+import 'package:omninest/features/admin/presentation/widgets/admin_dropdown.dart';
 import 'package:omninest/features/admin/presentation/widgets/admin_list_components.dart';
 
 void main() {
@@ -169,10 +170,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final dropdownField = find.byWidgetPredicate((w) => w is AdminDropdown);
+    final dropdownField = find.byWidgetPredicate(
+      (w) => w is AdminDropdown<String>,
+    );
     await tester.tap(dropdownField.first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('存储与共享空间').last);
+    // 菜单经 Overlay 浮层渲染，默认 finder 视为 offstage：经 MenuItemButton 定位。
+    await tester.tap(
+      find.descendant(
+        of: find.byType(MenuItemButton),
+        matching: find.text('存储与共享空间'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('自动导入已发现的媒体'), findsNothing);
