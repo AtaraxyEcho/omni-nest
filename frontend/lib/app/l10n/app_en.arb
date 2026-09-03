@@ -1559,7 +1559,6 @@
     }
   },
   "adminLibraryAccessTitle": "Access management",
-  "adminLibraryReviewSelectHint": "Select a source in the table above to review its scan results",
   "adminStorageColumnName": "Name",
   "adminStorageColumnMountKey": "Mount key",
   "adminStorageColumnRoot": "Root",

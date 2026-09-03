@@ -1433,7 +1433,6 @@
     }
   },
   "adminLibraryAccessTitle": "访问管理",
-  "adminLibraryReviewSelectHint": "在上方库源表中选择要审阅的来源",
   "adminStorageColumnName": "名称",
   "adminStorageColumnMountKey": "挂载键",
   "adminStorageColumnRoot": "根目录",

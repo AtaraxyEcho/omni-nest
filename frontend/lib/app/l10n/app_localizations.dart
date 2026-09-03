@@ -6965,12 +6965,6 @@ abstract class AppLocalizations {
   /// **'Access management'**
   String get adminLibraryAccessTitle;
 
-  /// No description provided for @adminLibraryReviewSelectHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a source in the table above to review its scan results'**
-  String get adminLibraryReviewSelectHint;
-
   /// No description provided for @adminStorageColumnName.
   ///
   /// In en, this message translates to:

@@ -3631,9 +3631,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminLibraryAccessTitle => '访问管理';
 
   @override
-  String get adminLibraryReviewSelectHint => '在上方库源表中选择要审阅的来源';
-
-  @override
   String get adminStorageColumnName => '名称';
 
   @override

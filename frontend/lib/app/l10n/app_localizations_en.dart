@@ -3752,10 +3752,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminLibraryAccessTitle => 'Access management';
 
   @override
-  String get adminLibraryReviewSelectHint =>
-      'Select a source in the table above to review its scan results';
-
-  @override
   String get adminStorageColumnName => 'Name';
 
   @override
