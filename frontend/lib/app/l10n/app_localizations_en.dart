@@ -7812,8 +7812,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get videoSelectAllCandidates =>
-      'Select every candidate in this source';
+  String get videoSelectAllCandidates => 'Select all';
 
   @override
   String get videoClearCandidateSelection => 'Clear selection';
@@ -7847,10 +7846,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoCandidateNew => 'New candidate';
-
-  @override
-  String get videoCandidateDetailsHint =>
-      'Select a candidate to inspect its match status, hierarchy, and file summary.';
 
   @override
   String get videoUnavailableTitle => 'Unavailable items';
@@ -7929,7 +7924,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoNeverScanned => 'Never scanned';
 
   @override
-  String get adminAddLocalStorageLocation => 'Add local storage location';
+  String get adminAddLocalStorageLocation => 'Add mount location';
 
   @override
   String get adminLocalStorageLocations => 'Local storage locations';

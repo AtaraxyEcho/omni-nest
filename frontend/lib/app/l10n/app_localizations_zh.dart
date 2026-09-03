@@ -7577,10 +7577,10 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get videoSelectAllCandidates => '选择当前来源的全部候选';
+  String get videoSelectAllCandidates => '全选候选';
 
   @override
-  String get videoClearCandidateSelection => '清除全部选择';
+  String get videoClearCandidateSelection => '清除选择';
 
   @override
   String get videoAddSelectedToLibrary => '加入媒体库';
@@ -7611,9 +7611,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoCandidateNew => '新候选';
-
-  @override
-  String get videoCandidateDetailsHint => '选择左侧候选以查看识别状态、层级和文件摘要。';
 
   @override
   String get videoUnavailableTitle => '不可用项目';
@@ -7687,7 +7684,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoNeverScanned => '未扫描';
 
   @override
-  String get adminAddLocalStorageLocation => '添加本地存储位置';
+  String get adminAddLocalStorageLocation => '添加挂载位置';
 
   @override
   String get adminLocalStorageLocations => '本地存储位置';

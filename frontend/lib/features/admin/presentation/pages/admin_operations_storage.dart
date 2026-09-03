@@ -290,6 +290,21 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
     final locations = _filteredLocations(widget.view.locations, query);
     final listSection = AdminTableSection(
       title: l10n.adminStorageMountsSection,
+      trailing: [
+        if (canManageStorage)
+          FilledButton.tonalIcon(
+            onPressed:
+                () => showDialog<void>(
+                  context: context,
+                  builder:
+                      (context) => _StorageLocationWizard(
+                        mounts: widget.view.trustedMounts,
+                      ),
+                ),
+            icon: const Icon(Icons.add_rounded),
+            label: Text(l10n.adminAddLocalStorageLocation),
+          ),
+      ],
       filters: [
         for (final filter in _StorageStatusFilter.values)
           ChoiceChip(
@@ -457,19 +472,6 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
                 icon: const Icon(Icons.refresh_rounded),
                 tooltip: l10n.adminRefresh,
               ),
-              if (canManageStorage)
-                FilledButton.tonalIcon(
-                  onPressed:
-                      () => showDialog<void>(
-                        context: context,
-                        builder:
-                            (context) => _StorageLocationWizard(
-                              mounts: widget.view.trustedMounts,
-                            ),
-                      ),
-                  icon: const Icon(Icons.add_rounded),
-                  label: Text(l10n.adminAddLocalStorageLocation),
-                ),
             ],
           ),
         ),

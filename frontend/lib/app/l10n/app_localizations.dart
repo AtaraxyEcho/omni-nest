@@ -14241,7 +14241,7 @@ abstract class AppLocalizations {
   /// No description provided for @videoSelectAllCandidates.
   ///
   /// In en, this message translates to:
-  /// **'Select every candidate in this source'**
+  /// **'Select all'**
   String get videoSelectAllCandidates;
 
   /// No description provided for @videoClearCandidateSelection.
@@ -14309,12 +14309,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New candidate'**
   String get videoCandidateNew;
-
-  /// No description provided for @videoCandidateDetailsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a candidate to inspect its match status, hierarchy, and file summary.'**
-  String get videoCandidateDetailsHint;
 
   /// No description provided for @videoUnavailableTitle.
   ///
@@ -14457,7 +14451,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminAddLocalStorageLocation.
   ///
   /// In en, this message translates to:
-  /// **'Add local storage location'**
+  /// **'Add mount location'**
   String get adminAddLocalStorageLocation;
 
   /// No description provided for @adminLocalStorageLocations.

@@ -3572,7 +3572,7 @@
       }
     }
   },
-  "videoSelectAllCandidates": "Select every candidate in this source",
+  "videoSelectAllCandidates": "Select all",
   "videoClearCandidateSelection": "Clear selection",
   "videoAddSelectedToLibrary": "Add to media library",
   "videoPauseImport": "Pause import",
@@ -3584,7 +3584,6 @@
   "videoCandidateChanged": "File changed",
   "videoCandidateUnmatched": "Unrecognized",
   "videoCandidateNew": "New candidate",
-  "videoCandidateDetailsHint": "Select a candidate to inspect its match status, hierarchy, and file summary.",
   "videoUnavailableTitle": "Unavailable items",
   "videoLibraryRecordsExpand": "Show more records",
   "videoLibraryRecordsCollapse": "Show fewer records",
@@ -3615,7 +3614,7 @@
   "videoSourceEnabled": "Enable this source",
   "videoSourceRequiredFields": "Enter a source name and relative directory",
   "videoNeverScanned": "Never scanned",
-  "adminAddLocalStorageLocation": "Add local storage location",
+  "adminAddLocalStorageLocation": "Add mount location",
   "adminLocalStorageLocations": "Local storage locations",
   "adminReadOnlyMediaMounts": "Read-only media mounts",
   "adminLocalStorageLocationsSubtitle": "Only deployment allowlisted mount keys and relative directories are stored; host absolute paths are not persisted.",

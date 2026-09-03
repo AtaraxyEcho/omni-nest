@@ -15,10 +15,11 @@ class AppDropdownItem<T> {
   final bool enabled;
 }
 
-/// 全局统一下拉选择：闭合态无边框填充式（聚焦主色描边 + 旋转箭头），
+/// 全局统一下拉选择：闭合态与 [TextField] 同风格的描边填充式
+///（静态 outlineVariant 描边、hover 加深、聚焦主色描边 + 旋转箭头），
 /// 展开菜单基于 Material 3 的 [MenuAnchor]——锚点定位、自动上下翻转、
 /// 外部点击关闭与键盘导航均由框架保证；视觉上为圆角投影面板、选项
-/// hover 高亮、选中项主色加粗并打勾。管理端所有下拉统一使用本控件。
+/// hover 高亮、选中项主色加粗并打勾。全局所有表单型下拉统一使用本控件。
 class AppDropdown<T> extends StatefulWidget {
   const AppDropdown({
     required this.value,
@@ -53,6 +54,7 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
   final MenuController _menu = MenuController();
   final FocusNode _focusNode = FocusNode();
   bool _focused = false;
+  bool _hovered = false;
 
   @override
   void dispose() {
@@ -110,6 +112,16 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
           final isOpen = controller.isOpen;
           return MouseRegion(
             cursor: SystemMouseCursors.click,
+            onHover: (_) {
+              if (!_hovered) {
+                setState(() => _hovered = true);
+              }
+            },
+            onExit: (_) {
+              if (_hovered) {
+                setState(() => _hovered = false);
+              }
+            },
             child: GestureDetector(
               onTap: () => isOpen ? controller.close() : controller.open(),
               child: InputDecorator(
@@ -122,14 +134,21 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                           ? null
                           : widget.suffixText,
                   filled: true,
-                  fillColor: colors.surfaceContainerLow,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                  fillColor: colors.surfaceContainerLowest,
+                  contentPadding:
+                      Theme.of(context).inputDecorationTheme.contentPadding ??
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  // 闭合态与主题输入框同风格描边：hover 加深，聚焦/展开
+                  // 用主色，保证与相邻 TextField 的视觉重量一致。
+                  border: _fieldBorder(colors.outlineVariant),
+                  enabledBorder: _fieldBorder(
+                    _focused || isOpen
+                        ? colors.primary
+                        : _hovered
+                        ? colors.onSurfaceVariant
+                        : colors.outlineVariant,
                   ),
-                  border: _fieldBorder(Colors.transparent),
-                  enabledBorder: _fieldBorder(Colors.transparent),
-                  focusedBorder: _fieldBorder(colors.primary),
+                  focusedBorder: _fieldBorder(colors.primary, width: 1.5),
                 ),
                 child: Row(
                   children: [
@@ -212,11 +231,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
     return field;
   }
 
-  OutlineInputBorder _fieldBorder(Color color) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(10),
-    borderSide:
-        color == Colors.transparent
-            ? BorderSide.none
-            : BorderSide(color: color, width: 1.5),
-  );
+  OutlineInputBorder _fieldBorder(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: color, width: width),
+      );
 }

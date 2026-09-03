@@ -3446,8 +3446,8 @@
       }
     }
   },
-  "videoSelectAllCandidates": "选择当前来源的全部候选",
-  "videoClearCandidateSelection": "清除全部选择",
+  "videoSelectAllCandidates": "全选候选",
+  "videoClearCandidateSelection": "清除选择",
   "videoAddSelectedToLibrary": "加入媒体库",
   "videoPauseImport": "暂停入库",
   "videoCancelDiscovery": "取消任务",
@@ -3458,7 +3458,6 @@
   "videoCandidateChanged": "文件已变化",
   "videoCandidateUnmatched": "无法识别",
   "videoCandidateNew": "新候选",
-  "videoCandidateDetailsHint": "选择左侧候选以查看识别状态、层级和文件摘要。",
   "videoUnavailableTitle": "不可用项目",
   "videoLibraryRecordsExpand": "展开更多记录",
   "videoLibraryRecordsCollapse": "收起记录",
@@ -3489,7 +3488,7 @@
   "videoSourceEnabled": "启用此来源",
   "videoSourceRequiredFields": "请填写来源名称和相对目录",
   "videoNeverScanned": "未扫描",
-  "adminAddLocalStorageLocation": "添加本地存储位置",
+  "adminAddLocalStorageLocation": "添加挂载位置",
   "adminLocalStorageLocations": "本地存储位置",
   "adminReadOnlyMediaMounts": "只读媒体挂载",
   "adminLocalStorageLocationsSubtitle": "仅登记部署白名单中的挂载键和相对目录，不保存宿主机绝对路径。",

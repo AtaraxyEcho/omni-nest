@@ -10,6 +10,28 @@ import 'package:omninest/app/theme/feature/reader_colors.dart';
 import 'package:omninest/app/theme/feature/video_colors.dart';
 import 'package:omninest/app/theme/global_theme_colors.dart';
 
+/// 将排版全部 M3 字级的字距归零；未赋值的字级保持 null 交由默认排版合并。
+TextTheme _zeroLetterSpacing(TextTheme theme) {
+  TextStyle? zero(TextStyle? style) => style?.copyWith(letterSpacing: 0);
+  return TextTheme(
+    displayLarge: zero(theme.displayLarge),
+    displayMedium: zero(theme.displayMedium),
+    displaySmall: zero(theme.displaySmall),
+    headlineLarge: zero(theme.headlineLarge),
+    headlineMedium: zero(theme.headlineMedium),
+    headlineSmall: zero(theme.headlineSmall),
+    titleLarge: zero(theme.titleLarge),
+    titleMedium: zero(theme.titleMedium),
+    titleSmall: zero(theme.titleSmall),
+    bodyLarge: zero(theme.bodyLarge),
+    bodyMedium: zero(theme.bodyMedium),
+    bodySmall: zero(theme.bodySmall),
+    labelLarge: zero(theme.labelLarge),
+    labelMedium: zero(theme.labelMedium),
+    labelSmall: zero(theme.labelSmall),
+  );
+}
+
 class OmniNestTheme {
   const OmniNestTheme._();
 
@@ -82,15 +104,24 @@ class OmniNestTheme {
       surfaceContainerHigh: colors.surfaceContainerHigh,
       surfaceContainerHighest: colors.surfaceContainerHighest,
     );
-    final textTheme = const TextTheme(
-      displayLarge: AppTypography.displayLarge,
-      headlineLarge: AppTypography.headlineLarge,
-      headlineMedium: AppTypography.headlineMedium,
-      bodyLarge: AppTypography.bodyLarge,
-      bodyMedium: AppTypography.bodyMedium,
-      bodySmall: AppTypography.bodySmall,
-      labelMedium: AppTypography.labelMedium,
-    ).apply(bodyColor: colors.onSurface, displayColor: colors.onSurface);
+    // 显式补齐默认排版全部字级后统一字距归零：Material 3 默认字距
+    // （0.1~0.5）按拉丁字形调校，对中文正文与按钮文案产生松散不齐的
+    // 观感；AppTypography 覆盖字级随后合并，随全局一并归零。
+    final textTheme = _zeroLetterSpacing(
+      ThemeData(brightness: brightness).textTheme
+          .merge(
+            const TextTheme(
+              displayLarge: AppTypography.displayLarge,
+              headlineLarge: AppTypography.headlineLarge,
+              headlineMedium: AppTypography.headlineMedium,
+              bodyLarge: AppTypography.bodyLarge,
+              bodyMedium: AppTypography.bodyMedium,
+              bodySmall: AppTypography.bodySmall,
+              labelMedium: AppTypography.labelMedium,
+            ),
+          )
+          .apply(bodyColor: colors.onSurface, displayColor: colors.onSurface),
+    );
     final roundedShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     );
