@@ -1410,6 +1410,28 @@
   "adminLogTime": "时间",
   "adminConfigDescription": "说明",
   "adminStorageOpenDetail": "详情",
+  "adminStorageColumnType": "类型",
+  "adminLibraryColumnLocation": "存储位置 · 根目录",
+  "adminLibraryColumnScanStatus": "扫描状态",
+  "adminLibraryColumnLastScan": "上次扫描",
+  "adminLibraryLastScanSummary": "发现 {found} · 入库 {created} · 缺失 {missing}",
+  "@adminLibraryLastScanSummary": {
+    "placeholders": {
+      "found": {},
+      "created": {},
+      "missing": {}
+    }
+  },
+  "adminLibraryScanNever": "未扫描",
+  "adminLibraryDeleteSourceTitle": "删除库源",
+  "adminLibraryDeleteSourceBody": "确定删除库源「{name}」吗？该操作不可撤销。",
+  "@adminLibraryDeleteSourceBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "adminLibraryAccessTitle": "访问管理",
+  "adminLibraryReviewSelectHint": "在上方库源表中选择要审阅的来源",
   "adminStorageColumnName": "名称",
   "adminStorageColumnMountKey": "挂载键",
   "adminStorageColumnRoot": "根目录",

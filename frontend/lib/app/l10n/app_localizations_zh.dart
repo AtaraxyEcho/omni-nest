@@ -3590,6 +3590,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminStorageOpenDetail => '详情';
 
   @override
+  String get adminStorageColumnType => '类型';
+
+  @override
+  String get adminLibraryColumnLocation => '存储位置 · 根目录';
+
+  @override
+  String get adminLibraryColumnScanStatus => '扫描状态';
+
+  @override
+  String get adminLibraryColumnLastScan => '上次扫描';
+
+  @override
+  String adminLibraryLastScanSummary(
+    Object found,
+    Object created,
+    Object missing,
+  ) {
+    return '发现 $found · 入库 $created · 缺失 $missing';
+  }
+
+  @override
+  String get adminLibraryScanNever => '未扫描';
+
+  @override
+  String get adminLibraryDeleteSourceTitle => '删除库源';
+
+  @override
+  String adminLibraryDeleteSourceBody(Object name) {
+    return '确定删除库源「$name」吗？该操作不可撤销。';
+  }
+
+  @override
+  String get adminLibraryAccessTitle => '访问管理';
+
+  @override
+  String get adminLibraryReviewSelectHint => '在上方库源表中选择要审阅的来源';
+
+  @override
   String get adminStorageColumnName => '名称';
 
   @override

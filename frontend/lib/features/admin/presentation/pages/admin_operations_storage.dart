@@ -68,6 +68,141 @@ Future<bool> _confirmDeleteStorage(
   return confirmed == true;
 }
 
+/// 挂载位置详情弹窗：全量字段 + 启用/停用与删除操作。
+void _showStorageLocationDetail(
+  BuildContext context,
+  WidgetRef ref,
+  AppLocalizations l10n,
+  AdminStorageLocation location, {
+  required bool canManage,
+}) {
+  final colors = Theme.of(context).colorScheme;
+  final healthy = _storageHealthy(location);
+  String fieldLabel(String label, String value) => '$label: $value';
+
+  showDialog<void>(
+    context: context,
+    builder:
+        (dialogContext) => AlertDialog(
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  location.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              AdminStatusPill(
+                label: healthStatusLabel(l10n, location.healthStatus),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 480,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fieldLabel(
+                    l10n.adminStorageFieldProvider,
+                    providerTypeLabel(l10n, location.providerType),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  fieldLabel(
+                    l10n.adminStorageFieldManagement,
+                    location.managementMode,
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  fieldLabel(l10n.adminMountKey, location.mountKey),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  fieldLabel(l10n.adminStorageFieldPath, location.relativeRoot),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  fieldLabel(
+                    l10n.adminStorageFieldScope,
+                    scopeTypeLabel(l10n, location.scopeType),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  fieldLabel(l10n.adminStorageFieldNode, location.nodeId),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (canManage && !healthy) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.adminStorageFilterUnhealthy,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: colors.tertiary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            if (canManage)
+              location.enabled
+                  ? OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      _toggleStorageLocation(
+                        context,
+                        ref,
+                        l10n,
+                        location,
+                        enabled: false,
+                      );
+                    },
+                    icon: const Icon(Icons.pause_circle_outline_rounded),
+                    label: Text(l10n.adminStorageDisableAction),
+                  )
+                  : FilledButton.tonalIcon(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      _toggleStorageLocation(
+                        context,
+                        ref,
+                        l10n,
+                        location,
+                        enabled: true,
+                      );
+                    },
+                    icon: const Icon(Icons.play_circle_outline_rounded),
+                    label: Text(l10n.adminStorageEnableAction),
+                  ),
+            if (canManage)
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  _deleteStorageLocation(context, ref, l10n, location);
+                },
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: Text(l10n.adminStorageDeleteAction),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.coreClose),
+            ),
+          ],
+        ),
+  );
+}
+
 /// 切换挂载位置启用状态（含禁用确认）。
 Future<void> _toggleStorageLocation(
   BuildContext context,
@@ -277,7 +412,13 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
                 tooltip: l10n.adminStorageOpenDetail,
                 icon: const Icon(Icons.info_outline_rounded, size: 20),
                 onPressed:
-                    () => setState(() => _selectedLocationId = location.id),
+                    () => _showStorageLocationDetail(
+                      context,
+                      ref,
+                      l10n,
+                      location,
+                      canManage: canManageStorage,
+                    ),
               ),
               if (canManageStorage)
                 IconButton(
@@ -400,11 +541,6 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
                 ref.watch(videoLibrarySourcesProvider).asData?.value ??
                 const <VideoLibrarySource>[],
             selectedSourceId: _reviewSourceId,
-            onSelectSource:
-                (id) => setState(() {
-                  _reviewSourceId = id;
-                  _selectedSourceId = id;
-                }),
           ),
         ],
       ],

@@ -1536,6 +1536,28 @@
   "adminLogTime": "Time",
   "adminConfigDescription": "Description",
   "adminStorageOpenDetail": "Details",
+  "adminStorageColumnType": "Type",
+  "adminLibraryColumnLocation": "Location · Root",
+  "adminLibraryColumnScanStatus": "Scan status",
+  "adminLibraryColumnLastScan": "Last scan",
+  "adminLibraryLastScanSummary": "Found {found} · Created {created} · Missing {missing}",
+  "@adminLibraryLastScanSummary": {
+    "placeholders": {
+      "found": {},
+      "created": {},
+      "missing": {}
+    }
+  },
+  "adminLibraryScanNever": "Never scanned",
+  "adminLibraryDeleteSourceTitle": "Delete library source",
+  "adminLibraryDeleteSourceBody": "Delete library source \"{name}\"? This cannot be undone.",
+  "@adminLibraryDeleteSourceBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "adminLibraryAccessTitle": "Access management",
+  "adminLibraryReviewSelectHint": "Select a source in the table above to review its scan results",
   "adminStorageColumnName": "Name",
   "adminStorageColumnMountKey": "Mount key",
   "adminStorageColumnRoot": "Root",

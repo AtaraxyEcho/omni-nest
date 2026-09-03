@@ -3711,6 +3711,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminStorageOpenDetail => 'Details';
 
   @override
+  String get adminStorageColumnType => 'Type';
+
+  @override
+  String get adminLibraryColumnLocation => 'Location · Root';
+
+  @override
+  String get adminLibraryColumnScanStatus => 'Scan status';
+
+  @override
+  String get adminLibraryColumnLastScan => 'Last scan';
+
+  @override
+  String adminLibraryLastScanSummary(
+    Object found,
+    Object created,
+    Object missing,
+  ) {
+    return 'Found $found · Created $created · Missing $missing';
+  }
+
+  @override
+  String get adminLibraryScanNever => 'Never scanned';
+
+  @override
+  String get adminLibraryDeleteSourceTitle => 'Delete library source';
+
+  @override
+  String adminLibraryDeleteSourceBody(Object name) {
+    return 'Delete library source \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String get adminLibraryAccessTitle => 'Access management';
+
+  @override
+  String get adminLibraryReviewSelectHint =>
+      'Select a source in the table above to review its scan results';
+
+  @override
   String get adminStorageColumnName => 'Name';
 
   @override

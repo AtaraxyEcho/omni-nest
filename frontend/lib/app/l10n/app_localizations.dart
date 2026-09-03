@@ -6895,6 +6895,70 @@ abstract class AppLocalizations {
   /// **'Details'**
   String get adminStorageOpenDetail;
 
+  /// No description provided for @adminStorageColumnType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get adminStorageColumnType;
+
+  /// No description provided for @adminLibraryColumnLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location · Root'**
+  String get adminLibraryColumnLocation;
+
+  /// No description provided for @adminLibraryColumnScanStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan status'**
+  String get adminLibraryColumnScanStatus;
+
+  /// No description provided for @adminLibraryColumnLastScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Last scan'**
+  String get adminLibraryColumnLastScan;
+
+  /// No description provided for @adminLibraryLastScanSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {found} · Created {created} · Missing {missing}'**
+  String adminLibraryLastScanSummary(
+    Object found,
+    Object created,
+    Object missing,
+  );
+
+  /// No description provided for @adminLibraryScanNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never scanned'**
+  String get adminLibraryScanNever;
+
+  /// No description provided for @adminLibraryDeleteSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete library source'**
+  String get adminLibraryDeleteSourceTitle;
+
+  /// No description provided for @adminLibraryDeleteSourceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete library source \"{name}\"? This cannot be undone.'**
+  String adminLibraryDeleteSourceBody(Object name);
+
+  /// No description provided for @adminLibraryAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Access management'**
+  String get adminLibraryAccessTitle;
+
+  /// No description provided for @adminLibraryReviewSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a source in the table above to review its scan results'**
+  String get adminLibraryReviewSelectHint;
+
   /// No description provided for @adminStorageColumnName.
   ///
   /// In en, this message translates to:
