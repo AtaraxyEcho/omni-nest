@@ -335,11 +335,6 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
               minWidth: 140,
             ),
             AdminListColumn(
-              key: 'mountKey',
-              label: l10n.adminStorageColumnMountKey,
-              minWidth: 140,
-            ),
-            AdminListColumn(
               key: 'root',
               label: l10n.adminStorageColumnRoot,
               flex: 2,

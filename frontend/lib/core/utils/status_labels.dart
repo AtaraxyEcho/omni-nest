@@ -9,7 +9,8 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 
 String healthStatusLabel(AppLocalizations l10n, String healthStatus) {
   return switch (healthStatus.toUpperCase()) {
-    'HEALTHY' || 'AVAILABLE' => l10n.statusHealthHealthy,
+    'HEALTHY' => l10n.statusHealthHealthy,
+    'AVAILABLE' => l10n.statusHealthAvailable,
     'UNAVAILABLE' => l10n.statusHealthUnavailable,
     'DISABLED' => l10n.adminStatusDisabled,
     _ => healthStatus,
