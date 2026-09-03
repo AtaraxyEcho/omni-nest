@@ -390,7 +390,7 @@ class _AuditLogTab extends StatelessWidget {
     }
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 16),
-      child: AdminInfoPanel(
+      child: AdminTableSection(
         title: l10n.adminRecentAudit,
         subtitle: l10n.adminRecentAuditSubtitle,
         children: [
@@ -516,7 +516,7 @@ class _LoginAuditLogTab extends StatelessWidget {
     }
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 16),
-      child: AdminInfoPanel(
+      child: AdminTableSection(
         title: l10n.adminLoginLog,
         subtitle: l10n.adminLoginLogSubtitle,
         children: [

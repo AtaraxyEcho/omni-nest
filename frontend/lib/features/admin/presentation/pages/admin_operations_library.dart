@@ -4,15 +4,9 @@ part of 'admin_operations_pages.dart';
 
 /// 视频库源分区：建立在已启用存储位置上的影视库源。
 class _LibrarySourcesSection extends ConsumerStatefulWidget {
-  const _LibrarySourcesSection({
-    required this.canManage,
-    required this.onSourceSelected,
-    required this.selectedSourceId,
-  });
+  const _LibrarySourcesSection({required this.canManage});
 
   final bool canManage;
-  final ValueChanged<String> onSourceSelected;
-  final String? selectedSourceId;
 
   @override
   ConsumerState<_LibrarySourcesSection> createState() =>
@@ -127,6 +121,7 @@ class _LibrarySourcesSectionState
     );
   }
 
+  /// 打开访问管理弹窗：可见性与授权用户。
   void _openAccessDialog(VideoLibrarySource source) {
     final l10n = AppLocalizations.of(context);
     showDialog<void>(
@@ -144,6 +139,51 @@ class _LibrarySourcesSectionState
                 child: Text(l10n.coreClose),
               ),
             ],
+          ),
+    );
+  }
+
+  /// 打开审阅窗口：库源扫描候选的审阅工作台。
+  void _openReviewWindow(VideoLibrarySource source) {
+    showDialog<void>(
+      context: context,
+      builder:
+          (dialogContext) => Dialog(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 920,
+                maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${AppLocalizations.of(context).videoSectionLibraryScan} · ${source.name}',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: AppLocalizations.of(context).coreClose,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(child: MediaLibraryReviewWorkspace(source: source)),
+                ],
+              ),
+            ),
           ),
     );
   }
@@ -213,17 +253,18 @@ class _LibrarySourcesSectionState
             ?.name ??
         source.storageLocationId;
 
-    return AdminInfoPanel(
+    return AdminTableSection(
       title: l10n.adminLibrarySourcesSection,
       subtitle: l10n.adminLibrarySourcesSubtitle,
-      trailing:
-          canManage ? _buildAddButton(context, l10n, canAdd, locations) : null,
+      trailing: [
+        if (canManage) _buildAddButton(context, l10n, canAdd, locations),
+      ],
       children: [
         AdminDataTable(
           showIndex: true,
           minTableWidth: 1080,
           rowCount: filtered.length,
-          onRowTap: (index) => widget.onSourceSelected(filtered[index].id),
+          onRowTap: (index) => _openReviewWindow(filtered[index]),
           emptyState: AdminListEmptyState(
             message:
                 query.isEmpty
@@ -343,48 +384,6 @@ class _LibrarySourcesSectionState
 }
 
 /// 扫描与审阅分区：选定库源后进入审阅工作区。
-class _LibraryReviewSection extends ConsumerWidget {
-  const _LibraryReviewSection({
-    required this.sources,
-    required this.selectedSourceId,
-  });
-
-  final List<VideoLibrarySource> sources;
-  final String? selectedSourceId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final selected =
-        sources.where((source) => source.id == selectedSourceId).firstOrNull;
-    return AdminInfoPanel(
-      title: l10n.videoSectionLibraryScan,
-      subtitle:
-          selected == null
-              ? l10n.adminLibraryReviewSelectHint
-              : '${l10n.adminLibraryReviewSubtitle} · ${selected.name}',
-      children: [
-        if (sources.isEmpty)
-          Row(
-            children: [
-              Icon(
-                Icons.manage_search_rounded,
-                size: 18,
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.adminLibrarySourcesEmpty,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          )
-        else if (selected != null)
-          MediaLibraryReviewWorkspace(source: selected),
-      ],
-    );
-  }
-}
 
 /// 库类型展示名。
 String _libraryTypeLabel(AppLocalizations l10n, VideoLibraryType libraryType) {

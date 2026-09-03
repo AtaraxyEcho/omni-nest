@@ -187,7 +187,7 @@ class _AdminSessionsPageState extends ConsumerState<AdminSessionsPage> {
           ],
         ),
         const SizedBox(height: 20),
-        AdminInfoPanel(
+        AdminTableSection(
           title: l10n.adminSessionList,
           subtitle: l10n.adminSessionListSubtitle,
           children: [

@@ -108,7 +108,7 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
           ],
         ),
         const SizedBox(height: 16),
-        AdminInfoPanel(
+        AdminTableSection(
           title: l10n.adminConfigItemList,
           subtitle: l10n.adminConfigItemListSubtitle,
           children: [

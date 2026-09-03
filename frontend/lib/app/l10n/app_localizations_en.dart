@@ -3439,6 +3439,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusHealthHealthy => 'Healthy';
 
   @override
+  String get statusHealthAvailable => 'Available';
+
+  @override
   String get statusHealthUnavailable => 'Unavailable';
 
   @override
@@ -3712,6 +3715,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminStorageColumnType => 'Type';
+
+  @override
+  String get adminStorageMountsSection => 'Local mount locations';
 
   @override
   String get adminLibraryColumnLocation => 'Location · Root';

@@ -379,7 +379,7 @@ class _TaskListTab extends StatelessWidget {
     final selectableCount = page.items.where((item) => item.canRetry).length;
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 16),
-      child: AdminInfoPanel(
+      child: AdminTableSection(
         title: l10n.adminTaskList,
         subtitle: l10n.adminTaskListSubtitle,
         children: [
@@ -608,7 +608,6 @@ class _DlqTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colors = context.adminColors;
     return state.when(
       loading:
           () => const Padding(
@@ -631,25 +630,77 @@ class _DlqTab extends StatelessWidget {
                 }).toList();
         return SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 16),
-          child: AdminInfoPanel(
+          child: AdminTableSection(
             title: l10n.adminDlq,
             subtitle: l10n.adminDlqSubtitle,
             children: [
-              if (filtered.isEmpty)
-                _EmptyText(
-                  query.isEmpty ? l10n.adminNoDlqTasks : l10n.adminNoMatch,
-                )
-              else
-                for (final item in filtered)
-                  _InfoRow(
-                    leading: item.taskType,
-                    middle:
-                        '${item.errorSummary ?? l10n.adminNoErrorSummary}\n${l10n.adminProgress} ${item.progress}% · ${item.updatedAt}',
-                    trailing: AdminStatusPill(
-                      label: item.status,
-                      color: colors.error,
-                    ),
+              AdminDataTable(
+                showIndex: true,
+                minTableWidth: 860,
+                rowCount: filtered.length,
+                emptyState: AdminListEmptyState(
+                  message:
+                      query.isEmpty ? l10n.adminNoDlqTasks : l10n.adminNoMatch,
+                ),
+                columns: [
+                  AdminListColumn(
+                    key: 'taskType',
+                    label: l10n.adminFilterTaskType,
+                    flex: 2,
                   ),
+                  AdminListColumn(
+                    key: 'status',
+                    label: l10n.adminTaskExecutionStatus,
+                    minWidth: 110,
+                  ),
+                  AdminListColumn(
+                    key: 'progress',
+                    label: l10n.adminProgress,
+                    minWidth: 100,
+                  ),
+                  AdminListColumn(
+                    key: 'error',
+                    label: l10n.adminTaskErrorSummary,
+                    flex: 3,
+                  ),
+                  AdminListColumn(
+                    key: 'updatedAt',
+                    label: l10n.adminTaskUpdatedAt,
+                    minWidth: 150,
+                  ),
+                ],
+                rowCellsBuilder: (context, index) {
+                  final item = filtered[index];
+                  return [
+                    Text(
+                      item.taskType,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    AdminStatusTag(
+                      label: item.status,
+                      tone: AdminTagTone.error,
+                    ),
+                    Text(
+                      '${item.progress}%',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Text(
+                      item.errorSummary ?? l10n.adminNoErrorSummary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Text(
+                      item.updatedAt,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ];
+                },
+              ),
             ],
           ),
         );

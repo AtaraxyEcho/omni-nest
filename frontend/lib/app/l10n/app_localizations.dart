@@ -6373,6 +6373,12 @@ abstract class AppLocalizations {
   /// **'Healthy'**
   String get statusHealthHealthy;
 
+  /// No description provided for @statusHealthAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get statusHealthAvailable;
+
   /// No description provided for @statusHealthUnavailable.
   ///
   /// In en, this message translates to:
@@ -6900,6 +6906,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type'**
   String get adminStorageColumnType;
+
+  /// No description provided for @adminStorageMountsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Local mount locations'**
+  String get adminStorageMountsSection;
 
   /// No description provided for @adminLibraryColumnLocation.
   ///

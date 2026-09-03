@@ -3,7 +3,7 @@ part of 'admin_operations_pages.dart';
 enum _StorageStatusFilter { all, enabled, disabled, unhealthy }
 
 bool _storageHealthy(AdminStorageLocation location) =>
-    location.healthStatus.toUpperCase() == 'HEALTHY';
+    location.healthStatus.toUpperCase() == 'AVAILABLE';
 
 class AdminStoragePage extends ConsumerStatefulWidget {
   const AdminStoragePage({required this.view, super.key});
@@ -76,8 +76,6 @@ void _showStorageLocationDetail(
   AdminStorageLocation location, {
   required bool canManage,
 }) {
-  final colors = Theme.of(context).colorScheme;
-  final healthy = _storageHealthy(location);
   String fieldLabel(String label, String value) => '$label: $value';
 
   showDialog<void>(
@@ -142,15 +140,6 @@ void _showStorageLocationDetail(
                   fieldLabel(l10n.adminStorageFieldNode, location.nodeId),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                if (canManage && !healthy) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    l10n.adminStorageFilterUnhealthy,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: colors.tertiary),
-                  ),
-                ],
               ],
             ),
           ),
@@ -252,9 +241,6 @@ Future<void> _deleteStorageLocation(
 
 class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
   _StorageStatusFilter _statusFilter = _StorageStatusFilter.all;
-  String? _selectedLocationId;
-  String? _selectedSourceId;
-  String? _reviewSourceId;
 
   List<AdminStorageLocation> _filteredLocations(
     List<AdminStorageLocation> locations,
@@ -302,49 +288,51 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
         false;
     final query = ref.watch(adminSearchProvider).toLowerCase();
     final locations = _filteredLocations(widget.view.locations, query);
-    final selected =
-        widget.view.locations
-            .where((location) => location.id == _selectedLocationId)
-            .firstOrNull;
-    final wideLayout = MediaQuery.sizeOf(context).width >= 1080;
-
-    final listSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final listSection = AdminTableSection(
+      title: l10n.adminStorageMountsSection,
+      filters: [
+        for (final filter in _StorageStatusFilter.values)
+          ChoiceChip(
+            label: Text(switch (filter) {
+              _StorageStatusFilter.all => l10n.adminStorageFilterAll,
+              _StorageStatusFilter.enabled => l10n.adminStorageFilterEnabled,
+              _StorageStatusFilter.disabled => l10n.adminStorageFilterDisabled,
+              _StorageStatusFilter.unhealthy =>
+                l10n.adminStorageFilterUnhealthy,
+            }),
+            selected: _statusFilter == filter,
+            onSelected: (_) => setState(() => _statusFilter = filter),
+          ),
+      ],
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final filter in _StorageStatusFilter.values)
-              ChoiceChip(
-                label: Text(switch (filter) {
-                  _StorageStatusFilter.all => l10n.adminStorageFilterAll,
-                  _StorageStatusFilter.enabled =>
-                    l10n.adminStorageFilterEnabled,
-                  _StorageStatusFilter.disabled =>
-                    l10n.adminStorageFilterDisabled,
-                  _StorageStatusFilter.unhealthy =>
-                    l10n.adminStorageFilterUnhealthy,
-                }),
-                selected: _statusFilter == filter,
-                onSelected: (_) => setState(() => _statusFilter = filter),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
         AdminDataTable(
           showIndex: true,
-          minTableWidth: 860,
+          minTableWidth: 960,
           rowCount: locations.length,
           emptyState: AdminListEmptyState(message: l10n.adminStorageEmptyList),
           onRowTap:
-              (index) =>
-                  setState(() => _selectedLocationId = locations[index].id),
+              (index) => _showStorageLocationDetail(
+                context,
+                ref,
+                l10n,
+                locations[index],
+                canManage: canManageStorage,
+              ),
           columns: [
             AdminListColumn(
               key: 'name',
               label: l10n.adminStorageColumnName,
               flex: 2,
+            ),
+            AdminListColumn(
+              key: 'type',
+              label: l10n.adminStorageColumnType,
+              minWidth: 100,
+            ),
+            AdminListColumn(
+              key: 'mountKey',
+              label: l10n.adminStorageColumnMountKey,
+              minWidth: 140,
             ),
             AdminListColumn(
               key: 'mountKey',
@@ -376,6 +364,12 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                providerTypeLabel(l10n, location.providerType),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               Text(
                 location.mountKey,
@@ -455,27 +449,6 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
       ],
     );
 
-    final detailSection =
-        selected == null
-            ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.touch_app_outlined,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.adminStorageDetailHint,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            )
-            : _StorageDetailPanel(location: selected);
-
     return _PageEntrance(
       children: [
         AdminPageHeader(
@@ -505,180 +478,10 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
             ],
           ),
         ),
-        if (wideLayout)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 5, child: listSection),
-              const SizedBox(width: 24),
-              VerticalDivider(width: 1, color: Theme.of(context).dividerColor),
-              const SizedBox(width: 24),
-              Expanded(flex: 3, child: detailSection),
-            ],
-          )
-        else ...[
-          listSection,
-          if (selected != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: detailSection,
-            ),
-        ],
+        listSection,
         const SizedBox(height: 32),
-        _LibrarySourcesSection(
-          canManage: canManageSources,
-          onSourceSelected:
-              (id) => setState(() {
-                _selectedSourceId = id;
-                _reviewSourceId = id;
-              }),
-          selectedSourceId: _selectedSourceId,
-        ),
-        if (canManageSources) ...[
-          const SizedBox(height: 32),
-          _LibraryReviewSection(
-            sources:
-                ref.watch(videoLibrarySourcesProvider).asData?.value ??
-                const <VideoLibrarySource>[],
-            selectedSourceId: _reviewSourceId,
-          ),
-        ],
+        _LibrarySourcesSection(canManage: canManageSources),
       ],
-    );
-  }
-}
-
-class _StorageDetailPanel extends ConsumerWidget {
-  const _StorageDetailPanel({required this.location});
-
-  final AdminStorageLocation location;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final canManage =
-        ref
-            .watch(authSessionProvider)
-            .asData
-            ?.value
-            .user
-            ?.permissions
-            .contains('system:config:manage') ??
-        false;
-    final colors = Theme.of(context).colorScheme;
-    final healthy = _storageHealthy(location);
-    final statusColor =
-        !location.enabled
-            ? colors.outline
-            : (healthy ? Colors.green.shade600 : colors.tertiary);
-
-    String fieldLabel(String label, String value) => '$label: $value';
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.circle, size: 10, color: statusColor),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  location.name,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              AdminStatusPill(
-                label: healthStatusLabel(
-                  AppLocalizations.of(context),
-                  location.healthStatus,
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 24),
-          Text(
-            fieldLabel(l10n.adminMountKey, location.mountKey),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            fieldLabel(l10n.adminStorageFieldPath, location.relativeRoot),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            fieldLabel(
-              l10n.adminStorageFieldScope,
-              scopeTypeLabel(l10n, location.scopeType),
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            fieldLabel(
-              l10n.adminStorageFieldProvider,
-              providerTypeLabel(l10n, location.providerType),
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            fieldLabel(
-              l10n.adminStorageFieldManagement,
-              location.managementMode,
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          if (canManage) ...[
-            const Divider(height: 24),
-            Wrap(
-              spacing: 8,
-              children: [
-                location.enabled
-                    ? OutlinedButton.icon(
-                      onPressed:
-                          () => _toggleStorageLocation(
-                            context,
-                            ref,
-                            l10n,
-                            location,
-                            enabled: false,
-                          ),
-                      icon: const Icon(Icons.pause_circle_outline_rounded),
-                      label: Text(l10n.adminStorageDisableAction),
-                    )
-                    : FilledButton.tonalIcon(
-                      onPressed:
-                          () => _toggleStorageLocation(
-                            context,
-                            ref,
-                            l10n,
-                            location,
-                            enabled: true,
-                          ),
-                      icon: const Icon(Icons.play_circle_outline_rounded),
-                      label: Text(l10n.adminStorageEnableAction),
-                    ),
-                OutlinedButton.icon(
-                  onPressed:
-                      () =>
-                          _deleteStorageLocation(context, ref, l10n, location),
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  label: Text(l10n.adminStorageDeleteAction),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

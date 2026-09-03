@@ -3325,6 +3325,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statusHealthHealthy => '健康';
 
   @override
+  String get statusHealthAvailable => '可用';
+
+  @override
   String get statusHealthUnavailable => '不可达';
 
   @override
@@ -3591,6 +3594,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get adminStorageColumnType => '类型';
+
+  @override
+  String get adminStorageMountsSection => '本地挂载位置';
 
   @override
   String get adminLibraryColumnLocation => '存储位置 · 根目录';
