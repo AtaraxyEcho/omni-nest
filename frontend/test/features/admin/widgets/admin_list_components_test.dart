@@ -126,7 +126,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.byType(DropdownButton<int>));
+    await tester.tap(find.byType(AdminDropdown<int>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('50').last);
     await tester.pumpAndSettle();

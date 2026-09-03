@@ -114,10 +114,11 @@ void main() {
     expect(find.text('存储与共享空间'), findsNWidgets(2));
     expect(find.text('分组'), findsWidgets);
     // 每页条数选择器：统一 AdminDropdown，默认 10。
-    final pageSizeDropdown = find
-        .byWidgetPredicate((w) => w is AdminDropdown<int>)
-        .evaluate()
-        .toList();
+    final pageSizeDropdown =
+        find
+            .byWidgetPredicate((w) => w is AdminDropdown<int>)
+            .evaluate()
+            .toList();
     expect(pageSizeDropdown, hasLength(1));
     expect((pageSizeDropdown.first.widget as AdminDropdown<int>).value, 10);
     expect(tester.takeException(), isNull);
@@ -168,9 +169,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final dropdownField = find.byWidgetPredicate(
-      (w) => w is DropdownButtonFormField,
-    );
+    final dropdownField = find.byWidgetPredicate((w) => w is AdminDropdown);
     await tester.tap(dropdownField.first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('存储与共享空间').last);
