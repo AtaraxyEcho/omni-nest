@@ -194,6 +194,7 @@ class AdminDataTable extends StatelessWidget {
     this.actionColumnWidth = 168,
     this.rowHeight = 48,
     this.emptyState,
+    this.onRowTap,
     super.key,
   }) : assert(
          !showCheckboxes || (isChecked != null && onRowCheck != null),
@@ -232,6 +233,9 @@ class AdminDataTable extends StatelessWidget {
   final double actionColumnWidth;
   final double rowHeight;
   final Widget? emptyState;
+
+  /// 行点击回调（如主从布局的选中）；为空时行不可点。
+  final void Function(int index)? onRowTap;
 
   bool get _hasActionColumn => actionsBuilder != null;
 
@@ -302,7 +306,8 @@ class AdminDataTable extends StatelessWidget {
       ],
       rows: [
         for (var i = 0; i < rowCount; i++)
-          DataRow(
+          DataRow2(
+            onTap: onRowTap == null ? null : () => onRowTap!(i),
             selected: showCheckboxes && (isChecked?.call(i) ?? false),
             cells: [
               if (showCheckboxes)

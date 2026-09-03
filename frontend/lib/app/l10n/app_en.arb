@@ -1535,6 +1535,12 @@
   "adminLogContent": "Description",
   "adminLogTime": "Time",
   "adminConfigDescription": "Description",
+  "adminStorageOpenDetail": "Details",
+  "adminStorageColumnName": "Name",
+  "adminStorageColumnMountKey": "Mount key",
+  "adminStorageColumnRoot": "Root",
+  "adminStorageColumnHealth": "Health",
+  "adminLibraryDiscoverUpdates": "Discover updates",
   "adminListTotalCount": "{count} items",
   "@adminListTotalCount": {
     "placeholders": {

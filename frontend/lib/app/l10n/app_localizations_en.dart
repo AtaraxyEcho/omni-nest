@@ -3708,6 +3708,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminConfigDescription => 'Description';
 
   @override
+  String get adminStorageOpenDetail => 'Details';
+
+  @override
+  String get adminStorageColumnName => 'Name';
+
+  @override
+  String get adminStorageColumnMountKey => 'Mount key';
+
+  @override
+  String get adminStorageColumnRoot => 'Root';
+
+  @override
+  String get adminStorageColumnHealth => 'Health';
+
+  @override
+  String get adminLibraryDiscoverUpdates => 'Discover updates';
+
+  @override
   String adminListTotalCount(Object count) {
     return '$count items';
   }

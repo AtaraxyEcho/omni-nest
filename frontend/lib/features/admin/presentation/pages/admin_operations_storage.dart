@@ -14,6 +14,107 @@ class AdminStoragePage extends ConsumerStatefulWidget {
   ConsumerState<AdminStoragePage> createState() => _AdminStoragePageState();
 }
 
+/// 禁用挂载位置前确认；停用属高危操作。
+Future<bool> _confirmDisableStorage(
+  BuildContext context,
+  AppLocalizations l10n,
+  AdminStorageLocation location,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder:
+        (dialogContext) => AlertDialog(
+          title: Text(l10n.adminStorageDisableConfirmTitle),
+          content: Text(l10n.adminStorageDisableConfirmBody(location.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.adminCancel),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.adminStorageDisableAction),
+            ),
+          ],
+        ),
+  );
+  return confirmed == true;
+}
+
+/// 删除挂载位置前确认。
+Future<bool> _confirmDeleteStorage(
+  BuildContext context,
+  AppLocalizations l10n,
+  AdminStorageLocation location,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder:
+        (dialogContext) => AlertDialog(
+          title: Text(l10n.adminStorageDeleteConfirmTitle),
+          content: Text(l10n.adminStorageDeleteConfirmBody(location.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.adminCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.adminStorageDeleteAction),
+            ),
+          ],
+        ),
+  );
+  return confirmed == true;
+}
+
+/// 切换挂载位置启用状态（含禁用确认）。
+Future<void> _toggleStorageLocation(
+  BuildContext context,
+  WidgetRef ref,
+  AppLocalizations l10n,
+  AdminStorageLocation location, {
+  required bool enabled,
+}) async {
+  if (!enabled && !await _confirmDisableStorage(context, l10n, location)) {
+    return;
+  }
+  try {
+    await ref
+        .read(adminOperationsActionsProvider)
+        .updateStorageLocation(location: location, enabled: enabled);
+  } on Exception catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
+      );
+    }
+  }
+}
+
+/// 删除挂载位置（含确认）。
+Future<void> _deleteStorageLocation(
+  BuildContext context,
+  WidgetRef ref,
+  AppLocalizations l10n,
+  AdminStorageLocation location,
+) async {
+  if (!await _confirmDeleteStorage(context, l10n, location)) {
+    return;
+  }
+  try {
+    await ref
+        .read(adminOperationsActionsProvider)
+        .deleteStorageLocation(location.id);
+  } on Exception catch (error) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
+      );
+    }
+  }
+}
+
 class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
   _StorageStatusFilter _statusFilter = _StorageStatusFilter.all;
   String? _selectedLocationId;
@@ -96,32 +197,120 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
           ],
         ),
         const SizedBox(height: 12),
-        if (locations.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.folder_off_outlined,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.adminStorageEmptyList,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
+        AdminDataTable(
+          showIndex: true,
+          minTableWidth: 860,
+          rowCount: locations.length,
+          emptyState: AdminListEmptyState(message: l10n.adminStorageEmptyList),
+          onRowTap:
+              (index) =>
+                  setState(() => _selectedLocationId = locations[index].id),
+          columns: [
+            AdminListColumn(
+              key: 'name',
+              label: l10n.adminStorageColumnName,
+              flex: 2,
             ),
-          )
-        else
-          ...locations.map(
-            (location) => _StorageLocationRow(
-              location: location,
-              selected: location.id == _selectedLocationId,
-              onTap: () => setState(() => _selectedLocationId = location.id),
+            AdminListColumn(
+              key: 'mountKey',
+              label: l10n.adminStorageColumnMountKey,
+              minWidth: 140,
             ),
-          ),
+            AdminListColumn(
+              key: 'root',
+              label: l10n.adminStorageColumnRoot,
+              flex: 2,
+            ),
+            AdminListColumn(
+              key: 'status',
+              label: l10n.adminFilterStatus,
+              minWidth: 100,
+            ),
+            AdminListColumn(
+              key: 'health',
+              label: l10n.adminStorageColumnHealth,
+              minWidth: 110,
+            ),
+          ],
+          rowCellsBuilder: (context, index) {
+            final location = locations[index];
+            final healthy = _storageHealthy(location);
+            return [
+              Text(
+                location.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                location.mountKey,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Text(
+                location.relativeRoot,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              AdminStatusTag(
+                label:
+                    location.enabled
+                        ? l10n.adminStatusEnabled
+                        : l10n.adminStatusDisabled,
+                tone:
+                    location.enabled
+                        ? AdminTagTone.success
+                        : AdminTagTone.neutral,
+              ),
+              AdminStatusTag(
+                label: healthStatusLabel(l10n, location.healthStatus),
+                tone: healthy ? AdminTagTone.success : AdminTagTone.warning,
+              ),
+            ];
+          },
+          actionsBuilder: (context, index) {
+            final location = locations[index];
+            return [
+              IconButton(
+                tooltip: l10n.adminStorageOpenDetail,
+                icon: const Icon(Icons.info_outline_rounded, size: 20),
+                onPressed:
+                    () => setState(() => _selectedLocationId = location.id),
+              ),
+              if (canManageStorage)
+                IconButton(
+                  tooltip:
+                      location.enabled
+                          ? l10n.adminStorageDisableAction
+                          : l10n.adminStatusEnabled,
+                  icon: Icon(
+                    location.enabled
+                        ? Icons.block_rounded
+                        : Icons.check_circle_outline_rounded,
+                    size: 20,
+                  ),
+                  onPressed:
+                      () => _toggleStorageLocation(
+                        context,
+                        ref,
+                        l10n,
+                        location,
+                        enabled: !location.enabled,
+                      ),
+                ),
+              if (canManageStorage)
+                IconButton(
+                  tooltip: l10n.adminStorageDeleteAction,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                  onPressed:
+                      () =>
+                          _deleteStorageLocation(context, ref, l10n, location),
+                ),
+            ];
+          },
+        ),
       ],
     );
 
@@ -223,82 +412,6 @@ class _AdminStoragePageState extends ConsumerState<AdminStoragePage> {
   }
 }
 
-class _StorageLocationRow extends StatelessWidget {
-  const _StorageLocationRow({
-    required this.location,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final AdminStorageLocation location;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final healthy = _storageHealthy(location);
-    final statusColor =
-        !location.enabled
-            ? colors.outline
-            : (healthy ? Colors.green.shade600 : colors.tertiary);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? colors.surfaceContainerHighest : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.circle, size: 10, color: statusColor),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 3,
-              child: Text(
-                location.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                location.mountKey,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            Expanded(
-              flex: 4,
-              child: Text(
-                location.relativeRoot,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              location.enabled
-                  ? healthStatusLabel(
-                    AppLocalizations.of(context),
-                    location.healthStatus,
-                  )
-                  : AppLocalizations.of(context).adminStorageStatusDisabled,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _StorageDetailPanel extends ConsumerWidget {
   const _StorageDetailPanel({required this.location});
 
@@ -322,80 +435,6 @@ class _StorageDetailPanel extends ConsumerWidget {
         !location.enabled
             ? colors.outline
             : (healthy ? Colors.green.shade600 : colors.tertiary);
-
-    Future<void> toggleEnabled(bool enabled) async {
-      if (!enabled) {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                title: Text(l10n.adminStorageDisableConfirmTitle),
-                content: Text(
-                  l10n.adminStorageDisableConfirmBody(location.name),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: Text(l10n.adminCancel),
-                  ),
-                  FilledButton.tonal(
-                    onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: Text(l10n.adminStorageDisableAction),
-                  ),
-                ],
-              ),
-        );
-        if (confirmed != true) {
-          return;
-        }
-      }
-      try {
-        await ref
-            .read(adminOperationsActionsProvider)
-            .updateStorageLocation(location: location, enabled: enabled);
-      } on Exception catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
-          );
-        }
-      }
-    }
-
-    Future<void> deleteLocation() async {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder:
-            (dialogContext) => AlertDialog(
-              title: Text(l10n.adminStorageDeleteConfirmTitle),
-              content: Text(l10n.adminStorageDeleteConfirmBody(location.name)),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(l10n.adminCancel),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: Text(l10n.adminStorageDeleteAction),
-                ),
-              ],
-            ),
-      );
-      if (confirmed != true) {
-        return;
-      }
-      try {
-        await ref
-            .read(adminOperationsActionsProvider)
-            .deleteStorageLocation(location.id);
-      } on Exception catch (error) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
-          );
-        }
-      }
-    }
 
     String fieldLabel(String label, String value) => '$label: $value';
 
@@ -469,17 +508,33 @@ class _StorageDetailPanel extends ConsumerWidget {
               children: [
                 location.enabled
                     ? OutlinedButton.icon(
-                      onPressed: () => toggleEnabled(false),
+                      onPressed:
+                          () => _toggleStorageLocation(
+                            context,
+                            ref,
+                            l10n,
+                            location,
+                            enabled: false,
+                          ),
                       icon: const Icon(Icons.pause_circle_outline_rounded),
                       label: Text(l10n.adminStorageDisableAction),
                     )
                     : FilledButton.tonalIcon(
-                      onPressed: () => toggleEnabled(true),
+                      onPressed:
+                          () => _toggleStorageLocation(
+                            context,
+                            ref,
+                            l10n,
+                            location,
+                            enabled: true,
+                          ),
                       icon: const Icon(Icons.play_circle_outline_rounded),
                       label: Text(l10n.adminStorageEnableAction),
                     ),
                 OutlinedButton.icon(
-                  onPressed: deleteLocation,
+                  onPressed:
+                      () =>
+                          _deleteStorageLocation(context, ref, l10n, location),
                   icon: const Icon(Icons.delete_outline_rounded),
                   label: Text(l10n.adminStorageDeleteAction),
                 ),

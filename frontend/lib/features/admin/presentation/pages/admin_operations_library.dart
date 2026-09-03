@@ -3,7 +3,7 @@ part of 'admin_operations_pages.dart';
 // ── 媒体库管理段区 ──────────────────────────────────────────────────────
 
 /// 视频库源分区：建立在已启用存储位置上的影视库源。
-class _LibrarySourcesSection extends ConsumerWidget {
+class _LibrarySourcesSection extends ConsumerStatefulWidget {
   const _LibrarySourcesSection({
     required this.canManage,
     required this.onSourceSelected,
@@ -13,6 +13,48 @@ class _LibrarySourcesSection extends ConsumerWidget {
   final bool canManage;
   final ValueChanged<String> onSourceSelected;
   final String? selectedSourceId;
+
+  @override
+  ConsumerState<_LibrarySourcesSection> createState() =>
+      _LibrarySourcesSectionState();
+}
+
+class _LibrarySourcesSectionState
+    extends ConsumerState<_LibrarySourcesSection> {
+  /// 正在执行"发现更新"扫描的库源，用于行内按钮转圈与禁用。
+  String? _scanningSourceId;
+
+  bool get canManage => widget.canManage;
+  String? get selectedSourceId => widget.selectedSourceId;
+
+  void _handleSourceSelected(String id) => widget.onSourceSelected(id);
+
+  /// 触发库源"发现更新"扫描：入队后由后台任务继续展示真实进度。
+  Future<void> _discoverUpdates(VideoLibrarySource source) async {
+    if (_scanningSourceId != null) return;
+    final l10n = AppLocalizations.of(context);
+    setState(() => _scanningSourceId = source.id);
+    try {
+      final task = await ref
+          .read(videoLibrarySourceActionsProvider)
+          .scan(source.id);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(task.message)));
+      }
+    } on Exception catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.adminLoadFailed(error.toString()))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _scanningSourceId = null);
+      }
+    }
+  }
 
   Widget _buildAddButton(
     BuildContext context,
@@ -45,7 +87,7 @@ class _LibrarySourcesSection extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final sourcesAsync = ref.watch(videoLibrarySourcesProvider);
     final locationsAsync = ref.watch(videoStorageLocationsProvider);
@@ -94,7 +136,7 @@ class _LibrarySourcesSection extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 InkWell(
-                  onTap: () => onSourceSelected(source.id),
+                  onTap: () => _handleSourceSelected(source.id),
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -143,6 +185,24 @@ class _LibrarySourcesSection extends ConsumerWidget {
                               : l10n.adminStorageStatusDisabled,
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
+                        if (canManage && source.enabled) ...[
+                          const SizedBox(width: 8),
+                          _scanningSourceId == source.id
+                              ? const SizedBox.square(
+                                dimension: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : IconButton(
+                                tooltip: l10n.adminLibraryDiscoverUpdates,
+                                icon: const Icon(
+                                  Icons.manage_search_rounded,
+                                  size: 20,
+                                ),
+                                onPressed: () => _discoverUpdates(source),
+                              ),
+                        ],
                       ],
                     ),
                   ),

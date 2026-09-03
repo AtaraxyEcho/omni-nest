@@ -1409,6 +1409,12 @@
   "adminLogContent": "操作内容",
   "adminLogTime": "时间",
   "adminConfigDescription": "说明",
+  "adminStorageOpenDetail": "详情",
+  "adminStorageColumnName": "名称",
+  "adminStorageColumnMountKey": "挂载键",
+  "adminStorageColumnRoot": "根目录",
+  "adminStorageColumnHealth": "健康状态",
+  "adminLibraryDiscoverUpdates": "发现更新",
   "adminListTotalCount": "共 {count} 条",
   "@adminListTotalCount": {
     "placeholders": {

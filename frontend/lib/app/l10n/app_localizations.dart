@@ -6889,6 +6889,42 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get adminConfigDescription;
 
+  /// No description provided for @adminStorageOpenDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get adminStorageOpenDetail;
+
+  /// No description provided for @adminStorageColumnName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get adminStorageColumnName;
+
+  /// No description provided for @adminStorageColumnMountKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Mount key'**
+  String get adminStorageColumnMountKey;
+
+  /// No description provided for @adminStorageColumnRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Root'**
+  String get adminStorageColumnRoot;
+
+  /// No description provided for @adminStorageColumnHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get adminStorageColumnHealth;
+
+  /// No description provided for @adminLibraryDiscoverUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover updates'**
+  String get adminLibraryDiscoverUpdates;
+
   /// No description provided for @adminListTotalCount.
   ///
   /// In en, this message translates to:

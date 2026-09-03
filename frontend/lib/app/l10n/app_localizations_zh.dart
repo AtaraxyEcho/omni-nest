@@ -3587,6 +3587,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get adminConfigDescription => '说明';
 
   @override
+  String get adminStorageOpenDetail => '详情';
+
+  @override
+  String get adminStorageColumnName => '名称';
+
+  @override
+  String get adminStorageColumnMountKey => '挂载键';
+
+  @override
+  String get adminStorageColumnRoot => '根目录';
+
+  @override
+  String get adminStorageColumnHealth => '健康状态';
+
+  @override
+  String get adminLibraryDiscoverUpdates => '发现更新';
+
+  @override
   String adminListTotalCount(Object count) {
     return '共 $count 条';
   }
