@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:omninest/app/theme/app_theme_palette.dart';
 import 'package:omninest/app/theme/app_typography.dart';
@@ -43,6 +44,16 @@ class OmniNestTheme {
     FilesColors? filesColors,
   }) {
     final brightness = ThemeData.estimateBrightnessForColor(colors.surface);
+    // 桌面/桌面浏览器采用紧凑密度，移动端保持触控尺寸。
+    final isDesktopDensity =
+        kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.linux;
+    final controlMinHeight = isDesktopDensity ? 38.0 : 44.0;
+    final iconMinSize =
+        isDesktopDensity ? const Size(36, 36) : const Size(40, 40);
+    final inputVerticalPadding = isDesktopDensity ? 10.0 : 12.0;
     final isDark = brightness == Brightness.dark;
     final scheme = ColorScheme(
       brightness: brightness,
@@ -97,6 +108,7 @@ class OmniNestTheme {
       dividerColor: colors.outlineVariant,
       fontFamily: AppTypography.fontFamily,
       textTheme: textTheme,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
       primaryTextTheme: textTheme,
       iconTheme: IconThemeData(color: colors.onSurfaceVariant, size: 20),
       textSelectionTheme: TextSelectionThemeData(
@@ -149,9 +161,9 @@ class OmniNestTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surfaceContainerLowest,
-        contentPadding: const EdgeInsets.symmetric(
+        contentPadding: EdgeInsets.symmetric(
           horizontal: 14,
-          vertical: 12,
+          vertical: inputVerticalPadding,
         ),
         border: inputBorder,
         enabledBorder: inputBorder,
@@ -168,7 +180,7 @@ class OmniNestTheme {
         style: FilledButton.styleFrom(
           backgroundColor: colors.primary,
           foregroundColor: colors.onPrimary,
-          minimumSize: const Size(44, 44),
+          minimumSize: Size(44, controlMinHeight),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           shape: roundedShape,
         ),
@@ -176,7 +188,7 @@ class OmniNestTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: colors.onSurface,
-          minimumSize: const Size(44, 44),
+          minimumSize: Size(44, controlMinHeight),
           side: BorderSide(color: colors.outline),
           shape: roundedShape,
         ),
@@ -184,14 +196,14 @@ class OmniNestTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: colors.primary,
-          minimumSize: const Size(40, 40),
+          minimumSize: iconMinSize,
           shape: roundedShape,
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           foregroundColor: colors.onSurfaceVariant,
-          minimumSize: const Size(40, 40),
+          minimumSize: iconMinSize,
           shape: roundedShape,
         ),
       ),

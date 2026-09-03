@@ -42,6 +42,9 @@ void main() {
     const Size(950, 650),
     const Size(1440, 620),
     const Size(1280, 500),
+    const Size(1920, 1080),
+    const Size(2560, 1440),
+    const Size(3840, 2160),
   ]) {
     testWidgets('任务页 ${size.width}x${size.height} 无布局异常', (tester) async {
       tester.view.physicalSize = size;

@@ -27,6 +27,7 @@ class AdminShell extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = !ResponsiveBreakpoints.isCompact(constraints.maxWidth);
+        final isUltraWide = constraints.maxWidth >= 1920;
         final l10n = AppLocalizations.of(context);
         final content = Column(
           children: [
@@ -49,6 +50,7 @@ class AdminShell extends ConsumerWidget {
                     child: _AdminShellBody(
                       section: section,
                       isWide: isWide,
+                      isUltraWide: isUltraWide,
                       child: child,
                     ),
                   ),
@@ -120,11 +122,13 @@ class _AdminShellBody extends StatelessWidget {
   const _AdminShellBody({
     required this.section,
     required this.isWide,
+    required this.isUltraWide,
     required this.child,
   });
 
   final AdminSection section;
   final bool isWide;
+  final bool isUltraWide;
   final Widget child;
 
   /// 需要填满剩余空间的页面（如带 TabBarView 的日志中心）。
@@ -167,7 +171,11 @@ class _AdminShellBody extends StatelessWidget {
         key: ValueKey(section),
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1480),
+          // 超宽屏（≥1920）解除内容宽度上限，充分利用 4K 全屏空间；
+          // 常规宽度仍居中限宽，避免可读性劣化。
+          constraints: BoxConstraints(
+            maxWidth: isUltraWide ? double.infinity : 1480,
+          ),
           child: child,
         ),
       ),
