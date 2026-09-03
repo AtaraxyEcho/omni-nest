@@ -115,7 +115,7 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
             AdminDataTable(
               showIndex: true,
               indexBase: currentPage * _pageSize,
-              minTableWidth: 1120,
+              minTableWidth: 1040,
               sort: _configSort,
               onSort:
                   (key, ascending) => setState(() {
@@ -147,11 +147,6 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                   label: l10n.adminConfigValue,
                   flex: 2,
                   sortable: true,
-                ),
-                AdminListColumn(
-                  key: 'toggle',
-                  label: l10n.adminConfigToggleColumn,
-                  minWidth: 90,
                 ),
                 AdminListColumn(
                   key: 'updatedAt',
@@ -197,7 +192,6 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _configToggleCell(context, item),
                   Text(
                     item.updatedAt,
                     maxLines: 1,
@@ -291,70 +285,6 @@ class _AdminConfigPageState extends ConsumerState<AdminConfigPage> {
       _pageSize = size;
       _page = 0;
     });
-  }
-
-  /// 开关列单元格：布尔配置显示开关，其余显示占位符。
-  Widget _configToggleCell(BuildContext context, AdminConfigEntry entry) {
-    if (entry.valueType != 'BOOLEAN') {
-      return Center(
-        child: Text(
-          '—',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: context.adminColors.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
-    return _ConfigToggleSwitch(entry: entry);
-  }
-}
-
-class _ConfigToggleSwitch extends ConsumerStatefulWidget {
-  const _ConfigToggleSwitch({required this.entry});
-
-  final AdminConfigEntry entry;
-
-  @override
-  ConsumerState<_ConfigToggleSwitch> createState() =>
-      _ConfigToggleSwitchState();
-}
-
-class _ConfigToggleSwitchState extends ConsumerState<_ConfigToggleSwitch> {
-  bool _saving = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return _saving
-        ? const SizedBox.square(
-          dimension: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        )
-        : Switch(
-          value: widget.entry.value == 'true',
-          onChanged:
-              !widget.entry.editable
-                  ? null
-                  : (enabled) async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    setState(() => _saving = true);
-                    try {
-                      await ref
-                          .read(adminOperationsActionsProvider)
-                          .updateConfig(widget.entry.key, enabled.toString());
-                    } on Object {
-                      if (mounted) {
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(l10n.adminOperationFailed)),
-                        );
-                      }
-                    } finally {
-                      if (mounted) {
-                        setState(() => _saving = false);
-                      }
-                    }
-                  },
-        );
   }
 }
 
@@ -452,16 +382,17 @@ class _ConfigEditDialogState extends ConsumerState<_ConfigEditDialog> {
               const SizedBox(height: 12),
             ],
             if (_isBoolConfig)
-              AdminDropdown<String>(
-                value: _boolValue,
-                label: l10n.adminConfigValue,
-                items: [
-                  AdminDropdownItem(value: 'true', label: l10n.adminTrue),
-                  AdminDropdownItem(value: 'false', label: l10n.adminFalse),
-                ],
-                onChanged: (v) {
-                  if (v != null) setState(() => _boolValue = v);
-                },
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(l10n.adminConfigValue),
+                subtitle: Text(
+                  _boolValue == 'true' ? l10n.adminEnabled : l10n.adminDisabled,
+                ),
+                value: _boolValue == 'true',
+                onChanged:
+                    (enabled) =>
+                        setState(() => _boolValue = enabled.toString()),
               )
             else if (_isQuotaConfig)
               _QuotaEditor(

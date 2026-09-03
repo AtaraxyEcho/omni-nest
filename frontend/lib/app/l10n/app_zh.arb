@@ -1427,7 +1427,6 @@
   "adminListJumpTo": "跳至",
   "adminListPageUnit": "页",
   "adminConfigGroupColumn": "分组",
-  "adminConfigToggleColumn": "开关",
   "adminBatchRevokeSessions": "批量强制下线",
   "adminBatchRetryTasks": "批量重试",
   "adminBatchClearSelection": "取消选择",

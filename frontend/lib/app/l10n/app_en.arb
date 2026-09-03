@@ -1553,7 +1553,6 @@
   "adminListJumpTo": "Go to",
   "adminListPageUnit": "",
   "adminConfigGroupColumn": "Group",
-  "adminConfigToggleColumn": "Toggle",
   "adminBatchRevokeSessions": "Force sign out selected",
   "adminBatchRetryTasks": "Retry selected",
   "adminBatchClearSelection": "Clear selection",
