@@ -122,7 +122,7 @@ services:
     restart: unless-stopped
 
   netease-music-api:
-    build: ./netease-api
+    build: ../netease-api
     container_name: omninest-netease-music-api
     environment:
       TZ: Asia/Shanghai

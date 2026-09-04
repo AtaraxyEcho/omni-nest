@@ -56,7 +56,7 @@ x-backend-service: &backend-service
   image: ${OMNINEST_BACKEND_IMAGE:-omninest/backend}:${OMNINEST_IMAGE_TAG:-latest}
   build:
     context: ../../backend
-    dockerfile: ../deploy/prod/backend/Dockerfile
+    dockerfile: ../deploy/backend/Dockerfile
   environment: *backend-environment
   depends_on:
     postgres:
@@ -279,7 +279,7 @@ services:
     restart: unless-stopped
 
   netease-music-api:
-    build: ./netease-api
+    build: ../netease-api
     environment:
       TZ: Asia/Shanghai
     healthcheck:

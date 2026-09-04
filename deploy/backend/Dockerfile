@@ -7,7 +7,9 @@ RUN apt-get update && \
 WORKDIR /app
 COPY omninest-app/target/omninest-app-*.jar app.jar
 
-ENV OMNINEST_PROFILE=prod \
+# 镜像默认生产 profile；开发对照构建可用 --build-arg OMNINEST_PROFILE=dev 覆盖。
+ARG OMNINEST_PROFILE=prod
+ENV OMNINEST_PROFILE=${OMNINEST_PROFILE} \
     OMNINEST_ROLE=api
 EXPOSE 8080
 
