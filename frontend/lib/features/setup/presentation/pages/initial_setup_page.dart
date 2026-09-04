@@ -17,19 +17,45 @@ class InitialSetupPage extends ConsumerStatefulWidget {
   ConsumerState<InitialSetupPage> createState() => _InitialSetupPageState();
 }
 
+/// 引导表单可选的常用 IANA 时区；时区标识本身与界面语言无关，不做本地化。
+const List<String> kCommonSetupTimezones = <String>[
+  'UTC',
+  'Asia/Shanghai',
+  'Asia/Hong_Kong',
+  'Asia/Taipei',
+  'Asia/Singapore',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Asia/Bangkok',
+  'Asia/Jakarta',
+  'Asia/Kolkata',
+  'Asia/Dubai',
+  'Asia/Riyadh',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Moscow',
+  'America/New_York',
+  'America/Toronto',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Sao_Paulo',
+  'Australia/Sydney',
+  'Pacific/Auckland',
+];
+
 class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   final _formKey = GlobalKey<FormState>();
   final _setupTokenController = TextEditingController();
   final _instanceNameController = TextEditingController(text: 'OmniNest');
-  final _defaultTimezoneController = TextEditingController(
-    text: 'Asia/Shanghai',
-  );
   final _usernameController = TextEditingController(text: 'root');
   final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   String _defaultLocale = 'zh-CN';
+  String _defaultTimezone = 'Asia/Shanghai';
   bool _obscurePassword = true;
   bool _submitting = false;
   String? _errorMessage;
@@ -38,7 +64,6 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   void dispose() {
     _setupTokenController.dispose();
     _instanceNameController.dispose();
-    _defaultTimezoneController.dispose();
     _usernameController.dispose();
     _displayNameController.dispose();
     _emailController.dispose();
@@ -57,7 +82,7 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
     final password = _passwordController.text;
     final instanceName = _instanceNameController.text.trim();
     final defaultLocale = _defaultLocale;
-    final defaultTimezone = _defaultTimezoneController.text.trim();
+    final defaultTimezone = _defaultTimezone;
     setState(() {
       _submitting = true;
       _errorMessage = null;
@@ -266,17 +291,17 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextFormField(
-                      controller: _defaultTimezoneController,
-                      decoration: InputDecoration(
-                        labelText: l10n.setupDefaultTimezone,
-                        prefixIcon: const Icon(Icons.schedule_outlined),
-                      ),
-                      validator:
-                          (value) =>
-                              value == null || value.trim().isEmpty
-                                  ? l10n.setupDefaultTimezoneRequired
-                                  : null,
+                    child: AppDropdown<String>(
+                      value: _defaultTimezone,
+                      items: [
+                        for (final timezone in kCommonSetupTimezones)
+                          AppDropdownItem(value: timezone, label: timezone),
+                      ],
+                      onChanged:
+                          (value) => setState(() {
+                            if (value != null) _defaultTimezone = value;
+                          }),
+                      label: l10n.setupDefaultTimezone,
                     ),
                   ),
                 ],
@@ -409,7 +434,7 @@ class _SetupTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
       child: Align(alignment: Alignment.centerRight, child: _LanguageSwitch()),
     );
   }

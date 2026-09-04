@@ -251,13 +251,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get setupDefaultLocale => '默认语言';
 
   @override
-  String get setupDefaultLocaleRequired => '请输入 BCP 47 语言标记';
-
-  @override
   String get setupDefaultTimezone => '默认时区';
-
-  @override
-  String get setupDefaultTimezoneRequired => '请输入 IANA 时区标识';
 
   @override
   String get setupDisplayName => '显示名称';

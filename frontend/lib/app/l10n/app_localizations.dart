@@ -560,23 +560,11 @@ abstract class AppLocalizations {
   /// **'Default locale'**
   String get setupDefaultLocale;
 
-  /// No description provided for @setupDefaultLocaleRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a BCP 47 language tag'**
-  String get setupDefaultLocaleRequired;
-
   /// No description provided for @setupDefaultTimezone.
   ///
   /// In en, this message translates to:
   /// **'Default time zone'**
   String get setupDefaultTimezone;
-
-  /// No description provided for @setupDefaultTimezoneRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter an IANA time zone identifier'**
-  String get setupDefaultTimezoneRequired;
 
   /// No description provided for @setupDisplayName.
   ///

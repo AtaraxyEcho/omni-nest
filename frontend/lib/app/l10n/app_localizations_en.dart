@@ -255,14 +255,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupDefaultLocale => 'Default locale';
 
   @override
-  String get setupDefaultLocaleRequired => 'Enter a BCP 47 language tag';
-
-  @override
   String get setupDefaultTimezone => 'Default time zone';
-
-  @override
-  String get setupDefaultTimezoneRequired =>
-      'Enter an IANA time zone identifier';
 
   @override
   String get setupDisplayName => 'Display name';
