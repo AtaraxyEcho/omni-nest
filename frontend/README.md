@@ -91,7 +91,7 @@ Web 在没有传入地址时会使用当前浏览器 origin 推导同源 API 和
 
 ## 本地启动
 
-先按 [../deploy/dev/README.md](../deploy/dev/README.md) 启动依赖，并在另一个终端按 [../backend/README.md](../backend/README.md) 启动后端。然后在 `frontend` 目录执行：
+先按 [部署指南](../deploy/README.md) 启动依赖，并在另一个终端按 [../backend/README.md](../backend/README.md) 启动后端。然后在 `frontend` 目录执行：
 
 ```bash
 flutter devices
@@ -163,6 +163,5 @@ git diff --check
 
 - [根目录项目总览](../README.md)
 - [后端开发指南](../backend/README.md)
-- [开发环境部署](../deploy/dev/README.md)
-- [生产环境部署](../deploy/prod/README.md)
+- [部署指南](../deploy/README.md)
 - [英文前端指南](README.en.md)

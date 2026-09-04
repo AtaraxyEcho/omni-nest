@@ -86,7 +86,7 @@ OmniNest Backend 是统一的服务端入口，负责 REST API、身份认证、
 
 - JDK 21、Maven 3.9 或兼容版本。
 - Docker Desktop 与 Docker Compose v2，用于启动开发依赖。
-- PostgreSQL、Redis、RabbitMQ 和 MinIO；可直接使用 [开发编排](../deploy/dev/README.md)。
+- PostgreSQL、Redis、RabbitMQ 和 MinIO；可直接使用 [开发编排](../deploy/README.md)。
 - 若启用图像分析，需要同时配置并启动 [ai-sidecar](../ai-sidecar/README.md)。
 
 ### 创建本地配置
@@ -139,7 +139,7 @@ mvn -pl omninest-app spring-boot:run -Dspring-boot.run.profiles=dev
 mvn -q -pl omninest-app -am -DskipTests package
 ```
 
-生产环境使用 [deploy/prod/README.md](../deploy/prod/README.md) 和对应 Docker Compose 运行 API、Worker、Scheduler。不同运行角色共享同一个代码库和应用镜像，通过 `OMNINEST_ROLE` 区分启动职责。
+生产环境使用 [部署指南](../deploy/README.md) 和对应 Docker Compose 运行 API、Worker、Scheduler。不同运行角色共享同一个代码库和应用镜像，通过 `OMNINEST_ROLE` 区分启动职责。
 
 首次启动空数据库时，Flyway 执行当前基线迁移 `V001__init_schema.sql` 和 `V002__builtin_catalog.sql`。这是运行时初始化的一部分，首个超级管理员仍通过安装向导创建。
 
@@ -158,7 +158,6 @@ git diff --check
 
 - [根目录项目总览](../README.md)
 - [前端开发指南](../frontend/README.md)
-- [开发环境部署](../deploy/dev/README.md)
-- [生产环境部署](../deploy/prod/README.md)
+- [部署指南](../deploy/README.md)
 - [Photos 图像分析侧车](../ai-sidecar/README.md)
 - [英文后端指南](README.en.md)

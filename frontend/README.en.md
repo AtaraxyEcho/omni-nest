@@ -61,7 +61,7 @@ flutter build windows --release
 flutter build macos --release
 ```
 
-The production Web build is created by `deploy/prod/nginx/Dockerfile` and served by Nginx, which also proxies the API, WebSocket, and MinIO endpoints. See [../deploy/prod/README.md](../deploy/prod/README.md) for deployment.
+The production Web build is created by `deploy/prod/nginx/Dockerfile` and served by Nginx, which also proxies the API, WebSocket, and MinIO endpoints. See [../deploy/README.md](../deploy/README.md) for deployment.
 
 The Windows and macOS commands currently produce Flutter platform build artifacts. The repository does not include a default Inno Setup, MSIX, or macOS DMG/PKG installer pipeline. Distribution to end users should add platform signing, packaging, and update policies after the build artifacts have been validated.
 
@@ -81,4 +81,4 @@ Changes involving imports, uploads, deletes, the reader, the player, routing, or
 - [Root project overview](../README.md)
 - [Chinese frontend guide](README.md)
 - [Backend guide](../backend/README.md)
-- [Development deployment](../deploy/dev/README.md)
+- [Deployment guide](../deploy/README.md)

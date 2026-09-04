@@ -84,7 +84,7 @@ OmniNest 是一个面向个人和家庭场景的自托管数字生活中心。�
 | 公网生产环境 | 4 核 8GB | 建议保持开启 |
 
 - 全栈包含 PostgreSQL、Redis、RabbitMQ、MinIO、后端运行角色进程和图像分析侧车等常驻服务。4GB 内存适合个人自托管或开发场景（此时建议关闭 ClamAV）；公网生产环境同时承载病毒扫描时内存偏紧，建议 8GB。
-- ClamAV 为上传文件提供安全扫描，属于可选服务。开发编排通过 `COMPOSE_PROFILES=clamav` 控制是否启动，关闭容器时必须同步把后端 `OMNINEST_CLAMAV_ENABLED` 改为 `false`，否则上传会因扫描不可用被拒绝，详见[开发环境部署](deploy/dev/README.md)。公网生产环境应保持开启。
+- ClamAV 为上传文件提供安全扫描，属于可选服务。开发编排通过 `COMPOSE_PROFILES=clamav` 控制是否启动，关闭容器时必须同步把后端 `OMNINEST_CLAMAV_ENABLED` 改为 `false`，否则上传会因扫描不可用被拒绝，详见[部署指南](deploy/README.md)。公网生产环境应保持开启。
 - Photos 图像分析侧车使用 CPU 推理（InsightFace），无需 GPU；模型在首次启动时自动下载，需预留最多 10 分钟的启动窗口。
 
 ## 快速开始
@@ -137,15 +137,14 @@ flutter run -d chrome --web-port=3000 --dart-define-from-file=env/dev.json
 
 ### 5. 其他平台
 
-前端设备查询、Android、Windows、macOS 的启动与构建命令见 [frontend/README.md](frontend/README.md)。生产环境的容器编排和 HTTPS 入口见 [deploy/prod/README.md](deploy/prod/README.md)。
+前端设备查询、Android、Windows、macOS 的启动与构建命令见 [frontend/README.md](frontend/README.md)。生产环境的容器编排和 HTTPS 入口见[部署指南](deploy/README.md)。
 
 
 ## 相关文档
 
 - [后端 README](backend/README.md)：服务职责、模块、API、存储、环境变量、启动和测试。
 - [前端 README](frontend/README.md)：页面结构、后端交互、环境配置、启动、构建和 Flutter 开发规范。
-- [开发环境部署](deploy/dev/README.md)：本地基础设施编排。
-- [生产环境部署](deploy/prod/README.md)：生产容器、Nginx、可选 HTTPS 和证书配置。
+- [部署指南](deploy/README.md)：开发依赖编排、生产容器、Nginx、HTTPS 和证书配置。
 
 ## 项目状态
 

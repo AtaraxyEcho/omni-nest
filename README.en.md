@@ -78,7 +78,7 @@ Chinese guides:
 
 ## Quick start
 
-See [deploy/dev/README.md](deploy/dev/README.md) for development dependency orchestration, environment variables, and startup order. See [deploy/prod/README.md](deploy/prod/README.md) for production deployment, including Nginx, optional HTTPS, and container builds.
+See [deploy/README.md](deploy/README.md) for development dependency orchestration, production deployment, Nginx, optional HTTPS, and certificate configuration.
 
 The root guide does not duplicate backend and frontend commands. Use [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md) as the source of truth for standalone development commands.
 
@@ -90,7 +90,7 @@ The root guide does not duplicate backend and frontend commands. Use [backend/RE
 | Public production | 4 vCPU / 8 GB RAM | Keep enabled |
 
 - The full stack runs PostgreSQL, Redis, RabbitMQ, MinIO, backend role processes, and the image-analysis sidecar as resident services. 4 GB RAM suits personal self-hosting or development (with ClamAV disabled); public production carrying malware scanning at the same time is memory-tight, so 8 GB is recommended.
-- ClamAV provides malware scanning for uploaded files and is optional. The development orchestration toggles it via `COMPOSE_PROFILES=clamav`; when the container is disabled, the backend `OMNINEST_CLAMAV_ENABLED` must be set to `false` in sync, otherwise uploads are rejected because scanning is unavailable. See [Development deployment](deploy/dev/README.md). Public production deployments should keep it enabled.
+- ClamAV provides malware scanning for uploaded files and is optional. The development orchestration toggles it via `COMPOSE_PROFILES=clamav`; when the container is disabled, the backend `OMNINEST_CLAMAV_ENABLED` must be set to `false` in sync, otherwise uploads are rejected because scanning is unavailable. See [Deployment guide](deploy/README.md). Public production deployments should keep it enabled.
 - The Photos image-analysis sidecar runs CPU inference (InsightFace) and does not require a GPU; models download automatically on first start, so allow a startup window of up to 10 minutes.
 
 ## License and status

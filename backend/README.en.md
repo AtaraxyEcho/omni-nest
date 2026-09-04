@@ -53,7 +53,7 @@ Defaults support local development and configuration validation. Production depl
 
 ## Local development
 
-Start dependencies as described in [deploy/dev/README.md](../deploy/dev/README.md), then run from Git Bash:
+Start dependencies as described in [deploy/README.md](../deploy/README.md), then run from Git Bash:
 
 ```bash
 cd backend
@@ -92,5 +92,5 @@ Changes involving databases, permissions, tasks, storage, or security boundaries
 
 - [Root project overview](../README.md)
 - [Chinese backend guide](README.md)
-- [Production deployment](../deploy/prod/README.md)
+- [Deployment guide](../deploy/README.md)
 - [Image-analysis Sidecar](../ai-sidecar/README.md)
