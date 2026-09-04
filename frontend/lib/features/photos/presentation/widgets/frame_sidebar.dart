@@ -5,7 +5,7 @@ import 'package:omninest/features/photos/application/photo_center_models.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_view_meta.dart';
 
-/// Frame 风格桌面侧栏：Logo、视图导航与图库统计，宽度 220px，可折叠 60px。
+/// Frame 风格桌面侧栏：系统 Logo、视图导航与图库统计，宽度 220px，可折叠 60px。
 class FrameSidebar extends StatelessWidget {
   const FrameSidebar({
     required this.activeView,
@@ -24,18 +24,20 @@ class FrameSidebar extends StatelessWidget {
   final int trashCount;
   final bool collapsed;
 
-  /// 设计稿导航结构：五个主视图 + 分隔线 + 回收站。
+  /// 设计稿导航结构：五个主视图 + 收藏，分隔线后为回收站。
   static const List<FrameView> _primaryViews = <FrameView>[
     FrameView.grid,
     FrameView.timeline,
     FrameView.locations,
     FrameView.tags,
     FrameView.albums,
+    FrameView.favorites,
   ];
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = context.frameColors;
     return AnimatedContainer(
       duration:
           MediaQuery.disableAnimationsOf(context)
@@ -43,9 +45,9 @@ class FrameSidebar extends StatelessWidget {
               : const Duration(milliseconds: 200),
       curve: Curves.easeOut,
       width: collapsed ? 60 : 220,
-      decoration: const BoxDecoration(
-        color: FramePalette.navBg,
-        border: Border(right: BorderSide(color: FramePalette.border)),
+      decoration: BoxDecoration(
+        color: colors.navBg,
+        border: Border(right: BorderSide(color: colors.border)),
       ),
       child: Column(
         children: [
@@ -73,7 +75,7 @@ class FrameSidebar extends StatelessWidget {
                         vertical: 8,
                       ),
                       height: 1,
-                      color: FramePalette.border,
+                      color: colors.border,
                     ),
                     _FrameNavItem(
                       key: const ValueKey('frame-nav-trash'),
@@ -100,6 +102,7 @@ class FrameSidebar extends StatelessWidget {
       return const SizedBox(height: 16);
     }
     final l10n = AppLocalizations.of(context);
+    final colors = context.frameColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Column(
@@ -109,8 +112,8 @@ class FrameSidebar extends StatelessWidget {
             l10n.photosFrameStatsPhotos(photoCount),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: FramePalette.ink,
+            style: TextStyle(
+              color: colors.ink,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -119,7 +122,7 @@ class FrameSidebar extends StatelessWidget {
             l10n.photosFrameStatsMeta(albumCount, trashCount),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: FramePalette.muted, fontSize: 12),
+            style: TextStyle(color: colors.muted, fontSize: 12),
           ),
         ],
       ),
@@ -135,6 +138,7 @@ class _FrameLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     final mark = const BrandLogo(size: 28, radius: 8);
     if (collapsed) {
       return SizedBox(height: 60, child: Center(child: mark));
@@ -148,13 +152,13 @@ class _FrameLogo extends StatelessWidget {
           const SizedBox(width: 12),
           Flexible(
             child: Text(
-              AppLocalizations.of(context).photosFrameNavPhotos,
+              AppLocalizations.of(context).photosModuleDisplayName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: FramePalette.serifFamily,
                 fontFamilyFallback: FramePalette.serifFallback,
-                color: FramePalette.ink,
+                color: colors.ink,
                 fontSize: 18,
                 height: 1,
               ),
@@ -166,7 +170,7 @@ class _FrameLogo extends StatelessWidget {
   }
 }
 
-/// 侧栏导航项：激活 #EDE9E1 底 + 陶土色图标，悬停 #F0EDE6 底。
+/// 侧栏导航项：激活强调底色 + 陶土色图标，悬停悬停底色。
 class _FrameNavItem extends StatefulWidget {
   const _FrameNavItem({
     required this.view,
@@ -192,16 +196,16 @@ class _FrameNavItemState extends State<_FrameNavItem> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     final active = widget.active;
     final background =
         active
-            ? FramePalette.activeBg
+            ? colors.activeBg
             : _hovering
-            ? FramePalette.hover
+            ? colors.hover
             : Colors.transparent;
-    final foreground =
-        active || _hovering ? FramePalette.ink : FramePalette.muted;
-    final iconColor = active ? FramePalette.accent : foreground;
+    final foreground = active || _hovering ? colors.ink : colors.muted;
+    final iconColor = active ? colors.accent : foreground;
 
     Widget item = MouseRegion(
       cursor: SystemMouseCursors.click,

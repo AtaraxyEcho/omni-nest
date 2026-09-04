@@ -201,5 +201,80 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('batch bar supports select all and deselect all', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(2400, 1200);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final photos = List<PhotoItem>.generate(
+        6,
+        (index) => PhotoItem(
+          id: 'photo-$index',
+          fileNodeId: 'file-$index',
+          title: 'Photo $index',
+          format: 'JPEG',
+          fileSize: 1024,
+          metadataStatus: 'READY',
+          favorite: false,
+          createdAt: DateTime(2026, 7, 13),
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/photos',
+        routes: [
+          GoRoute(
+            path: '/photos',
+            builder: (context, state) => const PhotosPage(),
+          ),
+          GoRoute(
+            path: '/portal',
+            builder: (context, state) => const SizedBox(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      final selectionState = PhotoCenterState.empty().copyWith(
+        photos: photos,
+        photoTotalElements: photos.length,
+        isSelectionMode: true,
+        selectedPhotoIds: const {'photo-0'},
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authSessionStoreProvider.overrideWithValue(
+              MemoryAuthSessionStore(),
+            ),
+            photoCenterControllerProvider.overrideWith(
+              () => _FakePhotoCenterController(selectionState),
+            ),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
+            theme: OmniNestTheme.from(AppThemePalette.dark),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      await tester.tap(find.text('Select all'));
+      await tester.pumpAndSettle();
+      expect(find.text('6 selected'), findsOneWidget);
+
+      await tester.tap(find.text('Deselect all'));
+      await tester.pumpAndSettle();
+      // 选择集清空后批操作条整体隐藏。
+      expect(find.text('1 selected'), findsNothing);
+      expect(find.text('Deselect all'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

@@ -522,16 +522,51 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
   }
 
   /// 切换 Frame 设计稿的图库视图；切出当前视图时退出多选模式。
+  ///
+  /// 收藏视图与图库数据源联动：进入收藏视图切换到收藏 Tab，
+  /// 切回其他视图恢复全部照片 Tab。
   void setFrameView(FrameView view) {
     final current = state.asData?.value;
     if (current == null || current.frameView == view) return;
+    PhotoTab? targetTab;
+    if (view == FrameView.favorites && current.tab != PhotoTab.favorites) {
+      targetTab = PhotoTab.favorites;
+    }
+    if (view != FrameView.favorites && current.tab == PhotoTab.favorites) {
+      targetTab = PhotoTab.all;
+    }
+    final hadQuery = current.searchQuery.trim().isNotEmpty;
     state = AsyncData(
       current.copyWith(
         frameView: view,
         isSelectionMode: false,
         selectedPhotoIds: const {},
+        tab: targetTab ?? current.tab,
+        searchQuery: targetTab != null ? '' : null,
       ),
     );
+    _importRefreshEpoch++;
+    _refreshGeneration++;
+    _searchDebounce?.cancel();
+    final tab = targetTab ?? current.tab;
+    if (targetTab != null || hadQuery) {
+      unawaited(_reloadVisiblePage(tab, ''));
+    }
+  }
+
+  /// 全选/取消全选当前视图可见照片；已全选时清空选择。
+  void toggleSelectAllVisible() {
+    final current = state.asData?.value;
+    if (current == null) return;
+    final visibleIds = current.visiblePhotos.map((photo) => photo.id).toSet();
+    final allSelected =
+        visibleIds.isNotEmpty &&
+        visibleIds.every(current.selectedPhotoIds.contains);
+    final next =
+        allSelected
+            ? const <String>{}
+            : <String>{...current.selectedPhotoIds, ...visibleIds};
+    state = AsyncData(current.copyWith(selectedPhotoIds: next));
   }
 
   /// 切换分组浏览的维度。

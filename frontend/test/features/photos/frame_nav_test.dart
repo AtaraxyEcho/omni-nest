@@ -75,6 +75,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('No locations yet'), findsOneWidget);
 
+      await tester.tap(find.byKey(const ValueKey('frame-nav-favorites')));
+      await tester.pumpAndSettle();
+      expect(find.text('No favorite photos yet'), findsOneWidget);
+
       await tester.tap(find.byKey(const ValueKey('frame-nav-albums')));
       await tester.pumpAndSettle();
       expect(find.text('New Album'), findsOneWidget);

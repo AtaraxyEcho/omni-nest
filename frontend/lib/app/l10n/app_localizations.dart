@@ -14658,6 +14658,24 @@ abstract class AppLocalizations {
   /// **'Toggle selection'**
   String get photosToggleSelection;
 
+  /// No description provided for @photosModuleDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightbox'**
+  String get photosModuleDisplayName;
+
+  /// No description provided for @photosSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get photosSelectAll;
+
+  /// No description provided for @photosDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get photosDeselectAll;
+
   /// No description provided for @photosFrameNavPhotos.
   ///
   /// In en, this message translates to:

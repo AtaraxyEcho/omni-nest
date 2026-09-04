@@ -30,7 +30,7 @@ class _FrameViewContent extends ConsumerWidget {
               ? Duration.zero
               : const Duration(milliseconds: 200),
       child: switch (state.frameView) {
-        FrameView.grid => _buildGrid(context, ref),
+        FrameView.grid || FrameView.favorites => _buildGrid(context, ref),
         FrameView.timeline => PhotoTimelineView(
           key: const ValueKey('frame-timeline'),
           onOpenPhoto: onOpenPhoto,
@@ -66,11 +66,16 @@ class _FrameViewContent extends ConsumerWidget {
   }
 
   Widget _buildGrid(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final isFavorites = state.tab == PhotoTab.favorites;
     final grid = FrameMasonryGrid(
-      key: const ValueKey('frame-grid'),
+      key: ValueKey(isFavorites ? 'frame-grid-favorites' : 'frame-grid-all'),
       photos: state.visiblePhotos,
       onOpenPhoto: onOpenPhoto,
       onToggleFavorite: onToggleFavorite,
+      emptyMessage: isFavorites ? l10n.photosNoFavorites : l10n.photosNoPhotos,
+      emptySubtitle:
+          isFavorites ? l10n.photosNoFavoritesHint : l10n.photosNoPhotosHint,
     );
     if (!compact) {
       return grid;
@@ -78,7 +83,7 @@ class _FrameViewContent extends ConsumerWidget {
     return RefreshIndicator(
       displacement: 48,
       strokeWidth: 2.5,
-      color: FramePalette.accent,
+      color: context.frameColors.accent,
       onRefresh:
           () => ref.read(photoCenterControllerProvider.notifier).refresh(),
       child: grid,

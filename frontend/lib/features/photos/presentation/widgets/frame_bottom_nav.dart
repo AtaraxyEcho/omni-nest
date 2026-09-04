@@ -4,7 +4,7 @@ import 'package:omninest/features/photos/application/photo_center_models.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_view_meta.dart';
 
-/// Frame 风格移动端底部导航：五个视图入口，不含回收站（与设计稿一致）。
+/// Frame 风格移动端底部导航：视图入口，不含回收站（与设计稿一致）。
 class FrameBottomNav extends StatelessWidget {
   const FrameBottomNav({
     required this.activeView,
@@ -30,10 +30,11 @@ class FrameBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = context.frameColors;
     final nav = Container(
-      decoration: const BoxDecoration(
-        color: FramePalette.navBg,
-        border: Border(top: BorderSide(color: FramePalette.border)),
+      decoration: BoxDecoration(
+        color: colors.navBg,
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: Row(
         children: [
@@ -73,7 +74,8 @@ class _FrameBottomItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? FramePalette.accent : FramePalette.muted;
+    final colors = context.frameColors;
+    final color = active ? colors.accent : colors.muted;
     return Semantics(
       button: true,
       selected: active,

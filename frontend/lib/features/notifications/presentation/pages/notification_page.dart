@@ -113,7 +113,14 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
         backgroundColor: colors.surface.withValues(alpha: 0.86),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.go('/portal'),
+          onPressed: () {
+            // 从模块内进入时返回来源模块，直达打开时回 Portal。
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/portal');
+            }
+          },
         ),
         title: Text(
           unreadCount > 0

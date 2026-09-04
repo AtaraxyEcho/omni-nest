@@ -90,9 +90,10 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
             context.go('/portal');
           },
           child: Scaffold(
-            backgroundColor: hosted ? Colors.transparent : FramePalette.bg,
+            backgroundColor:
+                hosted ? Colors.transparent : context.frameColors.bg,
             body: ColoredBox(
-              color: hosted ? Colors.transparent : FramePalette.bg,
+              color: hosted ? Colors.transparent : context.frameColors.bg,
               child:
                   isWide
                       ? _buildWideLayout(stateAsync, constraints.maxWidth)
@@ -112,43 +113,53 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
     return stateAsync.when(
       data: (data) {
         final notifier = ref.read(photoCenterControllerProvider.notifier);
-        return Row(
+        return Column(
           children: [
-            FrameSidebar(
-              activeView: data.frameView,
-              onSelectView: notifier.setFrameView,
-              photoCount: data.visiblePhotoTotalElements,
-              albumCount: data.albums.length,
-              trashCount: 0,
-              collapsed: width < 1024,
+            // 顶栏贯穿侧边栏，通知/头像/返回入口与其他模块保持同一位置。
+            FrameTopBar(
+              view: data.frameView,
+              searchController: _searchController,
+              onSearchChanged: notifier.setSearchQuery,
+              showTitle: true,
+              showBack: true,
             ),
             Expanded(
-              child: Column(
+              child: Row(
                 children: [
-                  FrameTopBar(
-                    view: data.frameView,
-                    searchController: _searchController,
-                    onSearchChanged: notifier.setSearchQuery,
-                    showTitle: true,
-                    showBack: true,
+                  FrameSidebar(
+                    activeView: data.frameView,
+                    onSelectView: notifier.setFrameView,
+                    photoCount: data.visiblePhotoTotalElements,
+                    albumCount: data.albums.length,
+                    trashCount: 0,
+                    collapsed: width < 1024,
                   ),
                   Expanded(
-                    child: _FrameViewContent(
-                      state: data,
-                      compact: false,
-                      onOpenPhoto:
-                          (photo) => context.push('/photos/${photo.id}'),
-                      onOpenAlbum:
-                          (album) => context.push('/photos/albums/${album.id}'),
-                      onDeleteAlbum:
-                          (album) => _confirmDeleteAlbum(context, album),
-                      onCreateAlbum: () => _showCreateAlbumDialog(context),
-                      onToggleFavorite:
-                          (photo) => unawaited(_toggleFavorite(photo)),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: _FrameViewContent(
+                            state: data,
+                            compact: false,
+                            onOpenPhoto:
+                                (photo) => context.push('/photos/${photo.id}'),
+                            onOpenAlbum:
+                                (album) =>
+                                    context.push('/photos/albums/${album.id}'),
+                            onDeleteAlbum:
+                                (album) => _confirmDeleteAlbum(context, album),
+                            onCreateAlbum:
+                                () => _showCreateAlbumDialog(context),
+                            onToggleFavorite:
+                                (photo) => unawaited(_toggleFavorite(photo)),
+                          ),
+                        ),
+                        if (data.isSelectionMode &&
+                            data.selectedPhotoIds.isNotEmpty)
+                          _buildAnimatedBatchBar(data),
+                      ],
                     ),
                   ),
-                  if (data.isSelectionMode && data.selectedPhotoIds.isNotEmpty)
-                    _buildAnimatedBatchBar(data),
                 ],
               ),
             ),

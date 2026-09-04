@@ -53,6 +53,7 @@ class _PhotoGridTileState extends State<PhotoGridTile> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = context.frameColors;
     final photo = widget.photo;
     final overlayVisible =
         _hovering || widget.isSelectionMode || widget.isSelected;
@@ -79,7 +80,7 @@ class _PhotoGridTileState extends State<PhotoGridTile> {
               fadeInDuration: Duration.zero,
               fadeOutDuration: Duration.zero,
               placeholder:
-                  (context, url) => const ColoredBox(color: FramePalette.card),
+                  (context, url) => ColoredBox(color: context.frameColors.card),
               errorWidget: (context, url, error) => const _Placeholder(),
             )
           else
@@ -158,13 +159,13 @@ class _PhotoGridTileState extends State<PhotoGridTile> {
 
           // 选中态 2px 陶土色内描边
           if (widget.isSelected)
-            const Positioned.fill(
+            Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(3)),
+                    borderRadius: const BorderRadius.all(Radius.circular(3)),
                     border: Border.fromBorderSide(
-                      BorderSide(color: FramePalette.accent, width: 2),
+                      BorderSide(color: colors.accent, width: 2),
                     ),
                   ),
                 ),
@@ -210,6 +211,7 @@ class _SelectionCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     return Semantics(
       button: true,
       selected: selected,
@@ -226,7 +228,7 @@ class _SelectionCircle extends StatelessWidget {
               shape: BoxShape.circle,
               color:
                   selected
-                      ? FramePalette.accent
+                      ? colors.accent
                       : Colors.white.withValues(alpha: 0.75),
               border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
             ),
@@ -259,6 +261,7 @@ class _FavoriteHeart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     final customActions =
         onTap == null
             ? null
@@ -276,7 +279,7 @@ class _FavoriteHeart extends StatelessWidget {
             data: const IconThemeData(size: 16),
             child:
                 favorite
-                    ? const Icon(Icons.favorite, color: FramePalette.accent)
+                    ? Icon(Icons.favorite, color: colors.accent)
                     : Icon(
                       Icons.favorite_border,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -294,6 +297,6 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(color: FramePalette.card);
+    return ColoredBox(color: context.frameColors.card);
   }
 }

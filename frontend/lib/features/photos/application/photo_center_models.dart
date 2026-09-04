@@ -12,8 +12,8 @@ enum PhotoTab { all, favorites }
 /// 图库内容形态：按日/按月网格、时间线、分组浏览。
 enum PhotoLibraryView { gridDay, gridMonth, timeline, groups }
 
-/// Frame 设计稿中的图库视图：全部照片、时间线、地点、标签、影集、回收站。
-enum FrameView { grid, timeline, locations, tags, albums, trash }
+/// Frame 设计稿中的图库视图：全部照片、时间线、地点、标签、影集、收藏、回收站。
+enum FrameView { grid, timeline, locations, tags, albums, favorites, trash }
 
 /// 导入流程提示类型；文案由界面层按语言映射。
 enum PhotoImportNotice { completedNotVisible, stillProcessing, backendFailed }

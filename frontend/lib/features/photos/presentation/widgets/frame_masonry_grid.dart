@@ -16,12 +16,20 @@ class FrameMasonryGrid extends ConsumerWidget {
     required this.photos,
     required this.onOpenPhoto,
     required this.onToggleFavorite,
+    this.emptyMessage,
+    this.emptySubtitle,
     super.key,
   });
 
   final List<PhotoItem> photos;
   final ValueChanged<PhotoItem> onOpenPhoto;
   final ValueChanged<PhotoItem> onToggleFavorite;
+
+  /// 空态主文案；缺省为"还没有照片"。
+  final String? emptyMessage;
+
+  /// 空态补充说明。
+  final String? emptySubtitle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,7 +51,8 @@ class FrameMasonryGrid extends ConsumerWidget {
               hasScrollBody: false,
               child: FrameEmptyView(
                 icon: Icons.image_outlined,
-                message: l10n.photosNoPhotos,
+                message: emptyMessage ?? l10n.photosNoPhotos,
+                hint: emptySubtitle,
               ),
             )
           else

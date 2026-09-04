@@ -8034,6 +8034,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosToggleSelection => 'Toggle selection';
 
   @override
+  String get photosModuleDisplayName => 'Lightbox';
+
+  @override
+  String get photosSelectAll => 'Select all';
+
+  @override
+  String get photosDeselectAll => 'Deselect all';
+
+  @override
   String get photosFrameNavPhotos => 'Photos';
 
   @override

@@ -262,25 +262,42 @@ class _AvatarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    final content =
+        avatarUrl != null && avatarUrl!.isNotEmpty
+            ? Image.network(
+              avatarUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _AvatarFallback(initial: initial),
+            )
+            : _AvatarFallback(initial: initial);
+    // 显式 ClipOval 保证任意平台上头像均为正圆，边框以覆盖层绘制。
+    return SizedBox(
       width: size,
       height: size,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: theme.colorScheme.surfaceContainerHighest,
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.32),
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipOval(
+              child: ColoredBox(
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: content,
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.32,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      child:
-          avatarUrl != null && avatarUrl!.isNotEmpty
-              ? Image.network(
-                avatarUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _AvatarFallback(initial: initial),
-              )
-              : _AvatarFallback(initial: initial),
     );
   }
 }

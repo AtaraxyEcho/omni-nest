@@ -26,6 +26,7 @@ class FrameAlbumsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = context.frameColors;
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -44,7 +45,7 @@ class FrameAlbumsView extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: FramePalette.serifFamily,
                           fontFamilyFallback: FramePalette.serifFallback,
-                          color: FramePalette.ink,
+                          color: colors.ink,
                           fontSize: 24,
                         ),
                       ),
@@ -58,10 +59,7 @@ class FrameAlbumsView extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         l10n.photosNoAlbums,
-                        style: const TextStyle(
-                          color: FramePalette.muted,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: colors.muted, fontSize: 13),
                       ),
                     )
                   else
@@ -113,6 +111,7 @@ class _NewAlbumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     return Semantics(
       button: true,
       child: MouseRegion(
@@ -122,17 +121,17 @@ class _NewAlbumButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: FramePalette.dark,
+              color: colors.btnBg,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.add_rounded, size: 15, color: Colors.white),
+                Icon(Icons.add_rounded, size: 15, color: colors.onBtn),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context).photosNewAlbum,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: TextStyle(color: colors.onBtn, fontSize: 14),
                 ),
               ],
             ),
@@ -191,7 +190,7 @@ class _FrameAlbumCardState extends State<_FrameAlbumCard> {
                 child: AspectRatio(
                   aspectRatio: 1.4,
                   child: Container(
-                    color: FramePalette.card,
+                    color: context.frameColors.card,
                     child: AnimatedScale(
                       scale: _hovering ? 1.05 : 1,
                       duration:
@@ -216,7 +215,10 @@ class _FrameAlbumCardState extends State<_FrameAlbumCard> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: _hovering ? FramePalette.accent : FramePalette.ink,
+                  color:
+                      _hovering
+                          ? context.frameColors.accent
+                          : context.frameColors.ink,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -226,7 +228,10 @@ class _FrameAlbumCardState extends State<_FrameAlbumCard> {
                 metaText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: FramePalette.muted, fontSize: 12),
+                style: TextStyle(
+                  color: context.frameColors.muted,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

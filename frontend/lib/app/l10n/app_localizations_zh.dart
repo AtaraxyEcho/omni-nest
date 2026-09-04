@@ -7787,6 +7787,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosToggleSelection => '多选';
 
   @override
+  String get photosModuleDisplayName => '光影集';
+
+  @override
+  String get photosSelectAll => '全选';
+
+  @override
+  String get photosDeselectAll => '取消全选';
+
+  @override
   String get photosFrameNavPhotos => '照片';
 
   @override

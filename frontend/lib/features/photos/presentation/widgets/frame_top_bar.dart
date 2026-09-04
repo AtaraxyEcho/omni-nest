@@ -11,10 +11,10 @@ import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart
 import 'package:omninest/features/photos/presentation/widgets/frame_view_meta.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 
-/// Frame 顶栏：返回 Portal、衬线视图标题、搜索框、多选与图库功能入口。
+/// Frame 顶栏：返回 Portal、衬线视图标题、搜索框与导入、通知、头像入口。
 ///
-/// 布局比照设计稿：标题 mr-auto 靠左，搜索框（md 及以上 208px，以下撑满）
-/// 与操作图标靠右；回收站与影集视图不提供多选入口。
+/// 多选不提供顶栏按钮，由照片卡片长按进入；回收站与影集视图的
+/// 卡片不支持多选。
 class FrameTopBar extends ConsumerWidget {
   const FrameTopBar({
     required this.view,
@@ -33,7 +33,7 @@ class FrameTopBar extends ConsumerWidget {
   /// 设计稿在 md 以下隐藏衬线标题。
   final bool showTitle;
 
-  /// 设计稿搜索框在 md 以下 flex-1 撑满，md 及以上固定 w-52（208px）。
+  /// 设计稿搜索框在 md 以下 flex-1 撑满，md 及以上固定宽度。
   final bool searchExpanded;
 
   /// 显示返回 Portal 入口；应用壳托管的移动端由壳层导航承担。
@@ -44,20 +44,13 @@ class FrameTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final isSelectionMode =
-        ref
-            .watch(photoCenterControllerProvider)
-            .asData
-            ?.value
-            .isSelectionMode ??
-        false;
-    final canSelect = view != FrameView.trash && view != FrameView.albums;
+    final colors = context.frameColors;
 
     Widget searchField = _FrameSearchField(
       controller: searchController,
       onChanged: onSearchChanged,
       hint: l10n.photosSearchHint,
-      width: searchExpanded ? null : 208,
+      width: searchExpanded ? null : 232,
     );
     if (searchExpanded) {
       searchField = Expanded(child: searchField);
@@ -66,19 +59,19 @@ class FrameTopBar extends ConsumerWidget {
     return Container(
       height: height,
       padding: EdgeInsets.symmetric(horizontal: showTitle ? 24 : 16),
-      decoration: const BoxDecoration(
-        color: FramePalette.bg,
-        border: Border(bottom: BorderSide(color: FramePalette.border)),
+      decoration: BoxDecoration(
+        color: colors.navBg,
+        border: Border(bottom: BorderSide(color: colors.border)),
       ),
       child: Row(
         children: [
           if (showBack) ...[
-            _FrameIconButton(
+            FrameIconButton(
               icon: Icons.arrow_back_rounded,
               tooltip: l10n.photosBackToPortal,
               onTap: () => context.go('/portal'),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
           ],
           if (showTitle)
             Text(
@@ -88,30 +81,17 @@ class FrameTopBar extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: FramePalette.serifFamily,
                 fontFamilyFallback: FramePalette.serifFallback,
-                color: FramePalette.ink,
+                color: colors.ink,
                 fontSize: 20,
               ),
             ),
           const Spacer(),
           searchField,
-          if (canSelect) ...[
-            const SizedBox(width: 8),
-            _FrameIconButton(
-              icon: Icons.check_box_outlined,
-              tooltip: l10n.photosToggleSelection,
-              active: isSelectionMode,
-              onTap:
-                  () =>
-                      ref
-                          .read(photoCenterControllerProvider.notifier)
-                          .toggleSelectionMode(),
-            ),
-          ],
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _FrameImportAction(),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           const NotificationIcon(size: 20),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           const UserAvatarMenu(),
         ],
       ),
@@ -119,7 +99,7 @@ class FrameTopBar extends ConsumerWidget {
   }
 }
 
-/// Frame 搜索框：单一输入框渲染，白底、#E5E2DC 边框、圆角 8、高 32。
+/// Frame 搜索框：单一输入框渲染，白底、细边框、圆角 8、高 40。
 class _FrameSearchField extends StatelessWidget {
   const _FrameSearchField({
     required this.controller,
@@ -135,28 +115,25 @@ class _FrameSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     Widget field = SizedBox(
-      height: 32,
+      height: 40,
       width: width,
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(color: FramePalette.ink, fontSize: 14),
-        cursorColor: FramePalette.accent,
+        style: TextStyle(color: colors.ink, fontSize: 14),
+        cursorColor: colors.accent,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: FramePalette.muted, fontSize: 14),
+          hintStyle: TextStyle(color: colors.muted, fontSize: 14),
           filled: true,
-          fillColor: FramePalette.white,
+          fillColor: colors.searchFill,
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-          prefixIcon: const Padding(
-            padding: EdgeInsets.only(left: 12, right: 8),
-            child: Icon(
-              Icons.search_rounded,
-              size: 14,
-              color: FramePalette.muted,
-            ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 14, right: 10),
+            child: Icon(Icons.search_rounded, size: 16, color: colors.muted),
           ),
           prefixIconConstraints: const BoxConstraints(
             minWidth: 0,
@@ -164,11 +141,11 @@ class _FrameSearchField extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: FramePalette.border),
+            borderSide: BorderSide(color: colors.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: FramePalette.border),
+            borderSide: BorderSide(color: colors.accent),
           ),
         ),
       ),
@@ -184,12 +161,13 @@ class _FrameSearchField extends StatelessWidget {
 }
 
 /// Frame 图标按钮：34px 方形、6px 圆角，激活态陶土色高亮，悬停墨色。
-class _FrameIconButton extends StatefulWidget {
-  const _FrameIconButton({
+class FrameIconButton extends StatefulWidget {
+  const FrameIconButton({
     required this.icon,
     required this.tooltip,
     required this.onTap,
     this.active = false,
+    super.key,
   });
 
   final IconData icon;
@@ -198,27 +176,28 @@ class _FrameIconButton extends StatefulWidget {
   final bool active;
 
   @override
-  State<_FrameIconButton> createState() => _FrameIconButtonState();
+  State<FrameIconButton> createState() => _FrameIconButtonState();
 }
 
-class _FrameIconButtonState extends State<_FrameIconButton> {
+class _FrameIconButtonState extends State<FrameIconButton> {
   bool _hovering = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     final active = widget.active;
     final background =
         active
-            ? const Color(0xFFF5EFE6)
+            ? colors.selectActiveBg
             : _hovering
-            ? FramePalette.hover
+            ? colors.hover
             : Colors.transparent;
     final iconColor =
         active
-            ? FramePalette.accent
+            ? colors.accent
             : _hovering
-            ? FramePalette.ink
-            : FramePalette.muted;
+            ? colors.ink
+            : colors.muted;
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -291,7 +270,7 @@ class _FrameImportAction extends ConsumerWidget {
       allowSharedSpace: false,
       reuseExistingFiles: true,
       style: ImportButtonStyle.iconButton,
-      color: FramePalette.muted,
+      color: context.frameColors.muted,
     );
   }
 }

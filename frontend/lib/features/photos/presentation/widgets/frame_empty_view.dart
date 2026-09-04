@@ -16,25 +16,26 @@ class FrameEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.frameColors;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 40, color: FramePalette.muted),
+            Icon(icon, size: 40, color: colors.muted),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: FramePalette.sub, fontSize: 14),
+              style: TextStyle(color: colors.sub, fontSize: 14),
             ),
             if (hint != null) ...[
               const SizedBox(height: 4),
               Text(
                 hint!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: FramePalette.muted, fontSize: 12),
+                style: TextStyle(color: colors.muted, fontSize: 12),
               ),
             ],
           ],

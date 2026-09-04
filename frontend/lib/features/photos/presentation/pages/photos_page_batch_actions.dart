@@ -6,6 +6,13 @@ class _BatchActionBar extends StatelessWidget {
   final PhotoCenterState state;
   final WidgetRef ref;
 
+  /// 当前视图可见照片是否已全部选中。
+  bool get _allVisibleSelected {
+    final visibleIds = state.visiblePhotos.map((photo) => photo.id);
+    return visibleIds.isNotEmpty &&
+        visibleIds.every(state.selectedPhotoIds.contains);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -46,33 +53,59 @@ class _BatchActionBar extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const Spacer(),
-          // 批量标签
-          _BatchAction(
-            icon: Icons.label_outline,
-            label: AppLocalizations.of(context).photosTag,
-            onTap: () => _showBatchTagDialog(context),
-          ),
-          const SizedBox(width: 8),
-          // 批量移动到相册
-          _BatchAction(
-            icon: Icons.photo_album_outlined,
-            label: AppLocalizations.of(context).photosMove,
-            onTap: () => _showBatchMoveDialog(context),
-          ),
           const SizedBox(width: 8),
           _BatchAction(
-            icon: Icons.archive_outlined,
-            label: AppLocalizations.of(context).photosExportZip,
-            onTap: () => _startBatchDownload(context),
+            icon:
+                _allVisibleSelected
+                    ? Icons.deselect_rounded
+                    : Icons.select_all_rounded,
+            label:
+                _allVisibleSelected
+                    ? AppLocalizations.of(context).photosDeselectAll
+                    : AppLocalizations.of(context).photosSelectAll,
+            onTap: () {
+              ref
+                  .read(photoCenterControllerProvider.notifier)
+                  .toggleSelectAllVisible();
+            },
           ),
           const SizedBox(width: 8),
-          // 批量删除
-          _BatchAction(
-            icon: Icons.delete_outline,
-            label: AppLocalizations.of(context).photosDelete,
-            isDestructive: true,
-            onTap: () => _confirmBatchDelete(context),
+          // 批量操作区：窄宽度下横向滚动，避免溢出。
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  // 批量标签
+                  _BatchAction(
+                    icon: Icons.label_outline,
+                    label: AppLocalizations.of(context).photosTag,
+                    onTap: () => _showBatchTagDialog(context),
+                  ),
+                  const SizedBox(width: 8),
+                  // 批量移动到相册
+                  _BatchAction(
+                    icon: Icons.photo_album_outlined,
+                    label: AppLocalizations.of(context).photosMove,
+                    onTap: () => _showBatchMoveDialog(context),
+                  ),
+                  const SizedBox(width: 8),
+                  _BatchAction(
+                    icon: Icons.archive_outlined,
+                    label: AppLocalizations.of(context).photosExportZip,
+                    onTap: () => _startBatchDownload(context),
+                  ),
+                  const SizedBox(width: 8),
+                  // 批量删除
+                  _BatchAction(
+                    icon: Icons.delete_outline,
+                    label: AppLocalizations.of(context).photosDelete,
+                    isDestructive: true,
+                    onTap: () => _confirmBatchDelete(context),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

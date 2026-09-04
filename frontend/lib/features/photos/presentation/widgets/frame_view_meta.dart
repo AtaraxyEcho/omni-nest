@@ -10,6 +10,7 @@ String frameViewLabel(AppLocalizations l10n, FrameView view) {
     FrameView.locations => l10n.photosFrameNavLocations,
     FrameView.tags => l10n.photosFrameNavTags,
     FrameView.albums => l10n.photosAlbums,
+    FrameView.favorites => l10n.photosTabFavorites,
     FrameView.trash => l10n.photosFrameNavTrash,
   };
 }
@@ -22,6 +23,7 @@ IconData frameViewIcon(FrameView view) {
     FrameView.locations => Icons.place_outlined,
     FrameView.tags => Icons.sell_outlined,
     FrameView.albums => Icons.folder_outlined,
+    FrameView.favorites => Icons.favorite_border,
     FrameView.trash => Icons.delete_outlined,
   };
 }
