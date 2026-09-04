@@ -6172,17 +6172,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosSurfaceExplore => 'Explore';
 
   @override
-  String get photosGraphToggle => 'Toggle relation graph';
-
-  @override
-  String get photosGraphFilter => 'Filter nodes';
-
-  @override
-  String photosGraphSearchActive(Object query) {
-    return 'Filtering for \"$query\"';
-  }
-
-  @override
   String get photosGraphKindAlbum => 'Albums';
 
   @override
@@ -6192,22 +6181,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosGraphKindLocation => 'Places';
 
   @override
-  String get photosGraphKindPerson => 'People';
-
-  @override
   String get photosGraphEmpty => 'No photo relationships are available yet.';
-
-  @override
-  String get photosGraphNoSearchResults => 'No nodes match your search.';
-
-  @override
-  String get photosGraphUnnamedAlbum => 'Untitled album';
-
-  @override
-  String get photosGraphBack => 'Back to graph';
-
-  @override
-  String get photosGraphOpenAlbum => 'Open album';
 
   @override
   String get photosGraphViewPhoto => 'View photo';
@@ -6216,18 +6190,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String photosGraphPhotoCount(Object count) {
     return '$count photos';
   }
-
-  @override
-  String photosGraphShowing(Object shown, Object total) {
-    return 'Showing $shown of $total';
-  }
-
-  @override
-  String get photosGraphLoadMore => 'Load more';
-
-  @override
-  String get photosGraphTruncated =>
-      'Large graph: showing a subset of nodes and links.';
 
   @override
   String get photosGroupByDate => 'Time';
@@ -8082,4 +8044,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photosScrollToTop => 'Back to top';
+
+  @override
+  String photosRelCooccur(Object count) {
+    return '$count co-occurring photos';
+  }
+
+  @override
+  String photosRelOthers(Object count) {
+    return '$count more';
+  }
+
+  @override
+  String photosRelRelated(Object name) {
+    return 'Related to \"$name\"';
+  }
+
+  @override
+  String get photosRelCooccurTitle => 'Related entities';
+
+  @override
+  String get photosRelHint =>
+      'Tap an entity to inspect relations; View all filters the library by that entity.';
 }

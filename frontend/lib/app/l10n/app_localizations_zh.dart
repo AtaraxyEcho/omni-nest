@@ -5989,17 +5989,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosSurfaceExplore => '探索';
 
   @override
-  String get photosGraphToggle => '切换关系图谱';
-
-  @override
-  String get photosGraphFilter => '筛选节点类型';
-
-  @override
-  String photosGraphSearchActive(Object query) {
-    return '正在筛选“$query”';
-  }
-
-  @override
   String get photosGraphKindAlbum => '相册';
 
   @override
@@ -6009,22 +5998,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosGraphKindLocation => '地点';
 
   @override
-  String get photosGraphKindPerson => '人物';
-
-  @override
   String get photosGraphEmpty => '暂时没有可展示的照片关系。';
-
-  @override
-  String get photosGraphNoSearchResults => '没有匹配搜索条件的节点。';
-
-  @override
-  String get photosGraphUnnamedAlbum => '未命名相册';
-
-  @override
-  String get photosGraphBack => '返回图谱';
-
-  @override
-  String get photosGraphOpenAlbum => '打开相册';
 
   @override
   String get photosGraphViewPhoto => '查看照片';
@@ -6033,17 +6007,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String photosGraphPhotoCount(Object count) {
     return '$count 张照片';
   }
-
-  @override
-  String photosGraphShowing(Object shown, Object total) {
-    return '显示 $shown / $total 张';
-  }
-
-  @override
-  String get photosGraphLoadMore => '加载更多';
-
-  @override
-  String get photosGraphTruncated => '关系较多，仅展示部分节点与连线。';
 
   @override
   String get photosGroupByDate => '时间';
@@ -7834,4 +7797,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get photosScrollToTop => '回到顶部';
+
+  @override
+  String photosRelCooccur(Object count) {
+    return '共现 $count 张';
+  }
+
+  @override
+  String photosRelOthers(Object count) {
+    return '其他 $count 项';
+  }
+
+  @override
+  String photosRelRelated(Object name) {
+    return '与「$name」关联';
+  }
+
+  @override
+  String get photosRelCooccurTitle => '关联实体';
+
+  @override
+  String get photosRelHint => '点击实体查看关联；「查看全部」将按该实体筛选图库。';
 }

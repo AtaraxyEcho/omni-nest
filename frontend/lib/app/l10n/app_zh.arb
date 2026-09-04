@@ -2590,23 +2590,10 @@
   "photosTabGraph": "关系图谱",
   "photosSurfaceLibrary": "照片库",
   "photosSurfaceExplore": "探索",
-  "photosGraphToggle": "切换关系图谱",
-  "photosGraphFilter": "筛选节点类型",
-  "photosGraphSearchActive": "正在筛选“{query}”",
-  "@photosGraphSearchActive": {
-    "placeholders": {
-      "query": {}
-    }
-  },
   "photosGraphKindAlbum": "相册",
   "photosGraphKindTime": "时间",
   "photosGraphKindLocation": "地点",
-  "photosGraphKindPerson": "人物",
   "photosGraphEmpty": "暂时没有可展示的照片关系。",
-  "photosGraphNoSearchResults": "没有匹配搜索条件的节点。",
-  "photosGraphUnnamedAlbum": "未命名相册",
-  "photosGraphBack": "返回图谱",
-  "photosGraphOpenAlbum": "打开相册",
   "photosGraphViewPhoto": "查看照片",
   "photosGraphPhotoCount": "{count} 张照片",
   "@photosGraphPhotoCount": {
@@ -2614,15 +2601,6 @@
       "count": {}
     }
   },
-  "photosGraphShowing": "显示 {shown} / {total} 张",
-  "@photosGraphShowing": {
-    "placeholders": {
-      "shown": {},
-      "total": {}
-    }
-  },
-  "photosGraphLoadMore": "加载更多",
-  "photosGraphTruncated": "关系较多，仅展示部分节点与连线。",
   "photosGroupByDate": "时间",
   "photosGroupByLocation": "位置",
   "photosGroupByFormat": "格式",
@@ -3538,5 +3516,25 @@
   "photosInsightsTitle": "关联视图",
   "photosAlbumsManage": "管理相册",
   "photosExpandAlbums": "展开相册",
-  "photosScrollToTop": "回到顶部"
+  "photosScrollToTop": "回到顶部",
+  "photosRelCooccur": "共现 {count} 张",
+  "@photosRelCooccur": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosRelOthers": "其他 {count} 项",
+  "@photosRelOthers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosRelRelated": "与「{name}」关联",
+  "@photosRelRelated": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "photosRelCooccurTitle": "关联实体",
+  "photosRelHint": "点击实体查看关联；「查看全部」将按该实体筛选图库。"
 }

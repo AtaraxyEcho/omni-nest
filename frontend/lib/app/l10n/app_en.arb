@@ -2716,23 +2716,10 @@
   "photosTabGraph": "Graph",
   "photosSurfaceLibrary": "Library",
   "photosSurfaceExplore": "Explore",
-  "photosGraphToggle": "Toggle relation graph",
-  "photosGraphFilter": "Filter nodes",
-  "photosGraphSearchActive": "Filtering for \"{query}\"",
-  "@photosGraphSearchActive": {
-    "placeholders": {
-      "query": {}
-    }
-  },
   "photosGraphKindAlbum": "Albums",
   "photosGraphKindTime": "Time",
   "photosGraphKindLocation": "Places",
-  "photosGraphKindPerson": "People",
   "photosGraphEmpty": "No photo relationships are available yet.",
-  "photosGraphNoSearchResults": "No nodes match your search.",
-  "photosGraphUnnamedAlbum": "Untitled album",
-  "photosGraphBack": "Back to graph",
-  "photosGraphOpenAlbum": "Open album",
   "photosGraphViewPhoto": "View photo",
   "photosGraphPhotoCount": "{count} photos",
   "@photosGraphPhotoCount": {
@@ -2740,15 +2727,6 @@
       "count": {}
     }
   },
-  "photosGraphShowing": "Showing {shown} of {total}",
-  "@photosGraphShowing": {
-    "placeholders": {
-      "shown": {},
-      "total": {}
-    }
-  },
-  "photosGraphLoadMore": "Load more",
-  "photosGraphTruncated": "Large graph: showing a subset of nodes and links.",
   "photosGroupByDate": "Time",
   "photosGroupByLocation": "Places",
   "photosGroupByFormat": "Formats",
@@ -3664,5 +3642,25 @@
   "photosInsightsTitle": "Relationship insights",
   "photosAlbumsManage": "Manage albums",
   "photosExpandAlbums": "Show albums",
-  "photosScrollToTop": "Back to top"
+  "photosScrollToTop": "Back to top",
+  "photosRelCooccur": "{count} co-occurring photos",
+  "@photosRelCooccur": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosRelOthers": "{count} more",
+  "@photosRelOthers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosRelRelated": "Related to \"{name}\"",
+  "@photosRelRelated": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "photosRelCooccurTitle": "Related entities",
+  "photosRelHint": "Tap an entity to inspect relations; View all filters the library by that entity."
 }

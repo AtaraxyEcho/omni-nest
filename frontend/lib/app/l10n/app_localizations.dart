@@ -11333,24 +11333,6 @@ abstract class AppLocalizations {
   /// **'Explore'**
   String get photosSurfaceExplore;
 
-  /// No description provided for @photosGraphToggle.
-  ///
-  /// In en, this message translates to:
-  /// **'Toggle relation graph'**
-  String get photosGraphToggle;
-
-  /// No description provided for @photosGraphFilter.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter nodes'**
-  String get photosGraphFilter;
-
-  /// No description provided for @photosGraphSearchActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Filtering for \"{query}\"'**
-  String photosGraphSearchActive(Object query);
-
   /// No description provided for @photosGraphKindAlbum.
   ///
   /// In en, this message translates to:
@@ -11369,41 +11351,11 @@ abstract class AppLocalizations {
   /// **'Places'**
   String get photosGraphKindLocation;
 
-  /// No description provided for @photosGraphKindPerson.
-  ///
-  /// In en, this message translates to:
-  /// **'People'**
-  String get photosGraphKindPerson;
-
   /// No description provided for @photosGraphEmpty.
   ///
   /// In en, this message translates to:
   /// **'No photo relationships are available yet.'**
   String get photosGraphEmpty;
-
-  /// No description provided for @photosGraphNoSearchResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No nodes match your search.'**
-  String get photosGraphNoSearchResults;
-
-  /// No description provided for @photosGraphUnnamedAlbum.
-  ///
-  /// In en, this message translates to:
-  /// **'Untitled album'**
-  String get photosGraphUnnamedAlbum;
-
-  /// No description provided for @photosGraphBack.
-  ///
-  /// In en, this message translates to:
-  /// **'Back to graph'**
-  String get photosGraphBack;
-
-  /// No description provided for @photosGraphOpenAlbum.
-  ///
-  /// In en, this message translates to:
-  /// **'Open album'**
-  String get photosGraphOpenAlbum;
 
   /// No description provided for @photosGraphViewPhoto.
   ///
@@ -11416,24 +11368,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} photos'**
   String photosGraphPhotoCount(Object count);
-
-  /// No description provided for @photosGraphShowing.
-  ///
-  /// In en, this message translates to:
-  /// **'Showing {shown} of {total}'**
-  String photosGraphShowing(Object shown, Object total);
-
-  /// No description provided for @photosGraphLoadMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Load more'**
-  String get photosGraphLoadMore;
-
-  /// No description provided for @photosGraphTruncated.
-  ///
-  /// In en, this message translates to:
-  /// **'Large graph: showing a subset of nodes and links.'**
-  String get photosGraphTruncated;
 
   /// No description provided for @photosGroupByDate.
   ///
@@ -14747,6 +14681,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back to top'**
   String get photosScrollToTop;
+
+  /// No description provided for @photosRelCooccur.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} co-occurring photos'**
+  String photosRelCooccur(Object count);
+
+  /// No description provided for @photosRelOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} more'**
+  String photosRelOthers(Object count);
+
+  /// No description provided for @photosRelRelated.
+  ///
+  /// In en, this message translates to:
+  /// **'Related to \"{name}\"'**
+  String photosRelRelated(Object name);
+
+  /// No description provided for @photosRelCooccurTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Related entities'**
+  String get photosRelCooccurTitle;
+
+  /// No description provided for @photosRelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an entity to inspect relations; View all filters the library by that entity.'**
+  String get photosRelHint;
 }
 
 class _AppLocalizationsDelegate
