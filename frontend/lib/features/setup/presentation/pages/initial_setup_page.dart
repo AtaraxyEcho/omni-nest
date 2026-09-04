@@ -21,7 +21,6 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   final _formKey = GlobalKey<FormState>();
   final _setupTokenController = TextEditingController();
   final _instanceNameController = TextEditingController(text: 'OmniNest');
-  final _defaultLocaleController = TextEditingController(text: 'zh-CN');
   final _defaultTimezoneController = TextEditingController(
     text: 'Asia/Shanghai',
   );
@@ -30,6 +29,7 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  String _defaultLocale = 'zh-CN';
   bool _obscurePassword = true;
   bool _submitting = false;
   String? _errorMessage;
@@ -38,7 +38,6 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   void dispose() {
     _setupTokenController.dispose();
     _instanceNameController.dispose();
-    _defaultLocaleController.dispose();
     _defaultTimezoneController.dispose();
     _usernameController.dispose();
     _displayNameController.dispose();
@@ -57,7 +56,7 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final instanceName = _instanceNameController.text.trim();
-    final defaultLocale = _defaultLocaleController.text.trim();
+    final defaultLocale = _defaultLocale;
     final defaultTimezone = _defaultTimezoneController.text.trim();
     setState(() {
       _submitting = true;
@@ -249,19 +248,20 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
               ),
               const SizedBox(height: 14),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: _defaultLocaleController,
-                      decoration: InputDecoration(
-                        labelText: l10n.setupDefaultLocale,
-                        prefixIcon: const Icon(Icons.language_outlined),
-                      ),
-                      validator:
-                          (value) =>
-                              value == null || value.trim().isEmpty
-                                  ? l10n.setupDefaultLocaleRequired
-                                  : null,
+                    child: AppDropdown<String>(
+                      value: _defaultLocale,
+                      items: const [
+                        AppDropdownItem(value: 'zh-CN', label: '中文'),
+                        AppDropdownItem(value: 'en-US', label: 'English'),
+                      ],
+                      onChanged:
+                          (value) => setState(() {
+                            if (value != null) _defaultLocale = value;
+                          }),
+                      label: l10n.setupDefaultLocale,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -408,26 +408,134 @@ class _SetupTopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final language = ref.watch(localeControllerProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: AppDropdown<String>(
-          value: language,
-          width: 148,
-          items: const [
-            AppDropdownItem(value: 'zh', label: '中文'),
-            AppDropdownItem(value: 'en', label: 'English'),
-          ],
-          onChanged: (value) {
-            if (value == null || value == language) return;
-            unawaited(
-              ref.read(localeControllerProvider.notifier).setLanguage(value),
-            );
-          },
+      child: Align(alignment: Alignment.centerRight, child: _LanguageSwitch()),
+    );
+  }
+}
+
+/// 紧凑语言切换：文字按钮 + 菜单，体量小于表单字段，避免喧宾夺主。
+class _LanguageSwitch extends ConsumerStatefulWidget {
+  const _LanguageSwitch();
+
+  @override
+  ConsumerState<_LanguageSwitch> createState() => _LanguageSwitchState();
+}
+
+class _LanguageSwitchState extends ConsumerState<_LanguageSwitch> {
+  final MenuController _menu = MenuController();
+
+  static const _languageOptions = <(String, String)>[
+    ('zh', '中文'),
+    ('en', 'English'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final language = ref.watch(localeControllerProvider);
+    final currentLabel =
+        _languageOptions.firstWhere((option) => option.$1 == language).$2;
+    return MenuAnchor(
+      controller: _menu,
+      useRootOverlay: true,
+      alignmentOffset: const Offset(0, 6),
+      style: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(colors.surfaceContainerHigh),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: colors.outlineVariant),
+          ),
         ),
+        elevation: const WidgetStatePropertyAll(8),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: 6),
+        ),
+        minimumSize: const WidgetStatePropertyAll(Size(120, 0)),
       ),
+      menuChildren: [
+        for (final (code, label) in _languageOptions)
+          MenuItemButton(
+            onPressed: () {
+              _menu.close();
+              if (code != language) {
+                unawaited(
+                  ref.read(localeControllerProvider.notifier).setLanguage(code),
+                );
+              }
+            },
+            style: ButtonStyle(
+              padding: const WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 12),
+              ),
+              minimumSize: const WidgetStatePropertyAll(Size.fromHeight(44)),
+              shape: WidgetStatePropertyAll(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              backgroundColor: WidgetStateProperty.resolveWith(
+                (states) =>
+                    states.contains(WidgetState.hovered)
+                        ? colors.onSurface.withValues(alpha: 0.06)
+                        : Colors.transparent,
+              ),
+              foregroundColor: WidgetStatePropertyAll(colors.onSurface),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: code == language ? colors.primary : colors.onSurface,
+                    fontWeight:
+                        code == language ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+                if (code == language)
+                  Icon(Icons.check_rounded, size: 16, color: colors.primary),
+              ],
+            ),
+          ),
+      ],
+      builder: (context, controller, child) {
+        return TextButton(
+          onPressed:
+              () => controller.isOpen ? controller.close() : controller.open(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            minimumSize: const Size(0, 36),
+            foregroundColor: colors.onSurface,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.language_rounded,
+                size: 18,
+                color: colors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                currentLabel,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              AnimatedRotation(
+                turns: controller.isOpen ? 0.5 : 0,
+                duration: const Duration(milliseconds: 150),
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -450,17 +558,15 @@ class _SetupSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              Icons.rocket_launch_outlined,
-              size: 38,
-              color: scheme.onPrimaryContainer,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              'assets/icon/icon.png',
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
+              // 源图为 2048px，按展示尺寸低分辨率解码，避免整图进内存。
+              cacheWidth: 216,
             ),
           ),
           const SizedBox(height: 24),

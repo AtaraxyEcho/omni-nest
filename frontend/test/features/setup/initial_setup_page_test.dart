@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/locale/application/locale_controller.dart';
 import 'package:omninest/app/theme/app_theme.dart';
-import 'package:omninest/app/widgets/app_dropdown.dart';
 import 'package:omninest/features/setup/application/initial_setup_controller.dart';
 import 'package:omninest/features/setup/domain/initial_setup_status.dart';
 import 'package:omninest/features/setup/presentation/pages/initial_setup_page.dart';
@@ -57,7 +56,8 @@ void main() {
 
     expect(find.text('创建超级管理员'), findsOneWidget);
 
-    await tester.tap(find.byType(AppDropdown<String>));
+    // 紧凑语言切换按钮以地球图标为锚点，与表单内的默认语言下拉互不混淆。
+    await tester.tap(find.byIcon(Icons.language_rounded));
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(
