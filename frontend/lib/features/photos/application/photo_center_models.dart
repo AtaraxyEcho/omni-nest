@@ -56,6 +56,11 @@ class PhotoCenterState {
     this.isLoadingGroups = false,
     this.isLoadingMoreGroups = false,
     this.groupPageError,
+    this.trashPhotos = const [],
+    this.trashPage = 0,
+    this.trashTotalElements = 0,
+    this.isLoadingTrash = false,
+    this.trashPageError,
     this.errorMessage,
   });
 
@@ -104,6 +109,11 @@ class PhotoCenterState {
   final bool isLoadingGroups;
   final bool isLoadingMoreGroups;
   final String? groupPageError;
+  final List<PhotoItem> trashPhotos;
+  final int trashPage;
+  final int trashTotalElements;
+  final bool isLoadingTrash;
+  final String? trashPageError;
   final String? errorMessage;
 
   bool get hasMorePhotos => photos.length < photoTotalElements;
@@ -189,6 +199,12 @@ class PhotoCenterState {
     bool clearFavoritePageError = false,
     bool clearTimelinePageError = false,
     bool clearGroupPageError = false,
+    List<PhotoItem>? trashPhotos,
+    int? trashPage,
+    int? trashTotalElements,
+    bool? isLoadingTrash,
+    String? trashPageError,
+    bool clearTrashPageError = false,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -245,6 +261,12 @@ class PhotoCenterState {
       isLoadingMoreGroups: isLoadingMoreGroups ?? this.isLoadingMoreGroups,
       groupPageError:
           clearGroupPageError ? null : (groupPageError ?? this.groupPageError),
+      trashPhotos: trashPhotos ?? this.trashPhotos,
+      trashPage: trashPage ?? this.trashPage,
+      trashTotalElements: trashTotalElements ?? this.trashTotalElements,
+      isLoadingTrash: isLoadingTrash ?? this.isLoadingTrash,
+      trashPageError:
+          clearTrashPageError ? null : (trashPageError ?? this.trashPageError),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }

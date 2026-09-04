@@ -1815,8 +1815,15 @@ CREATE TABLE "omni"."photo_items" (
   "white_balance" varchar(32),
   "metering_mode" varchar(32),
   "lens_model" varchar(120),
-  "gps_location" jsonb DEFAULT '{}'::jsonb
+  "gps_location" jsonb DEFAULT '{}'::jsonb,
+  "deleted_at" timestamptz(6)
 )
+;
+
+CREATE INDEX "idx_photo_items_owner_deleted_at" ON "omni"."photo_items" USING btree (
+  "owner_user_id" ASC,
+  "deleted_at" ASC
+) WHERE "deleted_at" IS NOT NULL
 ;
 
 CREATE TABLE "omni"."photo_scan_jobs" (

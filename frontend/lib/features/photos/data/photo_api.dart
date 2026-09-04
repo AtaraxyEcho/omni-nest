@@ -56,27 +56,49 @@ class PhotoApi {
     return PhotoItem.fromJson(parseData(response.data));
   }
 
-  /// 删除照片
-  Future<TaskSubmission> deletePhoto(
+  /// 将照片移入回收站（软删除，保留 30 天，可恢复）。
+  Future<void> movePhotoToTrash(String photoId) async {
+    await apiClient.dio.delete<void>('/photos/$photoId');
+  }
+
+  /// 批量将照片移入回收站。
+  Future<void> movePhotosToTrash(List<String> photoIds) async {
+    await apiClient.dio.delete<void>(
+      '/photos/batch',
+      data: {'photoIds': photoIds},
+    );
+  }
+
+  /// 分页查询回收站照片。
+  Future<PhotoPage> listTrash({int page = 0, int size = 50}) async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/photos/trash/page',
+      queryParameters: {'page': page, 'size': size},
+    );
+    return PhotoPage.fromJson(parseData(response.data));
+  }
+
+  /// 从回收站恢复照片。
+  Future<void> restorePhoto(String photoId) async {
+    await apiClient.dio.post<void>('/photos/$photoId/restore');
+  }
+
+  /// 永久删除回收站中的照片。
+  Future<TaskSubmission> purgePhoto(
     String photoId, {
     bool cascade = false,
   }) async {
     final response = await apiClient.dio.delete<Map<String, dynamic>>(
-      '/photos/$photoId',
+      '/photos/$photoId/purge',
       queryParameters: {'cascade': cascade},
     );
     return TaskSubmission.fromJson(parseData(response.data));
   }
 
-  /// 批量删除照片并返回统一任务。
-  Future<TaskSubmission> deletePhotos(
-    List<String> photoIds, {
-    bool cascade = false,
-  }) async {
-    final response = await apiClient.dio.delete<Map<String, dynamic>>(
-      '/photos/batch/purge',
-      data: {'photoIds': photoIds},
-      queryParameters: {'cascade': cascade},
+  /// 清空回收站。
+  Future<TaskSubmission> purgeTrash() async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/photos/trash/purge',
     );
     return TaskSubmission.fromJson(parseData(response.data));
   }

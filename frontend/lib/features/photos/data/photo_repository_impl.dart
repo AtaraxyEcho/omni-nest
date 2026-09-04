@@ -32,14 +32,26 @@ class PhotoRepositoryImpl implements PhotoRepository {
   Future<PhotoItem> getPhoto(String photoId) => _api.getPhoto(photoId);
 
   @override
-  Future<TaskSubmission> deletePhoto(String photoId, {bool cascade = false}) =>
-      _api.deletePhoto(photoId, cascade: cascade);
+  Future<void> movePhotoToTrash(String photoId) =>
+      _api.movePhotoToTrash(photoId);
 
   @override
-  Future<TaskSubmission> deletePhotos(
-    List<String> photoIds, {
-    bool cascade = false,
-  }) => _api.deletePhotos(photoIds, cascade: cascade);
+  Future<void> movePhotosToTrash(List<String> photoIds) =>
+      _api.movePhotosToTrash(photoIds);
+
+  @override
+  Future<PhotoPage> listTrash({int page = 0, int size = 50}) =>
+      _api.listTrash(page: page, size: size);
+
+  @override
+  Future<void> restorePhoto(String photoId) => _api.restorePhoto(photoId);
+
+  @override
+  Future<TaskSubmission> purgePhoto(String photoId, {bool cascade = false}) =>
+      _api.purgePhoto(photoId, cascade: cascade);
+
+  @override
+  Future<TaskSubmission> purgeTrash() => _api.purgeTrash();
 
   @override
   Future<PhotoPage> listFavorites({

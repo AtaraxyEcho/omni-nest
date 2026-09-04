@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_trash_view.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,6 @@ import 'package:omninest/core/navigation/navigation_extensions.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
-import 'package:omninest/core/widgets/file_purge_confirmation.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 
@@ -100,7 +101,7 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
               }
             }
           },
-          onDelete: () => _confirmDelete(context),
+          onDelete: _confirmDelete,
           onToggleInfo: () => setState(() => _showInfo = !_showInfo),
           onAddToAlbum: () => _showAddToAlbumDialog(context, ref),
           onEdit: () => context.push('/photos/${photo.id}/edit'),
@@ -115,66 +116,11 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
           showInfo: _showInfo,
           compact: compact,
         ),
-        // 上/下一张导航
-        if (prevId != null || nextId != null)
-          Container(
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: context.photosColors.surfaceContainer.withValues(
-                alpha: 0.6,
-              ),
-              border: Border(
-                bottom: BorderSide(
-                  color: context.photosColors.outlineVariant.withValues(
-                    alpha: 0.2,
-                  ),
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  tooltip: AppLocalizations.of(context).photosPrevPhoto,
-                  onPressed:
-                      prevId == null
-                          ? null
-                          : () => _navigateToAdjacent(photo, -1),
-                  icon: Icon(
-                    Icons.chevron_left_rounded,
-                    color:
-                        prevId != null
-                            ? context.photosColors.onSurface
-                            : context.photosColors.onSurfaceVariant.withValues(
-                              alpha: 0.3,
-                            ),
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  tooltip: AppLocalizations.of(context).photosNextPhoto,
-                  onPressed:
-                      nextId == null
-                          ? null
-                          : () => _navigateToAdjacent(photo, 1),
-                  icon: Icon(
-                    Icons.chevron_right_rounded,
-                    color:
-                        nextId != null
-                            ? context.photosColors.onSurface
-                            : context.photosColors.onSurfaceVariant.withValues(
-                              alpha: 0.3,
-                            ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        // 照片查看区
+        // 照片查看区：上/下一张按钮悬浮于图片左右两侧（Frame 设计稿样式）
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final photoView = _buildPhotoView(context, photo);
+              final photoView = _buildPhotoView(context, photo, prevId, nextId);
               if (!compact) {
                 return Row(
                   children: [
@@ -203,115 +149,142 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     );
   }
 
-  Widget _buildPhotoView(BuildContext context, PhotoItem photo) {
+  Widget _buildPhotoView(
+    BuildContext context,
+    PhotoItem photo,
+    String? prevId,
+    String? nextId,
+  ) {
     final imageUrl = photo.sourceUrl ?? photo.coverUrl;
     return ColoredBox(
-      color: context.photosColors.surfaceContainerLow,
-      child: Center(
-        child:
-            imageUrl != null && imageUrl.isNotEmpty
-                ? Hero(
-                  tag: 'photo-cover-${photo.id}',
-                  child: InteractiveViewer(
-                    minScale: 1,
-                    maxScale: 5,
-                    child: SizedBox.expand(
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        cacheKey:
-                            photo.sourceUrl != null
-                                ? photo.sourceCacheKey
-                                : photo.coverCacheKey,
-                        fit: BoxFit.contain,
-                        placeholder:
-                            (context, url) => Center(
-                              child: CircularProgressIndicator(
-                                color: context.photosColors.primaryContainer,
-                              ),
-                            ),
-                        errorWidget:
-                            (context, url, error) => Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.broken_image_outlined,
-                                    color: context.photosColors.onSurfaceVariant
-                                        .withValues(alpha: 0.4),
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    ).photosImageLoadFailed,
-                                    style: TextStyle(
+      // Frame 设计稿查看器底色 #0D0D0C。
+      color: FramePalette.viewerBg,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Center(
+              child:
+                  imageUrl != null && imageUrl.isNotEmpty
+                      ? Hero(
+                        tag: 'photo-cover-${photo.id}',
+                        child: InteractiveViewer(
+                          minScale: 1,
+                          maxScale: 5,
+                          child: SizedBox.expand(
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              cacheKey:
+                                  photo.sourceUrl != null
+                                      ? photo.sourceCacheKey
+                                      : photo.coverCacheKey,
+                              fit: BoxFit.contain,
+                              placeholder:
+                                  (context, url) => Center(
+                                    child: CircularProgressIndicator(
                                       color:
-                                          context.photosColors.onSurfaceVariant,
+                                          context.photosColors.primaryContainer,
                                     ),
                                   ),
-                                ],
-                              ),
+                              errorWidget:
+                                  (context, url, error) => Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.broken_image_outlined,
+                                          color: context
+                                              .photosColors
+                                              .onSurfaceVariant
+                                              .withValues(alpha: 0.4),
+                                          size: 48,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          ).photosImageLoadFailed,
+                                          style: TextStyle(
+                                            color:
+                                                context
+                                                    .photosColors
+                                                    .onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                             ),
+                          ),
+                        ),
+                      )
+                      : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.photo_outlined,
+                            color: context.photosColors.onSurfaceVariant
+                                .withValues(alpha: 0.4),
+                            size: 64,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            photo.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: context.photosColors.onSurfaceVariant,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                )
-                : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.photo_outlined,
-                      color: context.photosColors.onSurfaceVariant.withValues(
-                        alpha: 0.4,
-                      ),
-                      size: 64,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      photo.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: context.photosColors.onSurfaceVariant,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+          ),
+          if (prevId != null)
+            _ViewerArrowButton(
+              icon: Icons.chevron_left_rounded,
+              tooltip: AppLocalizations.of(context).photosPrevPhoto,
+              alignRight: false,
+              onTap: () => _navigateToAdjacent(photo, -1),
+            ),
+          if (nextId != null)
+            _ViewerArrowButton(
+              icon: Icons.chevron_right_rounded,
+              tooltip: AppLocalizations.of(context).photosNextPhoto,
+              alignRight: true,
+              onTap: () => _navigateToAdjacent(photo, 1),
+            ),
+        ],
       ),
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final deletedMessage = AppLocalizations.of(
+  Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showFrameConfirmDialog(
       context,
-    ).photosDeletedPhoto(widget.photo.title);
+      title: l10n.photosMoveToTrashTitle,
+      body: l10n.photosMoveToTrashBodyOne,
+      confirmLabel: l10n.photosMoveToTrashAction,
+    );
+    if (!confirmed || !mounted) return;
     try {
-      final deleted = await confirmAndRunFilePurge(
+      await ref
+          .read(photoCenterControllerProvider.notifier)
+          .movePhotoToTrash(widget.photo.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
         context,
-        resourceName: widget.photo.title,
-        action: (cascade) async {
-          if (!mounted) return;
-          await ref
-              .read(photoCenterControllerProvider.notifier)
-              .deletePhoto(widget.photo.id, cascade: cascade);
-        },
-      );
-      if (deleted && context.mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(deletedMessage)));
-        context.popOrGo('/photos');
-      }
+      ).showSnackBar(SnackBar(content: Text(l10n.photosTrashMoved)));
+      context.popOrGo('/photos');
     } on Exception {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).photosDeleteFailed),
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).photosDeleteFailed),
+        ),
+      );
     }
   }
 
@@ -1058,4 +1031,51 @@ class _InfoItem {
 
   final String label;
   final String value;
+}
+
+/// Frame 查看器左右切换按钮：42px 方形、圆角 8、35% 黑底、白色 60% 线形图标。
+class _ViewerArrowButton extends StatelessWidget {
+  const _ViewerArrowButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    required this.alignRight,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool alignRight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Align(
+        alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Material(
+            color: Colors.black.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: onTap,
+              child: Tooltip(
+                message: tooltip,
+                child: SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -3,6 +3,7 @@ package com.omninest.modules.photos.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -18,6 +19,7 @@ import com.omninest.modules.file.service.FilePurgeOrigin;
 import com.omninest.modules.file.service.FileQueryService;
 import com.omninest.modules.media.service.MediaSyncEventService;
 import com.omninest.modules.photos.domain.PhotoItem;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoTrashResultDto;
 import com.omninest.modules.photos.dto.GroupBy;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoGroupDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoItemDto;
@@ -105,12 +107,39 @@ class PhotoLibraryServiceTest {
     }
 
     @Test
-    void deletePhotoPermanentlyDeletesSourceFile() {
+    void deletePhotoMovesPhotoIntoTrashInsteadOfPurging() {
         PhotoItem photo = photoItem(PHOTO_ID_1, FILE_NODE_ID_1, COVER_FILE_ID_1, "待删除照片");
+        photo.setDeletedAt(null);
         when(photoItemRepository.findByOwnerUserIdAndId(OWNER_ID, PHOTO_ID_1)).thenReturn(Optional.of(photo));
 
-        service.deletePhoto(OWNER_ID, PHOTO_ID_1);
+        service.movePhotoToTrash(OWNER_ID, PHOTO_ID_1);
 
+        assertThat(photo.getDeletedAt()).isNotNull();
+        verify(photoItemRepository).save(photo);
+        verify(fileDeletionService, Mockito.never()).deletePermanently(
+                any(), any(), anyBoolean(), any(), any()
+        );
+        verify(photoItemRepository, Mockito.never()).delete(photo);
+    }
+
+    @Test
+    void purgePhotoFromTrashCreatesPermanentPurgeTask() {
+        PhotoItem photo = photoItem(PHOTO_ID_1, FILE_NODE_ID_1, COVER_FILE_ID_1, "回收站照片");
+        photo.setDeletedAt(Instant.now());
+        UUID taskId = UUID.fromString("40000000-0000-0000-0000-000000000002");
+        when(photoItemRepository.findTrashedByOwnerUserIdAndId(OWNER_ID, PHOTO_ID_1))
+                .thenReturn(Optional.of(photo));
+        when(fileDeletionService.deletePermanently(
+                eq(OWNER_ID),
+                eq(FILE_NODE_ID_1),
+                eq(false),
+                any(FilePurgeOrigin.class),
+                isNull()
+        )).thenReturn(taskId);
+
+        UUID result = service.purgePhotoFromTrash(OWNER_ID, PHOTO_ID_1, false);
+
+        assertThat(result).isEqualTo(taskId);
         verify(fileDeletionService).deletePermanently(
                 eq(OWNER_ID),
                 eq(FILE_NODE_ID_1),
@@ -118,37 +147,42 @@ class PhotoLibraryServiceTest {
                 any(FilePurgeOrigin.class),
                 isNull()
         );
-        verify(photoItemRepository, Mockito.never()).delete(photo);
     }
 
     @Test
-    void deletePhotosCreatesOnePurgeTaskForAllSourceFiles() {
+    void restorePhotoFromTrashClearsDeletedAt() {
+        PhotoItem photo = photoItem(PHOTO_ID_1, FILE_NODE_ID_1, COVER_FILE_ID_1, "回收站照片");
+        photo.setDeletedAt(Instant.now());
+        when(photoItemRepository.findTrashedByOwnerUserIdAndId(OWNER_ID, PHOTO_ID_1))
+                .thenReturn(Optional.of(photo));
+
+        service.restorePhotoFromTrash(OWNER_ID, PHOTO_ID_1);
+
+        assertThat(photo.getDeletedAt()).isNull();
+        verify(photoItemRepository).save(photo);
+    }
+
+    @Test
+    void movePhotosToTrashMarksEachPhotoDeleted() {
         PhotoItem firstPhoto = photoItem(PHOTO_ID_1, FILE_NODE_ID_1, COVER_FILE_ID_1, "第一张照片");
         PhotoItem secondPhoto = photoItem(PHOTO_ID_2, FILE_NODE_ID_2, COVER_FILE_ID_2, "第二张照片");
-        UUID taskId = UUID.fromString("40000000-0000-0000-0000-000000000001");
-        when(photoItemRepository.findActiveByOwnerUserIdAndIdIn(
+        when(photoItemRepository.findByOwnerUserIdAndId(OWNER_ID, PHOTO_ID_1))
+                .thenReturn(Optional.of(firstPhoto));
+        when(photoItemRepository.findByOwnerUserIdAndId(OWNER_ID, PHOTO_ID_2))
+                .thenReturn(Optional.of(secondPhoto));
+
+        List<PhotoTrashResultDto> results = service.movePhotosToTrash(
                 OWNER_ID,
                 List.of(PHOTO_ID_1, PHOTO_ID_2)
-        )).thenReturn(List.of(firstPhoto, secondPhoto));
-        when(fileDeletionService.deletePermanentlyBatch(
-                eq(OWNER_ID),
-                eq(List.of(FILE_NODE_ID_1, FILE_NODE_ID_2)),
-                eq(false),
-                any()
-        )).thenReturn(taskId);
-
-        UUID result = service.deletePhotos(
-                OWNER_ID,
-                List.of(PHOTO_ID_2, PHOTO_ID_1),
-                false
         );
 
-        assertThat(result).isEqualTo(taskId);
-        verify(fileDeletionService).deletePermanentlyBatch(
-                eq(OWNER_ID),
-                eq(List.of(FILE_NODE_ID_1, FILE_NODE_ID_2)),
-                eq(false),
-                any()
+        assertThat(results).hasSize(2);
+        assertThat(results.stream().allMatch(PhotoTrashResultDto::success)).isTrue();
+        assertThat(firstPhoto.getDeletedAt()).isNotNull();
+        assertThat(secondPhoto.getDeletedAt()).isNotNull();
+        verify(photoItemRepository, Mockito.times(2)).save(any(PhotoItem.class));
+        verify(fileDeletionService, Mockito.never()).deletePermanentlyBatch(
+                any(), any(), anyBoolean(), any()
         );
     }
 

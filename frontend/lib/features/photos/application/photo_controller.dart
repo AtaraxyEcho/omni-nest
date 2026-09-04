@@ -86,6 +86,7 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
 
   Future<PhotoCenterState> _loadState() async {
     final partialErrors = <String>[];
+    final previous = state.asData?.value;
     final results = await Future.wait([
       _safe(_repo.dashboard, PhotoDashboard.empty(), partialErrors),
       _safe(_repo.listPhotos, PhotoPage.empty(), partialErrors),
@@ -99,8 +100,15 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
       photos: photoPage.items,
       favorites: favoritePage.items,
       albums: results[3] as List<PhotoAlbum>,
-      tab: PhotoTab.all,
-      searchQuery: '',
+      tab: previous?.tab ?? PhotoTab.all,
+      libraryView: previous?.libraryView ?? PhotoLibraryView.gridDay,
+      frameView: previous?.frameView ?? FrameView.grid,
+      selectedPhotoIds: previous?.selectedPhotoIds ?? const {},
+      isSelectionMode: previous?.isSelectionMode ?? false,
+      groupBy: previous?.groupBy ?? GroupBy.date,
+      searchQuery: previous?.searchQuery ?? '',
+      trashPhotos: previous?.trashPhotos ?? const [],
+      trashTotalElements: previous?.trashTotalElements ?? 0,
       photoPage: photoPage.page,
       favoritePage: favoritePage.page,
       photoTotalElements: photoPage.totalElements,
@@ -552,6 +560,9 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     if (targetTab != null || hadQuery) {
       unawaited(_reloadVisiblePage(tab, ''));
     }
+    if (view == FrameView.trash) {
+      unawaited(loadTrashPage());
+    }
   }
 
   /// 全选/取消全选当前视图可见照片；已全选时清空选择。
@@ -618,16 +629,99 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     }
   }
 
-  /// 删除照片
-  Future<TaskSubmission> deletePhoto(
+  /// 将照片移入回收站。
+  Future<void> movePhotoToTrash(String photoId) async {
+    try {
+      await _repo.movePhotoToTrash(photoId);
+      _removePhotosOptimistically(<String>{photoId});
+      await refresh();
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 批量将照片移入回收站，并清空多选状态。
+  Future<void> movePhotosToTrash(List<String> photoIds) async {
+    try {
+      await _repo.movePhotosToTrash(photoIds);
+      _removePhotosOptimistically(photoIds.toSet());
+      await refresh();
+      final current = state.asData?.value;
+      if (current != null) {
+        state = AsyncData(
+          current.copyWith(isSelectionMode: false, selectedPhotoIds: const {}),
+        );
+      }
+    } on Exception catch (error) {
+      _setError(describeUserFacingError(error).message);
+      rethrow;
+    }
+  }
+
+  /// 加载回收站分页数据。
+  Future<void> loadTrashPage({bool force = false}) async {
+    final current = state.asData?.value;
+    if (current == null || current.isLoadingTrash) {
+      return;
+    }
+    if (!force && current.trashPhotos.isNotEmpty) {
+      return;
+    }
+    state = AsyncData(
+      current.copyWith(isLoadingTrash: true, clearTrashPageError: true),
+    );
+    try {
+      final page = await _repo.listTrash();
+      final next = state.asData?.value;
+      if (next == null) {
+        return;
+      }
+      state = AsyncData(
+        next.copyWith(
+          trashPhotos: page.items,
+          trashPage: page.page,
+          trashTotalElements: page.totalElements,
+          isLoadingTrash: false,
+        ),
+      );
+    } on Exception catch (e) {
+      final next = state.asData?.value;
+      if (next == null) {
+        return;
+      }
+      state = AsyncData(
+        next.copyWith(
+          isLoadingTrash: false,
+          trashPageError: describeUserFacingError(e).message,
+        ),
+      );
+    }
+  }
+
+  /// 从回收站恢复照片。
+  Future<void> restorePhotoFromTrash(String photoId) async {
+    try {
+      await _repo.restorePhoto(photoId);
+      await refresh();
+      await loadTrashPage(force: true);
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
+  /// 永久删除回收站中的照片。
+  Future<TaskSubmission> purgePhotoFromTrash(
     String photoId, {
     bool cascade = false,
   }) async {
     try {
-      final submission = await _repo.deletePhoto(photoId, cascade: cascade);
-      _removePhotosOptimistically(<String>{photoId});
+      final submission = await _repo.purgePhoto(photoId, cascade: cascade);
       ref.invalidate(activeTaskSummaryProvider);
       unawaited(ref.read(taskListProvider.notifier).load());
+      await refresh();
+      await loadTrashPage(force: true);
       return submission;
     } on Exception catch (e) {
       _setError(describeUserFacingError(e).message);
@@ -635,19 +729,17 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     }
   }
 
-  /// 批量删除照片并跟踪统一任务。
-  Future<TaskSubmission> deletePhotos(
-    List<String> photoIds, {
-    bool cascade = false,
-  }) async {
+  /// 清空回收站。
+  Future<TaskSubmission> purgeTrash() async {
     try {
-      final submission = await _repo.deletePhotos(photoIds, cascade: cascade);
-      _removePhotosOptimistically(photoIds.toSet());
+      final submission = await _repo.purgeTrash();
       ref.invalidate(activeTaskSummaryProvider);
       unawaited(ref.read(taskListProvider.notifier).load());
+      await refresh();
+      await loadTrashPage(force: true);
       return submission;
-    } on Exception catch (error) {
-      _setError(describeUserFacingError(error).message);
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
       rethrow;
     }
   }

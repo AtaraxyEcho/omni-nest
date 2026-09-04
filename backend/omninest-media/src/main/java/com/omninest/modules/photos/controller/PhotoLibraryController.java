@@ -34,6 +34,7 @@ import com.omninest.modules.photos.dto.PhotoDtos.PhotoFaceClusterDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoGroupDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoItemDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoListItemDto;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoTrashResultDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoScanJobDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoShareLinkDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoSharedAlbumDto;
@@ -149,34 +150,69 @@ public class PhotoLibraryController {
         return ApiResponse.success(libraryService.photo(userId, photoId));
     }
 
-    @Operation(summary = "删除照片", description = "删除指定的照片资源")
+    @Operation(summary = "删除照片", description = "将照片移入回收站（保留 30 天，可恢复）")
     @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
     @DeleteMapping("/api/v1/photos/{photoId}")
-    ApiResponse<FilePurgeTaskDto> deletePhoto(
+    ApiResponse<Void> deletePhoto(@PathVariable UUID photoId) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        libraryService.movePhotoToTrash(userId, photoId);
+        return ApiResponse.success(null);
+    }
+
+    /**
+     * 批量将照片移入回收站。
+     *
+     * @param body 批量照片请求
+     * @return 逐项处理结果
+     */
+    @Operation(summary = "批量删除照片", description = "将多张照片移入回收站，返回逐项结果")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @DeleteMapping("/api/v1/photos/batch")
+    ApiResponse<List<PhotoTrashResultDto>> deletePhotos(@Valid @RequestBody DeletePhotosRequest body) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(libraryService.movePhotosToTrash(userId, body.photoIds()));
+    }
+
+    // ─── 回收站 ───
+
+    @Operation(summary = "回收站照片列表", description = "分页查询回收站中的照片")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_READ + "')")
+    @GetMapping("/api/v1/photos/trash/page")
+    ApiResponse<Page<PhotoListItemDto>> trashPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size
+    ) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(libraryService.listTrashPage(userId, page, size));
+    }
+
+    @Operation(summary = "恢复回收站照片", description = "将照片从回收站恢复为正常状态")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @PostMapping("/api/v1/photos/{photoId}/restore")
+    ApiResponse<Void> restorePhoto(@PathVariable UUID photoId) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        libraryService.restorePhotoFromTrash(userId, photoId);
+        return ApiResponse.success(null);
+    }
+
+    @Operation(summary = "永久删除照片", description = "对回收站中的照片创建永久删除任务")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @DeleteMapping("/api/v1/photos/{photoId}/purge")
+    ApiResponse<FilePurgeTaskDto> purgePhoto(
             @PathVariable UUID photoId,
             @RequestParam(defaultValue = "false") boolean cascade
     ) {
         UUID userId = currentUserContext.requireCurrentUserId();
-        UUID taskId = libraryService.deletePhoto(userId, photoId, cascade);
+        UUID taskId = libraryService.purgePhotoFromTrash(userId, photoId, cascade);
         return ApiResponse.success(FilePurgeTaskDto.queued(taskId));
     }
 
-    /**
-     * 批量永久删除照片并返回统一任务。
-     *
-     * @param body 批量照片请求
-     * @param cascade 是否允许级联清理其他业务引用
-     * @return 永久删除任务
-     */
-    @Operation(summary = "批量删除照片", description = "为多张照片创建一个永久删除任务")
+    @Operation(summary = "清空回收站", description = "对回收站内全部照片创建批量永久删除任务")
     @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
-    @DeleteMapping("/api/v1/photos/batch/purge")
-    ApiResponse<FilePurgeTaskDto> deletePhotos(
-            @Valid @RequestBody DeletePhotosRequest body,
-            @RequestParam(defaultValue = "false") boolean cascade
-    ) {
+    @PostMapping("/api/v1/photos/trash/purge")
+    ApiResponse<FilePurgeTaskDto> purgeTrash() {
         UUID userId = currentUserContext.requireCurrentUserId();
-        UUID taskId = libraryService.deletePhotos(userId, body.photoIds(), cascade);
+        UUID taskId = libraryService.purgeTrash(userId);
         return ApiResponse.success(FilePurgeTaskDto.queued(taskId));
     }
 

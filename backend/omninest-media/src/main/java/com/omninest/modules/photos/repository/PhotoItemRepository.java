@@ -47,6 +47,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
               JOIN FileNode file ON p.fileNodeId = file.id
              WHERE p.ownerUserId = :ownerUserId
                AND file.deleted = false
+               AND p.deletedAt IS NULL
             """,
             countQuery = """
                     SELECT COUNT(p)
@@ -54,6 +55,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                       JOIN FileNode file ON p.fileNodeId = file.id
                      WHERE p.ownerUserId = :ownerUserId
                        AND file.deleted = false
+                       AND p.deletedAt IS NULL
                     """)
     Page<PhotoListItemProjection> findListPage(
             @Param("ownerUserId") UUID ownerUserId,
@@ -88,6 +90,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
               JOIN FileNode file ON p.fileNodeId = file.id
              WHERE p.ownerUserId = :ownerUserId
                AND file.deleted = false
+               AND p.deletedAt IS NULL
                AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%'))
                     OR LOWER(COALESCE(p.description, '')) LIKE LOWER(CONCAT('%', :query, '%')))
             """,
@@ -97,6 +100,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                       JOIN FileNode file ON p.fileNodeId = file.id
                      WHERE p.ownerUserId = :ownerUserId
                        AND file.deleted = false
+                       AND p.deletedAt IS NULL
                        AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%'))
                             OR LOWER(COALESCE(p.description, '')) LIKE LOWER(CONCAT('%', :query, '%')))
                     """)
@@ -135,6 +139,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                AND f.photoId = p.id
                AND file.id = p.fileNodeId
                AND file.deleted = false
+               AND p.deletedAt IS NULL
             """,
             countQuery = """
                     SELECT COUNT(p)
@@ -144,6 +149,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                        AND f.photoId = p.id
                        AND file.id = p.fileNodeId
                        AND file.deleted = false
+                       AND p.deletedAt IS NULL
                     """)
     Page<PhotoListItemProjection> findFavoriteListPage(
             @Param("ownerUserId") UUID ownerUserId,
@@ -180,6 +186,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                AND f.photoId = p.id
                AND file.id = p.fileNodeId
                AND file.deleted = false
+               AND p.deletedAt IS NULL
                AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%'))
                     OR LOWER(COALESCE(p.description, '')) LIKE LOWER(CONCAT('%', :query, '%')))
             """,
@@ -191,6 +198,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                        AND f.photoId = p.id
                        AND file.id = p.fileNodeId
                        AND file.deleted = false
+                       AND p.deletedAt IS NULL
                        AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%'))
                             OR LOWER(COALESCE(p.description, '')) LIKE LOWER(CONCAT('%', :query, '%')))
                     """)
@@ -216,6 +224,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                   JOIN omni.file_nodes f ON f.id = p.file_node_id
                  WHERE p.owner_user_id = :ownerUserId
                    AND f.is_deleted = false
+                   AND p.deleted_at IS NULL
                    AND p.date_taken IS NOT NULL
                  GROUP BY month_start
                  ORDER BY month_start DESC
@@ -251,6 +260,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                     ON DATE_TRUNC('month', p.date_taken AT TIME ZONE :zoneId) = mp.month_start
                  WHERE p.owner_user_id = :ownerUserId
                    AND f.is_deleted = false
+                   AND p.deleted_at IS NULL
                    AND p.date_taken IS NOT NULL
             )
             SELECT r.year AS "year",
@@ -297,6 +307,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                     JOIN omni.file_nodes f ON f.id = p.file_node_id
                    WHERE p.owner_user_id = :ownerUserId
                      AND f.is_deleted = false
+                     AND p.deleted_at IS NULL
                      AND p.date_taken IS NOT NULL
                    GROUP BY month_start
               ) timeline_months
@@ -351,6 +362,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                    AND t.photo_id = p.id
                  WHERE p.owner_user_id = :ownerUserId
                    AND f.is_deleted = false
+                   AND p.deleted_at IS NULL
                    AND (:groupBy <> 'TAG' OR t.id IS NOT NULL)
                    AND (:groupBy <> 'DATE' OR p.date_taken IS NOT NULL)
             ), group_page AS (
@@ -428,6 +440,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                AND t.photo_id = p.id
              WHERE p.owner_user_id = :ownerUserId
                AND f.is_deleted = false
+               AND p.deleted_at IS NULL
                AND (:groupBy <> 'TAG' OR t.id IS NOT NULL)
                AND (:groupBy <> 'DATE' OR p.date_taken IS NOT NULL)
             """, nativeQuery = true)
@@ -443,6 +456,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT photo FROM PhotoItem photo
             JOIN FileNode file ON photo.fileNodeId = file.id
             WHERE photo.ownerUserId = :ownerUserId AND file.deleted = false
+              AND photo.deletedAt IS NULL
             ORDER BY photo.createdAt DESC
             """)
     List<PhotoItem> findByOwnerUserIdOrderByCreatedAtDesc(@Param("ownerUserId") UUID ownerUserId);
@@ -454,6 +468,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT photo FROM PhotoItem photo
             JOIN FileNode file ON photo.fileNodeId = file.id
             WHERE photo.ownerUserId = :ownerUserId AND photo.id = :id AND file.deleted = false
+              AND photo.deletedAt IS NULL
             """)
     Optional<PhotoItem> findByOwnerUserIdAndId(
             @Param("ownerUserId") UUID ownerUserId,
@@ -471,6 +486,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT photo FROM PhotoItem photo
             JOIN FileNode file ON photo.fileNodeId = file.id
             WHERE photo.ownerUserId = :ownerUserId AND photo.id IN :ids AND file.deleted = false
+              AND photo.deletedAt IS NULL
             """)
     List<PhotoItem> findActiveByOwnerUserIdAndIdIn(
             @Param("ownerUserId") UUID ownerUserId,
@@ -525,6 +541,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT COUNT(photo) FROM PhotoItem photo
             JOIN FileNode file ON photo.fileNodeId = file.id
             WHERE photo.ownerUserId = :ownerUserId AND file.deleted = false
+              AND photo.deletedAt IS NULL
             """)
     long countByOwnerUserId(@Param("ownerUserId") UUID ownerUserId);
 
@@ -539,6 +556,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT p.id FROM PhotoItem p
             JOIN FileNode file ON p.fileNodeId = file.id
             WHERE p.ownerUserId = :ownerUserId AND file.deleted = false
+              AND p.deletedAt IS NULL
             """)
     Page<UUID> findIdsByOwnerUserId(
             @Param("ownerUserId") UUID ownerUserId,
@@ -552,6 +570,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT p FROM PhotoItem p
             JOIN FileNode file ON p.fileNodeId = file.id
             WHERE p.ownerUserId = :ownerUserId AND file.deleted = false
+              AND p.deletedAt IS NULL
               AND p.dateTaken IS NOT NULL
             ORDER BY p.dateTaken DESC
             """)
@@ -565,6 +584,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT p FROM PhotoItem p
             JOIN FileNode file ON p.fileNodeId = file.id
             WHERE p.ownerUserId = :ownerUserId AND file.deleted = false
+              AND p.deletedAt IS NULL
               AND LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
             """)
     List<PhotoItem> searchByOwnerUserIdAndKeyword(
@@ -578,6 +598,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT p FROM PhotoItem p
             JOIN FileNode file ON p.fileNodeId = file.id
             WHERE p.ownerUserId = :ownerUserId AND file.deleted = false
+              AND p.deletedAt IS NULL
               AND p.dateTaken >= :from AND p.dateTaken < :to
             ORDER BY p.dateTaken DESC
             """)
@@ -593,6 +614,7 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
             SELECT p FROM PhotoItem p
             JOIN FileNode file ON p.fileNodeId = file.id
             WHERE p.ownerUserId = :ownerUserId AND file.deleted = false
+              AND p.deletedAt IS NULL
             ORDER BY p.createdAt DESC
             LIMIT :limit
             """)
@@ -612,6 +634,111 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
     List<String> findExistingContentHashes(
             @Param("ownerUserId") UUID ownerUserId,
             @Param("hashes") List<String> hashes);
+
+    // ─── 回收站 ───
+
+    /**
+     * 分页查询用户回收站照片的轻量列表投影。
+     *
+     * @param ownerUserId 用户标识
+     * @param pageable 分页和排序参数
+     * @return 回收站照片投影分页
+     */
+    @Query(value = """
+            SELECT p.id AS id,
+                   p.ownerUserId AS ownerUserId,
+                   p.fileNodeId AS fileNodeId,
+                   p.title AS title,
+                   p.description AS description,
+                   p.width AS width,
+                   p.height AS height,
+                   p.orientation AS orientation,
+                   p.dateTaken AS dateTaken,
+                   p.gpsLatitude AS gpsLatitude,
+                   p.gpsLongitude AS gpsLongitude,
+                   p.format AS format,
+                   p.fileSize AS fileSize,
+                   p.coverFileId AS coverFileId,
+                   p.metadataStatus AS metadataStatus,
+                   p.createdAt AS createdAt
+              FROM PhotoItem p
+              JOIN FileNode file ON p.fileNodeId = file.id
+             WHERE p.ownerUserId = :ownerUserId
+               AND p.deletedAt IS NOT NULL
+               AND file.deleted = false
+             ORDER BY p.deletedAt DESC
+            """,
+            countQuery = """
+                    SELECT COUNT(p)
+                      FROM PhotoItem p
+                      JOIN FileNode file ON p.fileNodeId = file.id
+                     WHERE p.ownerUserId = :ownerUserId
+                       AND p.deletedAt IS NOT NULL
+                       AND file.deleted = false
+                    """)
+    Page<PhotoListItemProjection> findTrashPage(
+            @Param("ownerUserId") UUID ownerUserId,
+            Pageable pageable);
+
+    /**
+     * 按用户和 ID 查询回收站中的照片。
+     *
+     * @param ownerUserId 用户标识
+     * @param id 照片标识
+     * @return 回收站中的照片
+     */
+    @Query("""
+            SELECT photo FROM PhotoItem photo
+            JOIN FileNode file ON photo.fileNodeId = file.id
+            WHERE photo.ownerUserId = :ownerUserId AND photo.id = :id
+              AND photo.deletedAt IS NOT NULL AND file.deleted = false
+            """)
+    Optional<PhotoItem> findTrashedByOwnerUserIdAndId(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("id") UUID id
+    );
+
+    /**
+     * 统计用户回收站中的照片数量。
+     *
+     * @param ownerUserId 用户标识
+     * @return 回收站照片数量
+     */
+    long countByOwnerUserIdAndDeletedAtIsNotNull(UUID ownerUserId);
+
+    /**
+     * 查询用户回收站中进入时间早于截止时间的照片，供清空与过期清理。
+     *
+     * @param ownerUserId 用户标识
+     * @param cutoff 截止时间
+     * @return 回收站照片
+     */
+    @Query("""
+            SELECT photo FROM PhotoItem photo
+            JOIN FileNode file ON photo.fileNodeId = file.id
+            WHERE photo.ownerUserId = :ownerUserId
+              AND photo.deletedAt IS NOT NULL
+              AND photo.deletedAt <= :cutoff
+              AND file.deleted = false
+            ORDER BY photo.deletedAt ASC
+            """)
+    List<PhotoItem> findTrashByOwnerUserIdAndDeletedAtBefore(
+            @Param("ownerUserId") UUID ownerUserId,
+            @Param("cutoff") Instant cutoff
+    );
+
+    /**
+     * 查询存在过期回收站照片的用户标识。
+     *
+     * @param cutoff 截止时间
+     * @return 用户标识列表
+     */
+    @Query("""
+            SELECT photo.ownerUserId FROM PhotoItem photo
+            WHERE photo.deletedAt IS NOT NULL AND photo.deletedAt <= :cutoff
+            GROUP BY photo.ownerUserId
+            """)
+    List<UUID> findOwnerIdsWithExpiredTrash(@Param("cutoff") Instant cutoff);
 
     // ─── 关系图谱边聚合 ───
 

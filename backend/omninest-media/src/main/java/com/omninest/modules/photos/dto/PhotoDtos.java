@@ -196,8 +196,16 @@ public final class PhotoDtos {
             long totalPhotos,
             long totalAlbums,
             long totalFavorites,
+            long trashCount,
             List<PhotoItemDto> recentPhotos,
             List<PhotoItemDto> favoritePhotos
+    ) {}
+
+    /** 回收站批量操作逐项结果。 */
+    public record PhotoTrashResultDto(
+            UUID photoId,
+            boolean success,
+            String message
     ) {}
 
     public record PhotoAlbumDto(

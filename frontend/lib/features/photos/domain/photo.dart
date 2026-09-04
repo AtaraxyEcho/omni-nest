@@ -269,6 +269,7 @@ class PhotoDashboard {
     required this.totalPhotos,
     required this.totalAlbums,
     required this.totalFavorites,
+    this.trashCount = 0,
     required this.recentPhotos,
     required this.favoritePhotos,
   });
@@ -286,6 +287,7 @@ class PhotoDashboard {
   final int totalPhotos;
   final int totalAlbums;
   final int totalFavorites;
+  final int trashCount;
   final List<PhotoItem> recentPhotos;
   final List<PhotoItem> favoritePhotos;
 
@@ -294,6 +296,7 @@ class PhotoDashboard {
       totalPhotos: _asInt(json['totalPhotos']),
       totalAlbums: _asInt(json['totalAlbums']),
       totalFavorites: _asInt(json['totalFavorites']),
+      trashCount: _asInt(json['trashCount']),
       recentPhotos:
           _asList(json['recentPhotos']).map(PhotoItem.fromJson).toList(),
       favoritePhotos:

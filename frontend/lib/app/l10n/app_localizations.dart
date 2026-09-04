@@ -14658,6 +14658,96 @@ abstract class AppLocalizations {
   /// **'Toggle selection'**
   String get photosToggleSelection;
 
+  /// No description provided for @photosTrashSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items · automatically deleted after 30 days'**
+  String photosTrashSubtitle(Object count);
+
+  /// No description provided for @photosEmptyTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Trash'**
+  String get photosEmptyTrash;
+
+  /// No description provided for @photosRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get photosRestore;
+
+  /// No description provided for @photosDeleteForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever'**
+  String get photosDeleteForever;
+
+  /// No description provided for @photosEmptyTrashConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty Trash?'**
+  String get photosEmptyTrashConfirmTitle;
+
+  /// No description provided for @photosEmptyTrashConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} photos in the trash will be permanently deleted. This cannot be undone.'**
+  String photosEmptyTrashConfirmBody(Object count);
+
+  /// No description provided for @photosDeleteForeverConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Forever?'**
+  String get photosDeleteForeverConfirmTitle;
+
+  /// No description provided for @photosDeleteForeverConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo will be permanently deleted. This cannot be undone.'**
+  String get photosDeleteForeverConfirmBody;
+
+  /// No description provided for @photosMoveToTrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Trash?'**
+  String get photosMoveToTrashTitle;
+
+  /// No description provided for @photosMoveToTrashBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} photos will be moved to the Trash. You can restore them within 30 days.'**
+  String photosMoveToTrashBody(Object count);
+
+  /// No description provided for @photosMoveToTrashBodyOne.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo will be moved to the Trash. You can restore it within 30 days.'**
+  String get photosMoveToTrashBodyOne;
+
+  /// No description provided for @photosMoveToTrashAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Trash'**
+  String get photosMoveToTrashAction;
+
+  /// No description provided for @photosTrashRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo restored'**
+  String get photosTrashRestored;
+
+  /// No description provided for @photosTrashPurged.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted permanently'**
+  String get photosTrashPurged;
+
+  /// No description provided for @photosTrashMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to Trash'**
+  String get photosTrashMoved;
+
   /// No description provided for @photosModuleDisplayName.
   ///
   /// In en, this message translates to:

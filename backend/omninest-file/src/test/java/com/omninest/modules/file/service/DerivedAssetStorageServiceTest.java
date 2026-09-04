@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -53,10 +57,17 @@ class DerivedAssetStorageServiceTest {
     private final FileNodeRepository fileNodeRepository = mock(FileNodeRepository.class);
     private final SafeUrlValidator safeUrlValidator = mock(SafeUrlValidator.class);
     private final TransactionTemplate transactionTemplate = mock(TransactionTemplate.class);
+    private final PlatformTransactionManager platformTransactionManager = mock(PlatformTransactionManager.class);
 
     private void allowTransactionCallback() {
         when(transactionTemplate.execute(any())).thenAnswer(invocation ->
                 ((TransactionCallback<?>) invocation.getArgument(0)).doInTransaction(null));
+    }
+
+    private void allowStoreTransaction() {
+        when(transactionTemplate.getTransactionManager()).thenReturn(platformTransactionManager);
+        when(platformTransactionManager.getTransaction(any())).thenAnswer(invocation ->
+                new SimpleTransactionStatus());
     }
 
     @Test
@@ -229,6 +240,7 @@ class DerivedAssetStorageServiceTest {
             node.setId(FILE_NODE_ID);
             return node;
         });
+        allowStoreTransaction();
         DerivedAssetStorageService service = new DerivedAssetStorageService(
                 objectStorageBuckets(),
                 objectStorageClient,
@@ -278,6 +290,7 @@ class DerivedAssetStorageServiceTest {
             node.setId(FILE_NODE_ID);
             return node;
         });
+        allowStoreTransaction();
         DerivedAssetStorageService service = new DerivedAssetStorageService(
                 objectStorageBuckets(),
                 objectStorageClient,
@@ -395,6 +408,7 @@ class DerivedAssetStorageServiceTest {
                 safeUrlValidator,
                 transactionTemplate
         );
+        allowStoreTransaction();
 
         assertThatThrownBy(() -> service.store(
                 OWNER_ID,
@@ -420,6 +434,8 @@ class DerivedAssetStorageServiceTest {
             return node;
         });
 
+        allowStoreTransaction();
+
         UUID fileNodeId = service.store(
                 OWNER_ID,
                 "VIDEO",
@@ -436,6 +452,50 @@ class DerivedAssetStorageServiceTest {
                 eq(bigFile.toAbsolutePath().normalize()),
                 eq("audio/aac")
         );
+    }
+
+    @Test
+    void storeRetriesOnceWhenConcurrentWriteConflictsOnUniqueKey(@TempDir Path tempDirectory) throws Exception {
+        Path sourceFile = tempDirectory.resolve("thumb.jpg");
+        Files.writeString(sourceFile, "image", StandardCharsets.UTF_8);
+        FileObject existingObject = new FileObject();
+        existingObject.setId(FILE_OBJECT_ID);
+        existingObject.setBucketName("derived-assets");
+        when(fileObjectRepository.findByBucketNameAndObjectKey(any(), any()))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(existingObject));
+        when(fileObjectRepository.save(any()))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(fileNodeRepository.findActivePath(any(), any())).thenReturn(Optional.empty());
+        when(fileNodeRepository.save(any())).thenAnswer(invocation -> {
+            FileNode node = invocation.getArgument(0);
+            node.setId(FILE_NODE_ID);
+            return node;
+        });
+        allowStoreTransaction();
+        DerivedAssetStorageService service = new DerivedAssetStorageService(
+                objectStorageBuckets(),
+                objectStorageClient,
+                fileObjectRepository,
+                fileNodeRepository,
+                safeUrlValidator,
+                transactionTemplate
+        );
+
+        UUID fileNodeId = service.store(
+                OWNER_ID,
+                "PHOTO_ITEM",
+                RESOURCE_ID,
+                "POSTER",
+                "thumb.jpg",
+                "image/jpeg",
+                sourceFile
+        );
+
+        assertThat(fileNodeId).isEqualTo(FILE_NODE_ID);
+        verify(fileObjectRepository, times(2)).save(any());
+        verify(fileObjectRepository, times(2)).findByBucketNameAndObjectKey(any(), any());
     }
 
     private ObjectStorageBuckets objectStorageBuckets() {

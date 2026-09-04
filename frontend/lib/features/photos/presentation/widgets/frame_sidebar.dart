@@ -27,11 +27,11 @@ class FrameSidebar extends StatelessWidget {
   /// 设计稿导航结构：五个主视图 + 收藏，分隔线后为回收站。
   static const List<FrameView> _primaryViews = <FrameView>[
     FrameView.grid,
+    FrameView.favorites,
     FrameView.timeline,
     FrameView.locations,
     FrameView.tags,
     FrameView.albums,
-    FrameView.favorites,
   ];
 
   @override
@@ -192,6 +192,8 @@ class _FrameNavItem extends StatefulWidget {
 }
 
 class _FrameNavItemState extends State<_FrameNavItem> {
+  static const Duration stateDuration = Duration(milliseconds: 150);
+
   bool _hovering = false;
 
   @override
@@ -236,19 +238,31 @@ class _FrameNavItemState extends State<_FrameNavItem> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(frameViewIcon(widget.view), size: 17, color: iconColor),
+                TweenAnimationBuilder<Color?>(
+                  tween: ColorTween(end: iconColor),
+                  duration: stateDuration,
+                  builder:
+                      (context, color, child) => Icon(
+                        frameViewIcon(widget.view),
+                        size: 17,
+                        color: color,
+                      ),
+                ),
                 if (!widget.collapsed) ...[
                   const SizedBox(width: 10),
                   Flexible(
-                    child: Text(
-                      widget.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: AnimatedDefaultTextStyle(
+                      duration: stateDuration,
                       style: TextStyle(
                         color: foreground,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         letterSpacing: 0.13,
+                      ),
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),

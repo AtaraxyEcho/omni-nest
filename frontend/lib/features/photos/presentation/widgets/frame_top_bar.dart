@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/core/widgets/responsive_search_field.dart';
 import 'package:omninest/core/widgets/user_avatar_menu.dart';
 import 'package:omninest/features/files/application/media_import_service.dart';
 import 'package:omninest/features/files/media_import_ui.dart';
@@ -46,11 +47,12 @@ class FrameTopBar extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final colors = context.frameColors;
 
-    Widget searchField = _FrameSearchField(
+    // 与其他模块一致的共享搜索框样式。
+    Widget searchField = ResponsiveSearchField(
       controller: searchController,
       onChanged: onSearchChanged,
-      hint: l10n.photosSearchHint,
-      width: searchExpanded ? null : 232,
+      hintText: l10n.photosSearchHint,
+      maxWidth: searchExpanded ? double.infinity : 232,
     );
     if (searchExpanded) {
       searchField = Expanded(child: searchField);
@@ -96,67 +98,6 @@ class FrameTopBar extends ConsumerWidget {
         ],
       ),
     );
-  }
-}
-
-/// Frame 搜索框：单一输入框渲染，白底、细边框、圆角 8、高 40。
-class _FrameSearchField extends StatelessWidget {
-  const _FrameSearchField({
-    required this.controller,
-    required this.onChanged,
-    required this.hint,
-    this.width,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final String hint;
-  final double? width;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.frameColors;
-    Widget field = SizedBox(
-      height: 40,
-      width: width,
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: TextStyle(color: colors.ink, fontSize: 14),
-        cursorColor: colors.accent,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: colors.muted, fontSize: 14),
-          filled: true,
-          fillColor: colors.searchFill,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.only(left: 14, right: 10),
-            child: Icon(Icons.search_rounded, size: 16, color: colors.muted),
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 0,
-            minHeight: 0,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: colors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: colors.accent),
-          ),
-        ),
-      ),
-    );
-    if (width == null) {
-      field = ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480),
-        child: field,
-      );
-    }
-    return field;
   }
 }
 

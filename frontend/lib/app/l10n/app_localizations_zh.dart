@@ -7787,6 +7787,57 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosToggleSelection => '多选';
 
   @override
+  String photosTrashSubtitle(Object count) {
+    return '$count 个项目 · 保留 30 天后自动永久删除';
+  }
+
+  @override
+  String get photosEmptyTrash => '清空回收站';
+
+  @override
+  String get photosRestore => '恢复';
+
+  @override
+  String get photosDeleteForever => '永久删除';
+
+  @override
+  String get photosEmptyTrashConfirmTitle => '清空回收站？';
+
+  @override
+  String photosEmptyTrashConfirmBody(Object count) {
+    return '回收站中的 $count 张照片将被永久删除，且无法撤销。';
+  }
+
+  @override
+  String get photosDeleteForeverConfirmTitle => '永久删除？';
+
+  @override
+  String get photosDeleteForeverConfirmBody => '该照片将被永久删除，且无法撤销。';
+
+  @override
+  String get photosMoveToTrashTitle => '移入回收站？';
+
+  @override
+  String photosMoveToTrashBody(Object count) {
+    return '$count 张照片将移入回收站，30 天内可恢复。';
+  }
+
+  @override
+  String get photosMoveToTrashBodyOne => '该照片将移入回收站，30 天内可恢复。';
+
+  @override
+  String get photosMoveToTrashAction => '移入回收站';
+
+  @override
+  String get photosTrashRestored => '照片已恢复';
+
+  @override
+  String get photosTrashPurged => '已永久删除';
+
+  @override
+  String get photosTrashMoved => '已移入回收站';
+
+  @override
   String get photosModuleDisplayName => '光影集';
 
   @override

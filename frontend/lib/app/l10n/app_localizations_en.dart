@@ -8034,6 +8034,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosToggleSelection => 'Toggle selection';
 
   @override
+  String photosTrashSubtitle(Object count) {
+    return '$count items · automatically deleted after 30 days';
+  }
+
+  @override
+  String get photosEmptyTrash => 'Empty Trash';
+
+  @override
+  String get photosRestore => 'Restore';
+
+  @override
+  String get photosDeleteForever => 'Delete Forever';
+
+  @override
+  String get photosEmptyTrashConfirmTitle => 'Empty Trash?';
+
+  @override
+  String photosEmptyTrashConfirmBody(Object count) {
+    return 'All $count photos in the trash will be permanently deleted. This cannot be undone.';
+  }
+
+  @override
+  String get photosDeleteForeverConfirmTitle => 'Delete Forever?';
+
+  @override
+  String get photosDeleteForeverConfirmBody =>
+      'This photo will be permanently deleted. This cannot be undone.';
+
+  @override
+  String get photosMoveToTrashTitle => 'Move to Trash?';
+
+  @override
+  String photosMoveToTrashBody(Object count) {
+    return '$count photos will be moved to the Trash. You can restore them within 30 days.';
+  }
+
+  @override
+  String get photosMoveToTrashBodyOne =>
+      'This photo will be moved to the Trash. You can restore it within 30 days.';
+
+  @override
+  String get photosMoveToTrashAction => 'Move to Trash';
+
+  @override
+  String get photosTrashRestored => 'Photo restored';
+
+  @override
+  String get photosTrashPurged => 'Deleted permanently';
+
+  @override
+  String get photosTrashMoved => 'Moved to Trash';
+
+  @override
   String get photosModuleDisplayName => 'Lightbox';
 
   @override

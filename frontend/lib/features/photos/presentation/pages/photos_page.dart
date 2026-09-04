@@ -8,7 +8,6 @@ import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
-import 'package:omninest/core/widgets/file_purge_confirmation.dart';
 import 'package:omninest/core/widgets/mobile_shell_scope.dart';
 import 'package:omninest/core/widgets/mobile_ui.dart';
 import 'package:omninest/core/widgets/responsive_breakpoints.dart';
@@ -22,6 +21,7 @@ import 'package:omninest/features/photos/presentation/widgets/frame_empty_view.d
 import 'package:omninest/features/photos/presentation/widgets/frame_masonry_grid.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_sidebar.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_trash_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_top_bar.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
@@ -131,7 +131,7 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                     onSelectView: notifier.setFrameView,
                     photoCount: data.visiblePhotoTotalElements,
                     albumCount: data.albums.length,
-                    trashCount: 0,
+                    trashCount: data.dashboard.trashCount,
                     collapsed: width < 1024,
                   ),
                   Expanded(
@@ -152,6 +152,12 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                                 () => _showCreateAlbumDialog(context),
                             onToggleFavorite:
                                 (photo) => unawaited(_toggleFavorite(photo)),
+                            onRestoreFromTrash:
+                                (photo) => unawaited(_restoreFromTrash(photo)),
+                            onDeleteForeverFromTrash:
+                                (photo) => unawaited(_purgeFromTrash(photo)),
+                            onEmptyTrash:
+                                () => unawaited(_purgeTrashWithFeedback()),
                           ),
                         ),
                         if (data.isSelectionMode &&
@@ -191,6 +197,10 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
           onDeleteAlbum: (album) => _confirmDeleteAlbum(context, album),
           onCreateAlbum: () => _showCreateAlbumDialog(context),
           onToggleFavorite: (photo) => unawaited(_toggleFavorite(photo)),
+          onRestoreFromTrash: (photo) => unawaited(_restoreFromTrash(photo)),
+          onDeleteForeverFromTrash:
+              (photo) => unawaited(_purgeFromTrash(photo)),
+          onEmptyTrash: () => unawaited(_purgeTrashWithFeedback()),
         );
         final bottomNav =
             data.isSelectionMode
@@ -258,6 +268,60 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                   )
                   : const AppLoading.grid(),
     );
+  }
+
+  /// 从回收站恢复照片。
+  Future<void> _restoreFromTrash(PhotoItem photo) async {
+    try {
+      await ref
+          .read(photoCenterControllerProvider.notifier)
+          .restorePhotoFromTrash(photo.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).photosTrashRestored),
+        ),
+      );
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(describeUserFacingError(error).displayMessage)),
+      );
+    }
+  }
+
+  /// 永久删除回收站中的照片。
+  Future<void> _purgeFromTrash(PhotoItem photo) async {
+    try {
+      await ref
+          .read(photoCenterControllerProvider.notifier)
+          .purgePhotoFromTrash(photo.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).photosTrashPurged)),
+      );
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(describeUserFacingError(error).displayMessage)),
+      );
+    }
+  }
+
+  /// 清空回收站。
+  Future<void> _purgeTrashWithFeedback() async {
+    try {
+      await ref.read(photoCenterControllerProvider.notifier).purgeTrash();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).photosTrashPurged)),
+      );
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(describeUserFacingError(error).displayMessage)),
+      );
+    }
   }
 
   /// 卡片心形切换收藏；失败时给出用户可读提示。

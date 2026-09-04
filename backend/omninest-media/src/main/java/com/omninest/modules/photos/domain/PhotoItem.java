@@ -106,6 +106,10 @@ public class PhotoItem {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    /** 进入回收站的时间；NULL 表示未删除。 */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 

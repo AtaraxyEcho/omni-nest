@@ -12,6 +12,9 @@ class _FrameViewContent extends ConsumerWidget {
     required this.onDeleteAlbum,
     required this.onCreateAlbum,
     required this.onToggleFavorite,
+    required this.onRestoreFromTrash,
+    required this.onDeleteForeverFromTrash,
+    required this.onEmptyTrash,
   });
 
   final PhotoCenterState state;
@@ -21,6 +24,9 @@ class _FrameViewContent extends ConsumerWidget {
   final ValueChanged<PhotoAlbum> onDeleteAlbum;
   final VoidCallback onCreateAlbum;
   final ValueChanged<PhotoItem> onToggleFavorite;
+  final ValueChanged<PhotoItem> onRestoreFromTrash;
+  final ValueChanged<PhotoItem> onDeleteForeverFromTrash;
+  final VoidCallback onEmptyTrash;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,11 +61,14 @@ class _FrameViewContent extends ConsumerWidget {
           onDeleteAlbum: onDeleteAlbum,
           onCreateAlbum: onCreateAlbum,
         ),
-        FrameView.trash => FrameEmptyView(
+        FrameView.trash => FrameTrashView(
           key: const ValueKey('frame-trash'),
-          icon: Icons.delete_outlined,
-          message: AppLocalizations.of(context).photosFrameTrashEmpty,
-          hint: AppLocalizations.of(context).photosFrameTrashEmptyHint,
+          photos: state.trashPhotos,
+          isLoading: state.isLoadingTrash,
+          errorMessage: state.trashPageError,
+          onRestore: onRestoreFromTrash,
+          onDeleteForever: onDeleteForeverFromTrash,
+          onEmptyTrash: onEmptyTrash,
         ),
       },
     );

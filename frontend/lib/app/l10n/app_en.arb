@@ -3639,6 +3639,36 @@
   "photosViewTimeline": "Timeline",
   "photosViewGroups": "Groups",
   "photosToggleSelection": "Toggle selection",
+  "photosTrashSubtitle": "{count} items · automatically deleted after 30 days",
+  "@photosTrashSubtitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosEmptyTrash": "Empty Trash",
+  "photosRestore": "Restore",
+  "photosDeleteForever": "Delete Forever",
+  "photosEmptyTrashConfirmTitle": "Empty Trash?",
+  "photosEmptyTrashConfirmBody": "All {count} photos in the trash will be permanently deleted. This cannot be undone.",
+  "@photosEmptyTrashConfirmBody": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosDeleteForeverConfirmTitle": "Delete Forever?",
+  "photosDeleteForeverConfirmBody": "This photo will be permanently deleted. This cannot be undone.",
+  "photosMoveToTrashTitle": "Move to Trash?",
+  "photosMoveToTrashBody": "{count} photos will be moved to the Trash. You can restore them within 30 days.",
+  "@photosMoveToTrashBody": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosMoveToTrashBodyOne": "This photo will be moved to the Trash. You can restore it within 30 days.",
+  "photosMoveToTrashAction": "Move to Trash",
+  "photosTrashRestored": "Photo restored",
+  "photosTrashPurged": "Deleted permanently",
+  "photosTrashMoved": "Moved to Trash",
   "photosModuleDisplayName": "Lightbox",
   "photosSelectAll": "Select all",
   "photosDeselectAll": "Deselect all",

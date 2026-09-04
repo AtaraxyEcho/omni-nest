@@ -198,38 +198,59 @@ void main() {
       expect(result.first.photoCount, 25);
     });
 
-    test('deletePhoto sends DELETE to /photos/:id', () async {
+    test('movePhotoToTrash sends DELETE to /photos/:id', () async {
       final adapter = _CapturingHttpClientAdapter();
       final api = PhotoApi(_apiClient(adapter));
 
-      await api.deletePhoto('photo-99');
+      await api.movePhotoToTrash('photo-99');
 
       expect(adapter.lastMethod, 'DELETE');
       expect(adapter.lastPath, '/photos/photo-99');
     });
 
-    test('deletePhotos submits one batch purge request', () async {
+    test('listTrash reads /photos/trash/page', () async {
       final adapter = _CapturingHttpClientAdapter(
         body: {
           'code': 200,
           'message': 'success',
-          'data': {'taskId': 'task-1', 'status': 'QUEUED', 'phase': 'PLANNING'},
+          'data': {
+            'items': [
+              {
+                'id': 'photo-1',
+                'fileNodeId': 'file-1',
+                'title': 'Trashed',
+                'format': 'JPEG',
+                'fileSize': 10,
+                'metadataStatus': 'READY',
+              },
+            ],
+            'page': 0,
+            'size': 50,
+            'totalElements': 1,
+            'totalPages': 1,
+          },
         },
       );
       final api = PhotoApi(_apiClient(adapter));
 
-      final result = await api.deletePhotos([
-        'photo-1',
-        'photo-2',
-      ], cascade: true);
+      final page = await api.listTrash();
+
+      expect(adapter.lastMethod, 'GET');
+      expect(adapter.lastPath, '/photos/trash/page');
+      expect(page.totalElements, 1);
+    });
+
+    test('movePhotosToTrash submits one batch request', () async {
+      final adapter = _CapturingHttpClientAdapter();
+      final api = PhotoApi(_apiClient(adapter));
+
+      await api.movePhotosToTrash(['photo-1', 'photo-2']);
 
       expect(adapter.lastMethod, 'DELETE');
-      expect(adapter.lastPath, '/photos/batch/purge');
+      expect(adapter.lastPath, '/photos/batch');
       expect(adapter.lastData, {
         'photoIds': ['photo-1', 'photo-2'],
       });
-      expect(adapter.lastQueryParams, {'cascade': true});
-      expect(result.taskId, 'task-1');
     });
 
     test('addFavorite sends POST to /photos/:id/favorite', () async {

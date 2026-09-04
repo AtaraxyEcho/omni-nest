@@ -32,7 +32,9 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -71,6 +73,37 @@ public class DerivedAssetStorageService {
     private final FileNodeRepository fileNodeRepository;
     private final SafeUrlValidator safeUrlValidator;
     private final TransactionTemplate transactionTemplate;
+
+    /** 在独立新事务中执行存储动作；并发流水线写入同一对象键时重试一次。 */
+    private UUID storeInNewTransactionWithRetry(StoreAction action) {
+        TransactionTemplate template = new TransactionTemplate(
+                transactionTemplate.getTransactionManager());
+        template.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return executeWithConflictRetry(template, action);
+    }
+
+    /** 执行存储动作，命中对象键唯一键冲突时以新事务重试一次，复用先到者写入的元数据。 */
+    private UUID executeWithConflictRetry(TransactionTemplate template, StoreAction action) {
+        DataIntegrityViolationException lastFailure = null;
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            try {
+                return template.execute(status -> action.run());
+            } catch (DataIntegrityViolationException ex) {
+                if (attempt == 2) {
+                    throw ex;
+                }
+                lastFailure = ex;
+                log.warn("派生资源元数据并发写入冲突，重试: attempt={}", attempt);
+            }
+        }
+        throw lastFailure;
+    }
+
+    /** 存储动作。 */
+    @FunctionalInterface
+    private interface StoreAction {
+        UUID run();
+    }
 
     /**
      * 删除当前用户拥有的派生资源及其对象元数据。
@@ -244,7 +277,6 @@ public class DerivedAssetStorageService {
      * @param spaceType 空间类型（PERSONAL / SHARED）
      * @return FileNode ID
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public UUID store(UUID ownerUserId, String resourceType, UUID resourceId,
                      String assetType, String fileName, String mimeType, InputStream data, SpaceType spaceType) {
         Path tempFile = null;
@@ -254,17 +286,24 @@ public class DerivedAssetStorageService {
             try (OutputStream out = Files.newOutputStream(tempFile)) {
                 copyBounded(data, out, MAX_DERIVED_ASSET_BYTES);
             }
-            return storeFile(
-                    ownerUserId,
-                    resourceType,
-                    resourceId,
-                    assetType,
-                    fileName,
-                    fileName,
-                    mimeType,
-                    tempFile,
-                    spaceType
-            );
+            Path stagedFile = tempFile;
+            return storeInNewTransactionWithRetry(() -> {
+                try {
+                    return storeFile(
+                            ownerUserId,
+                            resourceType,
+                            resourceId,
+                            assetType,
+                            fileName,
+                            fileName,
+                            mimeType,
+                            stagedFile,
+                            spaceType
+                    );
+                } catch (IOException ex) {
+                    throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源保存失败");
+                }
+            });
         } catch (IOException ex) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源保存失败");
         } finally {
@@ -291,25 +330,26 @@ public class DerivedAssetStorageService {
      * @param spaceType 空间类型
      * @return FileNode ID
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public UUID store(UUID ownerUserId, String resourceType, UUID resourceId,
                       String assetType, String fileName, String mimeType,
                       Path sourceFile, SpaceType spaceType) {
-        try {
-            return storeFile(
-                    ownerUserId,
-                    resourceType,
-                    resourceId,
-                    assetType,
-                    fileName,
-                    fileName,
-                    mimeType,
-                    sourceFile,
-                    spaceType
-            );
-        } catch (IOException ex) {
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源保存失败");
-        }
+        return storeInNewTransactionWithRetry(() -> {
+            try {
+                return storeFile(
+                        ownerUserId,
+                        resourceType,
+                        resourceId,
+                        assetType,
+                        fileName,
+                        fileName,
+                        mimeType,
+                        sourceFile,
+                        spaceType
+                );
+            } catch (IOException ex) {
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源保存失败");
+            }
+        });
     }
 
     /**
@@ -325,25 +365,26 @@ public class DerivedAssetStorageService {
      * @param sourceFile 本地源文件
      * @return FileNode ID
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public UUID store(UUID ownerUserId, String resourceType, UUID resourceId,
                       String assetType, String fileName, String storageFileName,
                       String mimeType, Path sourceFile) {
-        try {
-            return storeFile(
-                    ownerUserId,
-                    resourceType,
-                    resourceId,
-                    assetType,
-                    fileName,
-                    storageFileName,
-                    mimeType,
-                    sourceFile,
-                    SpaceType.PERSONAL
-            );
-        } catch (IOException ex) {
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源保存失败");
-        }
+        return storeInNewTransactionWithRetry(() -> {
+            try {
+                return storeFile(
+                        ownerUserId,
+                        resourceType,
+                        resourceId,
+                        assetType,
+                        fileName,
+                        storageFileName,
+                        mimeType,
+                        sourceFile,
+                        SpaceType.PERSONAL
+                );
+            } catch (IOException ex) {
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED, "派生资源保存失败");
+            }
+        });
     }
 
     private UUID storeFile(
@@ -442,7 +483,7 @@ public class DerivedAssetStorageService {
             tempFile = downloaded.path();
             String mimeType = firstNonBlank(downloaded.mimeType(), request.mimeType(), "application/octet-stream");
             Path downloadedFile = tempFile;
-            return transactionTemplate.execute(status -> {
+            return executeWithConflictRetry(transactionTemplate, () -> {
                 try {
                     return storeFile(
                             request.ownerUserId(),

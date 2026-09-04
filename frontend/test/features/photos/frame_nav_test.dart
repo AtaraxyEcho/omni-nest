@@ -8,9 +8,15 @@ import 'package:omninest/app/theme/app_theme_palette.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/auth/auth_session_store_base.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
+import 'package:omninest/features/photos/domain/photo.dart';
+import 'package:omninest/features/photos/domain/photo_album.dart';
+import 'package:omninest/features/photos/domain/photo_repository.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:omninest/features/photos/presentation/pages/photos_page.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_bottom_nav.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_sidebar.dart';
+
+class _MockPhotoRepository extends Mock implements PhotoRepository {}
 
 /// 伪造的照片中心控制器，返回空状态以避免网络请求
 class _FakePhotoCenterController extends PhotoCenterController {
@@ -28,9 +34,34 @@ Widget _wrapFramePage() {
       GoRoute(path: '/portal', builder: (context, state) => const SizedBox()),
     ],
   );
+  final repository = _MockPhotoRepository();
+  when(
+    () => repository.dashboard(),
+  ).thenAnswer((_) async => PhotoDashboard.empty());
+  when(
+    () => repository.listAlbums(),
+  ).thenAnswer((_) async => const <PhotoAlbum>[]);
+  when(
+    () => repository.listPhotos(
+      query: any(named: 'query'),
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+      sort: any(named: 'sort'),
+    ),
+  ).thenAnswer((_) async => PhotoPage.empty());
+  when(
+    () => repository.listFavorites(
+      query: any(named: 'query'),
+      page: any(named: 'page'),
+      size: any(named: 'size'),
+      sort: any(named: 'sort'),
+    ),
+  ).thenAnswer((_) async => PhotoPage.empty());
+  when(() => repository.listTrash()).thenAnswer((_) async => PhotoPage.empty());
   return ProviderScope(
     overrides: [
       authSessionStoreProvider.overrideWithValue(MemoryAuthSessionStore()),
+      photoRepositoryProvider.overrideWithValue(repository),
       photoCenterControllerProvider.overrideWith(
         () => _FakePhotoCenterController(),
       ),

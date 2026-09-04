@@ -413,7 +413,7 @@ void main() {
     expect(controller.lastImportDetail, '安全扫描服务不可用，文件已隔离');
   });
 
-  test('永久删除任务提交后立即从本地状态移除照片', () async {
+  test('照片移入回收站后乐观移除并刷新列表', () async {
     final repository = _MockPhotoRepository();
     final taskApi = _MockTaskApi();
     _stubCommon(repository);
@@ -439,10 +439,26 @@ void main() {
     ).thenAnswer(
       (_) async => _page(<PhotoItem>[_photo('one'), _photo('two')], total: 2),
     );
-    when(() => repository.deletePhoto('one', cascade: false)).thenAnswer(
-      (_) async =>
-          const TaskSubmission(taskId: 'delete-photo', status: 'QUEUED'),
-    );
+    when(() => repository.movePhotoToTrash('one')).thenAnswer((_) async {});
+    var listCalls = 0;
+    when(
+      () => repository.listPhotos(
+        query: any(named: 'query'),
+        page: any(named: 'page'),
+        size: any(named: 'size'),
+        sort: any(named: 'sort'),
+      ),
+    ).thenAnswer((_) {
+      listCalls++;
+      return Future.value(
+        _page(
+          listCalls == 1
+              ? <PhotoItem>[_photo('one'), _photo('two')]
+              : <PhotoItem>[_photo('two')],
+          total: listCalls == 1 ? 2 : 1,
+        ),
+      );
+    });
     final container = ProviderContainer.test(
       overrides: [
         photoRepositoryProvider.overrideWithValue(repository),
@@ -454,12 +470,12 @@ void main() {
 
     await container
         .read(photoCenterControllerProvider.notifier)
-        .deletePhoto('one');
+        .movePhotoToTrash('one');
 
     final state = container.read(photoCenterControllerProvider).requireValue;
+    // 移入回收站后乐观移除并刷新列表，刷新结果仅剩剩余照片。
     expect(state.photos.map((photo) => photo.id), <String>['two']);
-    expect(state.dashboard.totalPhotos, 1);
-    verify(() => repository.deletePhoto('one', cascade: false)).called(1);
+    verify(() => repository.movePhotoToTrash('one')).called(1);
   });
 }
 

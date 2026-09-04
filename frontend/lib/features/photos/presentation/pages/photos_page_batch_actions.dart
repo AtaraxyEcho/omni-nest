@@ -101,7 +101,7 @@ class _BatchActionBar extends StatelessWidget {
                     icon: Icons.delete_outline,
                     label: AppLocalizations.of(context).photosDelete,
                     isDestructive: true,
-                    onTap: () => _confirmBatchDelete(context),
+                    onTap: () => _confirmBatchTrash(context),
                   ),
                 ],
               ),
@@ -220,28 +220,37 @@ class _BatchActionBar extends StatelessWidget {
     }
   }
 
-  Future<void> _confirmBatchDelete(BuildContext context) async {
+  /// 两步删除：确认后将所选照片移入回收站。
+  Future<void> _confirmBatchTrash(BuildContext context) async {
     final count = state.selectedPhotoIds.length;
     final photoIds = state.selectedPhotoIds.toList(growable: false);
-    final confirmed = await confirmAndRunFilePurge(
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showFrameConfirmDialog(
       context,
-      resourceName: AppLocalizations.of(context).photosSelectedCount(count),
-      action: (cascade) async {
+      title: l10n.photosMoveToTrashTitle,
+      body: l10n.photosMoveToTrashBody(count),
+      confirmLabel: l10n.photosMoveToTrashAction,
+    );
+    if (confirmed && context.mounted) {
+      try {
         await ref
             .read(photoCenterControllerProvider.notifier)
-            .deletePhotos(photoIds, cascade: cascade);
-      },
-    );
-    if (confirmed == true && context.mounted) {
-      ref.read(photoCenterControllerProvider.notifier).toggleSelectionMode();
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).photosBatchDeleted(count),
+            .movePhotosToTrash(photoIds);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).photosTrashMoved),
             ),
-          ),
-        );
+          );
+        }
+      } on Exception {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).photosDeleteFailed),
+            ),
+          );
+        }
       }
     }
   }

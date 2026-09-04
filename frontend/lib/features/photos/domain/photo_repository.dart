@@ -26,13 +26,22 @@ abstract interface class PhotoRepository {
   Future<PhotoItem> getPhoto(String photoId);
 
   /// 删除照片
-  Future<TaskSubmission> deletePhoto(String photoId, {bool cascade = false});
+  Future<void> movePhotoToTrash(String photoId);
 
   /// 批量删除照片并返回统一任务。
-  Future<TaskSubmission> deletePhotos(
-    List<String> photoIds, {
-    bool cascade = false,
-  });
+  Future<void> movePhotosToTrash(List<String> photoIds);
+
+  /// 分页查询回收站照片。
+  Future<PhotoPage> listTrash({int page = 0, int size = 50});
+
+  /// 从回收站恢复照片。
+  Future<void> restorePhoto(String photoId);
+
+  /// 永久删除回收站中的照片。
+  Future<TaskSubmission> purgePhoto(String photoId, {bool cascade = false});
+
+  /// 清空回收站。
+  Future<TaskSubmission> purgeTrash();
 
   /// 分页获取收藏照片列表。
   Future<PhotoPage> listFavorites({

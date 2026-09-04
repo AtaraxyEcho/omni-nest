@@ -21,6 +21,7 @@ import com.omninest.modules.photos.dto.PhotoDtos.PhotoGroupDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoItemDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoListItemDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoMonthGroup;
+import com.omninest.modules.photos.dto.PhotoDtos.PhotoTrashResultDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoTimelineDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoTimelineMonthDto;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoYearGroup;
@@ -103,6 +104,7 @@ public class PhotoLibraryService {
     private PhotoDashboardDto loadDashboard(UUID ownerUserId) {
         long totalPhotos = photoItemRepository.countByOwnerUserId(ownerUserId);
         long totalAlbums = albumRepository.countByOwnerUserId(ownerUserId);
+        long trashCount = photoItemRepository.countByOwnerUserIdAndDeletedAtIsNotNull(ownerUserId);
 
         // 一次查询获取所有收藏数据，避免三次重复查询
         List<PhotoFavorite> allFavorites = favoriteRepository.findByOwnerUserIdOrderByCreatedAtDesc(ownerUserId);
@@ -125,6 +127,7 @@ public class PhotoLibraryService {
                 totalPhotos,
                 totalAlbums,
                 favoriteIds.size(),
+                trashCount,
                 recent.stream().map(p -> toDto(p, favoriteIds.contains(p.getId()))).toList(),
                 favorites.stream().map(p -> toDto(p, true)).toList()
         );
@@ -229,17 +232,7 @@ public class PhotoLibraryService {
     }
 
     /**
-     * 永久删除指定照片及其源文件。
-     *
-     * @param ownerUserId 当前用户 ID
-     * @param photoId 照片 ID
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public UUID deletePhoto(UUID ownerUserId, UUID photoId) {
-        return deletePhoto(ownerUserId, photoId, false);
-    }
-
-    /** 按指定顺序批量查询用户拥有的活动照片，供公开相册分页使用。 */
+     * 按指定顺序批量查询用户拥有的活动照片，供公开相册分页使用。 */
     @Transactional(readOnly = true)
     public List<PhotoItemDto> listPhotosByIds(UUID ownerUserId, List<UUID> photoIds) {
         if (photoIds == null || photoIds.isEmpty()) {
@@ -277,17 +270,107 @@ public class PhotoLibraryService {
     }
 
     /**
-     * 创建照片永久删除任务。
+     * 将照片移入回收站（软删除，保留 30 天，可恢复或手动永久删除）。
+     *
+     * @param ownerUserId 当前用户 ID
+     * @param photoId 照片 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void movePhotoToTrash(UUID ownerUserId, UUID photoId) {
+        PhotoItem item = photoItemRepository.findByOwnerUserIdAndId(ownerUserId, photoId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "图片不存在"));
+        if (item.getDeletedAt() != null) {
+            return;
+        }
+        item.setDeletedAt(Instant.now());
+        photoItemRepository.save(item);
+        invalidateDashboardCache(ownerUserId);
+        recordPhotoEvent(ownerUserId, photoId, SyncAction.DELETED, null, Map.of("trashed", true));
+        log.info("照片已移入回收站: photoId={}, userId={}", photoId, ownerUserId);
+    }
+
+    /**
+     * 批量将照片移入回收站，返回逐项处理结果。
+     *
+     * @param ownerUserId 当前用户 ID
+     * @param photoIds 照片 ID 列表
+     * @return 逐项结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public List<PhotoTrashResultDto> movePhotosToTrash(UUID ownerUserId, List<UUID> photoIds) {
+        List<UUID> distinctPhotoIds = photoIds == null
+                ? List.of()
+                : photoIds.stream().distinct().toList();
+        List<PhotoTrashResultDto> results = new ArrayList<>();
+        for (UUID photoId : distinctPhotoIds) {
+            try {
+                movePhotoToTrash(ownerUserId, photoId);
+                results.add(new PhotoTrashResultDto(photoId, true, null));
+            } catch (BusinessException ex) {
+                results.add(new PhotoTrashResultDto(photoId, false, ex.getMessage()));
+            }
+        }
+        return results;
+    }
+
+    /**
+     * 分页查询回收站照片。
+     *
+     * @param ownerUserId 当前用户 ID
+     * @param page 页码，从零开始
+     * @param size 每页条数
+     * @return 回收站照片轻量列表分页
+     */
+    @Transactional(readOnly = true)
+    public Page<PhotoListItemDto> listTrashPage(UUID ownerUserId, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                Math.max(page, 0),
+                Math.min(Math.max(size, 1), MAX_PAGE_SIZE),
+                Sort.by(Sort.Direction.DESC, "deletedAt")
+        );
+        return mapListPage(ownerUserId, photoItemRepository.findTrashPage(ownerUserId, pageable), false);
+    }
+
+    /**
+     * 统计用户回收站中的照片数量。
+     *
+     * @param ownerUserId 当前用户 ID
+     * @return 回收站照片数量
+     */
+    @Transactional(readOnly = true)
+    public long countTrash(UUID ownerUserId) {
+        return photoItemRepository.countByOwnerUserIdAndDeletedAtIsNotNull(ownerUserId);
+    }
+
+    /**
+     * 从回收站恢复照片。
+     *
+     * @param ownerUserId 当前用户 ID
+     * @param photoId 照片 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void restorePhotoFromTrash(UUID ownerUserId, UUID photoId) {
+        PhotoItem item = photoItemRepository.findTrashedByOwnerUserIdAndId(ownerUserId, photoId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "回收站中不存在该图片"));
+        item.setDeletedAt(null);
+        photoItemRepository.save(item);
+        invalidateDashboardCache(ownerUserId);
+        recordPhotoEvent(ownerUserId, photoId, SyncAction.RESTORED, null, Map.of("trashed", false));
+        log.info("照片已从回收站恢复: photoId={}, userId={}", photoId, ownerUserId);
+    }
+
+    /**
+     * 永久删除回收站中的照片及其源文件。
      *
      * @param ownerUserId 当前用户 ID
      * @param photoId 照片 ID
      * @param cascade 是否允许级联清理其他业务引用
-     * @return 任务 ID
+     * @return 永久删除任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public UUID deletePhoto(UUID ownerUserId, UUID photoId, boolean cascade) {
-        PhotoItem item = photoItemRepository.findByOwnerUserIdAndId(ownerUserId, photoId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "图片不存在"));
+    public UUID purgePhotoFromTrash(UUID ownerUserId, UUID photoId, boolean cascade) {
+        PhotoItem item = photoItemRepository.findTrashedByOwnerUserIdAndId(ownerUserId, photoId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "回收站中不存在该图片"));
         UUID taskId = fileDeletionService.deletePermanently(
                 ownerUserId,
                 item.getFileNodeId(),
@@ -295,37 +378,55 @@ public class PhotoLibraryService {
                 new FilePurgeOrigin("PHOTOS", photoId),
                 null
         );
-        log.info("照片永久删除任务已创建: taskId={}, photoId={}, userId={}", taskId, photoId, ownerUserId);
+        log.info("回收站照片永久删除任务已创建: taskId={}, photoId={}, userId={}", taskId, photoId, ownerUserId);
         return taskId;
     }
 
     /**
-     * 为多张照片创建一个永久删除任务。
+     * 清空回收站：对回收站内全部照片创建一个批量永久删除任务。
      *
      * @param ownerUserId 当前用户 ID
-     * @param photoIds 照片 ID 列表
-     * @param cascade 是否允许级联清理其他业务引用
-     * @return 任务 ID
+     * @return 永久删除任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public UUID deletePhotos(UUID ownerUserId, List<UUID> photoIds, boolean cascade) {
-        List<UUID> distinctPhotoIds = photoIds.stream().distinct().sorted().toList();
-        List<PhotoItem> items = photoItemRepository.findActiveByOwnerUserIdAndIdIn(
+    public UUID purgeTrash(UUID ownerUserId) {
+        List<PhotoItem> items = photoItemRepository.findTrashByOwnerUserIdAndDeletedAtBefore(
                 ownerUserId,
-                distinctPhotoIds
+                Instant.now()
         );
-        if (items.size() != distinctPhotoIds.size()) {
-            throw new BusinessException(ErrorCode.NOT_FOUND, "批量删除包含不存在的图片");
+        if (items.isEmpty()) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "回收站为空");
         }
         UUID taskId = fileDeletionService.deletePermanentlyBatch(
                 ownerUserId,
                 items.stream().map(PhotoItem::getFileNodeId).toList(),
-                cascade,
+                false,
                 items.stream().map(item -> new FilePurgeOrigin("PHOTOS", item.getId())).toList()
         );
-        log.info("照片批量永久删除任务已创建: taskId={}, photoCount={}, userId={}",
+        log.info("回收站清空任务已创建: taskId={}, photoCount={}, userId={}",
                 taskId, items.size(), ownerUserId);
         return taskId;
+    }
+
+    /**
+     * 清理指定用户回收站中超过保留期的照片（调度入口）。
+     *
+     * @param ownerUserId 用户 ID
+     * @param cutoff 保留期截止时间
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void purgeExpiredTrashForOwner(UUID ownerUserId, Instant cutoff) {
+        List<PhotoItem> items = photoItemRepository.findTrashByOwnerUserIdAndDeletedAtBefore(ownerUserId, cutoff);
+        if (items.isEmpty()) {
+            return;
+        }
+        fileDeletionService.deletePermanentlyBatch(
+                ownerUserId,
+                items.stream().map(PhotoItem::getFileNodeId).toList(),
+                false,
+                items.stream().map(item -> new FilePurgeOrigin("PHOTOS", item.getId())).toList()
+        );
+        log.info("回收站过期照片清理任务已创建: photoCount={}, userId={}", items.size(), ownerUserId);
     }
 
     /**

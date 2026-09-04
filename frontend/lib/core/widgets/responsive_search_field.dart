@@ -5,6 +5,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 class ResponsiveSearchField extends StatelessWidget {
   const ResponsiveSearchField({
     required this.onChanged,
+    this.controller,
     this.hintText,
     this.maxWidth = 320,
     this.style,
@@ -13,6 +14,9 @@ class ResponsiveSearchField extends StatelessWidget {
   });
 
   final ValueChanged<String> onChanged;
+
+  /// 可选外部控制器；不传时由输入框自行管理。
+  final TextEditingController? controller;
   final String? hintText;
   final double maxWidth;
   final TextStyle? style;
@@ -24,6 +28,7 @@ class ResponsiveSearchField extends StatelessWidget {
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
       child: TextField(
+        controller: controller,
         onChanged: onChanged,
         style: style,
         decoration:

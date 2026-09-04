@@ -3513,6 +3513,36 @@
   "photosViewTimeline": "时间线",
   "photosViewGroups": "分组",
   "photosToggleSelection": "多选",
+  "photosTrashSubtitle": "{count} 个项目 · 保留 30 天后自动永久删除",
+  "@photosTrashSubtitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosEmptyTrash": "清空回收站",
+  "photosRestore": "恢复",
+  "photosDeleteForever": "永久删除",
+  "photosEmptyTrashConfirmTitle": "清空回收站？",
+  "photosEmptyTrashConfirmBody": "回收站中的 {count} 张照片将被永久删除，且无法撤销。",
+  "@photosEmptyTrashConfirmBody": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosDeleteForeverConfirmTitle": "永久删除？",
+  "photosDeleteForeverConfirmBody": "该照片将被永久删除，且无法撤销。",
+  "photosMoveToTrashTitle": "移入回收站？",
+  "photosMoveToTrashBody": "{count} 张照片将移入回收站，30 天内可恢复。",
+  "@photosMoveToTrashBody": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosMoveToTrashBodyOne": "该照片将移入回收站，30 天内可恢复。",
+  "photosMoveToTrashAction": "移入回收站",
+  "photosTrashRestored": "照片已恢复",
+  "photosTrashPurged": "已永久删除",
+  "photosTrashMoved": "已移入回收站",
   "photosModuleDisplayName": "光影集",
   "photosSelectAll": "全选",
   "photosDeselectAll": "取消全选",
