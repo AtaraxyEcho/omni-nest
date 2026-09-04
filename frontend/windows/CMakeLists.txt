@@ -55,6 +55,11 @@ add_subdirectory("runner")
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
+# The jni plugin (transitive via path_provider_android) only serves Android;
+# its optional find_package(JNI) may still succeed with a JRE lacking jni.h
+# and then fail to compile. Disable the lookup so the plugin skips itself,
+# exactly as designed for Flutter plugin builds without a JVM.
+set(CMAKE_DISABLE_FIND_PACKAGE_JNI ON)
 include(flutter/generated_plugins.cmake)
 
 
