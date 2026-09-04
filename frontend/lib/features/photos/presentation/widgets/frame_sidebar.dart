@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 import 'package:omninest/features/photos/application/photo_center_models.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_view_meta.dart';
@@ -126,7 +127,7 @@ class FrameSidebar extends StatelessWidget {
   }
 }
 
-/// Frame 品牌标：黑底圆角方块内的白色照片图形，静态展示不可点击。
+/// 侧栏品牌区：系统 Logo + 模块名称，静态展示不可点击。
 class _FrameLogo extends StatelessWidget {
   const _FrameLogo({required this.collapsed});
 
@@ -134,15 +135,7 @@ class _FrameLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mark = Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: FramePalette.dark,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const CustomPaint(painter: _FrameLogoPainter()),
-    );
+    final mark = const BrandLogo(size: 28, radius: 8);
     if (collapsed) {
       return SizedBox(height: 60, child: Center(child: mark));
     }
@@ -155,7 +148,7 @@ class _FrameLogo extends StatelessWidget {
           const SizedBox(width: 12),
           Flexible(
             child: Text(
-              'Frame',
+              AppLocalizations.of(context).photosFrameNavPhotos,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -171,41 +164,6 @@ class _FrameLogo extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 复刻设计稿 Logo 图形：白色圆角矩形、纸色圆点与山形折线。
-class _FrameLogoPainter extends CustomPainter {
-  const _FrameLogoPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scale = size.width / 24;
-    final paperPaint =
-        Paint()
-          ..color = FramePalette.bg
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5 * scale
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
-    final paperFill = Paint()..color = FramePalette.bg;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(3 * scale, 3 * scale, 18 * scale, 18 * scale),
-        Radius.circular(2 * scale),
-      ),
-      Paint()..color = FramePalette.white,
-    );
-    canvas.drawCircle(Offset(8.5 * scale, 8.5 * scale), 2 * scale, paperFill);
-    final mountain =
-        Path()
-          ..moveTo(21 * scale, 15 * scale)
-          ..lineTo(16 * scale, 10 * scale)
-          ..lineTo(5 * scale, 21 * scale);
-    canvas.drawPath(mountain, paperPaint);
-  }
-
-  @override
-  bool shouldRepaint(_FrameLogoPainter oldDelegate) => false;
 }
 
 /// 侧栏导航项：激活 #EDE9E1 底 + 陶土色图标，悬停 #F0EDE6 底。

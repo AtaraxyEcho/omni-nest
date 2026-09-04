@@ -130,6 +130,7 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                     searchController: _searchController,
                     onSearchChanged: notifier.setSearchQuery,
                     showTitle: true,
+                    showBack: true,
                   ),
                   Expanded(
                     child: _FrameViewContent(
@@ -216,6 +217,7 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                 onSearchChanged: notifier.setSearchQuery,
                 showTitle: false,
                 searchExpanded: true,
+                showBack: true,
               ),
             ),
             Expanded(child: content),
