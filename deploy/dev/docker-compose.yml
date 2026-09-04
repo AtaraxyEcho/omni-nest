@@ -98,6 +98,10 @@ services:
   clamav:
     image: clamav/clamav:stable
     container_name: omninest-clamav
+    # 可选服务：默认通过 .env 的 COMPOSE_PROFILES=clamav 启动；
+    # 不启动时必须同步把 backend/.env 的 OMNINEST_CLAMAV_ENABLED 改为 false，
+    # 否则后端因扫描不可用 fail-closed，上传会被拒绝。
+    profiles: ["clamav"]
     environment:
       CLAMD_CONF_StreamMaxLength: ${CLAMD_CONF_StreamMaxLength:-2047M}
       CLAMD_CONF_MaxScanSize: ${CLAMD_CONF_MaxScanSize:-2047M}
