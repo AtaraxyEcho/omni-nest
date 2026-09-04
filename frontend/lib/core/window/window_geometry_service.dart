@@ -5,6 +5,7 @@ import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:flutter/foundation.dart';
 import 'package:omninest/core/utils/platform_helper.dart';
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -19,6 +20,11 @@ const Size kMinimumWindowSize = Size(1024, 640);
 const double _defaultWorkAreaRatio = 0.85;
 
 const String _geometryPrefsKey = 'window.geometry.v1';
+
+/// 与原生 runner 约定的窗口帧控制通道，这里仅用于同步展示窗口。
+const MethodChannel _windowFrameChannel = MethodChannel(
+  'omninest/window_frame',
+);
 
 /// 已持久化的窗口边界快照。
 @immutable
@@ -166,24 +172,27 @@ class WindowGeometryService with WindowListener {
       if (planPosition != null) {
         _lastNormalBounds = _lastNormalBounds!.shift(planPosition);
       }
-      await windowManager.waitUntilReadyToShow(
-        WindowOptions(size: plan.size, minimumSize: kMinimumWindowSize),
-        () async {
-          windowManager.addListener(this);
-          if (planPosition != null) {
-            await windowManager.setBounds(null, position: planPosition);
-          }
-          if (plan.maximize) {
-            await windowManager.maximize();
-          }
-        },
-      );
+      windowManager.addListener(this);
+      // 不使用 waitUntilReadyToShow：其原生实现依赖首帧 WM_PAINT 钩子，
+      // 在 --start-paused 等首帧先于钩子的场景下会永远等不到触发。这里
+      // 改为在窗口隐藏期间直接下发全部几何，再主动展示，链路完全确定。
+      await windowManager.setMinimumSize(kMinimumWindowSize);
+      await windowManager.setSize(plan.size);
+      if (planPosition != null) {
+        await windowManager.setBounds(null, position: planPosition);
+      }
+      if (plan.maximize) {
+        await windowManager.maximize();
+      }
+      // window_manager 的 show 走 ShowWindowAsync，对创建即隐藏的窗口
+      // 可能被静默丢弃；改用自定义通道在 UI 线程同步展示。
+      await _windowFrameChannel.invokeMethod<void>('showWindow');
     } on Object catch (error) {
       if (kDebugMode) {
         debugPrint('Window geometry startup failed: $error');
       }
       try {
-        await windowManager.show();
+        await _windowFrameChannel.invokeMethod<void>('showWindow');
       } on Object catch (showError) {
         if (kDebugMode) {
           debugPrint('Window show fallback failed: $showError');

@@ -12,6 +12,7 @@ constexpr const char kSetFrameHiddenMethod[] = "setFrameHidden";
 constexpr const char kSetWindowFullscreenMethod[] = "setWindowFullscreen";
 constexpr const char kSaveWindowPlacementMethod[] = "saveWindowPlacement";
 constexpr const char kRestoreWindowPlacementMethod[] = "restoreWindowPlacement";
+constexpr const char kShowWindowMethod[] = "showWindow";
 constexpr const char kHiddenArgument[] = "hidden";
 constexpr const char kFullscreenArgument[] = "fullscreen";
 }  // 命名空间
@@ -46,6 +47,14 @@ bool FlutterWindow::OnCreate() {
              std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
                  result) {
         if (call.method_name() != kSetFrameHiddenMethod) {
+          if (call.method_name() == kShowWindowMethod) {
+            // ShowWindowAsync may be silently dropped for a window created
+            // hidden; show synchronously here on the UI thread instead.
+            ::ShowWindow(GetHandle(), SW_SHOW);
+            ::SetForegroundWindow(GetHandle());
+            result->Success(flutter::EncodableValue(true));
+            return;
+          }
           if (call.method_name() == kSaveWindowPlacementMethod) {
             SaveWindowPlacement();
             result->Success(flutter::EncodableValue(true));
@@ -104,13 +113,11 @@ bool FlutterWindow::OnCreate() {
       });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
-
-  // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
+  // The window starts hidden (see Win32Window::Show) and is shown by
+  // window_manager after Dart applies the remembered geometry. The template's
+  // next-frame auto-show must be removed here, otherwise it re-hides the
+  // window with SW_HIDE right after Dart shows it. ForceRedraw keeps a frame
+  // pending so the first paint is ready when the window is revealed.
   flutter_controller_->ForceRedraw();
 
   return true;
