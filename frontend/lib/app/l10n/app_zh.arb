@@ -3513,6 +3513,29 @@
   "photosViewTimeline": "时间线",
   "photosViewGroups": "分组",
   "photosToggleSelection": "多选",
+  "photosFrameNavPhotos": "照片",
+  "photosFrameNavLocations": "地点",
+  "photosFrameNavTags": "标签",
+  "photosFrameNavTrash": "回收站",
+  "photosFrameLocationsEmpty": "暂无地点信息",
+  "photosFrameLocationsEmptyHint": "包含拍摄地点的照片会显示在这里",
+  "photosFrameTagsEmpty": "暂无标签",
+  "photosFrameTagsEmptyHint": "已打标签的照片会显示在这里",
+  "photosFrameTrashEmpty": "回收站为空",
+  "photosFrameTrashEmptyHint": "删除的照片会在这里保留 30 天",
+  "photosFrameStatsPhotos": "{count} 张照片",
+  "@photosFrameStatsPhotos": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosFrameStatsMeta": "{albums} 个影集 · {trash} 张在回收站",
+  "@photosFrameStatsMeta": {
+    "placeholders": {
+      "albums": {},
+      "trash": {}
+    }
+  },
   "photosInsightsTitle": "关联视图",
   "photosAlbumsManage": "管理相册",
   "photosExpandAlbums": "展开相册",

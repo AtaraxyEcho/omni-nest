@@ -12,6 +12,9 @@ enum PhotoTab { all, favorites }
 /// 图库内容形态：按日/按月网格、时间线、分组浏览。
 enum PhotoLibraryView { gridDay, gridMonth, timeline, groups }
 
+/// Frame 设计稿中的图库视图：全部照片、时间线、地点、标签、影集、回收站。
+enum FrameView { grid, timeline, locations, tags, albums, trash }
+
 /// 导入流程提示类型；文案由界面层按语言映射。
 enum PhotoImportNotice { completedNotVisible, stillProcessing, backendFailed }
 
@@ -24,6 +27,7 @@ class PhotoCenterState {
     required this.albums,
     required this.tab,
     this.libraryView = PhotoLibraryView.gridDay,
+    this.frameView = FrameView.grid,
     this.searchQuery = '',
     this.timeline,
     this.groups,
@@ -71,6 +75,7 @@ class PhotoCenterState {
   final List<PhotoAlbum> albums;
   final PhotoTab tab;
   final PhotoLibraryView libraryView;
+  final FrameView frameView;
   final String searchQuery;
   final PhotoTimeline? timeline;
   final List<PhotoGroup>? groups;
@@ -150,6 +155,7 @@ class PhotoCenterState {
     List<PhotoAlbum>? albums,
     PhotoTab? tab,
     PhotoLibraryView? libraryView,
+    FrameView? frameView,
     String? searchQuery,
     PhotoTimeline? timeline,
     List<PhotoGroup>? groups,
@@ -193,6 +199,7 @@ class PhotoCenterState {
       albums: albums ?? this.albums,
       tab: tab ?? this.tab,
       libraryView: libraryView ?? this.libraryView,
+      frameView: frameView ?? this.frameView,
       searchQuery: searchQuery ?? this.searchQuery,
       timeline: timeline ?? this.timeline,
       groups: groups ?? this.groups,

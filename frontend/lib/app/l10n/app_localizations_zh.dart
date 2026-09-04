@@ -7787,6 +7787,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosToggleSelection => '多选';
 
   @override
+  String get photosFrameNavPhotos => '照片';
+
+  @override
+  String get photosFrameNavLocations => '地点';
+
+  @override
+  String get photosFrameNavTags => '标签';
+
+  @override
+  String get photosFrameNavTrash => '回收站';
+
+  @override
+  String get photosFrameLocationsEmpty => '暂无地点信息';
+
+  @override
+  String get photosFrameLocationsEmptyHint => '包含拍摄地点的照片会显示在这里';
+
+  @override
+  String get photosFrameTagsEmpty => '暂无标签';
+
+  @override
+  String get photosFrameTagsEmptyHint => '已打标签的照片会显示在这里';
+
+  @override
+  String get photosFrameTrashEmpty => '回收站为空';
+
+  @override
+  String get photosFrameTrashEmptyHint => '删除的照片会在这里保留 30 天';
+
+  @override
+  String photosFrameStatsPhotos(Object count) {
+    return '$count 张照片';
+  }
+
+  @override
+  String photosFrameStatsMeta(Object albums, Object trash) {
+    return '$albums 个影集 · $trash 张在回收站';
+  }
+
+  @override
   String get photosInsightsTitle => '关联视图';
 
   @override

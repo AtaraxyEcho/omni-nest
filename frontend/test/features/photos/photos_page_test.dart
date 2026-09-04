@@ -79,7 +79,7 @@ void main() {
     });
 
     testWidgets(
-      'desktop layout exposes library search, album shelf and scrollable date grid',
+      'desktop layout exposes Frame sidebar, library search and scrollable date grid',
       (tester) async {
         tester.view.physicalSize = const Size(2400, 1200);
         tester.view.devicePixelRatio = 2.0;

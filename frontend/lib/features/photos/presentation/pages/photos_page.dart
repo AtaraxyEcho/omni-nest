@@ -1,42 +1,35 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:omninest/app/l10n/app_localizations.dart';
-import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:omninest/core/auth/auth_controller.dart';
+import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:omninest/core/errors/error_message.dart';
-import 'package:omninest/core/widgets/workbench_top_bar.dart';
-import 'package:omninest/core/widgets/mobile_shell_scope.dart';
-import 'package:omninest/core/widgets/mobile_ui.dart';
-import 'package:omninest/features/files/media_import_ui.dart';
-import 'package:omninest/features/files/application/media_import_service.dart';
-import 'package:omninest/features/notifications/notification_ui.dart';
-import 'package:omninest/core/widgets/responsive_breakpoints.dart';
-import 'package:omninest/core/widgets/user_avatar_menu.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
 import 'package:omninest/core/widgets/file_purge_confirmation.dart';
+import 'package:omninest/core/widgets/mobile_shell_scope.dart';
+import 'package:omninest/core/widgets/mobile_ui.dart';
+import 'package:omninest/core/widgets/responsive_breakpoints.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/presentation/widgets/batch_progress_dialog.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_album_card.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_group_view.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_bottom_nav.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_empty_view.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_sidebar.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_top_bar.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_album_grid.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_date_grid.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_album_grid.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
 
 part 'photos_page_batch_actions.dart';
-part 'photos_page_desktop_content.dart';
-part 'photos_page_desktop_shell.dart';
-part 'photos_page_mobile_content.dart';
-part 'photos_page_mobile_shell.dart';
+part 'photos_page_view_content.dart';
 
-/// 照片中心主页
+/// 照片中心主页：Frame 风格导航壳（侧栏/顶栏/底部导航）+ 六视图内容。
 class PhotosPage extends ConsumerStatefulWidget {
   const PhotosPage({super.key});
 
@@ -97,114 +90,174 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
             context.go('/portal');
           },
           child: Scaffold(
-            backgroundColor:
-                hosted ? Colors.transparent : context.photosColors.surface,
-            body:
-                isWide
-                    ? _buildWideLayout(stateAsync)
-                    : _buildNarrowLayout(stateAsync, hosted: hosted),
+            backgroundColor: hosted ? Colors.transparent : FramePalette.bg,
+            body: ColoredBox(
+              color: hosted ? Colors.transparent : FramePalette.bg,
+              child:
+                  isWide
+                      ? _buildWideLayout(stateAsync, constraints.maxWidth)
+                      : _buildNarrowLayout(stateAsync, hosted: hosted),
+            ),
           ),
         );
       },
     );
   }
 
-  /// 桌面宽屏布局：顶栏 + 图库内容，无侧栏。
-  Widget _buildWideLayout(AsyncValue<PhotoCenterState> stateAsync) {
-    return Column(
-      children: [
-        _PhotoDesktopTopBar(
-          searchController: _searchController,
-          searchQuery: stateAsync.asData?.value.searchQuery ?? '',
-          onSearchChanged:
-              ref.read(photoCenterControllerProvider.notifier).setSearchQuery,
-        ),
-        Expanded(
-          child: ColoredBox(
-            color: context.photosColors.surface,
-            child: stateAsync.when(
-              data:
-                  (data) => _PhotoContent(
-                    state: data,
-                    onOpenPhoto: (photo) => context.push('/photos/${photo.id}'),
-                    onOpenAlbum:
-                        (album) => context.push('/photos/albums/${album.id}'),
-                    onDeletePhoto:
-                        (photo) => _confirmDeletePhoto(context, photo),
-                    onDeleteAlbum:
-                        (album) => _confirmDeleteAlbum(context, album),
-                    onCreateAlbum: () => _showCreateAlbumDialog(context),
-                  ),
-              error:
-                  (error, stackTrace) => AppErrorView(
-                    message: describeUserFacingError(error).displayMessage,
-                    onRetry:
-                        () => ref.invalidate(photoCenterControllerProvider),
-                  ),
-              loading: () => const AppLoading.grid(),
+  /// 桌面宽屏布局：Frame 侧栏 + 顶栏 + 视图内容，宽 1024 以下侧栏折叠。
+  Widget _buildWideLayout(
+    AsyncValue<PhotoCenterState> stateAsync,
+    double width,
+  ) {
+    return stateAsync.when(
+      data: (data) {
+        final notifier = ref.read(photoCenterControllerProvider.notifier);
+        return Row(
+          children: [
+            FrameSidebar(
+              activeView: data.frameView,
+              onSelectView: notifier.setFrameView,
+              photoCount: data.visiblePhotoTotalElements,
+              albumCount: data.albums.length,
+              trashCount: 0,
+              collapsed: width < 1024,
+              onOpenPortal: () => context.go('/portal'),
             ),
+            Expanded(
+              child: Column(
+                children: [
+                  FrameTopBar(
+                    view: data.frameView,
+                    searchController: _searchController,
+                    searchQuery: data.searchQuery,
+                    onSearchChanged: notifier.setSearchQuery,
+                    showTitle: true,
+                  ),
+                  Expanded(
+                    child: _FrameViewContent(
+                      state: data,
+                      compact: false,
+                      onOpenPhoto:
+                          (photo) => context.push('/photos/${photo.id}'),
+                      onOpenAlbum:
+                          (album) => context.push('/photos/albums/${album.id}'),
+                      onDeletePhoto:
+                          (photo) => _confirmDeletePhoto(context, photo),
+                      onDeleteAlbum:
+                          (album) => _confirmDeleteAlbum(context, album),
+                      onCreateAlbum: () => _showCreateAlbumDialog(context),
+                    ),
+                  ),
+                  if (data.isSelectionMode && data.selectedPhotoIds.isNotEmpty)
+                    _buildAnimatedBatchBar(data),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      error:
+          (error, stackTrace) => AppErrorView(
+            message: describeUserFacingError(error).displayMessage,
+            onRetry: () => ref.invalidate(photoCenterControllerProvider),
           ),
-        ),
-      ],
+      loading: () => const AppLoading.grid(),
     );
   }
 
-  /// 移动端窄屏布局：全局顶栏 + 图库单流内容，无底部 Dock。
+  /// 紧凑布局：非托管时含 Frame 顶栏，托管时由应用壳提供顶部导航。
   Widget _buildNarrowLayout(
     AsyncValue<PhotoCenterState> stateAsync, {
     required bool hosted,
   }) {
-    return Stack(
-      children: [
-        MobilePageSurface(
-          exposeBackdrop: hosted,
-          backdropOpacity: 1,
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: hosted ? 0 : WorkbenchTopBar.totalHeightOf(context),
+    return stateAsync.when(
+      data: (data) {
+        final notifier = ref.read(photoCenterControllerProvider.notifier);
+        final content = _FrameViewContent(
+          state: data,
+          compact: true,
+          onOpenPhoto: (photo) => context.push('/photos/${photo.id}'),
+          onOpenAlbum: (album) => context.push('/photos/albums/${album.id}'),
+          onDeletePhoto: (photo) => _confirmDeletePhoto(context, photo),
+          onDeleteAlbum: (album) => _confirmDeleteAlbum(context, album),
+          onCreateAlbum: () => _showCreateAlbumDialog(context),
+        );
+        final bottomNav =
+            data.isSelectionMode
+                ? null
+                : FrameBottomNav(
+                  activeView: data.frameView,
+                  onSelectView: notifier.setFrameView,
+                  useSafeArea: !hosted,
+                );
+        if (hosted) {
+          return Column(
+            children: [
+              Expanded(child: content),
+              if (bottomNav != null) bottomNav,
+              if (data.isSelectionMode && data.selectedPhotoIds.isNotEmpty)
+                _buildAnimatedBatchBar(data),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: FrameTopBar(
+                view: data.frameView,
+                searchController: _searchController,
+                searchQuery: data.searchQuery,
+                onSearchChanged: notifier.setSearchQuery,
+                showTitle: false,
+                searchExpanded: true,
+                showBack: true,
+              ),
             ),
-            child: stateAsync.when(
-              data:
-                  (data) => _PhotoLibrarySurface(
-                    state: data,
-                    hosted: hosted,
-                    onOpenPhoto: (photo) => context.push('/photos/${photo.id}'),
-                    onOpenAlbum:
-                        (album) => context.push('/photos/albums/${album.id}'),
-                    onDeletePhoto:
-                        (photo) => _confirmDeletePhoto(context, photo),
-                  ),
-              error:
-                  (error, stackTrace) => AppErrorView(
-                    message: describeUserFacingError(error).displayMessage,
-                    onRetry:
-                        () => ref.invalidate(photoCenterControllerProvider),
-                  ),
-              loading:
-                  () =>
-                      hosted
-                          ? const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                MobileSkeletonBlock(height: 220),
-                                SizedBox(height: 16),
-                                MobileSkeletonBlock(height: 180),
-                              ],
-                            ),
-                          )
-                          : const AppLoading.grid(),
-            ),
+            Expanded(child: content),
+            if (bottomNav != null) bottomNav,
+            if (data.isSelectionMode && data.selectedPhotoIds.isNotEmpty)
+              _buildAnimatedBatchBar(data),
+          ],
+        );
+      },
+      error:
+          (error, stackTrace) => AppErrorView(
+            message: describeUserFacingError(error).displayMessage,
+            onRetry: () => ref.invalidate(photoCenterControllerProvider),
           ),
-        ),
-        if (!hosted)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _PhotoTopBar(controller: _searchController, ref: ref),
+      loading:
+          () =>
+              hosted
+                  ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        MobileSkeletonBlock(height: 220),
+                        SizedBox(height: 16),
+                        MobileSkeletonBlock(height: 180),
+                      ],
+                    ),
+                  )
+                  : const AppLoading.grid(),
+    );
+  }
+
+  /// 多选操作条入场：自底部滑入并渐显。
+  Widget _buildAnimatedBatchBar(PhotoCenterState state) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 1, end: 0),
+      duration:
+          MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      builder:
+          (context, t, child) => Transform.translate(
+            offset: Offset(0, t * 72),
+            child: Opacity(opacity: 1 - t, child: child),
           ),
-      ],
+      child: _BatchActionBar(state: state, ref: ref),
     );
   }
 
@@ -415,5 +468,3 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
     );
   }
 }
-
-/// 顶部导航栏

@@ -521,6 +521,19 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     }
   }
 
+  /// 切换 Frame 设计稿的图库视图；切出当前视图时退出多选模式。
+  void setFrameView(FrameView view) {
+    final current = state.asData?.value;
+    if (current == null || current.frameView == view) return;
+    state = AsyncData(
+      current.copyWith(
+        frameView: view,
+        isSelectionMode: false,
+        selectedPhotoIds: const {},
+      ),
+    );
+  }
+
   /// 切换分组浏览的维度。
   void setGroupBy(GroupBy groupBy) {
     final current = state.asData?.value;

@@ -14658,6 +14658,78 @@ abstract class AppLocalizations {
   /// **'Toggle selection'**
   String get photosToggleSelection;
 
+  /// No description provided for @photosFrameNavPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get photosFrameNavPhotos;
+
+  /// No description provided for @photosFrameNavLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Locations'**
+  String get photosFrameNavLocations;
+
+  /// No description provided for @photosFrameNavTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get photosFrameNavTags;
+
+  /// No description provided for @photosFrameNavTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get photosFrameNavTrash;
+
+  /// No description provided for @photosFrameLocationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No locations yet'**
+  String get photosFrameLocationsEmpty;
+
+  /// No description provided for @photosFrameLocationsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos with location details will appear here'**
+  String get photosFrameLocationsEmptyHint;
+
+  /// No description provided for @photosFrameTagsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get photosFrameTagsEmpty;
+
+  /// No description provided for @photosFrameTagsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos you tag will appear here'**
+  String get photosFrameTagsEmptyHint;
+
+  /// No description provided for @photosFrameTrashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash is empty'**
+  String get photosFrameTrashEmpty;
+
+  /// No description provided for @photosFrameTrashEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted photos stay here for 30 days'**
+  String get photosFrameTrashEmptyHint;
+
+  /// No description provided for @photosFrameStatsPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} photos'**
+  String photosFrameStatsPhotos(Object count);
+
+  /// No description provided for @photosFrameStatsMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{albums} albums · {trash} in trash'**
+  String photosFrameStatsMeta(Object albums, Object trash);
+
   /// No description provided for @photosInsightsTitle.
   ///
   /// In en, this message translates to:

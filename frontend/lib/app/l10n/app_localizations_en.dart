@@ -8034,6 +8034,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosToggleSelection => 'Toggle selection';
 
   @override
+  String get photosFrameNavPhotos => 'Photos';
+
+  @override
+  String get photosFrameNavLocations => 'Locations';
+
+  @override
+  String get photosFrameNavTags => 'Tags';
+
+  @override
+  String get photosFrameNavTrash => 'Trash';
+
+  @override
+  String get photosFrameLocationsEmpty => 'No locations yet';
+
+  @override
+  String get photosFrameLocationsEmptyHint =>
+      'Photos with location details will appear here';
+
+  @override
+  String get photosFrameTagsEmpty => 'No tags yet';
+
+  @override
+  String get photosFrameTagsEmptyHint => 'Photos you tag will appear here';
+
+  @override
+  String get photosFrameTrashEmpty => 'Trash is empty';
+
+  @override
+  String get photosFrameTrashEmptyHint =>
+      'Deleted photos stay here for 30 days';
+
+  @override
+  String photosFrameStatsPhotos(Object count) {
+    return '$count photos';
+  }
+
+  @override
+  String photosFrameStatsMeta(Object albums, Object trash) {
+    return '$albums albums · $trash in trash';
+  }
+
+  @override
   String get photosInsightsTitle => 'Relationship insights';
 
   @override

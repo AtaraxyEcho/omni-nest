@@ -3639,6 +3639,29 @@
   "photosViewTimeline": "Timeline",
   "photosViewGroups": "Groups",
   "photosToggleSelection": "Toggle selection",
+  "photosFrameNavPhotos": "Photos",
+  "photosFrameNavLocations": "Locations",
+  "photosFrameNavTags": "Tags",
+  "photosFrameNavTrash": "Trash",
+  "photosFrameLocationsEmpty": "No locations yet",
+  "photosFrameLocationsEmptyHint": "Photos with location details will appear here",
+  "photosFrameTagsEmpty": "No tags yet",
+  "photosFrameTagsEmptyHint": "Photos you tag will appear here",
+  "photosFrameTrashEmpty": "Trash is empty",
+  "photosFrameTrashEmptyHint": "Deleted photos stay here for 30 days",
+  "photosFrameStatsPhotos": "{count} photos",
+  "@photosFrameStatsPhotos": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "photosFrameStatsMeta": "{albums} albums · {trash} in trash",
+  "@photosFrameStatsMeta": {
+    "placeholders": {
+      "albums": {},
+      "trash": {}
+    }
+  },
   "photosInsightsTitle": "Relationship insights",
   "photosAlbumsManage": "Manage albums",
   "photosExpandAlbums": "Show albums",
