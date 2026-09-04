@@ -7,6 +7,7 @@ import 'package:omninest/app/locale/application/locale_controller.dart';
 import 'package:omninest/app/widgets/app_dropdown.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/errors/app_exception.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 import 'package:omninest/core/widgets/workbench_panel.dart';
 import 'package:omninest/features/setup/application/initial_setup_controller.dart';
 
@@ -583,17 +584,7 @@ class _SetupSummary extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              'assets/icon/icon.png',
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
-              // 源图为 2048px，按展示尺寸低分辨率解码，避免整图进内存。
-              cacheWidth: 216,
-            ),
-          ),
+          const BrandLogo(size: 72, radius: 20),
           const SizedBox(height: 24),
           Text(
             'OmniNest',

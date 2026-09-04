@@ -1,4 +1,5 @@
 import 'package:tray_manager/tray_manager.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Desktop 系统托盘服务。
@@ -13,7 +14,7 @@ class DesktopTrayService with TrayListener {
     if (_initialized) return;
     trayManager.addListener(this);
 
-    await trayManager.setIcon('assets/icons/tray_icon.png', isTemplate: true);
+    await trayManager.setIcon(BrandLogo.assetPath, isTemplate: false);
 
     await trayManager.setContextMenu(
       Menu(

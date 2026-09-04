@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/features/reader/reader_cover_ui.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 
 class PortalVisualPalette {
   const PortalVisualPalette({
@@ -298,23 +299,7 @@ class PortalVisualTopBar extends StatelessWidget {
       height: 64,
       child: Row(
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: palette.muted.withValues(alpha: 0.26)),
-              color: palette.structuralStrongSurface(alpha: 0.68),
-            ),
-            child: Text(
-              'O',
-              style: TextStyle(
-                color: palette.text,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
+          const BrandLogo(size: 34, radius: 8),
           const SizedBox(width: 12),
           Text(
             'OmniNest',

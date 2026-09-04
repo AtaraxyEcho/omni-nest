@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/core/widgets/workbench_panel.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 
 class ProfileSecurityActionsPanel extends StatelessWidget {
   const ProfileSecurityActionsPanel({
@@ -38,7 +39,7 @@ class ProfileAboutPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.hub_outlined, size: 36, color: scheme.primary),
+          const BrandLogo(size: 40, radius: 10),
           const SizedBox(height: 18),
           Text(
             'OmniNest',

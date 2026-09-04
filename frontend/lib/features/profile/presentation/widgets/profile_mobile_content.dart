@@ -7,6 +7,7 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/mobile_layout_tokens.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/widgets/mobile_ui.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 import 'package:omninest/features/backdrop/backdrop_ui.dart';
 import 'package:omninest/features/profile/presentation/widgets/change_password_dialog.dart';
 import 'package:omninest/features/profile/presentation/widgets/profile_session_management_panel.dart';
@@ -324,6 +325,7 @@ class ProfileMobileContent extends ConsumerWidget {
     showAboutDialog(
       context: context,
       applicationName: 'OmniNest',
+      applicationIcon: const BrandLogo(size: 48, radius: 10),
       applicationVersion: l10n.settingsAboutHint,
     );
   }

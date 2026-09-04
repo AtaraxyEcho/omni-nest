@@ -22,6 +22,14 @@ public interface PhotoFaceRepository extends JpaRepository<PhotoFace, UUID> {
     long countByClusterId(UUID clusterId);
 
     /**
+     * 查询多张照片的人脸检测数据。
+     *
+     * @param photoIds 照片 ID 集合
+     * @return 人脸检测数据
+     */
+    List<PhotoFace> findByPhotoIdIn(Collection<UUID> photoIds);
+
+    /**
      * 按照片 ID 删除人脸检测数据
      */
     void deleteByPhotoId(UUID photoId);

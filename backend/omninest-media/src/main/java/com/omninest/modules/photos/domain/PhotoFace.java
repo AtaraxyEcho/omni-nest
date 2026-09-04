@@ -9,23 +9,28 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * 照片人脸检测实体。
  * 存储 AI 检测到的人脸位置、嵌入向量和聚类归属。
  */
-@Data
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 @Entity
 @Table(name = "photo_faces", schema = "omni")
 public class PhotoFace {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @Column(name = "photo_id", nullable = false)
@@ -46,6 +51,7 @@ public class PhotoFace {
     @Column(name = "bbox_h", nullable = false)
     private int bboxH;
 
+    @ToString.Exclude
     @Column(name = "embedding", columnDefinition = "bytea")
     private byte[] embedding;
 

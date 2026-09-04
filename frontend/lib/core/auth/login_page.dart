@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/errors/app_exception.dart';
+import 'package:omninest/core/widgets/brand_logo.dart';
 import 'package:omninest/core/widgets/workbench_panel.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -176,32 +177,7 @@ class _BrandPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: [scheme.primaryContainer, scheme.tertiary],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primaryContainer.withValues(alpha: 0.35),
-                blurRadius: 32,
-                offset: const Offset(0, 18),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            'O',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        const BrandLogo(size: 56, radius: 16),
         SizedBox(height: compact ? 20 : 32),
         Text(
           'OmniNest',
