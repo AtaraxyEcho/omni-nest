@@ -4,6 +4,7 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/feature/photos_colors.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 
 /// 照片网格缩略图
@@ -75,7 +76,7 @@ class PhotoGridTile extends StatelessWidget {
           child: Hero(
             tag: 'photo-cover-${photo.id}',
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(3),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -118,14 +119,6 @@ class PhotoGridTile extends StatelessWidget {
                   else
                     _Placeholder(format: photo.format),
 
-                  // 选中半透明遮罩
-                  if (isSelected)
-                    Container(
-                      color: context.photosColors.primaryContainer.withValues(
-                        alpha: 0.3,
-                      ),
-                    ),
-
                   // 选择模式复选框
                   if (isSelectionMode)
                     Positioned(
@@ -137,17 +130,10 @@ class PhotoGridTile extends StatelessWidget {
                         decoration: BoxDecoration(
                           color:
                               isSelected
-                                  ? context.photosColors.primaryContainer
-                                  : context.photosColors.badgeBg,
+                                  ? FramePalette.accent
+                                  : Colors.white.withValues(alpha: 0.75),
                           shape: BoxShape.circle,
-                          border:
-                              isSelected
-                                  ? null
-                                  : Border.all(
-                                    color: context.photosColors.badgeText
-                                        .withValues(alpha: 0.6),
-                                    width: 1.5,
-                                  ),
+                          border: Border.all(color: Colors.white54),
                         ),
                         child:
                             isSelected
@@ -255,7 +241,7 @@ class PhotoGridTile extends StatelessWidget {
           padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
             color: Colors.red.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(3),
           ),
           child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
         ),
