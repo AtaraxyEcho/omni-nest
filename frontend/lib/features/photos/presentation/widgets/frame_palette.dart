@@ -104,7 +104,7 @@ class FrameColors {
     overlayTextDim: 0.55,
   );
 
-  /// 暗色（暖纸色的暗版，强调色提亮保证对比）。
+  /// 暗色（暖纸色的暗版，强调色提亮保证对比；悬停/激活底色与背景拉开差距）。
   static const FrameColors dark = FrameColors(
     bg: Color(0xFF191817),
     navBg: Color(0xFF191817),
@@ -114,8 +114,8 @@ class FrameColors {
     accent: Color(0xFFCE8A52),
     border: Color(0xFF2E2C28),
     card: Color(0xFF242220),
-    hover: Color(0xFF232120),
-    activeBg: Color(0xFF2C2925),
+    hover: Color(0xFF2E2C28),
+    activeBg: Color(0xFF37342E),
     chipActiveBg: Color(0xFF3A2C1E),
     selectActiveBg: Color(0xFF3A2C1E),
     btnBg: Color(0xFFF2EFE9),

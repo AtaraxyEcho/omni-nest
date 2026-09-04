@@ -195,6 +195,7 @@ class _FrameNavItemState extends State<_FrameNavItem> {
   static const Duration stateDuration = Duration(milliseconds: 150);
 
   bool _hovering = false;
+  Color? _lastIconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -209,6 +210,7 @@ class _FrameNavItemState extends State<_FrameNavItem> {
     final foreground = active || _hovering ? colors.ink : colors.muted;
     final iconColor = active ? colors.accent : foreground;
 
+    _lastIconColor = iconColor;
     Widget item = MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovering = true),
@@ -239,7 +241,10 @@ class _FrameNavItemState extends State<_FrameNavItem> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TweenAnimationBuilder<Color?>(
-                  tween: ColorTween(end: iconColor),
+                  tween: ColorTween(
+                    begin: _lastIconColor ?? iconColor,
+                    end: iconColor,
+                  ),
                   duration: stateDuration,
                   builder:
                       (context, color, child) => Icon(
