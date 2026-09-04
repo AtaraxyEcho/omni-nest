@@ -53,6 +53,13 @@ final realtimeCoordinatorProvider = Provider<RealtimeCoordinator?>((ref) {
   return coordinator;
 });
 
+/// 实时脏范围广播流；未登录或协调器不可用时为 null。
+final realtimeDirtyScopesStreamProvider = Provider<Stream<Set<RealtimeScope>>?>(
+  (ref) {
+    return ref.watch(realtimeCoordinatorProvider)?.dirtyScopes;
+  },
+);
+
 /// 当前实时同步状态。
 final realtimePhaseProvider = StreamProvider<RealtimePhase>((ref) async* {
   final coordinator = ref.watch(realtimeCoordinatorProvider);

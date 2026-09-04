@@ -59,7 +59,8 @@ class _PortalMobileShellState extends ConsumerState<PortalMobileShell> {
 
   Future<void> _onRefresh() async {
     final actions = ref.read(portalDashboardActionsProvider);
-    await actions.refreshAll();
+    // 用户显式下拉刷新，不受分区节流限制。
+    await actions.refreshAll(force: true);
   }
 
   @override
