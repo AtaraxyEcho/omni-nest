@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/locale/application/locale_controller.dart';
+import 'package:omninest/app/widgets/app_dropdown.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/errors/app_exception.dart';
 import 'package:omninest/core/widgets/workbench_panel.dart';
@@ -96,20 +100,28 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
     final setup = ref.watch(initialSetupProvider);
     return Scaffold(
       body: SafeArea(
-        child: setup.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error:
-              (_, _) => _SetupStatusError(
-                onRetry: ref.read(initialSetupProvider.notifier).refresh,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _SetupTopBar(),
+            Expanded(
+              child: setup.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error:
+                    (_, _) => _SetupStatusError(
+                      onRetry: ref.read(initialSetupProvider.notifier).refresh,
+                    ),
+                data: (status) {
+                  if (!status.setupAvailable) {
+                    return _SetupUnavailable(
+                      onRetry: ref.read(initialSetupProvider.notifier).refresh,
+                    );
+                  }
+                  return _buildForm(context);
+                },
               ),
-          data: (status) {
-            if (!status.setupAvailable) {
-              return _SetupUnavailable(
-                onRetry: ref.read(initialSetupProvider.notifier).refresh,
-              );
-            }
-            return _buildForm(context);
-          },
+            ),
+          ],
         ),
       ),
     );
@@ -146,6 +158,39 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
     );
   }
 
+  /// 分区标题：引导表单按"实例信息 / 管理员账户"两段组织，降低长表单
+  /// 的视觉密度。
+  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: colors.primaryContainer.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 17, color: colors.onPrimaryContainer),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _formPanel(AppLocalizations l10n) {
     return WorkbenchPanel(
       padding: const EdgeInsets.all(24),
@@ -166,7 +211,13 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              _sectionHeader(
+                context,
+                l10n.setupSectionInstance,
+                Icons.dns_outlined,
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _setupTokenController,
                 obscureText: true,
@@ -175,7 +226,7 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
                 decoration: InputDecoration(
                   labelText: l10n.setupToken,
                   hintText: l10n.setupTokenHint,
-                  prefixIcon: const Icon(Icons.key_rounded),
+                  prefixIcon: const Icon(Icons.token_rounded),
                 ),
                 validator:
                     (value) =>
@@ -188,7 +239,7 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
                 controller: _instanceNameController,
                 decoration: InputDecoration(
                   labelText: l10n.setupInstanceName,
-                  prefixIcon: const Icon(Icons.home_work_outlined),
+                  prefixIcon: const Icon(Icons.apartment_rounded),
                 ),
                 validator:
                     (value) =>
@@ -230,7 +281,13 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
+              _sectionHeader(
+                context,
+                l10n.setupSectionAdmin,
+                Icons.manage_accounts_outlined,
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _usernameController,
                 autofillHints: const [AutofillHints.newUsername],
@@ -325,7 +382,7 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
                           dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                        : const Icon(Icons.admin_panel_settings_rounded),
+                        : const Icon(Icons.rocket_launch_rounded),
                 label: Text(l10n.setupCreateAdmin),
               ),
               const SizedBox(height: 12),
@@ -345,6 +402,37 @@ class _InitialSetupPageState extends ConsumerState<InitialSetupPage> {
   }
 }
 
+/// 顶部工具行：右上角界面语言切换器，安装期间无需登录即可切换语言。
+class _SetupTopBar extends ConsumerWidget {
+  const _SetupTopBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final language = ref.watch(localeControllerProvider);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: AppDropdown<String>(
+          value: language,
+          width: 148,
+          items: const [
+            AppDropdownItem(value: 'zh', label: '中文'),
+            AppDropdownItem(value: 'en', label: 'English'),
+          ],
+          onChanged: (value) {
+            if (value == null || value == language) return;
+            unawaited(
+              ref.read(localeControllerProvider.notifier).setLanguage(value),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// 概览面板：品牌标识 + 定位描述 + 能力特性摘要。
 class _SetupSummary extends StatelessWidget {
   const _SetupSummary();
 
@@ -352,12 +440,29 @@ class _SetupSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final features = <(IconData, String)>[
+      (Icons.folder_outlined, l10n.setupFeatureFiles),
+      (Icons.movie_outlined, l10n.setupFeatureMedia),
+      (Icons.auto_stories_outlined, l10n.setupFeatureReader),
+    ];
     return Padding(
-      padding: const EdgeInsets.only(top: 32),
+      padding: const EdgeInsets.only(top: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.hub_outlined, size: 44, color: scheme.primary),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.rocket_launch_outlined,
+              size: 38,
+              color: scheme.onPrimaryContainer,
+            ),
+          ),
           const SizedBox(height: 24),
           Text(
             'OmniNest',
@@ -376,6 +481,36 @@ class _SetupSummary extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 28),
+          for (final (icon, label) in features)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, size: 18, color: scheme.primary),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

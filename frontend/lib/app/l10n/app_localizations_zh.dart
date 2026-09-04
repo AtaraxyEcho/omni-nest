@@ -290,6 +290,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get setupSecureNotice => '安装令牌仅用于本次初始化，不会保存在客户端。';
 
   @override
+  String get setupLanguageSelector => '界面语言';
+
+  @override
+  String get setupSectionInstance => '实例信息';
+
+  @override
+  String get setupSectionAdmin => '管理员账户';
+
+  @override
+  String get setupFeatureFiles => '文件管理 · 多存储位';
+
+  @override
+  String get setupFeatureMedia => '影视 · 音乐 · 相册';
+
+  @override
+  String get setupFeatureReader => '阅读 · 离线同步';
+
+  @override
   String get adminSearchHint => '搜索…';
 
   @override

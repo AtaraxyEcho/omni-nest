@@ -297,6 +297,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'The setup token is only used for initialization and is not stored on this device.';
 
   @override
+  String get setupLanguageSelector => 'Language';
+
+  @override
+  String get setupSectionInstance => 'Instance';
+
+  @override
+  String get setupSectionAdmin => 'Administrator account';
+
+  @override
+  String get setupFeatureFiles => 'Files · multi-provider storage';
+
+  @override
+  String get setupFeatureMedia => 'Video · music · photos';
+
+  @override
+  String get setupFeatureReader => 'Reader · offline sync';
+
+  @override
   String get adminSearchHint => 'Search…';
 
   @override

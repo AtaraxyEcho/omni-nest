@@ -638,6 +638,42 @@ abstract class AppLocalizations {
   /// **'The setup token is only used for initialization and is not stored on this device.'**
   String get setupSecureNotice;
 
+  /// No description provided for @setupLanguageSelector.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get setupLanguageSelector;
+
+  /// No description provided for @setupSectionInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance'**
+  String get setupSectionInstance;
+
+  /// No description provided for @setupSectionAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator account'**
+  String get setupSectionAdmin;
+
+  /// No description provided for @setupFeatureFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files · multi-provider storage'**
+  String get setupFeatureFiles;
+
+  /// No description provided for @setupFeatureMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Video · music · photos'**
+  String get setupFeatureMedia;
+
+  /// No description provided for @setupFeatureReader.
+  ///
+  /// In en, this message translates to:
+  /// **'Reader · offline sync'**
+  String get setupFeatureReader;
+
   /// No description provided for @adminSearchHint.
   ///
   /// In en, this message translates to:

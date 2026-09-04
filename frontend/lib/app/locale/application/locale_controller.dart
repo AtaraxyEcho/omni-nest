@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/app/preferences/app_bootstrap_data.dart';
 import 'package:omninest/app/providers.dart';
@@ -8,6 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const localePreferenceScope = 'locale.v1';
 const supportedLanguageCodes = {'zh', 'en'};
+
+/// 无已存偏好时的默认语言：跟随系统语言，不支持的语言回退中文。
+/// 经 WidgetsBinding 读取，保证与 Widget 层可见的 locale 一致。
+String resolveSystemLanguage() {
+  final code = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+  return supportedLanguageCodes.contains(code) ? code : 'zh';
+}
 
 final localeControllerProvider = NotifierProvider<LocaleController, String>(
   LocaleController.new,
@@ -103,6 +111,9 @@ class LocaleController extends Notifier<String> {
   }
 
   String _normalizeLanguage(String? value) {
-    return supportedLanguageCodes.contains(value) ? value! : 'zh';
+    if (value != null && supportedLanguageCodes.contains(value)) {
+      return value;
+    }
+    return resolveSystemLanguage();
   }
 }
