@@ -12,7 +12,6 @@ import com.omninest.modules.file.service.FileLifecycleGuard;
 import com.omninest.modules.file.service.FileQueryService;
 import com.omninest.modules.photos.domain.PhotoFace;
 import com.omninest.modules.photos.domain.PhotoFaceCluster;
-import com.omninest.modules.photos.domain.PhotoFavorite;
 import com.omninest.modules.photos.domain.PhotoItem;
 import com.omninest.modules.photos.domain.PhotoTag;
 import com.omninest.modules.photos.dto.PhotoDtos.PhotoFaceClusterDto;

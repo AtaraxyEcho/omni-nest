@@ -28,16 +28,4 @@ public interface PhotoFaceRepository extends JpaRepository<PhotoFace, UUID> {
      * @return 人脸检测数据
      */
     List<PhotoFace> findByPhotoIdIn(Collection<UUID> photoIds);
-
-    /**
-     * 按照片 ID 删除人脸检测数据
-     */
-    void deleteByPhotoId(UUID photoId);
-
-    /**
-     * 批量删除指定照片的人脸检测数据。
-     *
-     * @param photoIds 照片 ID 集合
-     */
-    void deleteByPhotoIdIn(Collection<UUID> photoIds);
 }
