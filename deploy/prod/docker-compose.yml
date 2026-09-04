@@ -256,6 +256,9 @@ services:
       - omninest-aria2:/downloads
     restart: unless-stopped
 
+  # 公网生产环境建议保持 ClamAV 病毒扫描开启，不要注释或移除本服务；
+  # 若确需关闭（不建议），必须同步把后端 OMNINEST_CLAMAV_ENABLED 设为 false，
+  # 否则上传会因扫描不可用被拒绝。资源要求见 deploy/prod/README.md。
   clamav:
     image: clamav/clamav:stable
     environment:
