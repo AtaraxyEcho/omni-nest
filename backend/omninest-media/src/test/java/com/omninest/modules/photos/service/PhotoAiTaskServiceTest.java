@@ -160,7 +160,7 @@ class PhotoAiTaskServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("照片图像分析重分析全部失败");
 
-        Mockito.verify(taskRecordService).markFailed(taskId, "照片图像分析重分析全部失败");
+        Mockito.verify(taskRecordService, Mockito.never()).markFailed(Mockito.eq(taskId), Mockito.anyString());
         Mockito.verifyNoInteractions(completionService);
         Mockito.verify(photoAiService, Mockito.never()).clusterFaces(ownerUserId);
     }

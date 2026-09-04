@@ -14,7 +14,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 /**
- * 照片 AI 异步任务消费者，负责调用任务编排服务并确认消息结果。
+ * 照片 AI 异步任务消费者。
+ * 执行成功或失败裁决完成后确认消息；延迟重投由任务 Outbox 负责。
  *
  * @author OmniNest
  */
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 public class PhotoAiConsumer {
 
     private final PhotoAiTaskService photoAiTaskService;
+    private final PhotoAiTaskRetryService retryService;
 
     /**
      * 执行照片 AI 任务并确认消息结果。
@@ -47,9 +49,16 @@ public class PhotoAiConsumer {
             );
             photoAiTaskService.execute(event);
             channel.basicAck(deliveryTag, false);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("照片 AI 任务失败: taskId={}, photoId={}", event.taskId(), event.photoId(), e);
-            channel.basicNack(deliveryTag, false, false);
+            try {
+                retryService.handlePhotoAiFailure(event, e);
+                channel.basicAck(deliveryTag, false);
+            } catch (RuntimeException retryException) {
+                log.error("照片 AI 任务失败状态写入失败，将重新投递原消息: taskId={}",
+                        event.taskId(), retryException);
+                channel.basicNack(deliveryTag, false, true);
+            }
         }
     }
 }

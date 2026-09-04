@@ -3,6 +3,7 @@ package com.omninest.modules.photos.service;
 import com.omninest.common.ai.ImageAnalysisGateway;
 import com.omninest.common.ai.ImageAnalysisGateway.FaceDetection;
 import com.omninest.common.ai.ImageAnalysisGateway.ContentAnalysis;
+import com.omninest.common.config.AiSidecarProperties;
 import com.omninest.common.enums.ErrorCode;
 import com.omninest.common.error.BusinessException;
 import com.omninest.modules.file.dto.FileContentStream;
@@ -28,14 +29,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -55,9 +51,11 @@ public class PhotoAiService {
     private static final int MAX_CLUSTER_FACES = 10_000;
 
     private final ImageAnalysisGateway imageAnalysisGateway;
+    private final AiSidecarProperties aiSidecarProperties;
     private final PhotoLabelPolicy labelPolicy;
     private final PhotoContentAnalysisService contentAnalysisService;
     private final PhotosRuntimeConfigService configService;
+    private final PhotoFaceClusterMaintenanceService clusterMaintenanceService;
     private final PhotoFaceRepository faceRepository;
     private final PhotoFaceClusterRepository clusterRepository;
     private final PhotoItemRepository photoItemRepository;
@@ -104,10 +102,9 @@ public class PhotoAiService {
     /**
      * 对用户所有人脸进行聚类。
      *
-     * <p>多步写入（清空人脸归属、删除旧聚类、写入新聚类）必须在同一事务内完成，
-     * 中途失败整体回滚，避免留下无归属的人脸或丢失聚类。</p>
+     * <p>侧车调用在事务外执行；聚类归属的清空、旧聚类删除与新聚类写入由
+     * 聚类维护服务在同一短事务内原子完成，避免外呼期间长时间占用数据库连接。</p>
      */
-    @Transactional(rollbackFor = Exception.class)
     public void clusterFaces(UUID ownerUserId) {
         List<PhotoFace> allFaces = faceRepository.findByOwnerUserId(ownerUserId);
         if (allFaces.isEmpty()) {
@@ -121,13 +118,20 @@ public class PhotoAiService {
             );
         }
 
+        int embeddingDimension = aiSidecarProperties.getFaceEmbeddingDimension();
         List<float[]> embeddings = new ArrayList<>();
         List<UUID> faceIds = new ArrayList<>();
         for (PhotoFace face : allFaces) {
-            if (face.getEmbedding() != null && face.getEmbedding().length > 0) {
-                embeddings.add(bytesToFloatArray(face.getEmbedding()));
-                faceIds.add(face.getId());
+            float[] embedding = bytesToFloatArray(face.getEmbedding(), embeddingDimension);
+            if (embedding == null) {
+                log.warn("人脸嵌入向量缺失或维度异常，跳过聚类: ownerUserId={}, faceId={}, byteLength={}",
+                        ownerUserId,
+                        face.getId(),
+                        face.getEmbedding() == null ? 0 : face.getEmbedding().length);
+                continue;
             }
+            embeddings.add(embedding);
+            faceIds.add(face.getId());
         }
 
         if (embeddings.isEmpty()) {
@@ -149,41 +153,7 @@ public class PhotoAiService {
             }
             clusterMap.computeIfAbsent(clusterId, k -> new ArrayList<>()).add(faceIds.get(i));
         }
-
-        for (PhotoFace face : allFaces) {
-            face.setClusterId(null);
-        }
-        faceRepository.saveAll(allFaces);
-        List<PhotoFaceCluster> oldClusters = clusterRepository.findByOwnerUserIdOrderByFaceCountDesc(ownerUserId);
-        clusterRepository.deleteAll(oldClusters);
-
-        Map<UUID, PhotoFace> facesById = new HashMap<>();
-        for (PhotoFace face : allFaces) {
-            facesById.put(face.getId(), face);
-        }
-        int createdClusterCount = 0;
-        for (Map.Entry<Integer, List<UUID>> entry : clusterMap.entrySet()) {
-            List<UUID> clusterFaceIds = entry.getValue();
-            if (clusterFaceIds.size() < 2) {
-                continue;
-            }
-
-            PhotoFaceCluster cluster = new PhotoFaceCluster();
-            cluster.setOwnerUserId(ownerUserId);
-            cluster.setFaceCount(clusterFaceIds.size());
-            cluster.setCoverFaceId(clusterFaceIds.get(0));
-            clusterRepository.save(cluster);
-
-            for (UUID faceId : clusterFaceIds) {
-                PhotoFace face = facesById.get(faceId);
-                if (face != null) {
-                    face.setClusterId(cluster.getId());
-                }
-            }
-            createdClusterCount++;
-        }
-        faceRepository.saveAll(allFaces);
-
+        int createdClusterCount = clusterMaintenanceService.replaceClusters(ownerUserId, allFaces, clusterMap);
         log.info("人脸聚类完成: ownerUserId={}, 聚类数={}", ownerUserId, createdClusterCount);
     }
 
@@ -193,9 +163,28 @@ public class PhotoAiService {
     @Transactional(readOnly = true)
     public List<PhotoFaceClusterDto> getClusters(UUID ownerUserId) {
         List<PhotoFaceCluster> clusters = clusterRepository.findByOwnerUserIdOrderByFaceCountDesc(ownerUserId);
+        if (clusters.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> coverFaceIds = clusters.stream()
+                .map(PhotoFaceCluster::getCoverFaceId)
+                .filter(Objects::nonNull)
+                .toList();
+        Map<UUID, PhotoFace> coverFaces = coverFaceIds.isEmpty()
+                ? Map.of()
+                : faceRepository.findAllById(coverFaceIds).stream()
+                        .collect(Collectors.toMap(PhotoFace::getId, Function.identity()));
+        List<UUID> coverPhotoIds = coverFaces.values().stream()
+                .map(PhotoFace::getPhotoId)
+                .distinct()
+                .toList();
+        Map<UUID, PhotoItem> coverPhotos = coverPhotoIds.isEmpty()
+                ? Map.of()
+                : photoItemRepository.findAllById(coverPhotoIds).stream()
+                        .collect(Collectors.toMap(PhotoItem::getId, Function.identity()));
         return clusters.stream()
                 .map(cluster -> {
-                    String coverUrl = resolveClusterCoverUrl(ownerUserId, cluster);
+                    String coverUrl = resolveClusterCoverUrl(ownerUserId, cluster, coverFaces, coverPhotos);
                     return new PhotoFaceClusterDto(
                             cluster.getId(),
                             cluster.getName(),
@@ -206,14 +195,21 @@ public class PhotoAiService {
                 .toList();
     }
 
-    private String resolveClusterCoverUrl(UUID ownerUserId, PhotoFaceCluster cluster) {
+    private String resolveClusterCoverUrl(
+            UUID ownerUserId,
+            PhotoFaceCluster cluster,
+            Map<UUID, PhotoFace> coverFaces,
+            Map<UUID, PhotoItem> coverPhotos
+    ) {
         if (cluster.getCoverFaceId() == null) {
             return null;
         }
-        return faceRepository.findById(cluster.getCoverFaceId())
-                .flatMap(face -> photoItemRepository.findById(face.getPhotoId()))
-                .map(photo -> resolveCoverUrl(ownerUserId, photo.getCoverFileId()))
-                .orElse(null);
+        PhotoFace face = coverFaces.get(cluster.getCoverFaceId());
+        PhotoItem photo = face == null ? null : coverPhotos.get(face.getPhotoId());
+        if (photo == null) {
+            return null;
+        }
+        return resolveCoverUrl(ownerUserId, photo.getCoverFileId());
     }
 
     /**
@@ -224,17 +220,29 @@ public class PhotoAiService {
         PhotoFaceCluster cluster = clusterRepository.findByIdAndOwnerUserId(clusterId, ownerUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "聚类不存在"));
 
-        List<PhotoFace> faces = faceRepository.findByClusterId(clusterId);
-        List<UUID> photoIds = faces.stream()
+        List<UUID> photoIds = faceRepository.findByClusterId(clusterId).stream()
                 .map(PhotoFace::getPhotoId)
                 .distinct()
                 .toList();
-
+        if (photoIds.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, PhotoItem> photosById = photoItemRepository.findAllById(photoIds).stream()
+                .collect(Collectors.toMap(PhotoItem::getId, Function.identity()));
+        Set<UUID> favoritePhotoIds = favoriteRepository
+                .findPhotoIdsByOwnerUserIdAndPhotoIdIn(ownerUserId, photoIds)
+                .stream()
+                .collect(Collectors.toSet());
+        Map<UUID, List<String>> tagsByPhotoId = tagRepository.findByOwnerUserIdAndPhotoIdIn(ownerUserId, photoIds)
+                .stream()
+                .collect(Collectors.groupingBy(PhotoTag::getPhotoId,
+                        Collectors.mapping(PhotoTag::getTag, Collectors.toList())));
         return photoIds.stream()
-                .map(photoItemRepository::findById)
-                .filter(Optional::isPresent)
-                .map(opt -> opt.get())
-                .map(photo -> toDto(ownerUserId, photo))
+                .map(photosById::get)
+                .filter(Objects::nonNull)
+                .map(photo -> toDto(ownerUserId, photo,
+                        favoritePhotoIds.contains(photo.getId()),
+                        tagsByPhotoId.getOrDefault(photo.getId(), List.of())))
                 .toList();
     }
 
@@ -305,12 +313,13 @@ public class PhotoAiService {
         if (faces == null || analysis == null || analysis.observations() == null) {
             throw new IllegalStateException("图像分析侧车返回了不完整的分析结果");
         }
+        int embeddingDimension = aiSidecarProperties.getFaceEmbeddingDimension();
         for (FaceDetection face : faces) {
             if (face == null
                     || face.bboxW() <= 0
                     || face.bboxH() <= 0
                     || face.embedding() == null
-                    || face.embedding().length == 0) {
+                    || face.embedding().length != embeddingDimension) {
                 throw new IllegalStateException("图像分析侧车返回了无效的人脸检测结果");
             }
         }
@@ -348,21 +357,29 @@ public class PhotoAiService {
         return buffer.array();
     }
 
-    private float[] bytesToFloatArray(byte[] bytes) {
+    /**
+     * 将小端字节序列还原为浮点向量。
+     * 字节序列为空、长度不是 4 的倍数或维度与期望值不符时返回 null，由调用方跳过。
+     */
+    private float[] bytesToFloatArray(byte[] bytes, int expectedDimension) {
+        if (bytes == null || bytes.length == 0 || bytes.length % 4 != 0) {
+            return null;
+        }
+        int dimension = bytes.length / 4;
+        if (dimension != expectedDimension) {
+            return null;
+        }
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
-        float[] floats = new float[bytes.length / 4];
-        for (int i = 0; i < floats.length; i++) {
+        float[] floats = new float[dimension];
+        for (int i = 0; i < dimension; i++) {
             floats[i] = buffer.getFloat();
         }
         return floats;
     }
 
-    private PhotoItemDto toDto(UUID ownerUserId, PhotoItem photo) {
+    private PhotoItemDto toDto(UUID ownerUserId, PhotoItem photo, boolean isFavorite, List<String> tags) {
         String coverUrl = resolveCoverUrl(ownerUserId, photo.getCoverFileId());
-        boolean isFavorite = favoriteRepository.findByOwnerUserIdAndPhotoId(ownerUserId, photo.getId()).isPresent();
-        List<String> tags = tagRepository.findByOwnerUserIdAndPhotoId(ownerUserId, photo.getId())
-                .stream().map(PhotoTag::getTag).toList();
         return PhotoItemDto.fromEntity(photo, coverUrl, isFavorite, tags);
     }
 

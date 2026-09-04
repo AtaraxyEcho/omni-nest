@@ -62,6 +62,23 @@ def _require_sidecar_token(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
+def _verify_image_bounds(chunks: bytes) -> None:
+    """同步执行图片解码与边界校验，调用方需放入线程以避免阻塞事件循环。"""
+    from PIL import Image
+
+    with Image.open(io.BytesIO(chunks)) as decoded:
+        width, height = decoded.size
+        if (
+            width <= 0
+            or height <= 0
+            or width > MAX_IMAGE_WIDTH
+            or height > MAX_IMAGE_HEIGHT
+            or width * height > MAX_IMAGE_PIXELS
+        ):
+            raise HTTPException(status_code=413, detail="Image dimensions exceed limit")
+        decoded.verify()
+
+
 async def _read_bounded_image(image: UploadFile) -> bytes:
     """分块读取上传图片，并同时限制编码尺寸与解码像素。"""
     content_length = image.headers.get("content-length")
@@ -84,19 +101,7 @@ async def _read_bounded_image(image: UploadFile) -> bytes:
         raise HTTPException(status_code=400, detail="Image is empty")
 
     try:
-        from PIL import Image
-
-        with Image.open(io.BytesIO(chunks)) as decoded:
-            width, height = decoded.size
-            if (
-                width <= 0
-                or height <= 0
-                or width > MAX_IMAGE_WIDTH
-                or height > MAX_IMAGE_HEIGHT
-                or width * height > MAX_IMAGE_PIXELS
-            ):
-                raise HTTPException(status_code=413, detail="Image dimensions exceed limit")
-            decoded.verify()
+        await to_thread(_verify_image_bounds, bytes(chunks))
     except HTTPException:
         raise
     except Exception as exception:
@@ -234,7 +239,7 @@ async def detect_faces(image: UploadFile = File(...)):
         contents = await _read_bounded_image(image)
         nparr = np.frombuffer(contents, np.uint8)
         async with inference_slots:
-            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            img = await to_thread(cv2.imdecode, nparr, cv2.IMREAD_COLOR)
 
             if img is None:
                 raise HTTPException(status_code=400, detail="Unable to decode image")

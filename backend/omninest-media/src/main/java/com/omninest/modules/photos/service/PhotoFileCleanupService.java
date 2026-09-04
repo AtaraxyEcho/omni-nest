@@ -12,6 +12,7 @@ import com.omninest.modules.media.service.MediaFileVisibilitySyncParticipant;
 import com.omninest.modules.media.service.MediaSyncEventService;
 import com.omninest.modules.photos.domain.PhotoAlbum;
 import com.omninest.modules.photos.domain.PhotoEditVersion;
+import com.omninest.modules.photos.domain.PhotoFace;
 import com.omninest.modules.photos.domain.PhotoItem;
 import com.omninest.modules.photos.repository.PhotoAlbumItemRepository;
 import com.omninest.modules.photos.repository.PhotoAlbumRepository;
@@ -61,6 +62,7 @@ public class PhotoFileCleanupService implements
     private final PhotoSearchIndexService photoSearchIndexService;
     private final MediaSyncEventService syncEventService;
     private final ReadThroughCache readThroughCache;
+    private final PhotoFaceClusterMaintenanceService clusterMaintenanceService;
 
     /**
      * 查询目标文件的照片条目引用。
@@ -171,7 +173,9 @@ public class PhotoFileCleanupService implements
         List<UUID> photoIds = photos.stream().map(PhotoItem::getId).toList();
         tagRepository.deleteByOwnerUserIdAndPhotoIdIn(ownerUserId, photoIds);
         editVersionRepository.deleteByPhotoIdIn(photoIds);
-        faceRepository.deleteByPhotoIdIn(photoIds);
+        List<PhotoFace> removedFaces = faceRepository.findByPhotoIdIn(photoIds);
+        faceRepository.deleteAll(removedFaces);
+        clusterMaintenanceService.onFacesRemoved(ownerUserId, removedFaces);
         List<UUID> affectedAlbumIds = albumItemRepository.findAlbumIdsByPhotoIdIn(photoIds);
         albumItemRepository.deleteByPhotoIdIn(photoIds);
         favoriteRepository.deleteByPhotoIdIn(photoIds);

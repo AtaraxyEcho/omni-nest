@@ -1,12 +1,78 @@
 """AI 侧车人脸识别与边界逻辑测试。"""
 
 import asyncio
+import io
 import unittest
 from unittest.mock import patch
 
 import app
 from fastapi import HTTPException
+from PIL import Image
 from pydantic import Field, ValidationError, create_model
+
+
+class _FakeUploadFile:
+    """模拟 FastAPI UploadFile 的分块读取行为。"""
+
+    def __init__(self, data: bytes, headers: dict | None = None):
+        self._data = data
+        self._offset = 0
+        self.headers = headers or {}
+
+    async def read(self, size: int = -1) -> bytes:
+        if self._offset >= len(self._data):
+            return b""
+        chunk = self._data[self._offset:self._offset + size]
+        self._offset += len(chunk)
+        return chunk
+
+
+class ImageBoundaryTest(unittest.TestCase):
+    """验证上传图片读取的字节与解码边界。"""
+
+    @staticmethod
+    def png_bytes(width: int = 32, height: int = 32) -> bytes:
+        buffer = io.BytesIO()
+        Image.new("RGB", (width, height)).save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def test_read_bounded_image_accepts_valid_image(self):
+        """正常编码且尺寸合规的图片原样返回。"""
+        data = self.png_bytes()
+
+        result = asyncio.run(app._read_bounded_image(_FakeUploadFile(data)))
+
+        self.assertEqual(data, bytes(result))
+
+    def test_read_bounded_image_rejects_empty_upload(self):
+        """空上传返回 400。"""
+        with self.assertRaises(HTTPException) as ctx:
+            asyncio.run(app._read_bounded_image(_FakeUploadFile(b"")))
+        self.assertEqual(400, ctx.exception.status_code)
+
+    def test_read_bounded_image_rejects_oversized_content_length(self):
+        """content-length 超限时返回 413。"""
+        data = self.png_bytes()
+        headers = {"content-length": str(app.MAX_IMAGE_BYTES + 1)}
+
+        with self.assertRaises(HTTPException) as ctx:
+            asyncio.run(app._read_bounded_image(_FakeUploadFile(data, headers)))
+        self.assertEqual(413, ctx.exception.status_code)
+
+    def test_read_bounded_image_rejects_non_image_bytes(self):
+        """非图片字节返回 400 解码错误。"""
+        with self.assertRaises(HTTPException) as ctx:
+            asyncio.run(app._read_bounded_image(_FakeUploadFile(b"not-an-image")))
+        self.assertEqual(400, ctx.exception.status_code)
+
+    def test_read_bounded_image_rejects_dimensions_over_limit(self):
+        """像素总数超限返回 413。"""
+        data = self.png_bytes(32, 32)
+
+        with patch.object(app, "MAX_IMAGE_PIXELS", 16):
+            with self.assertRaises(HTTPException) as ctx:
+                asyncio.run(app._read_bounded_image(_FakeUploadFile(data)))
+        self.assertEqual(413, ctx.exception.status_code)
 
 
 class FaceOnlyAnalysisTest(unittest.TestCase):

@@ -44,6 +44,7 @@ public class PhotoContentAnalysisService {
     private final PhotoFaceRepository faceRepository;
     private final PhotoItemRepository photoItemRepository;
     private final FileLifecycleGuard fileLifecycleGuard;
+    private final PhotoFaceClusterMaintenanceService clusterMaintenanceService;
 
     /**
      * 在短事务中原子应用一轮图像分析结果。
@@ -87,8 +88,10 @@ public class PhotoContentAnalysisService {
         run.setCompletedAt(now);
         PhotoContentAnalysisRun savedRun = runRepository.save(run);
 
-        faceRepository.deleteByPhotoId(photoId);
+        List<PhotoFace> removedFaces = faceRepository.findByPhotoId(photoId);
+        faceRepository.deleteAll(removedFaces);
         faceRepository.saveAll(faces);
+        clusterMaintenanceService.onFacesRemoved(ownerUserId, removedFaces);
 
         List<PhotoContentLabel> entities = labels.stream()
                 .map(label -> toEntity(ownerUserId, photoId, savedRun.getId(), label))

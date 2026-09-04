@@ -13,14 +13,16 @@ import org.springframework.amqp.core.MessageProperties;
 
 /**
  * 照片 AI 消费者消息确认测试。
+ * 失败时交由重试服务裁决并确认消息；重试服务自身异常才重回队列。
  *
  * @author OmniNest
  */
 class PhotoAiConsumerTest {
 
     private final PhotoAiTaskService taskService = Mockito.mock(PhotoAiTaskService.class);
+    private final PhotoAiTaskRetryService retryService = Mockito.mock(PhotoAiTaskRetryService.class);
     private final Channel channel = Mockito.mock(Channel.class);
-    private final PhotoAiConsumer consumer = new PhotoAiConsumer(taskService);
+    private final PhotoAiConsumer consumer = new PhotoAiConsumer(taskService, retryService);
 
     @Test
     void handleAcknowledgesCompletedTask() throws IOException {
@@ -34,14 +36,30 @@ class PhotoAiConsumerTest {
     }
 
     @Test
-    void handleRejectsFailedTaskForDeadLetterProcessing() throws IOException {
+    void handleDelegatesFailureToRetryServiceAndAcknowledges() throws IOException {
         PhotoAiEvent event = event();
         Mockito.doThrow(new IllegalStateException("sidecar unavailable"))
                 .when(taskService).execute(event);
 
         consumer.handle(event, message(), channel);
 
-        Mockito.verify(channel).basicNack(1L, false, false);
+        Mockito.verify(retryService).handlePhotoAiFailure(
+                Mockito.eq(event), Mockito.any(IllegalStateException.class));
+        Mockito.verify(channel).basicAck(1L, false);
+        Mockito.verify(channel, Mockito.never()).basicNack(Mockito.anyLong(), Mockito.anyBoolean(), Mockito.anyBoolean());
+    }
+
+    @Test
+    void handleRequeuesOriginalMessageWhenRetryStateWriteFails() throws IOException {
+        PhotoAiEvent event = event();
+        Mockito.doThrow(new IllegalStateException("sidecar unavailable"))
+                .when(taskService).execute(event);
+        Mockito.doThrow(new IllegalStateException("database down"))
+                .when(retryService).handlePhotoAiFailure(Mockito.any(), Mockito.any());
+
+        consumer.handle(event, message(), channel);
+
+        Mockito.verify(channel).basicNack(1L, false, true);
         Mockito.verify(channel, Mockito.never()).basicAck(Mockito.anyLong(), Mockito.anyBoolean());
     }
 

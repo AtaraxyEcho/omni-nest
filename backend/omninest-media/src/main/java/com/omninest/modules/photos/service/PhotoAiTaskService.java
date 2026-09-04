@@ -35,14 +35,15 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @RequiredArgsConstructor
 public class PhotoAiTaskService {
 
-    private static final String TASK_TYPE_SINGLE = "PHOTO_AI_ANALYSIS";
-    private static final String TASK_TYPE_REANALYSIS = "PHOTO_AI_REANALYSIS";
-    private static final String TASK_TYPE_RECLUSTER = "PHOTO_AI_RECLUSTER";
+    public static final String TASK_TYPE_SINGLE = "PHOTO_AI_ANALYSIS";
+    public static final String TASK_TYPE_REANALYSIS = "PHOTO_AI_REANALYSIS";
+    public static final String TASK_TYPE_RECLUSTER = "PHOTO_AI_RECLUSTER";
     private static final int PAGE_SIZE = 25;
     private static final int MAX_FAILED_PHOTO_SAMPLES = 20;
     private static final List<String> ACTIVE_STATUSES = List.of(
             TaskStatus.QUEUED.getValue(),
-            TaskStatus.RUNNING.getValue()
+            TaskStatus.RUNNING.getValue(),
+            TaskStatus.RETRY_WAIT.getValue()
     );
 
     private final PhotoAiService photoAiService;
@@ -109,6 +110,9 @@ public class PhotoAiTaskService {
     /**
      * 执行照片图像分析事件并维护通用任务状态。
      *
+     * <p>生命周期冲突（源文件已删除或正在删除）在此取消任务；
+     * 其余失败的终态裁决（进入等待重试或死信）由 PhotoAiTaskRetryService 处理。</p>
+     *
      * @param event 图像分析任务事件
      */
     public void execute(PhotoAiEvent event) {
@@ -138,10 +142,6 @@ public class PhotoAiTaskService {
                         event.taskId(), event.photoId());
                 return;
             }
-            taskRecordService.markFailed(event.taskId(), errorSummary(exception));
-            throw exception;
-        } catch (RuntimeException exception) {
-            taskRecordService.markFailed(event.taskId(), errorSummary(exception));
             throw exception;
         }
     }
@@ -252,6 +252,14 @@ public class PhotoAiTaskService {
                 }
             }
             pageNumber++;
+            taskRecordService.updateResult(
+                    event.taskId(),
+                    Map.of(
+                            "processedItems", processedItems,
+                            "succeededItems", succeededItems,
+                            "failedItems", failedItems
+                    )
+            );
         } while (page.hasNext());
 
         if (failedItems > 0 && succeededItems == 0) {
