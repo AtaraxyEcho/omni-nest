@@ -265,7 +265,20 @@ class WindowGeometryService with WindowListener {
       if (await windowManager.isFullScreen() || await _isNativeFullscreen()) {
         return;
       }
-      final bounds = await windowManager.getBounds();
+      Rect bounds;
+      try {
+        bounds = await windowManager.getBounds();
+      } on Object {
+        // Windows 启动早期插件可能返回不完整数据，回退最近正常边界。
+        final last = _lastNormalBounds;
+        if (last == null) {
+          rethrow;
+        }
+        bounds = last;
+      }
+      if (bounds.width <= 0 || bounds.height <= 0) {
+        return;
+      }
       if (!maximized) {
         _lastNormalBounds = bounds;
       }

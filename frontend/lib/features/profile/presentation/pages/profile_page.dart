@@ -222,7 +222,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       role: role,
       avatarUrl: avatarUrl,
       onBack: () => context.go('/portal'),
-      onNotifications: () => context.go('/notifications'),
+      onNotifications: () => context.push('/notifications'),
       onSignOut: ref.read(authSessionProvider.notifier).clearSession,
       child: _desktopPanel(
         displayName: displayName,

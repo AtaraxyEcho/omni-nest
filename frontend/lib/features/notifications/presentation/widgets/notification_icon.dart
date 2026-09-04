@@ -18,7 +18,7 @@ class NotificationIcon extends ConsumerWidget {
     final colors = context.globalColors;
     return IconButton(
       tooltip: AppLocalizations.of(context).notificationTitle,
-      onPressed: () => context.go('/notifications'),
+      onPressed: () => context.push('/notifications'),
       icon: Badge(
         isLabelVisible: unreadCount > 0,
         label: Text(
