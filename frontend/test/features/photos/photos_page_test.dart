@@ -78,74 +78,77 @@ void main() {
       expect(find.byType(PhotosPage), findsOneWidget);
     });
 
-    testWidgets('desktop layout exposes sidebar search and scrollable grid', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(2400, 1200);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final photos = List<PhotoItem>.generate(
-        30,
-        (index) => PhotoItem(
-          id: 'photo-$index',
-          fileNodeId: 'file-$index',
-          title: 'Photo $index',
-          format: 'JPEG',
-          fileSize: 1024,
-          metadataStatus: 'READY',
-          favorite: false,
-          createdAt: DateTime(2026, 7, 13),
-        ),
-      );
-      final router = GoRouter(
-        initialLocation: '/photos',
-        routes: [
-          GoRoute(
-            path: '/photos',
-            builder: (context, state) => const PhotosPage(),
+    testWidgets(
+      'desktop layout exposes library search, album shelf and scrollable date grid',
+      (tester) async {
+        tester.view.physicalSize = const Size(2400, 1200);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final photos = List<PhotoItem>.generate(
+          30,
+          (index) => PhotoItem(
+            id: 'photo-$index',
+            fileNodeId: 'file-$index',
+            title: 'Photo $index',
+            format: 'JPEG',
+            fileSize: 1024,
+            metadataStatus: 'READY',
+            favorite: false,
+            createdAt: DateTime(2026, 7, 13),
           ),
-          GoRoute(
-            path: '/portal',
-            builder: (context, state) => const SizedBox(),
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            authSessionStoreProvider.overrideWithValue(
-              MemoryAuthSessionStore(),
+        );
+        final router = GoRouter(
+          initialLocation: '/photos',
+          routes: [
+            GoRoute(
+              path: '/photos',
+              builder: (context, state) => const PhotosPage(),
             ),
-            photoCenterControllerProvider.overrideWith(
-              () => _FakePhotoCenterController(
-                PhotoCenterState.empty().copyWith(photos: photos),
-              ),
+            GoRoute(
+              path: '/portal',
+              builder: (context, state) => const SizedBox(),
             ),
           ],
-          child: MaterialApp.router(
-            routerConfig: router,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('en'),
-            theme: OmniNestTheme.from(AppThemePalette.dark),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        addTearDown(router.dispose);
 
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Albums'), findsWidgets);
-      final importButton = tester.widget<MediaImportButton>(
-        find.byType(MediaImportButton),
-      );
-      expect(importButton.acceptedExtensions, isNot(contains('webp')));
-      expect(importButton.unsupportedExtensions, isEmpty);
-      final grid = tester.widget<GridView>(find.byType(GridView));
-      expect(grid.shrinkWrap, isFalse);
-      expect(grid.physics, isNot(isA<NeverScrollableScrollPhysics>()));
-    });
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              authSessionStoreProvider.overrideWithValue(
+                MemoryAuthSessionStore(),
+              ),
+              photoCenterControllerProvider.overrideWith(
+                () => _FakePhotoCenterController(
+                  PhotoCenterState.empty().copyWith(photos: photos),
+                ),
+              ),
+            ],
+            child: MaterialApp.router(
+              routerConfig: router,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('en'),
+              theme: OmniNestTheme.from(AppThemePalette.dark),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TextField), findsOneWidget);
+        expect(find.textContaining('Albums'), findsWidgets);
+        final importButton = tester.widget<MediaImportButton>(
+          find.byType(MediaImportButton),
+        );
+        expect(importButton.acceptedExtensions, isNot(contains('webp')));
+        expect(importButton.unsupportedExtensions, isEmpty);
+        expect(find.byType(CustomScrollView), findsOneWidget);
+        final scrollable = tester.widget<CustomScrollView>(
+          find.byType(CustomScrollView),
+        );
+        expect(scrollable.physics, isA<AlwaysScrollableScrollPhysics>());
+      },
+    );
   });
 }

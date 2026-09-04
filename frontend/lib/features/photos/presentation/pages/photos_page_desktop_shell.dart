@@ -1,14 +1,13 @@
 part of 'photos_page.dart';
 
+/// 桌面顶栏：返回、标题、搜索、视图切换、多选与关联视图入口。
 class _PhotoDesktopTopBar extends ConsumerWidget {
   const _PhotoDesktopTopBar({
-    required this.currentTab,
     required this.searchController,
     required this.searchQuery,
     required this.onSearchChanged,
   });
 
-  final PhotoTab currentTab;
   final TextEditingController searchController;
   final String searchQuery;
   final ValueChanged<String> onSearchChanged;
@@ -16,6 +15,10 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.photosColors;
+    final l10n = AppLocalizations.of(context);
+    final state = ref.watch(photoCenterControllerProvider).asData?.value;
+    final libraryView = state?.libraryView ?? PhotoLibraryView.gridDay;
+    final isSelectionMode = state?.isSelectionMode ?? false;
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -36,20 +39,15 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
               size: 19,
               color: colors.onSurfaceVariant,
             ),
-            tooltip: AppLocalizations.of(context).photosBackToPortal,
+            tooltip: l10n.photosBackToPortal,
           ),
           const SizedBox(width: 6),
-          SizedBox(
-            width: 170,
-            child: Text(
-              _desktopNavLabel(context, currentTab),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: colors.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
+          Text(
+            l10n.photosSurfaceLibrary,
+            style: TextStyle(
+              color: colors.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(width: 22),
@@ -62,21 +60,16 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
                   height: 40,
                   child: TextField(
                     controller: searchController,
-                    enabled:
-                        currentTab == PhotoTab.all ||
-                        currentTab == PhotoTab.favorites ||
-                        currentTab == PhotoTab.graph,
                     onChanged: onSearchChanged,
                     style: TextStyle(color: colors.onSurface, fontSize: 13),
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context).photosSearchHint,
+                      hintText: l10n.photosSearchHint,
                       prefixIcon: const Icon(Icons.search_rounded, size: 19),
                       suffixIcon:
                           searchQuery.isEmpty
                               ? null
                               : IconButton(
-                                tooltip:
-                                    AppLocalizations.of(context).photosClear,
+                                tooltip: l10n.photosClear,
                                 onPressed: () {
                                   searchController.clear();
                                   onSearchChanged('');
@@ -105,6 +98,92 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
                 ),
               ),
             ),
+          ),
+          const SizedBox(width: 12),
+          PopupMenuButton<PhotoLibraryView>(
+            tooltip: l10n.photosViewSwitch,
+            initialValue: libraryView,
+            onSelected: (view) {
+              ref
+                  .read(photoCenterControllerProvider.notifier)
+                  .setLibraryView(view);
+            },
+            itemBuilder:
+                (context) => [
+                  _viewMenuItem(
+                    context,
+                    PhotoLibraryView.gridDay,
+                    Icons.grid_view_rounded,
+                    l10n.photosViewGridDay,
+                  ),
+                  _viewMenuItem(
+                    context,
+                    PhotoLibraryView.gridMonth,
+                    Icons.calendar_view_month_rounded,
+                    l10n.photosViewGridMonth,
+                  ),
+                  _viewMenuItem(
+                    context,
+                    PhotoLibraryView.timeline,
+                    Icons.timeline_rounded,
+                    l10n.photosViewTimeline,
+                  ),
+                  _viewMenuItem(
+                    context,
+                    PhotoLibraryView.groups,
+                    Icons.folder_copy_outlined,
+                    l10n.photosViewGroups,
+                  ),
+                ],
+            child: Container(
+              height: 36,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: colors.outlineVariant.withValues(alpha: 0.16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _viewIcon(libraryView),
+                    size: 17,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _viewLabel(l10n, libraryView),
+                    style: TextStyle(color: colors.onSurface, fontSize: 13),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.expand_more_rounded,
+                    size: 16,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: l10n.photosToggleSelection,
+            onPressed:
+                () =>
+                    ref
+                        .read(photoCenterControllerProvider.notifier)
+                        .toggleSelectionMode(),
+            isSelected: isSelectionMode,
+            icon: const Icon(Icons.checklist_rounded, size: 20),
+            color: colors.onSurfaceVariant,
+          ),
+          IconButton(
+            tooltip: l10n.photosInsightsTitle,
+            onPressed: () => context.push('/photos/insights'),
+            icon: const Icon(Icons.hub_outlined, size: 20),
+            color: colors.onSurfaceVariant,
           ),
           const _RegenerateThumbnailsAction(),
           const SizedBox(width: 4),
@@ -167,184 +246,36 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
       ),
     );
   }
-}
 
-const List<(IconData, PhotoTab)> _desktopNavEntries = [
-  (Icons.photo_library_outlined, PhotoTab.all),
-  (Icons.auto_awesome_motion_outlined, PhotoTab.albums),
-  (Icons.favorite_outline, PhotoTab.favorites),
-  (Icons.auto_awesome_outlined, PhotoTab.timeline),
-  (Icons.category_outlined, PhotoTab.groups),
-  (Icons.auto_awesome_outlined, PhotoTab.graph),
-];
-
-String _desktopNavLabel(BuildContext context, PhotoTab tab) {
-  final l10n = AppLocalizations.of(context);
-  return switch (tab) {
-    PhotoTab.all => l10n.photosAllPhotos,
-    PhotoTab.albums => l10n.photosTabAlbums,
-    PhotoTab.favorites => l10n.photosTabFavorites,
-    PhotoTab.timeline => l10n.photosTabMemories,
-    PhotoTab.graph => l10n.photosTabGraph,
-    PhotoTab.groups => l10n.photosTabGroups,
-  };
-}
-
-class _PhotoDesktopSidebar extends StatelessWidget {
-  const _PhotoDesktopSidebar({
-    required this.currentTab,
-    required this.onTabChanged,
-  });
-
-  final PhotoTab currentTab;
-  final ValueChanged<PhotoTab> onTabChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.photosColors;
-    return Container(
-      width: 216,
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLow,
-        border: Border(
-          right: BorderSide(
-            color: colors.outlineVariant.withValues(alpha: 0.12),
-          ),
-        ),
-      ),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 18, 12, 24),
-        children: [
-          for (final entry in _desktopNavEntries) ...[
-            _DesktopNavTab(
-              label: _desktopNavLabel(context, entry.$2),
-              icon: entry.$1,
-              isActive: currentTab == entry.$2,
-              onTap: () => onTabChanged(entry.$2),
-            ),
-            const SizedBox(height: 4),
-          ],
-        ],
+  PopupMenuItem<PhotoLibraryView> _viewMenuItem(
+    BuildContext context,
+    PhotoLibraryView view,
+    IconData icon,
+    String label,
+  ) {
+    return PopupMenuItem<PhotoLibraryView>(
+      value: view,
+      child: Row(
+        children: [Icon(icon, size: 17), const SizedBox(width: 8), Text(label)],
       ),
     );
   }
-}
 
-class _DesktopNavTab extends StatelessWidget {
-  const _DesktopNavTab({
-    required this.label,
-    required this.icon,
-    required this.isActive,
-    required this.onTap,
-  });
+  IconData _viewIcon(PhotoLibraryView view) {
+    return switch (view) {
+      PhotoLibraryView.gridDay => Icons.grid_view_rounded,
+      PhotoLibraryView.gridMonth => Icons.calendar_view_month_rounded,
+      PhotoLibraryView.timeline => Icons.timeline_rounded,
+      PhotoLibraryView.groups => Icons.folder_copy_outlined,
+    };
+  }
 
-  final String label;
-  final IconData icon;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.photosColors;
-    final color =
-        isActive ? colors.onPrimaryContainer : colors.onSurfaceVariant;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(7),
-        hoverColor: colors.onSurfaceVariant.withValues(alpha: 0.06),
-        child: Container(
-          height: 42,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: isActive ? colors.primaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(7),
-            border: Border(
-              left: BorderSide(
-                color: isActive ? colors.primaryContainer : Colors.transparent,
-                width: 3,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 19, color: color),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    color: color,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  String _viewLabel(AppLocalizations l10n, PhotoLibraryView view) {
+    return switch (view) {
+      PhotoLibraryView.gridDay => l10n.photosViewGridDay,
+      PhotoLibraryView.gridMonth => l10n.photosViewGridMonth,
+      PhotoLibraryView.timeline => l10n.photosViewTimeline,
+      PhotoLibraryView.groups => l10n.photosViewGroups,
+    };
   }
 }
-
-class _PhotoFunctionBar extends StatelessWidget {
-  const _PhotoFunctionBar({
-    required this.currentTab,
-    required this.onTabChanged,
-  });
-
-  final PhotoTab currentTab;
-  final ValueChanged<PhotoTab> onTabChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        children: [
-          // "全部"胶囊 — 后续用户标签在此动态扩展
-          GestureDetector(
-            onTap: () => onTabChanged(PhotoTab.all),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: context.photosColors.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: context.photosColors.primaryContainer,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.photo_library_outlined,
-                    size: 16,
-                    color: context.photosColors.onPrimaryContainer,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    AppLocalizations.of(context).photosAll,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: context.photosColors.onPrimaryContainer,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 可滚动内容区（全部/收藏/相册 tab）— 用于 SingleChildScrollView 内部

@@ -3654,5 +3654,15 @@
     }
   },
   "readerComicExpandAll": "Expand all",
-  "readerComicCollapseAll": "Collapse all"
+  "readerComicCollapseAll": "Collapse all",
+  "photosViewSwitch": "Switch view",
+  "photosViewGridDay": "Grid · By day",
+  "photosViewGridMonth": "Grid · By month",
+  "photosViewTimeline": "Timeline",
+  "photosViewGroups": "Groups",
+  "photosToggleSelection": "Toggle selection",
+  "photosInsightsTitle": "Relationship insights",
+  "photosAlbumsManage": "Manage albums",
+  "photosExpandAlbums": "Show albums",
+  "photosScrollToTop": "Back to top"
 }

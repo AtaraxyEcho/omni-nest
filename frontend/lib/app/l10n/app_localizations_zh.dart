@@ -7804,4 +7804,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readerComicCollapseAll => '全部收起';
+
+  @override
+  String get photosViewSwitch => '切换视图';
+
+  @override
+  String get photosViewGridDay => '网格 · 按日';
+
+  @override
+  String get photosViewGridMonth => '网格 · 按月';
+
+  @override
+  String get photosViewTimeline => '时间线';
+
+  @override
+  String get photosViewGroups => '分组';
+
+  @override
+  String get photosToggleSelection => '多选';
+
+  @override
+  String get photosInsightsTitle => '关联视图';
+
+  @override
+  String get photosAlbumsManage => '管理相册';
+
+  @override
+  String get photosExpandAlbums => '展开相册';
+
+  @override
+  String get photosScrollToTop => '回到顶部';
 }

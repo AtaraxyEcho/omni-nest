@@ -1,60 +1,10 @@
 part of 'photos_page.dart';
 
-class _PhotoMobileSectionBar extends StatelessWidget {
-  const _PhotoMobileSectionBar({
-    required this.currentTab,
-    required this.onTabChanged,
-  });
-
-  final PhotoTab currentTab;
-  final ValueChanged<PhotoTab> onTabChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    const tabs = <PhotoTab>[
-      PhotoTab.all,
-      PhotoTab.timeline,
-      PhotoTab.albums,
-      PhotoTab.graph,
-    ];
-    return SizedBox(
-      height: 60,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        itemCount: tabs.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final tab = tabs[index];
-          return ChoiceChip(
-            selected: currentTab == tab,
-            showCheckmark: false,
-            onSelected: (_) => onTabChanged(tab),
-            label: Text(switch (tab) {
-              PhotoTab.all => l10n.photosTabHome,
-              PhotoTab.timeline => l10n.photosTabTimeline,
-              PhotoTab.albums => l10n.photosTabAlbums,
-              PhotoTab.graph => l10n.photosTabGraph,
-              _ => l10n.photosAll,
-            }),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class _PhotoTopBar extends StatelessWidget {
-  const _PhotoTopBar({
-    required this.controller,
-    required this.ref,
-    required this.currentTab,
-  });
+  const _PhotoTopBar({required this.controller, required this.ref});
 
   final TextEditingController controller;
   final WidgetRef ref;
-  final PhotoTab currentTab;
 
   @override
   Widget build(BuildContext context) {
@@ -78,16 +28,7 @@ class _PhotoTopBar extends StatelessWidget {
             const SizedBox(width: 8),
             // 标题
             Text(
-              switch (currentTab) {
-                PhotoTab.all => AppLocalizations.of(context).photosTabHome,
-                PhotoTab.favorites =>
-                  AppLocalizations.of(context).photosTabFavorites,
-                PhotoTab.timeline =>
-                  AppLocalizations.of(context).photosTabTimeline,
-                PhotoTab.graph => AppLocalizations.of(context).photosTabGraph,
-                PhotoTab.albums => AppLocalizations.of(context).photosTabAlbums,
-                _ => AppLocalizations.of(context).portalPhotos,
-              },
+              AppLocalizations.of(context).photosSurfaceLibrary,
               style: TextStyle(
                 color: context.photosColors.primaryContainer,
                 fontSize: 18,
@@ -149,6 +90,36 @@ class _PhotoTopBar extends StatelessWidget {
               reuseExistingFiles: true,
               style: ImportButtonStyle.iconButton,
               color: context.photosColors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 4),
+            // 多选模式
+            IconButton(
+              tooltip: AppLocalizations.of(context).photosToggleSelection,
+              onPressed:
+                  () =>
+                      ref
+                          .read(photoCenterControllerProvider.notifier)
+                          .toggleSelectionMode(),
+              isSelected:
+                  ref
+                      .watch(photoCenterControllerProvider)
+                      .asData
+                      ?.value
+                      .isSelectionMode ==
+                  true,
+              icon: const Icon(Icons.checklist_rounded, size: 20),
+              color: context.photosColors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 4),
+            // 关联视图
+            IconButton(
+              tooltip: AppLocalizations.of(context).photosInsightsTitle,
+              onPressed: () => context.push('/photos/insights'),
+              icon: Icon(
+                Icons.hub_outlined,
+                color: context.photosColors.onSurfaceVariant,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 4),
             // 搜索图标

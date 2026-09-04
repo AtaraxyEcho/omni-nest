@@ -3528,5 +3528,15 @@
     }
   },
   "readerComicExpandAll": "全部展开",
-  "readerComicCollapseAll": "全部收起"
+  "readerComicCollapseAll": "全部收起",
+  "photosViewSwitch": "切换视图",
+  "photosViewGridDay": "网格 · 按日",
+  "photosViewGridMonth": "网格 · 按月",
+  "photosViewTimeline": "时间线",
+  "photosViewGroups": "分组",
+  "photosToggleSelection": "多选",
+  "photosInsightsTitle": "关联视图",
+  "photosAlbumsManage": "管理相册",
+  "photosExpandAlbums": "展开相册",
+  "photosScrollToTop": "回到顶部"
 }

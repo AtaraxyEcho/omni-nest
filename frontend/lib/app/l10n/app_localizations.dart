@@ -14687,6 +14687,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collapse all'**
   String get readerComicCollapseAll;
+
+  /// No description provided for @photosViewSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch view'**
+  String get photosViewSwitch;
+
+  /// No description provided for @photosViewGridDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid · By day'**
+  String get photosViewGridDay;
+
+  /// No description provided for @photosViewGridMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid · By month'**
+  String get photosViewGridMonth;
+
+  /// No description provided for @photosViewTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get photosViewTimeline;
+
+  /// No description provided for @photosViewGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get photosViewGroups;
+
+  /// No description provided for @photosToggleSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle selection'**
+  String get photosToggleSelection;
+
+  /// No description provided for @photosInsightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship insights'**
+  String get photosInsightsTitle;
+
+  /// No description provided for @photosAlbumsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage albums'**
+  String get photosAlbumsManage;
+
+  /// No description provided for @photosExpandAlbums.
+  ///
+  /// In en, this message translates to:
+  /// **'Show albums'**
+  String get photosExpandAlbums;
+
+  /// No description provided for @photosScrollToTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to top'**
+  String get photosScrollToTop;
 }
 
 class _AppLocalizationsDelegate

@@ -6,17 +6,11 @@ import 'package:omninest/features/photos/domain/photo_timeline.dart';
 
 // -- 状态管理 --
 
-/// 照片模块的两个顶级浏览表面（导航层），内部通过 PhotoTab 路由到具体内容。
-enum PhotoSurface { library, explore }
+/// 图库数据源芯片。
+enum PhotoTab { all, favorites }
 
-/// 照片中心的内容页签（数据加载层）。
-enum PhotoTab { all, favorites, albums, timeline, groups, graph }
-
-/// 导航表面到默认数据页签的映射。
-PhotoTab photoSurfaceToTab(PhotoSurface surface) => switch (surface) {
-  PhotoSurface.library => PhotoTab.all,
-  PhotoSurface.explore => PhotoTab.timeline,
-};
+/// 图库内容形态：按日/按月网格、时间线、分组浏览。
+enum PhotoLibraryView { gridDay, gridMonth, timeline, groups }
 
 /// 导入流程提示类型；文案由界面层按语言映射。
 enum PhotoImportNotice { completedNotVisible, stillProcessing, backendFailed }
@@ -29,7 +23,7 @@ class PhotoCenterState {
     required this.favorites,
     required this.albums,
     required this.tab,
-    this.surface = PhotoSurface.library,
+    this.libraryView = PhotoLibraryView.gridDay,
     this.searchQuery = '',
     this.timeline,
     this.groups,
@@ -76,7 +70,7 @@ class PhotoCenterState {
   final List<PhotoItem> favorites;
   final List<PhotoAlbum> albums;
   final PhotoTab tab;
-  final PhotoSurface surface;
+  final PhotoLibraryView libraryView;
   final String searchQuery;
   final PhotoTimeline? timeline;
   final List<PhotoGroup>? groups;
@@ -120,30 +114,23 @@ class PhotoCenterState {
   bool get hasMoreVisiblePhotos => switch (tab) {
     PhotoTab.all => hasMorePhotos,
     PhotoTab.favorites => hasMoreFavorites,
-    _ => false,
   };
 
   bool get isLoadingMoreVisiblePhotos => switch (tab) {
     PhotoTab.all => isLoadingMorePhotos,
     PhotoTab.favorites => isLoadingMoreFavorites,
-    _ => false,
   };
 
   int get visiblePhotoTotalElements => switch (tab) {
     PhotoTab.all => photoTotalElements,
     PhotoTab.favorites => favoriteTotalElements,
-    _ => visiblePhotos.length,
   };
 
-  /// 当前 tab 下可见的照片
+  /// 当前数据源下可见的照片
   List<PhotoItem> get visiblePhotos {
     final source = switch (tab) {
       PhotoTab.all => photos,
       PhotoTab.favorites => favorites,
-      PhotoTab.albums => const <PhotoItem>[],
-      PhotoTab.timeline => photos,
-      PhotoTab.groups => photos,
-      PhotoTab.graph => photos,
     };
     final query = searchQuery.trim().toLowerCase();
     if (query.isEmpty) return source;
@@ -162,7 +149,7 @@ class PhotoCenterState {
     List<PhotoItem>? favorites,
     List<PhotoAlbum>? albums,
     PhotoTab? tab,
-    PhotoSurface? surface,
+    PhotoLibraryView? libraryView,
     String? searchQuery,
     PhotoTimeline? timeline,
     List<PhotoGroup>? groups,
@@ -205,7 +192,7 @@ class PhotoCenterState {
       favorites: favorites ?? this.favorites,
       albums: albums ?? this.albums,
       tab: tab ?? this.tab,
-      surface: surface ?? this.surface,
+      libraryView: libraryView ?? this.libraryView,
       searchQuery: searchQuery ?? this.searchQuery,
       timeline: timeline ?? this.timeline,
       groups: groups ?? this.groups,

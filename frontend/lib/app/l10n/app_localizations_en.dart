@@ -8052,4 +8052,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readerComicCollapseAll => 'Collapse all';
+
+  @override
+  String get photosViewSwitch => 'Switch view';
+
+  @override
+  String get photosViewGridDay => 'Grid · By day';
+
+  @override
+  String get photosViewGridMonth => 'Grid · By month';
+
+  @override
+  String get photosViewTimeline => 'Timeline';
+
+  @override
+  String get photosViewGroups => 'Groups';
+
+  @override
+  String get photosToggleSelection => 'Toggle selection';
+
+  @override
+  String get photosInsightsTitle => 'Relationship insights';
+
+  @override
+  String get photosAlbumsManage => 'Manage albums';
+
+  @override
+  String get photosExpandAlbums => 'Show albums';
+
+  @override
+  String get photosScrollToTop => 'Back to top';
 }

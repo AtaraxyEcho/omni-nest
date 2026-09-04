@@ -18,8 +18,6 @@ mixin PhotoCenterCollectionLoaders on AsyncNotifier<PhotoCenterState> {
       case PhotoTab.favorites:
         await _loadMorePhotos(favorites: true);
         return;
-      default:
-        return;
     }
   }
 

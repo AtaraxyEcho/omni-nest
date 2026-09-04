@@ -504,6 +504,33 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     }
   }
 
+  /// 切换图库内容形态；时间线与分组视图按需懒加载。
+  void setLibraryView(PhotoLibraryView view) {
+    final current = state.asData?.value;
+    if (current == null || current.libraryView == view) return;
+    state = AsyncData(current.copyWith(libraryView: view));
+    switch (view) {
+      case PhotoLibraryView.timeline:
+        if (current.timeline == null) {
+          unawaited(loadTimeline());
+        }
+      case PhotoLibraryView.groups:
+        unawaited(loadGroups(current.groupBy));
+      case PhotoLibraryView.gridDay || PhotoLibraryView.gridMonth:
+        break;
+    }
+  }
+
+  /// 切换分组浏览的维度。
+  void setGroupBy(GroupBy groupBy) {
+    final current = state.asData?.value;
+    if (current == null || current.groupBy == groupBy) return;
+    state = AsyncData(current.copyWith(groupBy: groupBy));
+    if (current.libraryView == PhotoLibraryView.groups) {
+      unawaited(loadGroups(groupBy));
+    }
+  }
+
   /// 设置搜索关键字
   void setSearchQuery(String query) {
     final current = state.asData?.value;

@@ -23,6 +23,8 @@ import 'package:omninest/features/photos/presentation/pages/photo_detail_page.da
 import 'package:omninest/features/photos/presentation/pages/photo_editor_page.dart';
 import 'package:omninest/features/photos/presentation/pages/photo_shared_album_page.dart';
 import 'package:omninest/features/photos/presentation/pages/photo_browse_page.dart';
+import 'package:omninest/features/photos/presentation/pages/photo_albums_page.dart';
+import 'package:omninest/features/photos/presentation/pages/photo_insights_page.dart';
 import 'package:omninest/features/photos/presentation/pages/photo_slideshow_page.dart';
 import 'package:omninest/features/photos/presentation/pages/photos_page.dart';
 import 'package:omninest/features/portal/presentation/pages/portal_page.dart';
@@ -173,6 +175,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       _animatedRoute('/photos/browse', (state) => const PhotoBrowsePage()),
+      _animatedRoute('/photos/albums', (state) => const PhotoAlbumsPage()),
+      _animatedRoute('/photos/insights', (state) => const PhotoInsightsPage()),
       _animatedRoute(
         '/photos/albums/:albumId',
         (state) =>

@@ -1,391 +1,232 @@
 part of 'photos_page.dart';
 
-class _PhotoScrollableContent extends StatelessWidget {
-  const _PhotoScrollableContent({
+/// 移动端图库主表面：过滤芯片 + 相册区 + 日期网格单流滚动。
+class _PhotoLibrarySurface extends ConsumerStatefulWidget {
+  const _PhotoLibrarySurface({
     required this.state,
+    required this.hosted,
     required this.onOpenPhoto,
     required this.onOpenAlbum,
     required this.onDeletePhoto,
-    required this.onDeleteAlbum,
-    required this.onCreateAlbum,
-    required this.ref,
   });
 
   final PhotoCenterState state;
+  final bool hosted;
   final ValueChanged<PhotoItem> onOpenPhoto;
   final ValueChanged<PhotoAlbum> onOpenAlbum;
   final ValueChanged<PhotoItem> onDeletePhoto;
-  final ValueChanged<PhotoAlbum> onDeleteAlbum;
-  final VoidCallback onCreateAlbum;
-  final WidgetRef ref;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (state.surface == PhotoSurface.library)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: _MobileLibraryFilterChips(state: state, ref: ref),
-          ),
-        Expanded(child: _buildTabContent(context)),
-      ],
-    );
-  }
-
-  Widget _buildTabContent(BuildContext context) {
-    return switch (state.tab) {
-      PhotoTab.all => _PhotoMobileAllSection(
-        state: state,
-        onOpenPhoto: onOpenPhoto,
-        onOpenAlbum: onOpenAlbum,
-      ),
-      PhotoTab.favorites => _PhotoGrid(
-        scrollable: true,
-        photos: state.visiblePhotos,
-        onOpenPhoto: onOpenPhoto,
-        onDeletePhoto: onDeletePhoto,
-        emptyMessage: AppLocalizations.of(context).photosNoFavorites,
-        emptySubtitle: AppLocalizations.of(context).photosNoFavoritesHint,
-        state: state,
-        ref: ref,
-      ),
-      PhotoTab.albums => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-        child: _AlbumGrid(
-          albums: state.albums,
-          onOpenAlbum: onOpenAlbum,
-          onDeleteAlbum: onDeleteAlbum,
-          onCreateAlbum: onCreateAlbum,
-        ),
-      ),
-      _ => const SizedBox.shrink(),
-    };
-  }
+  ConsumerState<_PhotoLibrarySurface> createState() =>
+      _PhotoLibrarySurfaceState();
 }
 
-/// 独立滚动内容区（时间线/分组/星系/人物 tab）— 有自己的滚动容器
-class _PhotoIndependentContent extends ConsumerStatefulWidget {
-  const _PhotoIndependentContent({
-    required this.state,
-    required this.onOpenPhoto,
-    required this.onOpenAlbum,
-  });
-
-  final PhotoCenterState state;
-  final ValueChanged<PhotoItem> onOpenPhoto;
-  final ValueChanged<PhotoAlbum> onOpenAlbum;
-
-  @override
-  ConsumerState<_PhotoIndependentContent> createState() =>
-      _PhotoIndependentContentState();
-}
-
-class _PhotoIndependentContentState
-    extends ConsumerState<_PhotoIndependentContent> {
-  bool _showGroups = false;
+class _PhotoLibrarySurfaceState extends ConsumerState<_PhotoLibrarySurface> {
+  bool _chipsCollapsed = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final state = widget.state;
     return Column(
       children: [
-        if (widget.state.surface == PhotoSurface.explore)
+        if (widget.hosted)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SegmentedButton<bool>(
-              segments: [
-                ButtonSegment(
-                  value: false,
-                  icon: const Icon(Icons.timeline_rounded, size: 16),
-                  label: Text(l10n.photosTabTimeline),
-                ),
-                ButtonSegment(
-                  value: true,
-                  icon: const Icon(Icons.folder_copy_outlined, size: 16),
-                  label: Text(l10n.photosTabGroups),
-                ),
-              ],
-              selected: {_showGroups},
-              onSelectionChanged: (v) => setState(() => _showGroups = v.first),
-              showSelectedIcon: false,
-              style: ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                textStyle: WidgetStateProperty.all(
-                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.photosSurfaceLibrary,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
           ),
-        Expanded(
+        AnimatedSize(
+          duration:
+              MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
           child:
-              _showGroups
-                  ? PhotoGroupView(
-                    onOpenPhoto: widget.onOpenPhoto,
-                    state: widget.state,
-                  )
-                  : PhotoTimelineView(
-                    onOpenPhoto: widget.onOpenPhoto,
-                    state: widget.state,
+              _chipsCollapsed
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: _MobileLibraryFilterChips(state: state, ref: ref),
+                    ),
                   ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            displacement: 48,
+            strokeWidth: 2.5,
+            color: context.photosColors.primaryContainer,
+            onRefresh:
+                () =>
+                    ref.read(photoCenterControllerProvider.notifier).refresh(),
+            child: switch (state.libraryView) {
+              PhotoLibraryView.gridDay ||
+              PhotoLibraryView.gridMonth => PhotoDateGrid(
+                photos: state.visiblePhotos,
+                grouping:
+                    state.libraryView == PhotoLibraryView.gridMonth
+                        ? PhotoDateGrouping.month
+                        : PhotoDateGrouping.day,
+                onOpenPhoto: widget.onOpenPhoto,
+                onDeletePhoto: widget.onDeletePhoto,
+                emptyMessage:
+                    state.tab == PhotoTab.favorites
+                        ? l10n.photosNoFavorites
+                        : l10n.photosNoPhotos,
+                emptySubtitle:
+                    state.tab == PhotoTab.favorites
+                        ? l10n.photosNoFavoritesHint
+                        : l10n.photosNoPhotosHint,
+                leadingSlivers: _albumLeadingSlivers(context),
+                onScrollOffsetChanged: (offset) {
+                  final collapsed = offset > 200;
+                  if (collapsed != _chipsCollapsed) {
+                    setState(() => _chipsCollapsed = collapsed);
+                  }
+                },
+                showScrollToTop: true,
+              ),
+              PhotoLibraryView.timeline => PhotoTimelineView(
+                onOpenPhoto: widget.onOpenPhoto,
+                state: state,
+              ),
+              PhotoLibraryView.groups => PhotoGroupView(
+                onOpenPhoto: widget.onOpenPhoto,
+                state: state,
+              ),
+            },
+          ),
         ),
       ],
     );
   }
-}
 
-/// 移动端"全部"页面 — 最近照片六宫格 + 影集横向滚动
-class _PhotoMobileAllSection extends ConsumerWidget {
-  const _PhotoMobileAllSection({
-    required this.state,
-    required this.onOpenPhoto,
-    required this.onOpenAlbum,
-  });
-
-  final PhotoCenterState state;
-  final ValueChanged<PhotoItem> onOpenPhoto;
-  final ValueChanged<PhotoAlbum> onOpenAlbum;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final recentPhotos = state.photos.take(6).toList();
-    final albums = state.albums;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 最近照片六宫格
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+  List<Widget> _albumLeadingSlivers(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final albums = widget.state.albums;
+    final topAlbums = albums.take(3).toList();
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
           child: Row(
             children: [
+              Icon(
+                Icons.photo_album_outlined,
+                size: 18,
+                color: context.photosColors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
               Text(
-                AppLocalizations.of(context).photosRecentPhotos,
+                '${l10n.photosAlbums} (${albums.length})',
                 style: TextStyle(
-                  color: context.mobileColors.textPrimary,
-                  fontSize: 16,
+                  color: context.photosColors.onSurface,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
-              TextButton(
-                onPressed: () => context.push('/photos/browse'),
-                child: Text(
-                  AppLocalizations.of(context).photosViewAll,
-                  style: TextStyle(
-                    color: context.mobileColors.musicAccent,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (recentPhotos.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.photo_library_outlined,
-                    size: 40,
-                    color: context.mobileColors.textSecondary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    AppLocalizations.of(context).photosNoPhotos,
-                    style: TextStyle(
-                      color: context.mobileColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1,
-              ),
-              itemCount: recentPhotos.length,
-              itemBuilder: (context, index) {
-                final photo = recentPhotos[index];
-                return PhotoGridTile(
-                  key: ValueKey(photo.id),
-                  photo: photo,
-                  onTap: () => onOpenPhoto(photo),
-                );
-              },
-            ),
-          ),
-        const SizedBox(height: 24),
-        // 影集横向滚动
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Row(
-            children: [
-              Text(
-                AppLocalizations.of(context).photosAlbums,
-                style: TextStyle(
-                  color: context.mobileColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed:
-                    () => ref
-                        .read(photoCenterControllerProvider.notifier)
-                        .selectTab(PhotoTab.albums),
-                child: Text(
-                  AppLocalizations.of(context).photosViewAll,
-                  style: TextStyle(
-                    color: context.mobileColors.musicAccent,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (albums.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.photo_album_outlined,
-                    size: 40,
-                    color: context.mobileColors.textSecondary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    AppLocalizations.of(context).photosNoAlbums,
-                    style: TextStyle(
-                      color: context.mobileColors.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 176,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: albums.length,
-              itemBuilder: (context, index) {
-                final album = albums[index];
-                return _AlbumHorizontalCard(
-                  album: album,
-                  onTap: () => onOpenAlbum(album),
-                );
-              },
-            ),
-          ),
-        const SizedBox(height: 40),
-      ],
-    );
-  }
-}
-
-/// 横向滚动的影集卡片
-class _AlbumHorizontalCard extends StatelessWidget {
-  const _AlbumHorizontalCard({required this.album, required this.onTap});
-
-  final PhotoAlbum album;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: context.mobileColors.surfaceRaised,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (album.coverUrl != null && album.coverUrl!.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: album.coverUrl!,
-                  fit: BoxFit.cover,
-                  memCacheWidth: 200,
-                ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black87],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 12,
-                left: 12,
-                right: 12,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      album.name,
-                      style: TextStyle(
-                        color: context.mobileColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      AppLocalizations.of(
-                        context,
-                      ).photosAlbumPhotoCount(album.photoCount),
-                      style: TextStyle(
-                        color: context.mobileColors.textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+              TextButton.icon(
+                onPressed: () => context.push('/photos/albums'),
+                icon: const Icon(Icons.unfold_more_rounded, size: 15),
+                label: Text(l10n.photosExpandAlbums),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                 ),
               ),
             ],
           ),
         ),
       ),
-    );
+      if (topAlbums.isEmpty)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Text(
+              l10n.photosNoAlbums,
+              style: TextStyle(
+                color: context.photosColors.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        )
+      else
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              for (final album in topAlbums)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                  child: Card(
+                    elevation: 0,
+                    margin: EdgeInsets.zero,
+                    color: context.photosColors.surfaceContainerLow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: context.photosColors.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                      ),
+                    ),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 52,
+                          height: 52,
+                          child:
+                              album.coverUrl != null &&
+                                      album.coverUrl!.isNotEmpty
+                                  ? CachedNetworkImage(
+                                    imageUrl: album.coverUrl!,
+                                    fit: BoxFit.cover,
+                                    memCacheWidth: 120,
+                                  )
+                                  : ColoredBox(
+                                    color:
+                                        context
+                                            .photosColors
+                                            .surfaceContainerHighest,
+                                    child: Icon(
+                                      Icons.photo_album_outlined,
+                                      color:
+                                          context.photosColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                        ),
+                      ),
+                      title: Text(
+                        album.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        l10n.photosAlbumPhotoCount(album.photoCount),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => widget.onOpenAlbum(album),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+    ];
   }
 }
 
-/// 主内容区
-
-/// 移动端 Library 过滤芯片：全部/收藏/相册/分组。
+/// 移动端 Library 过滤芯片：全部 / 收藏。
 class _MobileLibraryFilterChips extends ConsumerWidget {
   const _MobileLibraryFilterChips({required this.state, required this.ref});
 
@@ -395,37 +236,42 @@ class _MobileLibraryFilterChips extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef buildRef) {
     final l10n = AppLocalizations.of(context);
+    Widget chip(PhotoTab tab, {required String label, IconData? icon}) {
+      final selected = state.tab == tab;
+      return FilterChip(
+        selected: selected,
+        onSelected: (_) {
+          buildRef.read(photoCenterControllerProvider.notifier).selectTab(tab);
+        },
+        showCheckmark: false,
+        avatar:
+            icon == null
+                ? null
+                : Icon(
+                  icon,
+                  size: 15,
+                  color:
+                      selected
+                          ? context.photosColors.onPrimaryContainer
+                          : context.photosColors.onSurfaceVariant,
+                ),
+        label: Text(label),
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+      );
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          for (final tab in [
-            PhotoTab.all,
+          chip(PhotoTab.all, label: l10n.photosAll),
+          const SizedBox(width: 8),
+          chip(
             PhotoTab.favorites,
-            PhotoTab.albums,
-            PhotoTab.groups,
-          ])
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                selected: state.tab == tab,
-                onSelected: (_) {
-                  buildRef
-                      .read(photoCenterControllerProvider.notifier)
-                      .selectTab(tab);
-                },
-                label: Text(switch (tab) {
-                  PhotoTab.all => l10n.photosTabHome,
-                  PhotoTab.favorites => l10n.photosTabFavorites,
-                  PhotoTab.albums => l10n.photosTabAlbums,
-                  PhotoTab.groups => l10n.photosTabGroups,
-                  _ => '',
-                }),
-                showCheckmark: false,
-                visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-            ),
+            label: l10n.photosTabFavorites,
+            icon: Icons.favorite_rounded,
+          ),
         ],
       ),
     );
