@@ -13,7 +13,6 @@ class FrameSidebar extends StatelessWidget {
     required this.albumCount,
     required this.trashCount,
     required this.collapsed,
-    this.onOpenPortal,
     super.key,
   });
 
@@ -23,7 +22,6 @@ class FrameSidebar extends StatelessWidget {
   final int albumCount;
   final int trashCount;
   final bool collapsed;
-  final VoidCallback? onOpenPortal;
 
   /// 设计稿导航结构：五个主视图 + 分隔线 + 回收站。
   static const List<FrameView> _primaryViews = <FrameView>[
@@ -50,41 +48,42 @@ class FrameSidebar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _FrameLogo(
-            collapsed: collapsed,
-            onTap: onOpenPortal,
-            tooltip: l10n.photosBackToPortal,
-          ),
+          _FrameLogo(collapsed: collapsed),
           Expanded(
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  for (final view in _primaryViews)
+              // 设计稿 nav 容器 px-2，导航项 w-full 铺满剩余宽度。
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final view in _primaryViews)
+                      _FrameNavItem(
+                        key: ValueKey('frame-nav-${view.name}'),
+                        view: view,
+                        label: frameViewLabel(l10n, view),
+                        active: activeView == view,
+                        collapsed: collapsed,
+                        onTap: () => onSelectView(view),
+                      ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 8,
+                      ),
+                      height: 1,
+                      color: FramePalette.border,
+                    ),
                     _FrameNavItem(
-                      key: ValueKey('frame-nav-${view.name}'),
-                      view: view,
-                      label: frameViewLabel(l10n, view),
-                      active: activeView == view,
+                      key: const ValueKey('frame-nav-trash'),
+                      view: FrameView.trash,
+                      label: frameViewLabel(l10n, FrameView.trash),
+                      active: activeView == FrameView.trash,
                       collapsed: collapsed,
-                      onTap: () => onSelectView(view),
+                      onTap: () => onSelectView(FrameView.trash),
                     ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    height: 1,
-                    color: FramePalette.border,
-                  ),
-                  _FrameNavItem(
-                    key: const ValueKey('frame-nav-trash'),
-                    view: FrameView.trash,
-                    label: frameViewLabel(l10n, FrameView.trash),
-                    active: activeView == FrameView.trash,
-                    collapsed: collapsed,
-                    onTap: () => onSelectView(FrameView.trash),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -95,12 +94,13 @@ class FrameSidebar extends StatelessWidget {
   }
 
   Widget _buildStats(BuildContext context) {
+    // 设计稿折叠态隐藏统计文本，但保留外层 pb-4 的底部让位。
     if (collapsed) {
       return const SizedBox(height: 16);
     }
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 12, 16),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -126,21 +126,15 @@ class FrameSidebar extends StatelessWidget {
   }
 }
 
-/// Frame 品牌标：黑底圆角方块内的白色照片图形。
+/// Frame 品牌标：黑底圆角方块内的白色照片图形，静态展示不可点击。
 class _FrameLogo extends StatelessWidget {
-  const _FrameLogo({
-    required this.collapsed,
-    required this.tooltip,
-    this.onTap,
-  });
+  const _FrameLogo({required this.collapsed});
 
   final bool collapsed;
-  final String tooltip;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    Widget mark = Container(
+    final mark = Container(
       width: 28,
       height: 28,
       decoration: BoxDecoration(
@@ -149,21 +143,11 @@ class _FrameLogo extends StatelessWidget {
       ),
       child: const CustomPaint(painter: _FrameLogoPainter()),
     );
-    if (onTap != null) {
-      mark = InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: mark,
-      );
-    }
     if (collapsed) {
-      return SizedBox(
-        height: 56,
-        child: Center(child: Tooltip(message: tooltip, child: mark)),
-      );
+      return SizedBox(height: 60, child: Center(child: mark));
     }
     return SizedBox(
-      height: 56,
+      height: 60,
       child: Row(
         children: [
           const SizedBox(width: 16),
@@ -176,6 +160,7 @@ class _FrameLogo extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontFamily: FramePalette.serifFamily,
+                fontFamilyFallback: FramePalette.serifFallback,
                 color: FramePalette.ink,
                 fontSize: 18,
                 height: 1,

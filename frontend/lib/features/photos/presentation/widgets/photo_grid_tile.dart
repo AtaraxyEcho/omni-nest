@@ -1,19 +1,23 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
-import 'package:omninest/app/theme/feature/photos_colors.dart';
-import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 
-/// 照片网格缩略图
-class PhotoGridTile extends StatelessWidget {
+/// Frame 照片卡片：图片按纵横比自撑高度，悬停/多选/选中时显示遮罩层。
+///
+/// 遮罩层内含左上选择圆圈（20px，选中陶土色填充 + 白勾）与右上心形
+/// （收藏陶土色填充，未收藏白色描边）；底部展示标题（暂代拍摄地点）
+/// 与拍摄日期；选中态叠加 2px 陶土色内描边。
+class PhotoGridTile extends StatefulWidget {
   const PhotoGridTile({
     required this.photo,
     required this.onTap,
     this.onLongPress,
-    this.onDelete,
+    this.onToggleSelection,
+    this.onToggleFavorite,
     this.isSelectionMode = false,
     this.isSelected = false,
     this.aspectRatio,
@@ -24,7 +28,12 @@ class PhotoGridTile extends StatelessWidget {
   final PhotoItem photo;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final ValueChanged<PhotoItem>? onDelete;
+
+  /// 选择圆圈点击：无论是否处于多选模式都切换选中（设计稿 onToggle 语义）。
+  final VoidCallback? onToggleSelection;
+
+  /// 心形点击：切换收藏。
+  final VoidCallback? onToggleFavorite;
   final bool isSelectionMode;
   final bool isSelected;
 
@@ -35,263 +44,256 @@ class PhotoGridTile extends StatelessWidget {
   final bool enableHero;
 
   @override
+  State<PhotoGridTile> createState() => _PhotoGridTileState();
+}
+
+class _PhotoGridTileState extends State<PhotoGridTile> {
+  bool _hovering = false;
+
+  @override
   Widget build(BuildContext context) {
-    final semanticsLabel =
-        photo.resolutionDisplay == null
-            ? photo.title
-            : '${photo.title}, ${photo.resolutionDisplay}';
-    final deleteSemanticsActions =
-        !isSelectionMode && onDelete != null
-            ? <CustomSemanticsAction, VoidCallback>{
-              CustomSemanticsAction(
-                    label: AppLocalizations.of(context).photosDelete,
-                  ):
-                  () => onDelete!(photo),
-            }
-            : null;
+    final l10n = AppLocalizations.of(context);
+    final photo = widget.photo;
+    final overlayVisible =
+        _hovering || widget.isSelectionMode || widget.isSelected;
+    final date = photo.dateTaken ?? photo.createdAt;
+    final dateText =
+        date == null
+            ? null
+            : DateFormat.yMMMMd(
+              Localizations.localeOf(context).toString(),
+            ).format(date);
 
-    Widget tile = FocusableActionDetector(
-      shortcuts: const <ShortcutActivator, Intent>{
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: <Type, Action<Intent>>{
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (_) {
-            onTap();
-            return null;
-          },
-        ),
-      },
-      child: Semantics(
-        button: true,
-        label: semanticsLabel,
-        onTap: onTap,
-        onLongPress: onLongPress,
-        customSemanticsActions: deleteSemanticsActions,
-        child: GestureDetector(
-          excludeFromSemantics: true,
-          onTap: onTap,
-          onLongPress: onLongPress,
-          child: Hero(
-            tag: 'photo-cover-${photo.id}',
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // 照片缩略图
-                  if (photo.hasCover)
-                    CachedNetworkImage(
-                      imageUrl: photo.coverUrl!,
-                      cacheKey: photo.coverCacheKey,
-                      fit: BoxFit.cover,
-                      memCacheWidth: 200,
-                      useOldImageOnUrlChange: true,
-                      fadeInDuration: Duration.zero,
-                      fadeOutDuration: Duration.zero,
-                      placeholder:
-                          (context, url) => Container(
-                            color: context.photosColors.surfaceContainerHigh,
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  ).photoThumbnailLoading,
-                                  maxLines: 2,
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color:
-                                        context.photosColors.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
+    final body = ClipRRect(
+      borderRadius: BorderRadius.circular(3),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (photo.hasCover)
+            CachedNetworkImage(
+              imageUrl: photo.coverUrl!,
+              cacheKey: photo.coverCacheKey,
+              fit: BoxFit.cover,
+              memCacheWidth: 200,
+              useOldImageOnUrlChange: true,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder:
+                  (context, url) => const ColoredBox(color: FramePalette.card),
+              errorWidget: (context, url, error) => const _Placeholder(),
+            )
+          else
+            const _Placeholder(),
+
+          // 悬停/多选/选中时的遮罩层
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !overlayVisible,
+              child: AnimatedOpacity(
+                opacity: overlayVisible ? 1 : 0,
+                duration:
+                    MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 150),
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _SelectionCircle(
+                              selected: widget.isSelected,
+                              onTap: widget.onToggleSelection,
+                              semanticLabel: l10n.photosToggleSelection,
                             ),
-                          ),
-                      errorWidget:
-                          (context, url, error) =>
-                              _Placeholder(format: photo.format),
-                    )
-                  else
-                    _Placeholder(format: photo.format),
-
-                  // 选择模式复选框
-                  if (isSelectionMode)
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color:
-                              isSelected
-                                  ? FramePalette.accent
-                                  : Colors.white.withValues(alpha: 0.75),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white54),
-                        ),
-                        child:
-                            isSelected
-                                ? Icon(
-                                  Icons.check_rounded,
-                                  color: context.photosColors.badgeText,
-                                  size: 16,
-                                )
-                                : null,
-                      ),
-                    ),
-
-                  // 收藏标记（非选择模式时显示）
-                  if (photo.favorite && !isSelectionMode)
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: context.photosColors.badgeBg,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.favorite_rounded,
-                          color: context.photosColors.danger,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-
-                  // 底部渐变 + 文件大小
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 20, 8, 6),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            context.photosColors.overlay,
+                            _FavoriteHeart(
+                              favorite: photo.favorite,
+                              onTap: widget.onToggleFavorite,
+                              semanticLabel:
+                                  photo.favorite
+                                      ? l10n.photosUnfavorite
+                                      : l10n.photosFavorite,
+                            ),
                           ],
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
                               photo.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: context.photosColors.mediaOverlayText,
-                                fontSize: 11,
-                                height: 14 / 11,
-                                fontWeight: FontWeight.w600,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                height: 1.35,
                               ),
                             ),
-                          ),
-                          if (photo.resolutionDisplay != null) ...[
-                            const SizedBox(width: 4),
-                            Flexible(
-                              fit: FlexFit.loose,
-                              child: Text(
-                                photo.resolutionDisplay!,
+                            if (dateText != null)
+                              Text(
+                                dateText,
                                 maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.end,
                                 style: TextStyle(
-                                  color: context.photosColors.mediaOverlayText
-                                      .withValues(alpha: 0.7),
-                                  fontSize: 10,
-                                  height: 13 / 10,
+                                  color: Colors.white.withValues(alpha: 0.55),
+                                  fontSize: 12,
                                 ),
                               ),
-                            ),
                           ],
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
+          ),
+
+          // 选中态 2px 陶土色内描边
+          if (widget.isSelected)
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.all(Radius.circular(3)),
+                    border: Border.fromBorderSide(
+                      BorderSide(color: FramePalette.accent, width: 2),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    Widget card = GestureDetector(
+      excludeFromSemantics: true,
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      child:
+          widget.enableHero
+              ? Hero(tag: 'photo-cover-${photo.id}', child: body)
+              : body,
+    );
+
+    if (widget.aspectRatio != null && widget.aspectRatio! > 0) {
+      card = AspectRatio(aspectRatio: widget.aspectRatio!, child: card);
+    }
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: card,
+    );
+  }
+}
+
+/// 选择圆圈：20px 圆形，未选白色 75% 底 + 白色 50% 边框，选中陶土色底 + 白勾。
+class _SelectionCircle extends StatelessWidget {
+  const _SelectionCircle({
+    required this.selected,
+    required this.onTap,
+    required this.semanticLabel,
+  });
+
+  final bool selected;
+  final VoidCallback? onTap;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: semanticLabel,
+      child: GestureDetector(
+        excludeFromSemantics: true,
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color:
+                  selected
+                      ? FramePalette.accent
+                      : Colors.white.withValues(alpha: 0.75),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+            ),
+            child:
+                selected
+                    ? const Icon(
+                      Icons.check_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    )
+                    : null,
           ),
         ),
       ),
     );
+  }
+}
 
-    // 非选择模式且有 onDelete 回调时，支持左滑删除
-    if (!isSelectionMode && onDelete != null) {
-      tile = Dismissible(
-        key: ValueKey(photo.id),
-        direction: DismissDirection.endToStart,
-        confirmDismiss: (direction) async {
-          onDelete!(photo);
-          return false;
-        },
-        background: Container(
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(
-            color: Colors.red.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(3),
+/// 收藏心形：收藏陶土色填充，未收藏白色描边。
+class _FavoriteHeart extends StatelessWidget {
+  const _FavoriteHeart({
+    required this.favorite,
+    required this.onTap,
+    required this.semanticLabel,
+  });
+
+  final bool favorite;
+  final VoidCallback? onTap;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final customActions =
+        onTap == null
+            ? null
+            : <CustomSemanticsAction, VoidCallback>{
+              CustomSemanticsAction(label: semanticLabel): onTap!,
+            };
+    return Semantics(
+      customSemanticsActions: customActions,
+      child: GestureDetector(
+        excludeFromSemantics: true,
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: IconTheme(
+            data: const IconThemeData(size: 16),
+            child:
+                favorite
+                    ? const Icon(Icons.favorite, color: FramePalette.accent)
+                    : Icon(
+                      Icons.favorite_border,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
           ),
-          child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
         ),
-        child: tile,
-      );
-    }
-
-    if (aspectRatio != null && aspectRatio! > 0) {
-      tile = AspectRatio(aspectRatio: aspectRatio!, child: tile);
-    }
-
-    return tile;
+      ),
+    );
   }
 }
 
 /// 无封面时的占位图
 class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.format});
-
-  final String format;
+  const _Placeholder();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: context.photosColors.surfaceContainerHigh,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.photo_outlined,
-              color: context.photosColors.onSurfaceVariant.withValues(
-                alpha: 0.4,
-              ),
-              size: 28,
-            ),
-            SizedBox(height: 4),
-            Text(
-              format.toUpperCase(),
-              style: TextStyle(
-                color: context.photosColors.onSurfaceVariant.withValues(
-                  alpha: 0.5,
-                ),
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const ColoredBox(color: FramePalette.card);
   }
 }

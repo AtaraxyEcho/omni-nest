@@ -16,14 +16,14 @@ import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/presentation/widgets/batch_progress_dialog.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_albums_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_bottom_nav.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_empty_view.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_masonry_grid.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_sidebar.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_top_bar.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_album_grid.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_date_grid.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
 
 part 'photos_page_batch_actions.dart';
@@ -121,7 +121,6 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
               albumCount: data.albums.length,
               trashCount: 0,
               collapsed: width < 1024,
-              onOpenPortal: () => context.go('/portal'),
             ),
             Expanded(
               child: Column(
@@ -129,7 +128,6 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                   FrameTopBar(
                     view: data.frameView,
                     searchController: _searchController,
-                    searchQuery: data.searchQuery,
                     onSearchChanged: notifier.setSearchQuery,
                     showTitle: true,
                   ),
@@ -141,11 +139,11 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                           (photo) => context.push('/photos/${photo.id}'),
                       onOpenAlbum:
                           (album) => context.push('/photos/albums/${album.id}'),
-                      onDeletePhoto:
-                          (photo) => _confirmDeletePhoto(context, photo),
                       onDeleteAlbum:
                           (album) => _confirmDeleteAlbum(context, album),
                       onCreateAlbum: () => _showCreateAlbumDialog(context),
+                      onToggleFavorite:
+                          (photo) => unawaited(_toggleFavorite(photo)),
                     ),
                   ),
                   if (data.isSelectionMode && data.selectedPhotoIds.isNotEmpty)
@@ -178,9 +176,9 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
           compact: true,
           onOpenPhoto: (photo) => context.push('/photos/${photo.id}'),
           onOpenAlbum: (album) => context.push('/photos/albums/${album.id}'),
-          onDeletePhoto: (photo) => _confirmDeletePhoto(context, photo),
           onDeleteAlbum: (album) => _confirmDeleteAlbum(context, album),
           onCreateAlbum: () => _showCreateAlbumDialog(context),
+          onToggleFavorite: (photo) => unawaited(_toggleFavorite(photo)),
         );
         final bottomNav =
             data.isSelectionMode
@@ -191,8 +189,16 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
                   useSafeArea: !hosted,
                 );
         if (hosted) {
+          // 应用壳托管时同样按设计稿移动端结构渲染：顶栏 + 内容 + 底部导航。
           return Column(
             children: [
+              FrameTopBar(
+                view: data.frameView,
+                searchController: _searchController,
+                onSearchChanged: notifier.setSearchQuery,
+                showTitle: false,
+                searchExpanded: true,
+              ),
               Expanded(child: content),
               if (bottomNav != null) bottomNav,
               if (data.isSelectionMode && data.selectedPhotoIds.isNotEmpty)
@@ -207,11 +213,9 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
               child: FrameTopBar(
                 view: data.frameView,
                 searchController: _searchController,
-                searchQuery: data.searchQuery,
                 onSearchChanged: notifier.setSearchQuery,
                 showTitle: false,
                 searchExpanded: true,
-                showBack: true,
               ),
             ),
             Expanded(child: content),
@@ -243,6 +247,20 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
     );
   }
 
+  /// 卡片心形切换收藏；失败时给出用户可读提示。
+  Future<void> _toggleFavorite(PhotoItem photo) async {
+    try {
+      await ref
+          .read(photoCenterControllerProvider.notifier)
+          .toggleFavorite(photo.id, currentFavorite: photo.favorite);
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(describeUserFacingError(error).displayMessage)),
+      );
+    }
+  }
+
   /// 多选操作条入场：自底部滑入并渐显。
   Widget _buildAnimatedBatchBar(PhotoCenterState state) {
     return TweenAnimationBuilder<double>(
@@ -259,42 +277,6 @@ class _PhotosPageState extends ConsumerState<PhotosPage> {
           ),
       child: _BatchActionBar(state: state, ref: ref),
     );
-  }
-
-  Future<void> _confirmDeletePhoto(
-    BuildContext context,
-    PhotoItem photo,
-  ) async {
-    try {
-      final deleted = await confirmAndRunFilePurge(
-        context,
-        resourceName: photo.title,
-        action: (cascade) async {
-          await ref
-              .read(photoCenterControllerProvider.notifier)
-              .deletePhoto(photo.id, cascade: cascade);
-        },
-      );
-      if (deleted && context.mounted) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context).photosDeletedPhoto(photo.title),
-              ),
-            ),
-          );
-        }
-      }
-    } on Exception {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).photosDeleteFailed),
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _confirmDeleteAlbum(

@@ -8,7 +8,7 @@ import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_grid_tile.dart';
 
 void main() {
-  testWidgets('照片标题和分辨率在分数像素窄卡片内不溢出', (tester) async {
+  testWidgets('窄卡片内标题与日期文本不溢出', (tester) async {
     final photo = PhotoItem(
       id: 'photo-1',
       fileNodeId: 'file-1',
@@ -25,6 +25,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: OmniNestTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
         home: Scaffold(
           body: Align(
             alignment: Alignment.topLeft,
@@ -40,8 +43,9 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull);
+    // 遮罩层常驻树中（透明度控制显隐），标题文本应存在且不溢出。
     expect(find.text(photo.title), findsOneWidget);
-    expect(find.text(photo.resolutionDisplay!), findsOneWidget);
+    expect(find.text('January 1, 2026'), findsOneWidget);
   });
 
   testWidgets('缩略图切换不使用淡入动画并保留稳定照片 key', (tester) async {
@@ -81,6 +85,42 @@ void main() {
     expect(image.fadeInDuration, Duration.zero);
     expect(image.fadeOutDuration, Duration.zero);
     expect(find.byKey(const ValueKey('photo-1')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('选中态显示遮罩、选择圆圈与心形', (tester) async {
+    final photo = PhotoItem(
+      id: 'photo-1',
+      fileNodeId: 'file-1',
+      title: 'photo.jpg',
+      format: 'jpg',
+      fileSize: 1,
+      metadataStatus: 'READY',
+      favorite: true,
+      createdAt: DateTime(2026),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: OmniNestTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
+        home: SizedBox(
+          width: 240,
+          height: 240,
+          child: PhotoGridTile(
+            photo: photo,
+            onTap: () {},
+            isSelectionMode: true,
+            isSelected: true,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text(photo.title), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

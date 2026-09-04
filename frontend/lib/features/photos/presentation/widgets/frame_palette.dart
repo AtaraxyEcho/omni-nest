@@ -19,6 +19,7 @@ class FramePalette {
   static const viewerBg = Color(0xFF0D0D0C);
   static const white = Colors.white;
 
-  /// 设计稿标题使用 Instrument Serif；项目已内置 NotoSerifSC 作为衬线替代。
-  static const serifFamily = 'NotoSerifSC';
+  /// 设计稿标题字体 Instrument Serif；中文标题回退到内置 NotoSerifSC。
+  static const serifFamily = 'InstrumentSerif';
+  static const serifFallback = <String>['NotoSerifSC'];
 }

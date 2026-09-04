@@ -93,6 +93,9 @@ flutter:
     - family: NotoSerifSC
       fonts:
         - asset: assets/fonts/NotoSerifSC-Regular.otf
+    - family: InstrumentSerif
+      fonts:
+        - asset: assets/fonts/InstrumentSerif-Regular.ttf
 
 flutter_launcher_icons_plus:
   # 全局默认图标

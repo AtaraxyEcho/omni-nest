@@ -7,7 +7,6 @@ import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/app/theme/app_theme_palette.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 import 'package:omninest/core/auth/auth_session_store_base.dart';
-import 'package:omninest/features/files/presentation/widgets/media_import_button.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/presentation/pages/photos_page.dart';
@@ -138,11 +137,6 @@ void main() {
 
         expect(find.byType(TextField), findsOneWidget);
         expect(find.textContaining('Albums'), findsWidgets);
-        final importButton = tester.widget<MediaImportButton>(
-          find.byType(MediaImportButton),
-        );
-        expect(importButton.acceptedExtensions, isNot(contains('webp')));
-        expect(importButton.unsupportedExtensions, isEmpty);
         expect(find.byType(CustomScrollView), findsOneWidget);
         final scrollable = tester.widget<CustomScrollView>(
           find.byType(CustomScrollView),

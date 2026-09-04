@@ -9,18 +9,18 @@ class _FrameViewContent extends ConsumerWidget {
     required this.compact,
     required this.onOpenPhoto,
     required this.onOpenAlbum,
-    required this.onDeletePhoto,
     required this.onDeleteAlbum,
     required this.onCreateAlbum,
+    required this.onToggleFavorite,
   });
 
   final PhotoCenterState state;
   final bool compact;
   final ValueChanged<PhotoItem> onOpenPhoto;
   final ValueChanged<PhotoAlbum> onOpenAlbum;
-  final ValueChanged<PhotoItem> onDeletePhoto;
   final ValueChanged<PhotoAlbum> onDeleteAlbum;
   final VoidCallback onCreateAlbum;
+  final ValueChanged<PhotoItem> onToggleFavorite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +48,13 @@ class _FrameViewContent extends ConsumerWidget {
           message: AppLocalizations.of(context).photosFrameTagsEmpty,
           hint: AppLocalizations.of(context).photosFrameTagsEmptyHint,
         ),
-        FrameView.albums => _buildAlbums(context),
+        FrameView.albums => FrameAlbumsView(
+          key: const ValueKey('frame-albums'),
+          albums: state.albums,
+          onOpenAlbum: onOpenAlbum,
+          onDeleteAlbum: onDeleteAlbum,
+          onCreateAlbum: onCreateAlbum,
+        ),
         FrameView.trash => FrameEmptyView(
           key: const ValueKey('frame-trash'),
           icon: Icons.delete_outlined,
@@ -60,16 +66,11 @@ class _FrameViewContent extends ConsumerWidget {
   }
 
   Widget _buildGrid(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final grid = PhotoDateGrid(
+    final grid = FrameMasonryGrid(
       key: const ValueKey('frame-grid'),
       photos: state.visiblePhotos,
-      grouping: PhotoDateGrouping.day,
       onOpenPhoto: onOpenPhoto,
-      onDeletePhoto: onDeletePhoto,
-      emptyMessage: l10n.photosNoPhotos,
-      emptySubtitle: l10n.photosNoPhotosHint,
-      showScrollToTop: compact,
+      onToggleFavorite: onToggleFavorite,
     );
     if (!compact) {
       return grid;
@@ -81,42 +82,6 @@ class _FrameViewContent extends ConsumerWidget {
       onRefresh:
           () => ref.read(photoCenterControllerProvider.notifier).refresh(),
       child: grid,
-    );
-  }
-
-  Widget _buildAlbums(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return CustomScrollView(
-      key: const ValueKey('frame-albums'),
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.photosAlbums,
-                style: const TextStyle(
-                  fontFamily: FramePalette.serifFamily,
-                  color: FramePalette.ink,
-                  fontSize: 22,
-                ),
-              ),
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-          sliver: SliverToBoxAdapter(
-            child: PhotoAlbumGrid(
-              albums: state.albums,
-              onOpenAlbum: onOpenAlbum,
-              onDeleteAlbum: onDeleteAlbum,
-              onCreateAlbum: onCreateAlbum,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
