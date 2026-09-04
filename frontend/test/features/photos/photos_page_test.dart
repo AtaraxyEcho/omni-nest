@@ -144,5 +144,62 @@ void main() {
         expect(scrollable.physics, isA<AlwaysScrollableScrollPhysics>());
       },
     );
+
+    testWidgets('batch tag dialog closes via cancel without type error', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(2400, 1200);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final router = GoRouter(
+        initialLocation: '/photos',
+        routes: [
+          GoRoute(
+            path: '/photos',
+            builder: (context, state) => const PhotosPage(),
+          ),
+          GoRoute(
+            path: '/portal',
+            builder: (context, state) => const SizedBox(),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      final selectionState = PhotoCenterState.empty().copyWith(
+        isSelectionMode: true,
+        selectedPhotoIds: const {'photo-1'},
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authSessionStoreProvider.overrideWithValue(
+              MemoryAuthSessionStore(),
+            ),
+            photoCenterControllerProvider.overrideWith(
+              () => _FakePhotoCenterController(selectionState),
+            ),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
+            theme: OmniNestTheme.from(AppThemePalette.dark),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Tag'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

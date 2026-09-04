@@ -102,7 +102,7 @@ class _BatchActionBar extends StatelessWidget {
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
+                      onPressed: () => Navigator.pop(ctx),
                       child: Text(AppLocalizations.of(context).photosCancel),
                     ),
                     FilledButton(
