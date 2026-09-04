@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:omninest/app/theme/app_typography.dart';
 import 'package:omninest/app/theme/feature/files_colors.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -313,7 +314,8 @@ class _ShareLinkSheetState extends ConsumerState<ShareLinkSheet> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 12,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTypography.monoFamily,
+                        fontFamilyFallback: AppTypography.monoFamilyFallback,
                       ),
                     ),
                   ),
@@ -345,7 +347,8 @@ class _ShareLinkSheetState extends ConsumerState<ShareLinkSheet> {
                       l10n.filesSharePasswordLabel(share.generatedPassword!),
                       style: TextStyle(
                         fontSize: 12,
-                        fontFamily: 'monospace',
+                        fontFamily: AppTypography.monoFamily,
+                        fontFamilyFallback: AppTypography.monoFamilyFallback,
                         fontWeight: FontWeight.w600,
                         color: context.filesColors.onSurface,
                       ),

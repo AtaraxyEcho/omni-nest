@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:omninest/app/theme/app_typography.dart';
 import 'package:omninest/features/reader/presentation/widgets/reader_html_parser.dart';
 import 'package:omninest/features/reader/presentation/widgets/reader_pagination_models.dart';
 import 'package:omninest/features/reader/presentation/widgets/reader_view_content.dart';
@@ -505,10 +506,12 @@ class ReaderPaginationEngine {
               textScale,
           fontFamily:
               span.isCode
-                  ? 'monospace'
+                  ? AppTypography.monoFamily
                   : settings.fontFamily == 'serif'
                   ? 'NotoSerifSC'
                   : null,
+          fontFamilyFallback:
+              span.isCode ? AppTypography.monoFamilyFallback : null,
         );
         children.add(TextSpan(text: span.text, style: style));
         charOffset += span.text.length;

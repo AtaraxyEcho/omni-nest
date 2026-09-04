@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show SelectedContent;
 import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/theme/app_typography.dart';
 import 'package:omninest/features/reader/domain/reader_models.dart';
 import 'package:omninest/features/reader/presentation/widgets/reader_content_annotations.dart';
 import 'package:omninest/features/reader/presentation/widgets/reader_content_image.dart';
@@ -626,7 +627,8 @@ class _ReaderViewContentState extends State<ReaderViewContent> {
         recognizer = _getRecognizer(span.startOffset, span.href!);
       } else if (span.isCode) {
         style = _spanStyle(span).copyWith(
-          fontFamily: 'monospace',
+          fontFamily: AppTypography.monoFamily,
+          fontFamilyFallback: AppTypography.monoFamilyFallback,
           fontSize: widget.settings.fontSize * 0.9,
           backgroundColor:
               span.backgroundColor ??

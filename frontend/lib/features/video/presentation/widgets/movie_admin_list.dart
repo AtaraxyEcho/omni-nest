@@ -606,7 +606,8 @@ Future<void> _showNfoPreview(BuildContext context, MovieVideoItem item) async {
                     child: SelectableText(
                       nfo.content,
                       style: TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: AppTypography.monoFamily,
+                        fontFamilyFallback: AppTypography.monoFamilyFallback,
                         fontSize: 12,
                         color: context.videoColors.onSurface,
                       ),

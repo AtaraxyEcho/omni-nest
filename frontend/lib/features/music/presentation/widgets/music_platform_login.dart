@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/theme/app_typography.dart';
 import 'package:omninest/app/theme/feature/music_colors.dart';
 import 'package:omninest/features/music/application/music_controller.dart';
 import 'package:omninest/features/music/application/music_platform_library_controller.dart';
@@ -308,7 +309,8 @@ class _QqMusicLoginSectionState extends ConsumerState<_QqMusicLoginSection> {
                     style: TextStyle(
                       color: colors.onSurface,
                       fontSize: 13,
-                      fontFamily: 'monospace',
+                      fontFamily: AppTypography.monoFamily,
+                      fontFamilyFallback: AppTypography.monoFamilyFallback,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Paste cookie here...',

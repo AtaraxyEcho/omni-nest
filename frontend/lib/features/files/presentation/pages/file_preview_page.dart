@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:omninest/app/theme/app_typography.dart';
 import 'package:omninest/app/theme/feature/files_colors.dart';
 import 'package:omninest/app/theme/mobile_layout_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -499,7 +500,8 @@ class _TextPreview extends ConsumerWidget {
               child: SelectableText(
                 content,
                 style: const TextStyle(
-                  fontFamily: 'monospace',
+                  fontFamily: AppTypography.monoFamily,
+                  fontFamilyFallback: AppTypography.monoFamilyFallback,
                   fontSize: 13,
                   height: 1.5,
                 ),

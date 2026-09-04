@@ -167,7 +167,12 @@ abstract final class _ReaderPaginationMetrics {
         fontSize:
             (span.isCode ? settings.fontSize * 0.9 : settings.fontSize) *
             textScale,
-        fontFamily: span.isCode ? 'monospace' : settings.resolvedFontFamily,
+        fontFamily:
+            span.isCode
+                ? AppTypography.monoFamily
+                : settings.resolvedFontFamily,
+        fontFamilyFallback:
+            span.isCode ? AppTypography.monoFamilyFallback : null,
       );
       return TextSpan(text: span.text, style: style);
     }).toList();

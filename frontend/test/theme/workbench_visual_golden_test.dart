@@ -15,13 +15,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
-    final fontLoader =
+    final interLoader =
+        FontLoader('Inter')
+          ..addFont(rootBundle.load('assets/fonts/Inter-Regular.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/Inter-Medium.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/Inter-SemiBold.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/Inter-Bold.ttf'));
+    final notoSansLoader =
         FontLoader('NotoSansSC')
           ..addFont(rootBundle.load('assets/fonts/NotoSansSC-400.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/NotoSansSC-500.ttf'))
+          ..addFont(rootBundle.load('assets/fonts/NotoSansSC-600.ttf'))
           ..addFont(rootBundle.load('assets/fonts/NotoSansSC-700.ttf'));
     final iconLoader = FontLoader('MaterialIcons')
       ..addFont(_loadMaterialIcons());
-    await Future.wait(<Future<void>>[fontLoader.load(), iconLoader.load()]);
+    await Future.wait(<Future<void>>[
+      interLoader.load(),
+      notoSansLoader.load(),
+      iconLoader.load(),
+    ]);
   });
 
   final cases = <({String name, Size size, Brightness brightness})>[

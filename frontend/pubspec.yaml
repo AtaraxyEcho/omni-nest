@@ -100,6 +100,21 @@ flutter:
     - family: InstrumentSerif
       fonts:
         - asset: assets/fonts/InstrumentSerif-Regular.ttf
+    # Inter 与 JetBrains Mono 均为 SIL OFL 1.1 许可，许可文本见 assets/fonts/OFL-*.txt
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+          weight: 400
 
 flutter_launcher_icons_plus:
   # 全局默认图标

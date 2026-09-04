@@ -3,7 +3,17 @@ import 'package:flutter/material.dart';
 class AppTypography {
   const AppTypography._();
 
-  static const fontFamily = 'NotoSansSC';
+  /// 全局西文字体。中文字符经 [fontFamilyFallback] 回落至中文字体渲染。
+  static const fontFamily = 'Inter';
+
+  /// 全局字形回落链，承接西文字体缺失的中文与 CJK 标点。
+  static const fontFamilyFallback = <String>['NotoSansSC'];
+
+  /// 等宽场景（代码、链接、路径）统一使用的字体。
+  static const monoFamily = 'JetBrainsMono';
+
+  /// 等宽字体回落链：代码中的中文回落中文字体，其余回落平台等宽字体。
+  static const monoFamilyFallback = <String>['NotoSansSC', 'monospace'];
 
   static const displayLarge = TextStyle(
     fontSize: 48,

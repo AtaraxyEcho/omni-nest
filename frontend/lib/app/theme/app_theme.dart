@@ -120,7 +120,12 @@ class OmniNestTheme {
               labelMedium: AppTypography.labelMedium,
             ),
           )
-          .apply(bodyColor: colors.onSurface, displayColor: colors.onSurface),
+          .apply(
+            fontFamily: AppTypography.fontFamily,
+            fontFamilyFallback: AppTypography.fontFamilyFallback,
+            bodyColor: colors.onSurface,
+            displayColor: colors.onSurface,
+          ),
     );
     final roundedShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
