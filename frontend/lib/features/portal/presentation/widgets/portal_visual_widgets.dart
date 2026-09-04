@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -536,6 +538,31 @@ class PortalGradientCover extends StatelessWidget {
   }
 }
 
+/// 底层氛围图的模糊强度：仅用于完整封面下方的铺满裁切层。
+const double _ambientBackdropBlurSigma = 24;
+
+/// 底层氛围图的解码缓存宽度：只需保留色彩关系，避免整卡分辨率解码。
+const int _ambientBackdropCacheWidth = 128;
+
+/// 将底层封面图模糊为色彩氛围层，消除与上层完整封面的同图重影。
+class _AmbientCoverBackdrop extends StatelessWidget {
+  const _AmbientCoverBackdrop({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(
+        sigmaX: _ambientBackdropBlurSigma,
+        sigmaY: _ambientBackdropBlurSigma,
+        tileMode: TileMode.clamp,
+      ),
+      child: child,
+    );
+  }
+}
+
 class _AdaptiveCoverImage extends StatelessWidget {
   const _AdaptiveCoverImage({
     required this.fallbackColors,
@@ -619,10 +646,16 @@ class _ReaderAdaptiveCoverImage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        AuthCoverImage(itemId: itemId, fit: BoxFit.cover, fallback: fallback),
+        _AmbientCoverBackdrop(
+          child: AuthCoverImage(
+            itemId: itemId,
+            fit: BoxFit.cover,
+            fallback: fallback,
+          ),
+        ),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.28),
+            color: Colors.black.withValues(alpha: 0.20),
           ),
         ),
         Padding(
@@ -657,17 +690,20 @@ class _NetworkAdaptiveCoverImage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        CachedNetworkImage(
-          imageUrl: imageUrl,
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
-          filterQuality: FilterQuality.medium,
-          placeholder: (context, url) => fallback,
-          errorWidget: (context, url, error) => fallback,
+        _AmbientCoverBackdrop(
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.medium,
+            memCacheWidth: _ambientBackdropCacheWidth,
+            placeholder: (context, url) => fallback,
+            errorWidget: (context, url, error) => fallback,
+          ),
         ),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.26),
+            color: Colors.black.withValues(alpha: 0.20),
           ),
         ),
         Padding(
