@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_relation_view.dart';
 
@@ -39,22 +38,10 @@ void main() {
     final entities = relationEntitiesForDimension(
       relation: relation,
       dimension: PhotoRelationNodeType.album,
-      albums: [
-        PhotoAlbum(
-          id: 'album-1',
-          name: 'Japan',
-          description: '',
-          photoCount: 10,
-          createdAt: null,
-          updatedAt: null,
-          coverUrl: 'https://example.test/album.jpg',
-        ),
-      ],
     );
 
     expect(entities, hasLength(1));
     expect(entities.single.label, 'Japan');
-    expect(entities.single.coverUrl, 'https://example.test/album.jpg');
   });
 
   test('relationEntitiesForDimension 时间节点标签回退到 key 并支持截断', () {

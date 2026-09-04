@@ -116,7 +116,7 @@ class _PhotoTopBar extends StatelessWidget {
               tooltip: AppLocalizations.of(context).photosInsightsTitle,
               onPressed: () => context.push('/photos/insights'),
               icon: Icon(
-                Icons.hub_outlined,
+                Icons.account_tree_rounded,
                 color: context.photosColors.onSurfaceVariant,
                 size: 20,
               ),

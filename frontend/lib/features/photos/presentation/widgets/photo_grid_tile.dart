@@ -15,6 +15,8 @@ class PhotoGridTile extends StatelessWidget {
     this.onDelete,
     this.isSelectionMode = false,
     this.isSelected = false,
+    this.aspectRatio,
+    this.enableHero = false,
     super.key,
   });
 
@@ -24,6 +26,12 @@ class PhotoGridTile extends StatelessWidget {
   final ValueChanged<PhotoItem>? onDelete;
   final bool isSelectionMode;
   final bool isSelected;
+
+  /// 瀑布流布局使用：非空时图格按该纵横比自撑高度。
+  final double? aspectRatio;
+
+  /// 从图库进入详情时的共享元素过渡开关。
+  final bool enableHero;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +48,7 @@ class PhotoGridTile extends StatelessWidget {
                   () => onDelete!(photo),
             }
             : null;
+
     Widget tile = FocusableActionDetector(
       shortcuts: const <ShortcutActivator, Intent>{
         SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
@@ -63,165 +72,169 @@ class PhotoGridTile extends StatelessWidget {
           excludeFromSemantics: true,
           onTap: onTap,
           onLongPress: onLongPress,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // 照片缩略图
-                if (photo.hasCover)
-                  CachedNetworkImage(
-                    imageUrl: photo.coverUrl!,
-                    cacheKey: photo.coverCacheKey,
-                    fit: BoxFit.cover,
-                    memCacheWidth: 200,
-                    useOldImageOnUrlChange: true,
-                    fadeInDuration: Duration.zero,
-                    fadeOutDuration: Duration.zero,
-                    placeholder:
-                        (context, url) => Container(
-                          color: context.photosColors.surfaceContainerHigh,
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                AppLocalizations.of(
-                                  context,
-                                ).photoThumbnailLoading,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: context.photosColors.onSurfaceVariant,
-                                  fontSize: 11,
+          child: Hero(
+            tag: 'photo-cover-${photo.id}',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // 照片缩略图
+                  if (photo.hasCover)
+                    CachedNetworkImage(
+                      imageUrl: photo.coverUrl!,
+                      cacheKey: photo.coverCacheKey,
+                      fit: BoxFit.cover,
+                      memCacheWidth: 200,
+                      useOldImageOnUrlChange: true,
+                      fadeInDuration: Duration.zero,
+                      fadeOutDuration: Duration.zero,
+                      placeholder:
+                          (context, url) => Container(
+                            color: context.photosColors.surfaceContainerHigh,
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).photoThumbnailLoading,
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color:
+                                        context.photosColors.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+                      errorWidget:
+                          (context, url, error) =>
+                              _Placeholder(format: photo.format),
+                    )
+                  else
+                    _Placeholder(format: photo.format),
+
+                  // 选中半透明遮罩
+                  if (isSelected)
+                    Container(
+                      color: context.photosColors.primaryContainer.withValues(
+                        alpha: 0.3,
+                      ),
+                    ),
+
+                  // 选择模式复选框
+                  if (isSelectionMode)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? context.photosColors.primaryContainer
+                                  : context.photosColors.badgeBg,
+                          shape: BoxShape.circle,
+                          border:
+                              isSelected
+                                  ? null
+                                  : Border.all(
+                                    color: context.photosColors.badgeText
+                                        .withValues(alpha: 0.6),
+                                    width: 1.5,
+                                  ),
                         ),
-                    errorWidget:
-                        (context, url, error) =>
-                            _Placeholder(format: photo.format),
-                  )
-                else
-                  _Placeholder(format: photo.format),
-
-                // 选中半透明遮罩
-                if (isSelected)
-                  Container(
-                    color: context.photosColors.primaryContainer.withValues(
-                      alpha: 0.3,
-                    ),
-                  ),
-
-                // 选择模式复选框
-                if (isSelectionMode)
-                  Positioned(
-                    top: 6,
-                    left: 6,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color:
+                        child:
                             isSelected
-                                ? context.photosColors.primaryContainer
-                                : context.photosColors.badgeBg,
-                        shape: BoxShape.circle,
-                        border:
-                            isSelected
-                                ? null
-                                : Border.all(
-                                  color: context.photosColors.badgeText
-                                      .withValues(alpha: 0.6),
-                                  width: 1.5,
-                                ),
+                                ? Icon(
+                                  Icons.check_rounded,
+                                  color: context.photosColors.badgeText,
+                                  size: 16,
+                                )
+                                : null,
                       ),
-                      child:
-                          isSelected
-                              ? Icon(
-                                Icons.check_rounded,
-                                color: context.photosColors.badgeText,
-                                size: 16,
-                              )
-                              : null,
                     ),
-                  ),
 
-                // 收藏标记（非选择模式时显示）
-                if (photo.favorite && !isSelectionMode)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: context.photosColors.badgeBg,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.favorite_rounded,
-                        color: context.photosColors.danger,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-
-                // 底部渐变 + 文件大小
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(8, 20, 8, 6),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          context.photosColors.overlay,
-                        ],
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            photo.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: context.photosColors.mediaOverlayText,
-                              fontSize: 11,
-                              height: 14 / 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                  // 收藏标记（非选择模式时显示）
+                  if (photo.favorite && !isSelectionMode)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: context.photosColors.badgeBg,
+                          shape: BoxShape.circle,
                         ),
-                        if (photo.resolutionDisplay != null) ...[
-                          const SizedBox(width: 4),
-                          Flexible(
-                            fit: FlexFit.loose,
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: context.photosColors.danger,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+
+                  // 底部渐变 + 文件大小
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(8, 20, 8, 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            context.photosColors.overlay,
+                          ],
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
                             child: Text(
-                              photo.resolutionDisplay!,
+                              photo.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
                               style: TextStyle(
-                                color: context.photosColors.mediaOverlayText
-                                    .withValues(alpha: 0.7),
-                                fontSize: 10,
-                                height: 13 / 10,
+                                color: context.photosColors.mediaOverlayText,
+                                fontSize: 11,
+                                height: 14 / 11,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
+                          if (photo.resolutionDisplay != null) ...[
+                            const SizedBox(width: 4),
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: Text(
+                                photo.resolutionDisplay!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
+                                style: TextStyle(
+                                  color: context.photosColors.mediaOverlayText
+                                      .withValues(alpha: 0.7),
+                                  fontSize: 10,
+                                  height: 13 / 10,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -248,6 +261,10 @@ class PhotoGridTile extends StatelessWidget {
         ),
         child: tile,
       );
+    }
+
+    if (aspectRatio != null && aspectRatio! > 0) {
+      tile = AspectRatio(aspectRatio: aspectRatio!, child: tile);
     }
 
     return tile;

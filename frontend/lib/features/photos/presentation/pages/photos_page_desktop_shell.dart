@@ -182,7 +182,7 @@ class _PhotoDesktopTopBar extends ConsumerWidget {
           IconButton(
             tooltip: l10n.photosInsightsTitle,
             onPressed: () => context.push('/photos/insights'),
-            icon: const Icon(Icons.hub_outlined, size: 20),
+            icon: const Icon(Icons.account_tree_rounded, size: 20),
             color: colors.onSurfaceVariant,
           ),
           const _RegenerateThumbnailsAction(),

@@ -210,47 +210,50 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
       child: Center(
         child:
             imageUrl != null && imageUrl.isNotEmpty
-                ? InteractiveViewer(
-                  minScale: 1,
-                  maxScale: 5,
-                  child: SizedBox.expand(
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      cacheKey:
-                          photo.sourceUrl != null
-                              ? photo.sourceCacheKey
-                              : photo.coverCacheKey,
-                      fit: BoxFit.contain,
-                      placeholder:
-                          (context, url) => Center(
-                            child: CircularProgressIndicator(
-                              color: context.photosColors.primaryContainer,
+                ? Hero(
+                  tag: 'photo-cover-${photo.id}',
+                  child: InteractiveViewer(
+                    minScale: 1,
+                    maxScale: 5,
+                    child: SizedBox.expand(
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        cacheKey:
+                            photo.sourceUrl != null
+                                ? photo.sourceCacheKey
+                                : photo.coverCacheKey,
+                        fit: BoxFit.contain,
+                        placeholder:
+                            (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                color: context.photosColors.primaryContainer,
+                              ),
                             ),
-                          ),
-                      errorWidget:
-                          (context, url, error) => Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.broken_image_outlined,
-                                  color: context.photosColors.onSurfaceVariant
-                                      .withValues(alpha: 0.4),
-                                  size: 48,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  ).photosImageLoadFailed,
-                                  style: TextStyle(
-                                    color:
-                                        context.photosColors.onSurfaceVariant,
+                        errorWidget:
+                            (context, url, error) => Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image_outlined,
+                                    color: context.photosColors.onSurfaceVariant
+                                        .withValues(alpha: 0.4),
+                                    size: 48,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    ).photosImageLoadFailed,
+                                    style: TextStyle(
+                                      color:
+                                          context.photosColors.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                      ),
                     ),
                   ),
                 )
