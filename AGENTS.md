@@ -31,10 +31,10 @@ AGENTS.md
 ## 仓库与提交
 
 ```text
-backend/      Spring Boot API、Worker、Scheduler、Flyway 与后端测试
-frontend/     Flutter Web、Android、Desktop 与前端测试
-ai-sidecar/   图片分析侧车服务、模型适配与容器定义
-deploy/       dev/prod Docker Compose、环境模板与共享镜像定义
+backend/           Spring Boot API、Worker、Scheduler、Flyway 与后端测试
+frontend/          Flutter Web、Android、Desktop 与前端测试
+deploy/            dev/prod Docker Compose、环境模板与共享镜像定义
+deploy/ai-sidecar/ 图片分析侧车服务、模型适配与容器定义
 ```
 
 - 项目根目录是唯一 Git 仓库，统一追踪后端、前端、图片分析侧车和部署配置。

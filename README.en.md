@@ -59,7 +59,7 @@ The project is under active development. This root README focuses on product cap
 - The backend is a modular Spring Boot monolith with API, Worker, and Scheduler runtime roles.
 - Controlled storage Providers own original content. MinIO is the default host for managed content and derived assets; selected video libraries may use administrator-registered read-only local sources.
 - PostgreSQL stores business metadata, permissions, configuration, and task state. RabbitMQ handles background work that needs persistence, retries, or recovery. Redis provides caching, short-lived state, and concurrency control.
-- Photo image analysis is an optional independent Sidecar capability. See [ai-sidecar/README.md](ai-sidecar/README.md) for its current boundary.
+- Photo image analysis is an optional independent Sidecar capability. See [deploy/ai-sidecar/README.md](deploy/ai-sidecar/README.md) for its current boundary.
 
 ## Repository navigation
 
@@ -67,7 +67,7 @@ The project is under active development. This root README focuses on product cap
 | --- | --- | --- |
 | [backend](backend/README.md) | Backend API, Worker, Scheduler, and tests | Backend architecture, modules, configuration, and verification |
 | [frontend](frontend/README.md) | Flutter Web, Android, and Desktop client | Features, local development, and builds |
-| [ai-sidecar](ai-sidecar/README.md) | Photos image-analysis Sidecar | Analysis capabilities, API, and container notes |
+| [ai-sidecar](deploy/ai-sidecar/README.md) | Photos image-analysis Sidecar | Analysis capabilities, API, and container notes |
 | [deploy](deploy/README.md) | dev/prod Docker orchestration | Development dependencies and production deployment |
 
 Chinese guides:

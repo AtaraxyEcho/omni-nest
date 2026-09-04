@@ -6,8 +6,9 @@
 - `prod/` 启动 Nginx、API、Worker、Scheduler、Certbot 和生产依赖。
 - 每个环境内的组件目录保存对应镜像定义或运行脚本，打开目录即可查看全部 Docker 配置。
 
-组件源码及其直接构建入口仍保留在组件目录中。dev/prod Compose 使用各自环境目录下的
-Dockerfile，并继续以项目 `backend/`、`ai-sidecar/` 作为源码构建上下文。
+组件源码及其直接构建入口仍保留在组件目录中。图像分析侧车的源码与镜像定义位于
+`ai-sidecar/`，backend、nginx、netease-api 的镜像定义位于各自环境目录；dev/prod
+Compose 继续以项目 `backend/` 与 `ai-sidecar/` 作为源码构建上下文。
 两个环境中的公共构建逻辑必须同步维护；backend 的默认 Profile 等环境差异应保留在各自目录并明确说明。
 
 ## 开发环境
@@ -25,9 +26,9 @@ docker compose up -d
 后端裸进程变量从 `backend/.env` 读取，模板位于 `backend/.env.example`。Compose 的
 `.env` 不会自动注入后端裸进程。
 
-`backend/`、`ai-sidecar/`、`netease-api/` 包含完整 Dockerfile，便于与生产环境直接比较。
-开发编排默认只构建图片分析侧车和网易云 API，后端仍由 Maven 或 IDE 运行；图片分析侧车
-继续使用项目 `ai-sidecar/` 作为源码构建上下文。
+`backend/`、`netease-api/` 与 `ai-sidecar/` 包含完整 Dockerfile，便于与生产环境直接比较。
+开发编排默认只构建图像分析侧车和网易云 API，后端仍由 Maven 或 IDE 运行；图像分析侧车
+继续使用 `ai-sidecar/` 作为源码构建上下文。
 
 ### ClamAV 可选开关
 
@@ -49,8 +50,8 @@ ClamAV 是可选服务，通过 `.env` 的 `COMPOSE_PROFILES=clamav` 控制：
 托管 Flutter Web，统一代理 API、WebSocket 和 MinIO。网易云 API 与图片分析侧车
 只在 Compose 内部网络提供服务，不直接暴露宿主机端口。
 
-`backend/`、`nginx/`、`ai-sidecar/`、`netease-api/` 包含生产环境使用的完整
-Dockerfile 或运行脚本。Compose 从项目源码构建镜像，不复制业务源码到部署目录。
+`backend/`、`nginx/`、`netease-api/` 包含生产环境使用的完整
+Dockerfile 或运行脚本，图像分析侧车镜像定义位于 `ai-sidecar/`。Compose 从项目源码构建镜像，不复制业务源码到部署目录。
 
 ### 资源要求与安全扫描
 

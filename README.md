@@ -65,7 +65,7 @@ OmniNest 是一个面向个人和家庭场景的自托管数字生活中心。�
 | --- | --- | --- |
 | [backend](backend/README.md) | Spring Boot API、Worker、Scheduler 和后端测试 | [后端开发指南](backend/README.md) |
 | [frontend](frontend/README.md) | Flutter Web、Android、Windows、macOS 客户端与测试 | [前端开发指南](frontend/README.md) |
-| [ai-sidecar](ai-sidecar/README.md) | Photos 图像分析侧车、模型适配和容器定义 | Sidecar README |
+| [ai-sidecar](deploy/ai-sidecar/README.md) | Photos 图像分析侧车、模型适配和容器定义 | Sidecar README |
 | [deploy](deploy/README.md) | dev/prod Docker 编排、镜像构建和运行配置 | 部署 README |
 
 ## 环境要求

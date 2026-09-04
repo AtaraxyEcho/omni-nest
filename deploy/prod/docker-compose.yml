@@ -321,8 +321,8 @@ services:
 
   ai-sidecar:
     build:
-      context: ../../ai-sidecar
-      dockerfile: ../deploy/prod/ai-sidecar/Dockerfile
+      context: ../ai-sidecar
+      dockerfile: Dockerfile
     environment:
       INSIGHTFACE_ROOT: /app/models/insightface
       OMNINEST_AI_SIDECAR_SECRET: ${OMNINEST_AI_SIDECAR_SECRET:-change-me-ai-sidecar-random-secret}

@@ -199,8 +199,8 @@ services:
 
   ai-sidecar:
     build:
-      context: ../../ai-sidecar
-      dockerfile: ../deploy/dev/ai-sidecar/Dockerfile
+      context: ../ai-sidecar
+      dockerfile: Dockerfile
     container_name: omninest-ai-sidecar
     environment:
       INSIGHTFACE_ROOT: /app/models/insightface
