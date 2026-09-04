@@ -150,7 +150,10 @@ bool Win32Window::Create(const std::wstring& title,
 }
 
 bool Win32Window::Show() {
-  return ShowWindow(window_handle_, SW_SHOWNORMAL);
+  // Keep the native window hidden on launch: window_manager applies the
+  // remembered geometry and shows the window afterwards, avoiding a
+  // visible flash of the fallback size.
+  return ShowWindow(window_handle_, SW_HIDE) != 0;
 }
 
 // static

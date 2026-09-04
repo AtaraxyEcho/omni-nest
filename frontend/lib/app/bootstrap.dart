@@ -8,6 +8,7 @@ import 'package:omninest/app/locale/application/locale_controller.dart';
 import 'package:omninest/app/preferences/app_bootstrap_data.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/core/services/app_image_cache_policy.dart';
+import 'package:omninest/core/window/window_geometry_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:omninest/app/bootstrap_stub.dart'
@@ -42,6 +43,9 @@ void bootstrap(Widget Function(AppBootstrapData data) builder) {
     () {
       WidgetsFlutterBinding.ensureInitialized();
       AppImageCachePolicy.configure(PaintingBinding.instance.imageCache);
+      // 桌面端在启动前摆放窗口：记忆边界优先，首启按工作区收窄，
+      // Windows 原生窗口隐藏由本服务负责展示。
+      unawaited(windowGeometryService.applyStartupGeometry());
       runApp(AppBootstrapGate(builder: builder, loader: _loadBootstrapData));
     },
     (error, stackTrace) {
