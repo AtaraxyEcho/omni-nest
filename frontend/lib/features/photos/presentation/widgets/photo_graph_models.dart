@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:omninest/features/photos/domain/photo_album.dart';
-import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 
 /// 图谱节点渲染数量上限：超出后按权重截断，保证布局模拟的交互性能。
@@ -61,34 +60,32 @@ class PhotoGraphEdge {
 /// 将关系端点数据构建为可渲染图谱。
 ///
 /// 纯函数：类型筛选、搜索过滤与数量截断都在此完成，便于测试。
+/// 人物维度已随人物页下线，后端返回的 PERSON 节点与相关边在此被过滤。
 PhotoGraphData buildPhotoGraph({
   required PhotoRelationGraph relation,
   required Set<PhotoRelationNodeType> kinds,
   required String query,
   Iterable<PhotoAlbum> albums = const [],
-  Iterable<PhotoFaceCluster> faceClusters = const [],
 }) {
   final normalizedQuery = query.trim().toLowerCase();
   final albumCovers = {for (final album in albums) album.id: album.coverUrl};
-  final personCovers = {
-    for (final cluster in faceClusters) cluster.id: cluster.coverPhotoUrl,
-  };
 
   final allNodes =
       relation.nodes
+          .where((node) => node.type != PhotoRelationNodeType.person)
           .where((node) => kinds.contains(node.type))
           .map((node) {
             final label = switch (node.type) {
-              PhotoRelationNodeType.album => node.label ?? '',
-              PhotoRelationNodeType.person => node.label ?? '',
               PhotoRelationNodeType.time ||
               PhotoRelationNodeType.location => node.label ?? node.key,
+              PhotoRelationNodeType.album ||
+              PhotoRelationNodeType.person => node.label ?? '',
             };
             final coverUrl = switch (node.type) {
               PhotoRelationNodeType.album => albumCovers[node.key],
-              PhotoRelationNodeType.person => personCovers[node.key],
               PhotoRelationNodeType.time ||
               PhotoRelationNodeType.location => null,
+              PhotoRelationNodeType.person => null,
             };
             return PhotoGraphNode(
               id: '${node.type.value}:${node.key}',

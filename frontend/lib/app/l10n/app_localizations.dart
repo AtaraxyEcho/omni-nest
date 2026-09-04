@@ -11309,12 +11309,6 @@ abstract class AppLocalizations {
   /// **'Albums'**
   String get photosTabAlbums;
 
-  /// No description provided for @photosTabPeople.
-  ///
-  /// In en, this message translates to:
-  /// **'People'**
-  String get photosTabPeople;
-
   /// No description provided for @photosTabGroups.
   ///
   /// In en, this message translates to:
@@ -11332,12 +11326,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Library'**
   String get photosSurfaceLibrary;
-
-  /// No description provided for @photosSurfacePeople.
-  ///
-  /// In en, this message translates to:
-  /// **'People'**
-  String get photosSurfacePeople;
 
   /// No description provided for @photosSurfaceExplore.
   ///
@@ -11405,12 +11393,6 @@ abstract class AppLocalizations {
   /// **'Untitled album'**
   String get photosGraphUnnamedAlbum;
 
-  /// No description provided for @photosGraphUnnamedPerson.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown person'**
-  String get photosGraphUnnamedPerson;
-
   /// No description provided for @photosGraphBack.
   ///
   /// In en, this message translates to:
@@ -11434,12 +11416,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} photos'**
   String photosGraphPhotoCount(Object count);
-
-  /// No description provided for @photosGraphFaceCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} faces'**
-  String photosGraphFaceCount(Object count);
 
   /// No description provided for @photosGraphShowing.
   ///
@@ -12293,89 +12269,17 @@ abstract class AppLocalizations {
   /// **'Rollback'**
   String get photosRollback;
 
-  /// No description provided for @photosLoadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Load failed: {error}'**
-  String photosLoadFailed(Object error);
-
-  /// No description provided for @photosAiActions.
-  ///
-  /// In en, this message translates to:
-  /// **'Image analysis actions'**
-  String get photosAiActions;
-
-  /// No description provided for @photosAnalyzeLibrary.
-  ///
-  /// In en, this message translates to:
-  /// **'Reanalyze photo library'**
-  String get photosAnalyzeLibrary;
-
-  /// No description provided for @photosAiTaskSubmitted.
-  ///
-  /// In en, this message translates to:
-  /// **'AI task submitted ({taskId}). Track progress in Tasks'**
-  String photosAiTaskSubmitted(Object taskId);
-
-  /// No description provided for @photosAiTaskSubmitFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to submit AI task'**
-  String get photosAiTaskSubmitFailed;
-
-  /// No description provided for @photosNamePerson.
-  ///
-  /// In en, this message translates to:
-  /// **'Name Person'**
-  String get photosNamePerson;
-
-  /// No description provided for @photosPersonNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter person name'**
-  String get photosPersonNameHint;
-
   /// No description provided for @photosConfirm.
   ///
   /// In en, this message translates to:
   /// **'Confirm'**
   String get photosConfirm;
 
-  /// No description provided for @photosRecluster.
-  ///
-  /// In en, this message translates to:
-  /// **'Re-cluster'**
-  String get photosRecluster;
-
-  /// No description provided for @photosNoFaceData.
-  ///
-  /// In en, this message translates to:
-  /// **'No face data yet\nPhotos will be automatically recognized and grouped after upload'**
-  String get photosNoFaceData;
-
-  /// No description provided for @photosUnnamed.
-  ///
-  /// In en, this message translates to:
-  /// **'Unnamed'**
-  String get photosUnnamed;
-
-  /// No description provided for @photosFaceCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count}'**
-  String photosFaceCount(Object count);
-
   /// No description provided for @photosPhotoCount.
   ///
   /// In en, this message translates to:
   /// **'{count} photos'**
   String photosPhotoCount(Object count);
-
-  /// No description provided for @photosPersonNoPhotos.
-  ///
-  /// In en, this message translates to:
-  /// **'No photos for this person'**
-  String get photosPersonNoPhotos;
 
   /// No description provided for @photosSharedAlbumAccessError.
   ///

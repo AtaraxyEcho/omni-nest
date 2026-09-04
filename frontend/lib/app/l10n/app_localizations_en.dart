@@ -6160,9 +6160,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosTabAlbums => 'Albums';
 
   @override
-  String get photosTabPeople => 'People';
-
-  @override
   String get photosTabGroups => 'Groups';
 
   @override
@@ -6170,9 +6167,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photosSurfaceLibrary => 'Library';
-
-  @override
-  String get photosSurfacePeople => 'People';
 
   @override
   String get photosSurfaceExplore => 'Explore';
@@ -6210,9 +6204,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosGraphUnnamedAlbum => 'Untitled album';
 
   @override
-  String get photosGraphUnnamedPerson => 'Unknown person';
-
-  @override
   String get photosGraphBack => 'Back to graph';
 
   @override
@@ -6224,11 +6215,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String photosGraphPhotoCount(Object count) {
     return '$count photos';
-  }
-
-  @override
-  String photosGraphFaceCount(Object count) {
-    return '$count faces';
   }
 
   @override
@@ -6696,55 +6682,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosRollback => 'Rollback';
 
   @override
-  String photosLoadFailed(Object error) {
-    return 'Load failed: $error';
-  }
-
-  @override
-  String get photosAiActions => 'Image analysis actions';
-
-  @override
-  String get photosAnalyzeLibrary => 'Reanalyze photo library';
-
-  @override
-  String photosAiTaskSubmitted(Object taskId) {
-    return 'AI task submitted ($taskId). Track progress in Tasks';
-  }
-
-  @override
-  String get photosAiTaskSubmitFailed => 'Failed to submit AI task';
-
-  @override
-  String get photosNamePerson => 'Name Person';
-
-  @override
-  String get photosPersonNameHint => 'Enter person name';
-
-  @override
   String get photosConfirm => 'Confirm';
-
-  @override
-  String get photosRecluster => 'Re-cluster';
-
-  @override
-  String get photosNoFaceData =>
-      'No face data yet\nPhotos will be automatically recognized and grouped after upload';
-
-  @override
-  String get photosUnnamed => 'Unnamed';
-
-  @override
-  String photosFaceCount(Object count) {
-    return '$count';
-  }
 
   @override
   String photosPhotoCount(Object count) {
     return '$count photos';
   }
-
-  @override
-  String get photosPersonNoPhotos => 'No photos for this person';
 
   @override
   String photosSharedAlbumAccessError(Object error) {

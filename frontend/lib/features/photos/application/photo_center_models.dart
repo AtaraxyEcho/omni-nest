@@ -1,22 +1,20 @@
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
-import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_timeline.dart';
 
 // -- 状态管理 --
 
-/// 照片模块的三个顶级浏览表面（导航层），内部通过 PhotoTab 路由到具体内容。
-enum PhotoSurface { library, people, explore }
+/// 照片模块的两个顶级浏览表面（导航层），内部通过 PhotoTab 路由到具体内容。
+enum PhotoSurface { library, explore }
 
 /// 照片中心的内容页签（数据加载层）。
-enum PhotoTab { all, favorites, albums, timeline, groups, graph, people }
+enum PhotoTab { all, favorites, albums, timeline, groups, graph }
 
 /// 导航表面到默认数据页签的映射。
 PhotoTab photoSurfaceToTab(PhotoSurface surface) => switch (surface) {
   PhotoSurface.library => PhotoTab.all,
-  PhotoSurface.people => PhotoTab.people,
   PhotoSurface.explore => PhotoTab.timeline,
 };
 
@@ -38,12 +36,9 @@ class PhotoCenterState {
     this.groupBy = GroupBy.date,
     this.selectedPhotoIds = const {},
     this.isSelectionMode = false,
-    this.faceClusters = const [],
-    this.isLoadingFaceClusters = false,
     this.relationGraph = PhotoRelationGraph.empty,
     this.isLoadingRelationGraph = false,
     this.relationGraphError,
-    this.faceClusterError,
     this.photoPage = 0,
     this.favoritePage = 0,
     this.photoTotalElements = 0,
@@ -88,12 +83,9 @@ class PhotoCenterState {
   final GroupBy groupBy;
   final Set<String> selectedPhotoIds;
   final bool isSelectionMode;
-  final List<PhotoFaceCluster> faceClusters;
-  final bool isLoadingFaceClusters;
   final PhotoRelationGraph relationGraph;
   final bool isLoadingRelationGraph;
   final String? relationGraphError;
-  final String? faceClusterError;
   final int photoPage;
   final int favoritePage;
   final int photoTotalElements;
@@ -152,7 +144,6 @@ class PhotoCenterState {
       PhotoTab.timeline => photos,
       PhotoTab.groups => photos,
       PhotoTab.graph => photos,
-      PhotoTab.people => const <PhotoItem>[],
     };
     final query = searchQuery.trim().toLowerCase();
     if (query.isEmpty) return source;
@@ -178,13 +169,10 @@ class PhotoCenterState {
     GroupBy? groupBy,
     Set<String>? selectedPhotoIds,
     bool? isSelectionMode,
-    List<PhotoFaceCluster>? faceClusters,
     PhotoRelationGraph? relationGraph,
     bool? isLoadingRelationGraph,
     String? relationGraphError,
     bool clearRelationGraphError = false,
-    bool? isLoadingFaceClusters,
-    String? faceClusterError,
     int? photoPage,
     int? favoritePage,
     int? photoTotalElements,
@@ -208,7 +196,6 @@ class PhotoCenterState {
     bool clearFavoritePageError = false,
     bool clearTimelinePageError = false,
     bool clearGroupPageError = false,
-    bool clearFaceClusterError = false,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -225,7 +212,6 @@ class PhotoCenterState {
       groupBy: groupBy ?? this.groupBy,
       selectedPhotoIds: selectedPhotoIds ?? this.selectedPhotoIds,
       isSelectionMode: isSelectionMode ?? this.isSelectionMode,
-      faceClusters: faceClusters ?? this.faceClusters,
       relationGraph: relationGraph ?? this.relationGraph,
       isLoadingRelationGraph:
           isLoadingRelationGraph ?? this.isLoadingRelationGraph,
@@ -233,12 +219,6 @@ class PhotoCenterState {
           clearRelationGraphError
               ? null
               : (relationGraphError ?? this.relationGraphError),
-      isLoadingFaceClusters:
-          isLoadingFaceClusters ?? this.isLoadingFaceClusters,
-      faceClusterError:
-          clearFaceClusterError
-              ? null
-              : (faceClusterError ?? this.faceClusterError),
       photoPage: photoPage ?? this.photoPage,
       favoritePage: favoritePage ?? this.favoritePage,
       photoTotalElements: photoTotalElements ?? this.photoTotalElements,

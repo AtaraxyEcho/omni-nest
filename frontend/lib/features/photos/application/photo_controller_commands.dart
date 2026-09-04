@@ -162,65 +162,6 @@ mixin PhotoCenterControllerCommands on AsyncNotifier<PhotoCenterState> {
     size: size,
   );
 
-  /// 加载人脸聚类数据
-  Future<void> loadFaceClusters({bool propagateError = false}) async {
-    final current = state.asData?.value;
-    if (current == null) return;
-    state = AsyncData(
-      current.copyWith(
-        isLoadingFaceClusters: true,
-        clearFaceClusterError: true,
-      ),
-    );
-    try {
-      final clusters = await _repo.listFaceClusters();
-      final latest = state.asData?.value ?? current;
-      state = AsyncData(
-        latest.copyWith(
-          faceClusters: clusters,
-          isLoadingFaceClusters: false,
-          clearFaceClusterError: true,
-        ),
-      );
-    } on Exception catch (error) {
-      final latest = state.asData?.value ?? current;
-      state = AsyncData(
-        latest.copyWith(
-          isLoadingFaceClusters: false,
-          faceClusterError: describeUserFacingError(error).message,
-        ),
-      );
-      if (propagateError) {
-        rethrow;
-      }
-    }
-  }
-
-  /// 获取聚类中的照片
-  Future<List<PhotoItem>> getPhotosByCluster(String clusterId) =>
-      _repo.getPhotosByCluster(clusterId);
-
-  /// 为聚类命名
-  Future<void> nameCluster(String clusterId, String name) async {
-    try {
-      await _repo.nameCluster(clusterId, name);
-      await loadFaceClusters();
-    } on Exception catch (e) {
-      _setError(describeUserFacingError(e).message);
-      rethrow;
-    }
-  }
-
-  /// 提交重新聚类任务
-  Future<String> reclusterFaces() async {
-    try {
-      return await _repo.reclusterFaces();
-    } on Exception catch (e) {
-      _setError(describeUserFacingError(e).message);
-      rethrow;
-    }
-  }
-
   /// 提交照片库存量 AI 重分析任务
   Future<String> reanalyzeLibrary() async {
     try {

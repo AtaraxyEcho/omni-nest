@@ -9,7 +9,6 @@ import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_batch_task.dart';
 import 'package:omninest/features/photos/domain/photo_batch_download_ticket.dart';
 import 'package:omninest/features/photos/domain/photo_edit_version.dart';
-import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_share_link.dart';
@@ -417,39 +416,7 @@ class PhotoApi {
     return PhotoSharedAlbum.fromJson(parseData(response.data));
   }
 
-  // -- AI 人脸聚类 --
-
-  /// 获取人脸聚类列表
-  Future<List<PhotoFaceCluster>> listFaceClusters() async {
-    final response = await apiClient.dio.get<Map<String, dynamic>>(
-      '/photos/people',
-    );
-    return parseList(response.data).map(PhotoFaceCluster.fromJson).toList();
-  }
-
-  /// 获取聚类中的照片
-  Future<List<PhotoItem>> getPhotosByCluster(String clusterId) async {
-    final response = await apiClient.dio.get<Map<String, dynamic>>(
-      '/photos/people/$clusterId',
-    );
-    return parseList(response.data).map(PhotoItem.fromJson).toList();
-  }
-
-  /// 为聚类命名
-  Future<void> nameCluster(String clusterId, String name) async {
-    await apiClient.dio.put<Map<String, dynamic>>(
-      '/photos/people/$clusterId',
-      data: {'name': name},
-    );
-  }
-
-  /// 提交重新聚类任务
-  Future<String> reclusterFaces() async {
-    final response = await apiClient.dio.post<Map<String, dynamic>>(
-      '/photos/ai/recluster',
-    );
-    return parseData(response.data)['taskId']?.toString() ?? '';
-  }
+  // -- 关系图谱 --
 
   /// 提交照片库存量 AI 重分析任务
   Future<String> reanalyzeLibrary() async {

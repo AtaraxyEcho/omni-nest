@@ -77,7 +77,6 @@ class _PhotoGraphViewState extends ConsumerState<PhotoGraphView>
       kinds: _enabledKinds,
       query: widget.state.searchQuery,
       albums: widget.state.albums,
-      faceClusters: widget.state.faceClusters,
     );
   }
 

@@ -32,7 +32,6 @@ import 'package:omninest/features/photos/presentation/widgets/photo_group_view.d
 import 'package:omninest/features/photos/presentation/widgets/photo_timeline_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_graph_view.dart';
-import 'package:omninest/features/photos/presentation/pages/photo_faces_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 part 'photos_page_batch_actions.dart';
@@ -52,7 +51,6 @@ class PhotosPage extends ConsumerStatefulWidget {
 /// 底部导航表面。
 enum _PhotosNavDestination {
   library(Icons.photo_library_outlined, Icons.photo_library_rounded),
-  people(Icons.people_outline, Icons.people_rounded),
   explore(Icons.explore_outlined, Icons.explore_rounded);
 
   const _PhotosNavDestination(this.icon, this.selectedIcon);
@@ -64,7 +62,6 @@ enum _PhotosNavDestination {
     final l10n = AppLocalizations.of(context);
     return switch (this) {
       library => l10n.photosSurfaceLibrary,
-      people => l10n.photosSurfacePeople,
       explore => l10n.photosSurfaceExplore,
     };
   }
@@ -74,7 +71,6 @@ enum _PhotosNavDestination {
 PhotoTab _photoTabForDestination(_PhotosNavDestination dest) {
   return switch (dest) {
     _PhotosNavDestination.library => PhotoTab.all,
-    _PhotosNavDestination.people => PhotoTab.people,
     _PhotosNavDestination.explore => PhotoTab.timeline,
   };
 }
@@ -82,8 +78,9 @@ PhotoTab _photoTabForDestination(_PhotosNavDestination dest) {
 /// PhotoTab 对应的导航表面。
 _PhotosNavDestination _destinationForPhotoTab(PhotoTab tab) {
   return switch (tab) {
-    PhotoTab.people => _PhotosNavDestination.people,
-    PhotoTab.timeline || PhotoTab.groups => _PhotosNavDestination.explore,
+    PhotoTab.timeline ||
+    PhotoTab.groups ||
+    PhotoTab.graph => _PhotosNavDestination.explore,
     _ => _PhotosNavDestination.library,
   };
 }

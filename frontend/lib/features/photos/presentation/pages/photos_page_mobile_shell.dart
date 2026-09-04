@@ -16,7 +16,6 @@ class _PhotoMobileSectionBar extends StatelessWidget {
       PhotoTab.all,
       PhotoTab.timeline,
       PhotoTab.albums,
-      PhotoTab.people,
       PhotoTab.graph,
     ];
     return SizedBox(
@@ -36,7 +35,6 @@ class _PhotoMobileSectionBar extends StatelessWidget {
               PhotoTab.all => l10n.photosTabHome,
               PhotoTab.timeline => l10n.photosTabTimeline,
               PhotoTab.albums => l10n.photosTabAlbums,
-              PhotoTab.people => l10n.photosTabPeople,
               PhotoTab.graph => l10n.photosTabGraph,
               _ => l10n.photosAll,
             }),

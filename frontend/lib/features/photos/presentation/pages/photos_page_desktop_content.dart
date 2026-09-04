@@ -156,7 +156,6 @@ class _PhotoContentState extends ConsumerState<_PhotoContent> {
                   onOpenPhoto: onOpenPhoto,
                   onOpenAlbum: onOpenAlbum,
                 ),
-                PhotoTab.people => const PhotoFacesPage(),
               },
             ),
           ),

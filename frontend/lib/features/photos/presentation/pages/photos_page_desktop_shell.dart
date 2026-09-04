@@ -175,7 +175,6 @@ const List<(IconData, PhotoTab)> _desktopNavEntries = [
   (Icons.favorite_outline, PhotoTab.favorites),
   (Icons.auto_awesome_outlined, PhotoTab.timeline),
   (Icons.category_outlined, PhotoTab.groups),
-  (Icons.people_outline, PhotoTab.people),
   (Icons.auto_awesome_outlined, PhotoTab.graph),
 ];
 
@@ -186,7 +185,6 @@ String _desktopNavLabel(BuildContext context, PhotoTab tab) {
     PhotoTab.albums => l10n.photosTabAlbums,
     PhotoTab.favorites => l10n.photosTabFavorites,
     PhotoTab.timeline => l10n.photosTabMemories,
-    PhotoTab.people => l10n.photosTabPeople,
     PhotoTab.graph => l10n.photosTabGraph,
     PhotoTab.groups => l10n.photosTabGroups,
   };

@@ -2712,11 +2712,9 @@
   "photosTabFavorites": "Favorites",
   "photosTabTimeline": "Timeline",
   "photosTabAlbums": "Albums",
-  "photosTabPeople": "People",
   "photosTabGroups": "Groups",
   "photosTabGraph": "Graph",
   "photosSurfaceLibrary": "Library",
-  "photosSurfacePeople": "People",
   "photosSurfaceExplore": "Explore",
   "photosGraphToggle": "Toggle relation graph",
   "photosGraphFilter": "Filter nodes",
@@ -2733,18 +2731,11 @@
   "photosGraphEmpty": "No photo relationships are available yet.",
   "photosGraphNoSearchResults": "No nodes match your search.",
   "photosGraphUnnamedAlbum": "Untitled album",
-  "photosGraphUnnamedPerson": "Unknown person",
   "photosGraphBack": "Back to graph",
   "photosGraphOpenAlbum": "Open album",
   "photosGraphViewPhoto": "View photo",
   "photosGraphPhotoCount": "{count} photos",
   "@photosGraphPhotoCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "photosGraphFaceCount": "{count} faces",
-  "@photosGraphFaceCount": {
     "placeholders": {
       "count": {}
     }
@@ -2963,40 +2954,13 @@
   "photosEditVersionHistory": "Edit Version History",
   "photosNoEditHistory": "No edit history",
   "photosRollback": "Rollback",
-  "photosLoadFailed": "Load failed: {error}",
-  "@photosLoadFailed": {
-    "placeholders": {
-      "error": {}
-    }
-  },
-  "photosAiActions": "Image analysis actions",
-  "photosAnalyzeLibrary": "Reanalyze photo library",
-  "photosAiTaskSubmitted": "AI task submitted ({taskId}). Track progress in Tasks",
-  "@photosAiTaskSubmitted": {
-    "placeholders": {
-      "taskId": {}
-    }
-  },
-  "photosAiTaskSubmitFailed": "Failed to submit AI task",
-  "photosNamePerson": "Name Person",
-  "photosPersonNameHint": "Enter person name",
   "photosConfirm": "Confirm",
-  "photosRecluster": "Re-cluster",
-  "photosNoFaceData": "No face data yet\nPhotos will be automatically recognized and grouped after upload",
-  "photosUnnamed": "Unnamed",
-  "photosFaceCount": "{count}",
-  "@photosFaceCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "photosPhotoCount": "{count} photos",
   "@photosPhotoCount": {
     "placeholders": {
       "count": {}
     }
   },
-  "photosPersonNoPhotos": "No photos for this person",
   "photosSharedAlbumAccessError": "Cannot access shared album: {error}",
   "@photosSharedAlbumAccessError": {
     "placeholders": {

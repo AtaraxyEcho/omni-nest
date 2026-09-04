@@ -460,10 +460,6 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
       if (!ref.mounted || generation != _refreshGeneration) return;
       await loadGroups(current.groupBy, force: true);
     }
-    if (current.faceClusters.isNotEmpty || current.tab == PhotoTab.people) {
-      if (!ref.mounted || generation != _refreshGeneration) return;
-      await loadFaceClusters();
-    }
   }
 
   Future<T> _safe<T>(

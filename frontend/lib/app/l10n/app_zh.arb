@@ -2586,11 +2586,9 @@
   "photosTabFavorites": "收藏",
   "photosTabTimeline": "时间线",
   "photosTabAlbums": "相册",
-  "photosTabPeople": "人物",
   "photosTabGroups": "分组",
   "photosTabGraph": "关系图谱",
   "photosSurfaceLibrary": "照片库",
-  "photosSurfacePeople": "人物",
   "photosSurfaceExplore": "探索",
   "photosGraphToggle": "切换关系图谱",
   "photosGraphFilter": "筛选节点类型",
@@ -2607,18 +2605,11 @@
   "photosGraphEmpty": "暂时没有可展示的照片关系。",
   "photosGraphNoSearchResults": "没有匹配搜索条件的节点。",
   "photosGraphUnnamedAlbum": "未命名相册",
-  "photosGraphUnnamedPerson": "未知人物",
   "photosGraphBack": "返回图谱",
   "photosGraphOpenAlbum": "打开相册",
   "photosGraphViewPhoto": "查看照片",
   "photosGraphPhotoCount": "{count} 张照片",
   "@photosGraphPhotoCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "photosGraphFaceCount": "{count} 张人脸",
-  "@photosGraphFaceCount": {
     "placeholders": {
       "count": {}
     }
@@ -2837,40 +2828,13 @@
   "photosEditVersionHistory": "编辑版本历史",
   "photosNoEditHistory": "暂无编辑历史",
   "photosRollback": "回滚",
-  "photosLoadFailed": "加载失败: {error}",
-  "@photosLoadFailed": {
-    "placeholders": {
-      "error": {}
-    }
-  },
-  "photosAiActions": "图像分析操作",
-  "photosAnalyzeLibrary": "重分析照片库",
-  "photosAiTaskSubmitted": "AI 任务已提交（{taskId}），可在任务中心查看进度",
-  "@photosAiTaskSubmitted": {
-    "placeholders": {
-      "taskId": {}
-    }
-  },
-  "photosAiTaskSubmitFailed": "AI 任务提交失败",
-  "photosNamePerson": "命名人物",
-  "photosPersonNameHint": "输入人物名称",
   "photosConfirm": "确定",
-  "photosRecluster": "重新聚类",
-  "photosNoFaceData": "暂无人脸数据\n上传照片后系统会自动识别并分组",
-  "photosUnnamed": "未命名",
-  "photosFaceCount": "{count} 张",
-  "@photosFaceCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "photosPhotoCount": "{count} 张照片",
   "@photosPhotoCount": {
     "placeholders": {
       "count": {}
     }
   },
-  "photosPersonNoPhotos": "该人物暂无照片",
   "photosSharedAlbumAccessError": "无法访问共享相册：{error}",
   "@photosSharedAlbumAccessError": {
     "placeholders": {

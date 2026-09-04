@@ -4,7 +4,6 @@ import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_batch_task.dart';
 import 'package:omninest/features/photos/domain/photo_batch_download_ticket.dart';
 import 'package:omninest/features/photos/domain/photo_edit_version.dart';
-import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_repository.dart';
@@ -199,20 +198,6 @@ class PhotoRepositoryImpl implements PhotoRepository {
     page: page,
     size: size,
   );
-
-  @override
-  Future<List<PhotoFaceCluster>> listFaceClusters() => _api.listFaceClusters();
-
-  @override
-  Future<List<PhotoItem>> getPhotosByCluster(String clusterId) =>
-      _api.getPhotosByCluster(clusterId);
-
-  @override
-  Future<void> nameCluster(String clusterId, String name) =>
-      _api.nameCluster(clusterId, name);
-
-  @override
-  Future<String> reclusterFaces() => _api.reclusterFaces();
 
   @override
   Future<String> reanalyzeLibrary() => _api.reanalyzeLibrary();

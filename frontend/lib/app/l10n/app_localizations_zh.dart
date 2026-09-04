@@ -5977,9 +5977,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosTabAlbums => '相册';
 
   @override
-  String get photosTabPeople => '人物';
-
-  @override
   String get photosTabGroups => '分组';
 
   @override
@@ -5987,9 +5984,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get photosSurfaceLibrary => '照片库';
-
-  @override
-  String get photosSurfacePeople => '人物';
 
   @override
   String get photosSurfaceExplore => '探索';
@@ -6027,9 +6021,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosGraphUnnamedAlbum => '未命名相册';
 
   @override
-  String get photosGraphUnnamedPerson => '未知人物';
-
-  @override
   String get photosGraphBack => '返回图谱';
 
   @override
@@ -6041,11 +6032,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String photosGraphPhotoCount(Object count) {
     return '$count 张照片';
-  }
-
-  @override
-  String photosGraphFaceCount(Object count) {
-    return '$count 张人脸';
   }
 
   @override
@@ -6503,54 +6489,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosRollback => '回滚';
 
   @override
-  String photosLoadFailed(Object error) {
-    return '加载失败: $error';
-  }
-
-  @override
-  String get photosAiActions => '图像分析操作';
-
-  @override
-  String get photosAnalyzeLibrary => '重分析照片库';
-
-  @override
-  String photosAiTaskSubmitted(Object taskId) {
-    return 'AI 任务已提交（$taskId），可在任务中心查看进度';
-  }
-
-  @override
-  String get photosAiTaskSubmitFailed => 'AI 任务提交失败';
-
-  @override
-  String get photosNamePerson => '命名人物';
-
-  @override
-  String get photosPersonNameHint => '输入人物名称';
-
-  @override
   String get photosConfirm => '确定';
-
-  @override
-  String get photosRecluster => '重新聚类';
-
-  @override
-  String get photosNoFaceData => '暂无人脸数据\n上传照片后系统会自动识别并分组';
-
-  @override
-  String get photosUnnamed => '未命名';
-
-  @override
-  String photosFaceCount(Object count) {
-    return '$count 张';
-  }
 
   @override
   String photosPhotoCount(Object count) {
     return '$count 张照片';
   }
-
-  @override
-  String get photosPersonNoPhotos => '该人物暂无照片';
 
   @override
   String photosSharedAlbumAccessError(Object error) {

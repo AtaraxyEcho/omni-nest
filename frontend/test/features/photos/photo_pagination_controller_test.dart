@@ -183,36 +183,6 @@ void main() {
     expect(state.hasMoreGroups, isFalse);
   });
 
-  test('人物聚类加载失败时保留照片中心状态并暴露独立错误', () async {
-    final repository = _MockPhotoRepository();
-    _stubCommon(repository);
-    when(
-      () => repository.listPhotos(
-        query: any(named: 'query'),
-        page: any(named: 'page'),
-        size: any(named: 'size'),
-        sort: any(named: 'sort'),
-      ),
-    ).thenAnswer((_) async => PhotoPage.empty());
-    when(
-      () => repository.listFaceClusters(),
-    ).thenThrow(Exception('AI service unavailable'));
-    final container = ProviderContainer.test(
-      overrides: [photoRepositoryProvider.overrideWithValue(repository)],
-    );
-    addTearDown(container.dispose);
-    await container.read(photoCenterControllerProvider.future);
-
-    await container
-        .read(photoCenterControllerProvider.notifier)
-        .loadFaceClusters();
-
-    final state = container.read(photoCenterControllerProvider).requireValue;
-    expect(state.isLoadingFaceClusters, isFalse);
-    expect(state.faceClusterError, isNotEmpty);
-    expect(state.photos, isEmpty);
-  });
-
   test('导入完成回调会更新照片列表和仪表盘', () async {
     final repository = _MockPhotoRepository();
     _stubCommon(repository);

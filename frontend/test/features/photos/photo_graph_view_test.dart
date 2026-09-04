@@ -5,14 +5,13 @@ import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
-import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_graph_models.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_graph_view.dart';
 
 void main() {
-  test('buildPhotoGraph 构建带类型前缀的节点并解析展示名', () {
+  test('buildPhotoGraph 构建带类型前缀的节点并解析展示名，过滤人物节点', () {
     final relation = _relation(
       nodes: [
         const PhotoRelationNode(
@@ -54,7 +53,6 @@ void main() {
     expect(graph.nodes.map((node) => node.id), [
       'ALBUM:album-1',
       'TIME:2026-08',
-      'PERSON:person-1',
     ]);
     expect(graph.nodes[0].label, 'Japan');
     expect(graph.nodes[1].label, '2026-08');
@@ -63,7 +61,7 @@ void main() {
     expect(graph.truncated, isFalse);
   });
 
-  test('buildPhotoGraph 从当前列表富化相册与人物封面', () {
+  test('buildPhotoGraph 从当前列表富化相册封面', () {
     final relation = _relation(
       nodes: [
         const PhotoRelationNode(
@@ -71,12 +69,6 @@ void main() {
           key: 'album-1',
           label: 'Japan',
           weight: 1,
-        ),
-        const PhotoRelationNode(
-          type: PhotoRelationNodeType.person,
-          key: 'person-1',
-          label: 'Alice',
-          weight: 2,
         ),
       ],
       edges: [],
@@ -93,14 +85,6 @@ void main() {
           coverUrl: 'https://example.test/album.jpg',
         ),
       ],
-      faceClusters: [
-        const PhotoFaceCluster(
-          id: 'person-1',
-          name: 'Alice',
-          faceCount: 2,
-          coverPhotoUrl: 'https://example.test/alice.jpg',
-        ),
-      ],
     );
 
     final graph = buildPhotoGraph(
@@ -108,17 +92,9 @@ void main() {
       kinds: {...PhotoRelationNodeType.values},
       query: '',
       albums: state.albums,
-      faceClusters: state.faceClusters,
     );
 
-    expect(
-      graph.nodes.firstWhere((n) => n.id == 'ALBUM:album-1').coverUrl,
-      'https://example.test/album.jpg',
-    );
-    expect(
-      graph.nodes.firstWhere((n) => n.id == 'PERSON:person-1').coverUrl,
-      'https://example.test/alice.jpg',
-    );
+    expect(graph.nodes.single.coverUrl, 'https://example.test/album.jpg');
   });
 
   test('buildPhotoGraph 按类型筛选节点并丢弃端点缺失的边', () {
@@ -275,7 +251,6 @@ void main() {
     expect(find.byKey(const Key('photo-graph-canvas')), findsOneWidget);
     expect(find.text('Japan'), findsOneWidget);
     expect(find.text('2026-08'), findsOneWidget);
-    expect(find.text('Alice'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(_graphApp(OmniNestTheme.dark()));
@@ -395,22 +370,8 @@ Widget _graphApp(ThemeData theme) {
           label: null,
           weight: 6,
         ),
-        const PhotoRelationNode(
-          type: PhotoRelationNodeType.person,
-          key: 'person-1',
-          label: 'Alice',
-          weight: 3,
-        ),
       ],
-      edges: [
-        const PhotoRelationEdge(
-          sourceType: PhotoRelationNodeType.album,
-          sourceKey: 'album-1',
-          targetType: PhotoRelationNodeType.person,
-          targetKey: 'person-1',
-          weight: 3,
-        ),
-      ],
+      edges: const [],
     ),
   );
   return ProviderScope(
@@ -445,9 +406,6 @@ class _NoopPhotoCenterController extends PhotoCenterController {
 
   @override
   Future<void> loadGroups(GroupBy by, {bool force = false}) async {}
-
-  @override
-  Future<void> loadFaceClusters({bool propagateError = false}) async {}
 
   @override
   Future<void> loadRelationGraph({bool force = false}) async {}

@@ -372,23 +372,6 @@ void main() {
       expect(ticket.expiresAt.toUtc(), DateTime.parse('2030-07-27T00:00:00Z'));
     });
 
-    test('reclusterFaces submits task and returns task id', () async {
-      final adapter = _CapturingHttpClientAdapter(
-        body: {
-          'code': 200,
-          'message': 'success',
-          'data': {'taskId': 'task-recluster', 'status': 'QUEUED'},
-        },
-      );
-      final api = PhotoApi(_apiClient(adapter));
-
-      final taskId = await api.reclusterFaces();
-
-      expect(adapter.lastMethod, 'POST');
-      expect(adapter.lastPath, '/photos/ai/recluster');
-      expect(taskId, 'task-recluster');
-    });
-
     test('reanalyzeLibrary submits task and returns task id', () async {
       final adapter = _CapturingHttpClientAdapter(
         body: {

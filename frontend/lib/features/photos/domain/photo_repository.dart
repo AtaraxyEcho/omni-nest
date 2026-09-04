@@ -3,7 +3,6 @@ import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_batch_task.dart';
 import 'package:omninest/features/photos/domain/photo_batch_download_ticket.dart';
 import 'package:omninest/features/photos/domain/photo_edit_version.dart';
-import 'package:omninest/features/photos/domain/photo_face_cluster.dart';
 import 'package:omninest/features/photos/domain/photo_group.dart';
 import 'package:omninest/features/photos/domain/photo_relation.dart';
 import 'package:omninest/features/photos/domain/photo_share_link.dart';
@@ -160,22 +159,10 @@ abstract interface class PhotoRepository {
     int size,
   });
 
-  // -- AI 人脸聚类 --
-
-  /// 获取人脸聚类列表
-  Future<List<PhotoFaceCluster>> listFaceClusters();
-
-  /// 获取聚类中的照片
-  Future<List<PhotoItem>> getPhotosByCluster(String clusterId);
+  // -- 关系图谱 --
 
   /// 获取关系图谱节点与边。
   Future<PhotoRelationGraph> getRelationGraph();
-
-  /// 为聚类命名
-  Future<void> nameCluster(String clusterId, String name);
-
-  /// 提交重新聚类任务
-  Future<String> reclusterFaces();
 
   /// 提交照片库存量 AI 重分析任务
   Future<String> reanalyzeLibrary();

@@ -21,13 +21,14 @@ class _GraphFilterBar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (final type in PhotoRelationNodeType.values)
-          FilterChip(
-            selected: enabledKinds.contains(type),
-            onSelected: (_) => onToggle(type),
-            label: Text(_kindLabel(l10n, type)),
-            showCheckmark: false,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-          ),
+          if (type != PhotoRelationNodeType.person)
+            FilterChip(
+              selected: enabledKinds.contains(type),
+              onSelected: (_) => onToggle(type),
+              label: Text(_kindLabel(l10n, type)),
+              showCheckmark: false,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+            ),
         if (isLoading) ...[
           const SizedBox(width: 4),
           SizedBox.square(
@@ -53,10 +54,7 @@ String _kindLabel(AppLocalizations l10n, PhotoRelationNodeType type) {
 }
 
 String _nodeCountLabel(AppLocalizations l10n, PhotoGraphNode node) {
-  return switch (node.type) {
-    PhotoRelationNodeType.person => l10n.photosGraphFaceCount(node.weight),
-    _ => l10n.photosGraphPhotoCount(node.weight),
-  };
+  return l10n.photosGraphPhotoCount(node.weight);
 }
 
 class _GraphSearchStatus extends StatelessWidget {
@@ -332,10 +330,6 @@ class _GraphDetailState extends ConsumerState<_GraphDetail> {
         return (await ref.read(
           photoAlbumDetailProvider(node.key).future,
         )).photos;
-      case PhotoRelationNodeType.person:
-        return ref
-            .read(photoCenterControllerProvider.notifier)
-            .getPhotosByCluster(node.key);
       case PhotoRelationNodeType.time:
       case PhotoRelationNodeType.location:
         await ref
@@ -353,6 +347,8 @@ class _GraphDetailState extends ConsumerState<_GraphDetail> {
                 .toList(growable: false) ??
             const <PhotoItem>[];
         return photos;
+      case PhotoRelationNodeType.person:
+        return const <PhotoItem>[];
     }
   }
 
@@ -364,7 +360,6 @@ class _GraphDetailState extends ConsumerState<_GraphDetail> {
         widget.node.label.trim().isEmpty
             ? switch (widget.node.type) {
               PhotoRelationNodeType.album => l10n.photosGraphUnnamedAlbum,
-              PhotoRelationNodeType.person => l10n.photosGraphUnnamedPerson,
               _ => widget.node.key,
             }
             : widget.node.label;
