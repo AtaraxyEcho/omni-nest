@@ -7,6 +7,16 @@
 `backend/`、`nginx/`、`ai-sidecar/`、`netease-api/` 包含生产环境使用的完整
 Dockerfile 或运行脚本。Compose 从项目源码构建镜像，不复制业务源码到部署目录。
 
+## 资源要求与安全扫描
+
+生产编排默认包含 ClamAV 病毒扫描（clamav 服务）。公网生产环境建议保持开启，
+最低配置为 4 核 8GB 内存；4 核 4GB 仅适合关闭病毒扫描的个人自托管场景。
+关闭病毒扫描必须同时停用容器与后端 `OMNINEST_CLAMAV_ENABLED`，且不应在公网
+生产环境这样做；同步规则与开发编排见[开发环境部署](../dev/README.md)。
+
+Photos 图像分析侧车使用 CPU 推理，无需 GPU；模型首次启动自动下载，预留最多
+10 分钟启动窗口。
+
 ## 构建与启动
 
 backend 镜像使用已经由 Maven 生成的应用 JAR：

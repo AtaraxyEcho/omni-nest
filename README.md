@@ -76,6 +76,17 @@ OmniNest 是一个面向个人和家庭场景的自托管数字生活中心。�
 - Flutter stable。当前项目验证基线为 Flutter 3.44.8、Dart 3.12.2。
 - Chrome，用于 Web 开发；Android Studio 与 Android SDK 用于 Android 开发；Windows 或 macOS 对应桌面工具链用于桌面构建。
 
+## 服务器配置与安全扫描建议
+
+| 部署场景 | 建议配置 | 病毒扫描 |
+| --- | --- | --- |
+| 个人自托管 / 本地开发 | 4 核 4GB | 可选关闭以降低常驻内存 |
+| 公网生产环境 | 4 核 8GB | 建议保持开启 |
+
+- 全栈包含 PostgreSQL、Redis、RabbitMQ、MinIO、后端运行角色进程和图像分析侧车等常驻服务。4GB 内存适合个人自托管或开发场景（此时建议关闭 ClamAV）；公网生产环境同时承载病毒扫描时内存偏紧，建议 8GB。
+- ClamAV 为上传文件提供安全扫描，属于可选服务。开发编排通过 `COMPOSE_PROFILES=clamav` 控制是否启动，关闭容器时必须同步把后端 `OMNINEST_CLAMAV_ENABLED` 改为 `false`，否则上传会因扫描不可用被拒绝，详见[开发环境部署](deploy/dev/README.md)。公网生产环境应保持开启。
+- Photos 图像分析侧车使用 CPU 推理（InsightFace），无需 GPU；模型在首次启动时自动下载，需预留最多 10 分钟的启动窗口。
+
 ## 快速开始
 
 以下命令均从项目根目录执行。后端和前端需要使用两个 Git Bash 终端。
