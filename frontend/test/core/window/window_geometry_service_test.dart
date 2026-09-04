@@ -92,6 +92,18 @@ void main() {
       expect(plan.position, const Offset((2560 - 1280) / 2, (1440 - 800) / 2));
     });
 
+    test('记忆位置偏右导致窗口右缘越界：夹取回工作区内', () {
+      const workArea = Rect.fromLTWH(0, 0, 1536, 845);
+      const saved = WindowBoundsSnapshot(
+        bounds: Rect.fromLTWH(1000, 100, 1280, 718),
+      );
+      final plan = computeStartupGeometry(
+        saved: saved,
+        visibleAreas: [workArea],
+      );
+      expect(plan.position, const Offset(256, 100));
+    });
+
     test('记忆为最大化时保持最大化并抬升尺寸下限', () {
       const workArea = Rect.fromLTWH(0, 0, 2560, 1440);
       const saved = WindowBoundsSnapshot(

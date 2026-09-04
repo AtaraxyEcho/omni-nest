@@ -4,8 +4,8 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:flutter/foundation.dart';
-import 'package:omninest/core/utils/platform_helper.dart';
 import 'package:flutter/services.dart' show MethodChannel;
+import 'package:omninest/core/utils/platform_helper.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -100,15 +100,30 @@ WindowStartupPlan computeStartupGeometry({
     final width = math.max(minimumSize.width, saved.bounds.width);
     final height = math.max(minimumSize.height, saved.bounds.height);
     final size = Size(width, height);
-    final anchored = visibleAreas.any(
-      (area) => area.contains(saved.bounds.topLeft),
-    );
-    final position =
-        anchored
-            ? saved.bounds.topLeft
-            : visibleAreas.isNotEmpty
-            ? _centerIn(visibleAreas.first, size)
-            : null;
+    final containingArea =
+        visibleAreas
+            .where((area) => area.contains(saved.bounds.topLeft))
+            .firstOrNull;
+    final Offset? position;
+    if (containingArea != null) {
+      // 位置夹取在所在工作区边界内，避免右缘或下缘越界不可见。
+      final maxX = math.max(
+        containingArea.left,
+        containingArea.right - size.width,
+      );
+      final maxY = math.max(
+        containingArea.top,
+        containingArea.bottom - size.height,
+      );
+      position = Offset(
+        math.max(containingArea.left, math.min(saved.bounds.left, maxX)),
+        math.max(containingArea.top, math.min(saved.bounds.top, maxY)),
+      );
+    } else if (visibleAreas.isNotEmpty) {
+      position = _centerIn(visibleAreas.first, size);
+    } else {
+      position = null;
+    }
     return WindowStartupPlan(
       size: size,
       position: position,
@@ -185,20 +200,30 @@ class WindowGeometryService with WindowListener {
         await windowManager.maximize();
       }
       // window_manager 的 show 走 ShowWindowAsync，对创建即隐藏的窗口
-      // 可能被静默丢弃；改用自定义通道在 UI 线程同步展示。
-      await _windowFrameChannel.invokeMethod<void>('showWindow');
+      // 可能被静默丢弃；Windows 改用自定义通道在 UI 线程同步展示。
+      await _revealWindow();
     } on Object catch (error) {
       if (kDebugMode) {
         debugPrint('Window geometry startup failed: $error');
       }
       try {
-        await _windowFrameChannel.invokeMethod<void>('showWindow');
+        await _revealWindow();
       } on Object catch (showError) {
         if (kDebugMode) {
           debugPrint('Window show fallback failed: $showError');
         }
       }
     }
+  }
+
+  /// 展示窗口：Windows 经自定义通道同步展示；其余桌面平台原生启动即
+  /// 已显示，走 window_manager 兜底。
+  Future<void> _revealWindow() async {
+    if (defaultTargetPlatform == TargetPlatform.windows) {
+      await _windowFrameChannel.invokeMethod<void>('showWindow');
+      return;
+    }
+    await windowManager.show();
   }
 
   /// 收集全部显示器的工作区；屏幕信息不可用时返回空列表。
@@ -237,7 +262,7 @@ class WindowGeometryService with WindowListener {
   Future<void> _persistNow() async {
     try {
       final maximized = await windowManager.isMaximized();
-      if (await windowManager.isFullScreen()) {
+      if (await windowManager.isFullScreen() || await _isNativeFullscreen()) {
         return;
       }
       final bounds = await windowManager.getBounds();
@@ -254,6 +279,22 @@ class WindowGeometryService with WindowListener {
       if (kDebugMode) {
         debugPrint('Window geometry persist failed: $error');
       }
+    }
+  }
+
+  /// Windows 的 F11 全屏经自定义通道切换，window_manager 不感知，
+  /// 持久化前需单独查询，避免把全屏尺寸当作正常边界记忆。
+  Future<bool> _isNativeFullscreen() async {
+    if (defaultTargetPlatform != TargetPlatform.windows) {
+      return false;
+    }
+    try {
+      return await _windowFrameChannel.invokeMethod<bool>(
+            'isWindowFullscreen',
+          ) ??
+          false;
+    } on Object {
+      return false;
     }
   }
 

@@ -13,6 +13,7 @@ constexpr const char kSetWindowFullscreenMethod[] = "setWindowFullscreen";
 constexpr const char kSaveWindowPlacementMethod[] = "saveWindowPlacement";
 constexpr const char kRestoreWindowPlacementMethod[] = "restoreWindowPlacement";
 constexpr const char kShowWindowMethod[] = "showWindow";
+constexpr const char kIsWindowFullscreenMethod[] = "isWindowFullscreen";
 constexpr const char kHiddenArgument[] = "hidden";
 constexpr const char kFullscreenArgument[] = "fullscreen";
 }  // 命名空间
@@ -53,6 +54,10 @@ bool FlutterWindow::OnCreate() {
             ::ShowWindow(GetHandle(), SW_SHOW);
             ::SetForegroundWindow(GetHandle());
             result->Success(flutter::EncodableValue(true));
+            return;
+          }
+          if (call.method_name() == kIsWindowFullscreenMethod) {
+            result->Success(flutter::EncodableValue(window_fullscreen_));
             return;
           }
           if (call.method_name() == kSaveWindowPlacementMethod) {
