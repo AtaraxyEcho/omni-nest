@@ -201,12 +201,14 @@ class _FrameNavItemState extends State<_FrameNavItem> {
   Widget build(BuildContext context) {
     final colors = context.frameColors;
     final active = widget.active;
+    // 关键：未悬停端使用"悬停色 + alpha 0"而不是 Colors.transparent，
+    // 避免颜色插值时 RGB 向黑色过渡导致进入/移出瞬间闪现暗色背景。
     final background =
         active
             ? colors.activeBg
             : _hovering
             ? colors.hover
-            : Colors.transparent;
+            : colors.hover.withValues(alpha: 0);
     final foreground = active || _hovering ? colors.ink : colors.muted;
     final iconColor = active ? colors.accent : foreground;
 

@@ -102,17 +102,30 @@ void main() {
     addTearDown(gesture.removePointer);
 
     final timelineLabel = find.text('Timeline').first;
+
+    // 悬停进入的中途帧：RGB 通道保持悬停色不变，仅透明度渐变（无黑色闪烁）
     await gesture.moveTo(tester.getCenter(timelineLabel));
+    await tester.pump(const Duration(milliseconds: 75));
+    final enterMid = _navItemBackground(tester, timelineLabel)!;
+    expect(enterMid.r, greaterThan(0.85));
+    expect(enterMid.g, greaterThan(0.85));
     await tester.pumpAndSettle();
 
     expect(_navItemBackground(tester, timelineLabel), FramePalette.hover);
     expect(_navItemTextColor(tester, timelineLabel), FramePalette.ink);
 
-    // 移出到内容区：悬停态完全恢复
+    // 移出中途帧同样不变黑，结束后完全恢复
     await gesture.moveTo(const Offset(900, 400));
+    await tester.pump(const Duration(milliseconds: 75));
+    final exitMid = _navItemBackground(tester, timelineLabel)!;
+    expect(exitMid.r, greaterThan(0.85));
+    expect(exitMid.g, greaterThan(0.85));
     await tester.pumpAndSettle();
 
-    expect(_navItemBackground(tester, timelineLabel), Colors.transparent);
+    expect(
+      _navItemBackground(tester, timelineLabel),
+      FramePalette.hover.withValues(alpha: 0),
+    );
     expect(_navItemTextColor(tester, timelineLabel), FramePalette.muted);
   });
 }
