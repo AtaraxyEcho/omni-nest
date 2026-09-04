@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/app/appearance/application/appearance_controller.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
+import 'package:omninest/app/locale/application/locale_controller.dart';
 import 'package:omninest/app/theme/global_theme_colors.dart';
 import 'package:omninest/core/auth/auth_controller.dart';
 
@@ -29,6 +30,7 @@ class UserAvatarMenu extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authSessionProvider);
     final themeMode = ref.watch(appearanceControllerProvider);
+    final languageCode = ref.watch(localeControllerProvider);
     final user = authState.asData?.value.user;
     final appColors = context.globalColors;
     final sourceTheme = Theme.of(context);
@@ -132,6 +134,23 @@ class UserAvatarMenu extends ConsumerWidget {
                   selected: themeMode == ThemeMode.dark,
                 ),
               ),
+              // 语言切换项与设置页共用同一组文案
+              PopupMenuItem<_MenuAction>(
+                value: _MenuAction.languageChinese,
+                child: _MenuItem(
+                  icon: Icons.language_rounded,
+                  title: l10n.settingsLanguageChinese,
+                  selected: languageCode == 'zh',
+                ),
+              ),
+              PopupMenuItem<_MenuAction>(
+                value: _MenuAction.languageEnglish,
+                child: _MenuItem(
+                  icon: Icons.language_rounded,
+                  title: l10n.settingsLanguageEnglish,
+                  selected: languageCode == 'en',
+                ),
+              ),
               const PopupMenuDivider(),
               // 存储空间
               PopupMenuItem<_MenuAction>(
@@ -188,6 +207,14 @@ class UserAvatarMenu extends ConsumerWidget {
               .read(appearanceControllerProvider.notifier)
               .setThemeMode(ThemeMode.dark),
         );
+      case _MenuAction.languageChinese:
+        unawaited(
+          ref.read(localeControllerProvider.notifier).setLanguage('zh'),
+        );
+      case _MenuAction.languageEnglish:
+        unawaited(
+          ref.read(localeControllerProvider.notifier).setLanguage('en'),
+        );
       case _MenuAction.storage:
         context.go('/files');
       case _MenuAction.admin:
@@ -203,6 +230,8 @@ enum _MenuAction {
   themeSystem,
   themeLight,
   themeDark,
+  languageChinese,
+  languageEnglish,
   storage,
   admin,
   signOut,
