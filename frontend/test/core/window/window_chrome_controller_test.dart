@@ -47,7 +47,7 @@ void main() {
     );
   });
 
-  test('releasing an older lease keeps the newer owner active', () {
+  test('releasing an older lease keeps the newer owner active', () async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final controller = container.read(windowChromeControllerProvider.notifier);
@@ -55,12 +55,15 @@ void main() {
     final older = controller.acquireImmersive(owner: 'reader');
     final newer = controller.acquireImmersive(owner: 'photos');
     older.release();
+    // 释放经微任务延迟，冲刷后再断言状态。
+    await Future<void>.delayed(Duration.zero);
 
     final active = container.read(windowChromeControllerProvider);
     expect(active.immersiveOwner, 'photos');
     expect(active.isFullscreen, isTrue);
 
     newer.release();
+    await Future<void>.delayed(Duration.zero);
     expect(
       container.read(windowChromeControllerProvider).isFullscreen,
       isFalse,
@@ -124,6 +127,7 @@ void main() {
       final lease = controller.acquireImmersive(owner: 'reader');
       await fullscreenEntered.future;
       lease.release();
+      await Future<void>.delayed(Duration.zero);
       allowFullscreenEnter.complete();
       await controller.pendingApply;
 
