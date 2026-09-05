@@ -159,10 +159,7 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
           onSlideshow:
               () => context.push(
                 '/photos/slideshow',
-                extra: {
-                  'photos': [photo],
-                  'initialIndex': 0,
-                },
+                extra: _slideshowExtra(photo),
               ),
           showInfo: _showInfo,
           compact: compact,
@@ -314,6 +311,15 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
         ],
       ),
     );
+  }
+
+  /// 幻灯片播放当前可见照片全集，从当前照片开始。
+  Map<String, dynamic> _slideshowExtra(PhotoItem photo) {
+    final state = ref.read(photoCenterControllerProvider).asData?.value;
+    final visible = state?.visiblePhotos ?? const <PhotoItem>[];
+    final photos = visible.isNotEmpty ? visible : <PhotoItem>[photo];
+    final index = photos.indexWhere((item) => item.id == photo.id);
+    return {'photos': photos, 'initialIndex': index < 0 ? 0 : index};
   }
 
   Future<void> _confirmDelete() async {

@@ -50,7 +50,9 @@ class WindowChromeLease {
       return;
     }
     _released = true;
-    _releaseRequest(_requestId);
+    // 页面 dispose 发生在路由过渡的构建阶段，此处同步修改 Provider 会被
+    // Riverpod 的构建期守卫拒绝，导致无边框状态无法退出；延迟一拍执行。
+    scheduleMicrotask(() => _releaseRequest(_requestId));
   }
 }
 
