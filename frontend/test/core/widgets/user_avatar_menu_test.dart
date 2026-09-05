@@ -67,10 +67,14 @@ void main() {
 
     await tester.tap(find.byType(UserAvatarMenu));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('English'));
+    await tester.tap(find.text('Language'));
     await tester.pumpAndSettle();
 
     expect(container.read(localeControllerProvider), 'en');
+
+    await tester.tap(find.byType(UserAvatarMenu));
+    await tester.pumpAndSettle();
+    expect(find.text('English'), findsOneWidget);
   });
 }
 

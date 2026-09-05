@@ -134,22 +134,10 @@ class UserAvatarMenu extends ConsumerWidget {
                   selected: themeMode == ThemeMode.dark,
                 ),
               ),
-              // 语言切换项与设置页共用同一组文案
+              // 语言开关：开启为中文界面，关闭为英文界面
               PopupMenuItem<_MenuAction>(
-                value: _MenuAction.languageChinese,
-                child: _MenuItem(
-                  icon: Icons.language_rounded,
-                  title: l10n.settingsLanguageChinese,
-                  selected: languageCode == 'zh',
-                ),
-              ),
-              PopupMenuItem<_MenuAction>(
-                value: _MenuAction.languageEnglish,
-                child: _MenuItem(
-                  icon: Icons.language_rounded,
-                  title: l10n.settingsLanguageEnglish,
-                  selected: languageCode == 'en',
-                ),
+                value: _MenuAction.language,
+                child: _LanguageToggleItem(isChinese: languageCode == 'zh'),
               ),
               const PopupMenuDivider(),
               // 存储空间
@@ -207,13 +195,12 @@ class UserAvatarMenu extends ConsumerWidget {
               .read(appearanceControllerProvider.notifier)
               .setThemeMode(ThemeMode.dark),
         );
-      case _MenuAction.languageChinese:
+      case _MenuAction.language:
+        final current = ref.read(localeControllerProvider);
         unawaited(
-          ref.read(localeControllerProvider.notifier).setLanguage('zh'),
-        );
-      case _MenuAction.languageEnglish:
-        unawaited(
-          ref.read(localeControllerProvider.notifier).setLanguage('en'),
+          ref
+              .read(localeControllerProvider.notifier)
+              .setLanguage(current == 'zh' ? 'en' : 'zh'),
         );
       case _MenuAction.storage:
         context.go('/files');
@@ -230,8 +217,7 @@ enum _MenuAction {
   themeSystem,
   themeLight,
   themeDark,
-  languageChinese,
-  languageEnglish,
+  language,
   storage,
   admin,
   signOut,
@@ -269,6 +255,47 @@ class _MenuItem extends StatelessWidget {
           selected
               ? Icon(Icons.check_rounded, size: 18, color: colors.primary)
               : null,
+      dense: true,
+      visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+}
+
+/// 语言开关行：开关开启表示中文界面，关闭表示英文界面。
+/// 行内 Switch 仅承载状态展示，点击统一交给菜单选中逻辑处理。
+class _LanguageToggleItem extends StatelessWidget {
+  const _LanguageToggleItem({required this.isChinese});
+
+  final bool isChinese;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colors = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: Icon(Icons.language_rounded, size: 20, color: colors.onSurface),
+      title: Text(
+        l10n.settingsLanguage,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: colors.onSurface,
+        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isChinese
+                ? l10n.settingsLanguageChinese
+                : l10n.settingsLanguageEnglish,
+            style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(width: 8),
+          IgnorePointer(child: Switch(value: isChinese, onChanged: (_) {})),
+        ],
+      ),
       dense: true,
       visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
       contentPadding: EdgeInsets.zero,
