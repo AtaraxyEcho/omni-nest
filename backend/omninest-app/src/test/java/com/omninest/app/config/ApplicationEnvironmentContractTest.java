@@ -107,6 +107,7 @@ class ApplicationEnvironmentContractTest {
 
         assertThat(dev.getProperty("spring.config.activate.on-profile")).isEqualTo("dev");
         assertThat(dev.getProperty("omninest.runtime.embedded-worker-enabled")).isEqualTo(true);
+        assertThat(dev.getProperty("photo.geo.import.dir")).isEqualTo("../data/geonames");
         assertThat(prod.getProperty("spring.config.activate.on-profile")).isEqualTo("prod");
         assertThat(prod.getProperty("omninest.runtime.embedded-worker-enabled")).isEqualTo(false);
 

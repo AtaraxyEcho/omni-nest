@@ -42,6 +42,10 @@ photo:
     timeout-seconds: ${OMNINEST_PHOTO_AI_TIMEOUT_SECONDS:30}
     max-image-bytes: ${OMNINEST_PHOTO_AI_MAX_IMAGE_BYTES:67108864}
     max-response-bytes: ${OMNINEST_PHOTO_AI_MAX_RESPONSE_BYTES:1048576}
+  geo:
+    import:
+      # GeoNames dump 数据集目录；相对路径相对后端进程工作目录（backend/）解析。
+      dir: ../data/geonames
 
 file:
   local-media:
