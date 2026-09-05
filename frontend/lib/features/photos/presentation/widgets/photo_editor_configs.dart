@@ -101,6 +101,8 @@ ProImageEditorConfigs buildPhotoEditorConfigs(AppLocalizations l10n) {
         bottomNavigationBarText: l10n.photosEditorFilterBottomNav,
         back: l10n.photosEditorBack,
         done: l10n.photosEditorDone,
+        // 滤镜名为专有名词保留原文，仅本地化"无滤镜"。
+        filters: I18nFilters(none: l10n.photosEditorFilterNone),
       ),
       blurEditor: I18nBlurEditor(
         bottomNavigationBarText: l10n.photosEditorBlurBottomNav,

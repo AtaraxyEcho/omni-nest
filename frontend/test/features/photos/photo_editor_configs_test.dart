@@ -13,6 +13,7 @@ void main() {
     expect(configs.i18n.cropRotateEditor.bottomNavigationBarText, '裁剪旋转');
     expect(configs.i18n.tuneEditor.brightness, '亮度');
     expect(configs.i18n.filterEditor.bottomNavigationBarText, '滤镜');
+    expect(configs.i18n.filterEditor.filters.none, '无滤镜');
     expect(configs.cropRotateEditor.aspectRatios.first.text, '自由');
     expect(configs.cropRotateEditor.aspectRatios[1].text, '原始');
   });
