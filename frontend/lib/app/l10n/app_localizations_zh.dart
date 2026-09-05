@@ -7841,6 +7841,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosBackToPhotos => '返回照片';
 
   @override
+  String get photosTagsSelectHint => '选择一个标签查看对应照片';
+
+  @override
   String get photosDeleteShort => '删除';
 
   @override

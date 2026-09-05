@@ -21,6 +21,7 @@ import java.awt.image.ByteLookupTable;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.awt.image.LookupOp;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,6 +112,71 @@ public class PhotoEditService {
         version.setEditType(request.editType());
         version.setEditParams(request.editParams());
         version.setFileId(fileId);
+        transactionTemplate.executeWithoutResult(status -> {
+            editVersionRepository.save(version);
+            photo.setCoverFileId(fileId);
+            photoItemRepository.save(photo);
+            enforceMaxVersions(ownerUserId, photoId);
+            syncEventService.record(
+                    ownerUserId,
+                    SyncScope.PHOTOS,
+                    "PHOTO_ITEM",
+                    photoId.toString(),
+                    SyncAction.UPDATED,
+                    photo.getVersion(),
+                    Map.of("editVersion", nextVersion)
+            );
+        });
+
+        return toDto(version);
+    }
+
+    /**
+     * 保存外部编辑器（如 Flutter 端 pro_image_editor）产出的整图结果为新版本。
+     *
+     * <p>与 {@link #applyEdit} 的参数式编辑不同，本方法直接接收编辑完成的
+     * 图像字节，不再在服务端做二次变换。</p>
+     *
+     * @param ownerUserId 所有者用户 ID
+     * @param photoId 照片 ID
+     * @param image 编辑后的图像字节（JPEG）
+     * @return 新增的编辑版本
+     */
+    public PhotoEditVersionDto applyEditedImage(
+            UUID ownerUserId,
+            UUID photoId,
+            byte[] image
+    ) {
+        PhotoItem photo = photoItemRepository.findById(photoId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "照片不存在"));
+        if (!photo.getOwnerUserId().equals(ownerUserId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权编辑此照片");
+        }
+        if (image == null || image.length == 0) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "编辑结果为空");
+        }
+
+        int nextVersion = (int) editVersionRepository.countByPhotoId(photoId) + 1;
+        String fileName = photoId + "_v" + nextVersion + ".jpg";
+
+        UUID fileId = derivedAssetStorageService.store(
+                ownerUserId,
+                "PHOTO_ITEM",
+                photoId,
+                "EDIT_VERSION",
+                fileName,
+                "image/jpeg",
+                new ByteArrayInputStream(image)
+        );
+
+        PhotoEditVersion version = new PhotoEditVersion();
+        version.setOwnerUserId(ownerUserId);
+        version.setPhotoId(photoId);
+        version.setVersionNumber(nextVersion);
+        version.setEditType("EXTERNAL");
+        version.setEditParams(Map.of("source", "pro_image_editor"));
+        version.setFileId(fileId);
+
         transactionTemplate.executeWithoutResult(status -> {
             editVersionRepository.save(version);
             photo.setCoverFileId(fileId);

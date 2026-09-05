@@ -173,6 +173,25 @@ public class PhotoLibraryController {
         return ApiResponse.success(libraryService.movePhotosToTrash(userId, body.photoIds()));
     }
 
+    @Operation(summary = "保存外部编辑结果", description = "接收编辑器产出的整图字节并存为新编辑版本")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @PostMapping(value = "/api/v1/photos/{photoId}/edited-image", consumes = "image/jpeg")
+    ApiResponse<PhotoEditVersionDto> applyEditedImage(
+            @PathVariable UUID photoId,
+            @RequestBody byte[] image
+    ) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(editService.applyEditedImage(userId, photoId, image));
+    }
+
+    @Operation(summary = "按标签查询照片", description = "返回携带指定标签的照片列表")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_READ + "')")
+    @GetMapping("/api/v1/photos/by-tag")
+    ApiResponse<List<PhotoItemDto>> listByTag(@RequestParam String tag) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(libraryService.listByTag(userId, tag));
+    }
+
     // ─── 回收站 ───
 
     @Operation(summary = "回收站照片列表", description = "分页查询回收站中的照片")

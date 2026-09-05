@@ -8,7 +8,6 @@ import 'package:omninest/features/admin/domain/admin_section.dart';
 import 'package:omninest/features/admin/presentation/widgets/admin_shell.dart';
 import 'package:omninest/features/files/domain/file_node.dart';
 import 'package:omninest/features/files/presentation/pages/file_preview_page.dart';
-import 'package:omninest/features/photos/presentation/widgets/photo_editor_toolbar.dart';
 import 'package:omninest/features/profile/presentation/widgets/profile_mobile_content.dart';
 import 'package:omninest/features/video/domain/movie_models.dart';
 import 'package:omninest/features/video/presentation/widgets/series_detail_hero.dart';
@@ -46,34 +45,6 @@ void main() {
       await tester.pump();
       expect(tester.takeException(), isNull, reason: '尺寸 $size 出现布局异常');
     }
-  });
-
-  testWidgets('相片工具栏在 360 宽度和放大字体下保持五栏稳定', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(360, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      _testApp(
-        PhotoEditorToolbar(
-          selectedTool: EditTool.brightness,
-          onToolSelected: (_) {},
-          onRotate: _noop,
-          onCrop: _noop,
-          brightness: 0.2,
-          contrast: 1,
-          saturation: 0,
-          selectedFilter: FilterPreset.original,
-          onBrightnessChanged: (_) {},
-          onSaturationChanged: (_) {},
-          onContrastChanged: (_) {},
-          onFilterSelected: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byType(PhotoEditorToolbar), findsOneWidget);
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('剧集详情 Hero 在窄屏使用纵向内容层级', (tester) async {

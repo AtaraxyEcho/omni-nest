@@ -14754,6 +14754,12 @@ abstract class AppLocalizations {
   /// **'Back to Photos'**
   String get photosBackToPhotos;
 
+  /// No description provided for @photosTagsSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a tag to browse its photos'**
+  String get photosTagsSelectHint;
+
   /// No description provided for @photosDeleteShort.
   ///
   /// In en, this message translates to:

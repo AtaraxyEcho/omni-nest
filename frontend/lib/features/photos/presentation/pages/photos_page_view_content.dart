@@ -2,7 +2,7 @@ part of 'photos_page.dart';
 
 /// Frame 视图内容分发：网格、时间线、地点、标签、影集与回收站。
 ///
-/// 地点、标签与回收站的完整交互在后续批次实现，当前提供 Frame 风格空态。
+/// 地点与回收站的完整交互在后续批次实现；标签视图已接入实时查询。
 class _FrameViewContent extends ConsumerWidget {
   const _FrameViewContent({
     required this.state,
@@ -59,11 +59,10 @@ class _FrameViewContent extends ConsumerWidget {
           message: AppLocalizations.of(context).photosFrameLocationsEmpty,
           hint: AppLocalizations.of(context).photosFrameLocationsEmptyHint,
         ),
-        FrameView.tags => FrameEmptyView(
+        FrameView.tags => FrameTagsView(
           key: const ValueKey('frame-tags'),
-          icon: Icons.sell_outlined,
-          message: AppLocalizations.of(context).photosFrameTagsEmpty,
-          hint: AppLocalizations.of(context).photosFrameTagsEmptyHint,
+          onOpenPhoto: onOpenPhoto,
+          onToggleFavorite: onToggleFavorite,
         ),
         FrameView.albums => FrameAlbumsView(
           key: const ValueKey('frame-albums'),

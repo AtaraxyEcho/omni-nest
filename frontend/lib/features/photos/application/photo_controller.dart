@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -706,6 +707,16 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
     }
   }
 
+  /// 提交外部编辑器产出的整图字节，保存为新编辑版本。
+  Future<void> applyEditedImage(String photoId, Uint8List bytes) async {
+    try {
+      await _repo.applyEditedImage(photoId, bytes);
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
+    }
+  }
+
   /// 为有 GPS 坐标但缺少地名的照片补充逆地理编码。
   Future<void> backfillGeocode(String photoId) async {
     try {
@@ -911,6 +922,17 @@ class PhotoInfoPanelVisibleNotifier extends Notifier<bool> {
 
   void toggle() => state = !state;
 }
+
+/// 用户的标签清单（用于标签视图芯片）。
+final photoTagsProvider = FutureProvider.autoDispose<List<String>>((ref) {
+  return ref.watch(photoRepositoryProvider).listTags();
+});
+
+/// 按标签查询的照片列表。
+final photosByTagProvider = FutureProvider.autoDispose
+    .family<List<PhotoItem>, String>((ref, tag) {
+      return ref.watch(photoRepositoryProvider).listByTag(tag);
+    });
 
 final photoInfoPanelVisibleProvider =
     NotifierProvider<PhotoInfoPanelVisibleNotifier, bool>(

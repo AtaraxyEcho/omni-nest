@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:omninest/features/photos/data/photo_api.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
@@ -55,6 +56,13 @@ class PhotoRepositoryImpl implements PhotoRepository {
 
   @override
   Future<TaskSubmission> purgeTrash() => _api.purgeTrash();
+
+  @override
+  Future<PhotoEditVersion> applyEditedImage(String photoId, Uint8List bytes) =>
+      _api.applyEditedImage(photoId, bytes);
+
+  @override
+  Future<List<PhotoItem>> listByTag(String tag) => _api.listByTag(tag);
 
   @override
   Future<PhotoPage> listFavorites({

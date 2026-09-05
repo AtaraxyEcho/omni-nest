@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_batch_task.dart';
@@ -42,6 +43,12 @@ abstract interface class PhotoRepository {
 
   /// 永久删除回收站中的照片。
   Future<TaskSubmission> purgePhoto(String photoId, {bool cascade = false});
+
+  /// 提交外部编辑器产出的整图字节，保存为新编辑版本。
+  Future<PhotoEditVersion> applyEditedImage(String photoId, Uint8List bytes);
+
+  /// 按标签查询照片列表。
+  Future<List<PhotoItem>> listByTag(String tag);
 
   /// 清空回收站。
   Future<TaskSubmission> purgeTrash();

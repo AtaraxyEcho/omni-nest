@@ -3670,6 +3670,7 @@
   "photosTrashPurged": "Deleted permanently",
   "photosTrashMoved": "Moved to Trash",
   "photosBackToPhotos": "Back to Photos",
+  "photosTagsSelectHint": "Select a tag to browse its photos",
   "photosDeleteShort": "Delete",
   "photosSaturation": "Saturation",
   "photosModuleDisplayName": "Lightbox",

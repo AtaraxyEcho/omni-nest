@@ -21,6 +21,7 @@ import 'package:omninest/features/photos/presentation/widgets/frame_empty_view.d
 import 'package:omninest/features/photos/presentation/widgets/frame_masonry_grid.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_sidebar.dart';
+import 'package:omninest/features/photos/presentation/widgets/frame_tags_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_trash_view.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_top_bar.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';

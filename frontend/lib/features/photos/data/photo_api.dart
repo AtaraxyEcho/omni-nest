@@ -88,6 +88,28 @@ class PhotoApi {
     await apiClient.dio.post<void>('/photos/$photoId/geocode');
   }
 
+  /// 提交外部编辑器产出的整图字节，保存为新编辑版本。
+  Future<PhotoEditVersion> applyEditedImage(
+    String photoId,
+    Uint8List bytes,
+  ) async {
+    final response = await apiClient.dio.post<Map<String, dynamic>>(
+      '/photos/$photoId/edited-image',
+      data: bytes,
+      options: Options(headers: {'Content-Type': 'image/jpeg'}),
+    );
+    return PhotoEditVersion.fromJson(parseData(response.data));
+  }
+
+  /// 按标签查询照片列表。
+  Future<List<PhotoItem>> listByTag(String tag) async {
+    final response = await apiClient.dio.get<Map<String, dynamic>>(
+      '/photos/by-tag',
+      queryParameters: {'tag': tag},
+    );
+    return parseList(response.data).map(PhotoItem.fromJson).toList();
+  }
+
   /// 永久删除回收站中的照片。
   Future<TaskSubmission> purgePhoto(
     String photoId, {

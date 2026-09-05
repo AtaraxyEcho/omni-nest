@@ -8090,6 +8090,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosBackToPhotos => 'Back to Photos';
 
   @override
+  String get photosTagsSelectHint => 'Select a tag to browse its photos';
+
+  @override
   String get photosDeleteShort => 'Delete';
 
   @override
