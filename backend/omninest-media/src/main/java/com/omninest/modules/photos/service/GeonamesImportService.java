@@ -68,6 +68,10 @@ public class GeonamesImportService {
     private static final String COUNTRY_FILE = "countryInfo.txt";
     private static final String ALTERNATES_FILE = "alternateNamesV2.txt";
 
+    /** 导入必需文件；alternateNamesV2.txt 可选，缺失时中文名回退主名称。 */
+    public static final List<String> REQUIRED_DUMP_FILES =
+            List.of(CITIES_FILE, ADMIN1_FILE, COUNTRY_FILE);
+
     private final GeoDatasetRepository geoDatasetRepository;
     private final GeoCityRepository geoCityRepository;
     private final GeoNamesParser parser;
@@ -156,7 +160,7 @@ public class GeonamesImportService {
             throw new BusinessException(ErrorCode.FILE_NOT_FOUND,
                     "GeoNames 导入目录不存在: " + importDir.getFileName());
         }
-        for (String file : List.of(CITIES_FILE, ADMIN1_FILE, COUNTRY_FILE)) {
+        for (String file : REQUIRED_DUMP_FILES) {
             Path path = importDir.resolve(file);
             if (!Files.isRegularFile(path) || !Files.isReadable(path)) {
                 throw new BusinessException(ErrorCode.FILE_NOT_FOUND, "缺少 GeoNames 数据文件: " + file);

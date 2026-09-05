@@ -125,6 +125,8 @@ public final class ConfigDefinitionCatalog {
                 "config.photo.geo.maxDistance", "离线最近城市最大可信距离（公里，0 表示不限制）", 0, 2000));
         add(values, number("photo.geo.import.batch-size", "1000", "photo", ConfigSurface.GENERAL,
                 "config.photo.geo.importBatchSize", "GeoNames 导入每批写入行数", 100, 10_000));
+        add(values, bool("photo.geo.import.auto", true, "photo", ConfigSurface.GENERAL,
+                "config.photo.geo.importAuto", "启动时无已发布数据集且文件齐全时自动触发 GeoNames 导入"));
         add(values, number("storage.quota.default", "10", "storage", ConfigSurface.GENERAL,
                 "config.storage.defaultQuota", "新用户默认存储配额（GB，0 表示无限制）", 0, 1_048_576));
         add(values, number("storage.quota.warning", "80", "storage", ConfigSurface.GENERAL,

@@ -25,6 +25,7 @@ public class PhotosRuntimeConfigService extends BaseRuntimeConfigService {
     public static final String PHOTO_GEO_NOMINATIM = "photo.geo.nominatim";
     public static final String PHOTO_GEO_MAX_DISTANCE = "photo.geo.max-distance-km";
     public static final String PHOTO_GEO_IMPORT_BATCH_SIZE = "photo.geo.import.batch-size";
+    public static final String PHOTO_GEO_IMPORT_AUTO = "photo.geo.import.auto";
 
     private final AiSidecarProperties deploymentProperties;
     private final LegacyDeploymentConfigResolver legacyDeploymentConfigResolver;
@@ -127,6 +128,13 @@ public class PhotosRuntimeConfigService extends BaseRuntimeConfigService {
                         .orElse(1000),
                 100,
                 10_000);
+    }
+
+    /** @return 启动时无已发布数据集且文件齐全时是否自动触发导入（默认开启） */
+    public boolean isGeoAutoImportEnabled() {
+        return cachedConfigValue(PHOTO_GEO_IMPORT_AUTO)
+                .map(value -> parseBoolean(value, true))
+                .orElse(true);
     }
 
     /** @return 是否启用 Nominatim 在线兜底（默认关闭，属行为变更的显式开关） */

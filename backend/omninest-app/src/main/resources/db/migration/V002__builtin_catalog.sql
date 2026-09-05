@@ -33,6 +33,7 @@ INSERT INTO omni.config_entries (
     ('photo.geo.nominatim', 'false', 'BOOLEAN', 'photo', 'HOT', '离线未命中时是否回退 Nominatim 在线服务', false),
     ('photo.geo.max-distance-km', '100', 'NUMBER', 'photo', 'HOT', '离线最近城市最大可信距离（公里，0 表示不限制）', false),
     ('photo.geo.import.batch-size', '1000', 'NUMBER', 'photo', 'HOT', 'GeoNames 导入每批写入行数', false),
+    ('photo.geo.import.auto', 'true', 'BOOLEAN', 'photo', 'HOT', '启动时无已发布数据集且文件齐全时自动触发 GeoNames 导入', false),
     ('storage.quota.default', '10', 'NUMBER', 'storage', 'HOT', '新用户默认存储配额（GB，0 表示无限制）', false),
     ('storage.quota.warning', '80', 'NUMBER', 'storage', 'HOT', '存储配额预警阈值百分比', false),
     ('share.enabled', 'true', 'BOOLEAN', 'storage', 'HOT', '是否启用共享空间', false),
