@@ -2762,6 +2762,7 @@
   "photosShowInfo": "显示信息",
   "photosEdit": "编辑",
   "photosSlideshow": "幻灯片",
+  "photosSlideshowUnavailable": "当前没有可连续播放的照片",
   "photosAddToAlbum": "加入相册",
   "photosPhotoInfo": "照片信息",
   "photosBasicInfo": "基本信息",

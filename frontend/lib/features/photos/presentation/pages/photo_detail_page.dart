@@ -118,19 +118,51 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     }
   }
 
-  /// 当前浏览范围：浏览视图打开照片时写入；未写入时回退为全部照片。
-  List<PhotoItem> _browseScope(PhotoItem photo) {
-    final centerState = ref.read(photoCenterControllerProvider).asData?.value;
-    final scope = ref.read(photoBrowseScopeProvider);
-    if (scope.length > 1 && scope.any((item) => item.id == photo.id)) {
-      return scope;
+  /// 上一张/下一张的导航范围：浏览范围优先，未包含当前照片时回退中心照片列表。
+  List<PhotoItem> _resolveNavigationScope(
+    PhotoItem photo,
+    List<PhotoItem> browseScope,
+    List<PhotoItem> centerPhotos,
+  ) {
+    if (browseScope.length > 1 &&
+        browseScope.any((item) => item.id == photo.id)) {
+      return browseScope;
     }
-    return centerState?.photos ?? const <PhotoItem>[];
+    return centerPhotos;
   }
 
-  /// 在当前浏览范围中找到相邻照片 ID，返回 null 表示无相邻照片。
-  String? _adjacentPhotoId(PhotoItem photo, int offset) {
-    final list = _browseScope(photo);
+  /// 幻灯片可播放序列：必须包含当前照片，否则返回空，避免播放状态空转。
+  List<PhotoItem> _resolveSlideshowPlaylist(
+    PhotoItem photo,
+    List<PhotoItem> browseScope,
+    List<PhotoItem> centerPhotos,
+  ) {
+    if (browseScope.length > 1 &&
+        browseScope.any((item) => item.id == photo.id)) {
+      return browseScope;
+    }
+    if (centerPhotos.length > 1 &&
+        centerPhotos.any((item) => item.id == photo.id)) {
+      return centerPhotos;
+    }
+    return const <PhotoItem>[];
+  }
+
+  /// 回调时机（非 build 阶段）读取当前可播放序列。
+  List<PhotoItem> _currentPlaylist(PhotoItem photo) {
+    final browseScope = ref.read(photoBrowseScopeProvider);
+    final centerPhotos =
+        ref.read(photoCenterControllerProvider).asData?.value.photos ??
+        const <PhotoItem>[];
+    return _resolveSlideshowPlaylist(photo, browseScope, centerPhotos);
+  }
+
+  /// 在导航范围中找到相邻照片 ID，返回 null 表示无相邻照片。
+  String? _adjacentPhotoIdIn(
+    List<PhotoItem> list,
+    PhotoItem photo,
+    int offset,
+  ) {
     final index = list.indexWhere((p) => p.id == photo.id);
     if (index < 0) return null;
     final target = index + offset;
@@ -138,8 +170,12 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     return list[target].id;
   }
 
-  void _navigateToAdjacent(PhotoItem photo, int offset) {
-    final targetId = _adjacentPhotoId(photo, offset);
+  void _navigateToAdjacent(
+    List<PhotoItem> navScope,
+    PhotoItem photo,
+    int offset,
+  ) {
+    final targetId = _adjacentPhotoIdIn(navScope, photo, offset);
     if (targetId == null || !mounted) return;
     unawaited(_goToAdjacentPhoto(targetId));
   }
@@ -166,7 +202,7 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   void _startSlideshow() {
     _slideshowTimer?.cancel();
     _slideshowTimer = null;
-    if (_browseScope(widget.photo).length < 2) return;
+    if (_currentPlaylist(widget.photo).length < 2) return;
     _slideshowTimer = Timer.periodic(_slideshowInterval, (_) {
       _slideshowAdvance();
     });
@@ -177,14 +213,32 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     _slideshowTimer = null;
   }
 
+  /// 播放/暂停切换；无可播放序列时给出可见反馈，绝不静默。
+  void _toggleSlideshow() {
+    if (ref.read(photoSlideshowPlayingProvider)) {
+      ref.read(photoSlideshowPlayingProvider.notifier).stop();
+      return;
+    }
+    if (_currentPlaylist(widget.photo).length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).photosSlideshowUnavailable,
+          ),
+        ),
+      );
+      return;
+    }
+    ref.read(photoSlideshowPlayingProvider.notifier).start();
+  }
+
   /// 播放到范围末尾后循环回第一张，与设计稿一致。
   void _slideshowAdvance() {
     if (!mounted) return;
-    final photo = widget.photo;
-    final list = _browseScope(photo);
-    final index = list.indexWhere((p) => p.id == photo.id);
-    if (index < 0 || list.length < 2) return;
-    final target = list[(index + 1) % list.length];
+    final playlist = _currentPlaylist(widget.photo);
+    final index = playlist.indexWhere((p) => p.id == widget.photo.id);
+    if (index < 0 || playlist.length < 2) return;
+    final target = playlist[(index + 1) % playlist.length];
     unawaited(_goToAdjacentPhoto(target.id));
   }
 
@@ -341,10 +395,20 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   Widget build(BuildContext context) {
     final photo = widget.photo;
     final compact = MediaQuery.sizeOf(context).width < 700;
-    final scope = _browseScope(photo);
-    final scopeIndex = scope.indexWhere((p) => p.id == photo.id);
-    final prevId = _adjacentPhotoId(photo, -1);
-    final nextId = _adjacentPhotoId(photo, 1);
+    // 响应式读取：浏览范围或照片列表晚到时，箭头/徽章/播放反馈随之可用。
+    final browseScope = ref.watch(photoBrowseScopeProvider);
+    final centerPhotos =
+        ref.watch(photoCenterControllerProvider).asData?.value.photos ??
+        const <PhotoItem>[];
+    final navScope = _resolveNavigationScope(photo, browseScope, centerPhotos);
+    final playlist = _resolveSlideshowPlaylist(
+      photo,
+      browseScope,
+      centerPhotos,
+    );
+    final playlistIndex = playlist.indexWhere((p) => p.id == photo.id);
+    final prevId = _adjacentPhotoIdIn(navScope, photo, -1);
+    final nextId = _adjacentPhotoIdIn(navScope, photo, 1);
 
     // 幻灯片开关由 Provider 承载，跨上一张/下一张路由替换保持播放。
     ref.listen(photoSlideshowPlayingProvider, (_, playing) {
@@ -368,7 +432,15 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: _buildPhotoView(context, photo, prevId, nextId)),
+              Expanded(
+                child: _buildPhotoView(
+                  context,
+                  photo,
+                  navScope,
+                  prevId,
+                  nextId,
+                ),
+              ),
               if (!compact)
                 AnimatedSize(
                   duration: const Duration(milliseconds: 200),
@@ -463,20 +535,17 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
                 ref.read(photoSlideshowPlayingProvider.notifier).stop();
                 context.push('/photos/${photo.id}/edit');
               },
-              onToggleSlideshow:
-                  () =>
-                      ref.read(photoSlideshowPlayingProvider.notifier).toggle(),
+              onToggleSlideshow: _toggleSlideshow,
               onDownload: () => unawaited(_downloadPhoto()),
               showInfo: _showInfo,
               slideshowPlaying: ref.watch(photoSlideshowPlayingProvider),
-              slideshowEnabled: scope.length >= 2,
               compact: compact,
             ),
           ),
           // 幻灯片播放徽章：底部居中
           if (ref.watch(photoSlideshowPlayingProvider) &&
-              scopeIndex >= 0 &&
-              scope.isNotEmpty)
+              playlist.length >= 2 &&
+              playlistIndex >= 0)
             Positioned(
               left: 0,
               right: 0,
@@ -484,8 +553,8 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
               child: IgnorePointer(
                 child: Center(
                   child: _SlideshowBadge(
-                    current: scopeIndex + 1,
-                    total: scope.length,
+                    current: playlistIndex + 1,
+                    total: playlist.length,
                   ),
                 ),
               ),
@@ -498,6 +567,7 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   Widget _buildPhotoView(
     BuildContext context,
     PhotoItem photo,
+    List<PhotoItem> navScope,
     String? prevId,
     String? nextId,
   ) {
@@ -603,14 +673,14 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
               icon: Icons.chevron_left_rounded,
               tooltip: AppLocalizations.of(context).photosPrevPhoto,
               alignRight: false,
-              onTap: () => _navigateToAdjacent(photo, -1),
+              onTap: () => _navigateToAdjacent(navScope, photo, -1),
             ),
           if (nextId != null)
             _ViewerArrowButton(
               icon: Icons.chevron_right_rounded,
               tooltip: AppLocalizations.of(context).photosNextPhoto,
               alignRight: true,
-              onTap: () => _navigateToAdjacent(photo, 1),
+              onTap: () => _navigateToAdjacent(navScope, photo, 1),
             ),
         ],
       ),
@@ -632,7 +702,6 @@ class _DetailTopBar extends StatelessWidget {
     required this.onDownload,
     required this.showInfo,
     required this.slideshowPlaying,
-    required this.slideshowEnabled,
     required this.compact,
   });
 
@@ -647,7 +716,6 @@ class _DetailTopBar extends StatelessWidget {
   final VoidCallback onDownload;
   final bool showInfo;
   final bool slideshowPlaying;
-  final bool slideshowEnabled;
   final bool compact;
 
   @override
@@ -759,7 +827,6 @@ class _DetailTopBar extends StatelessWidget {
                     ),
                     PopupMenuItem(
                       value: _PhotoMenuAction.slideshow,
-                      enabled: slideshowEnabled,
                       child: Text(AppLocalizations.of(context).photosSlideshow),
                     ),
                     PopupMenuItem(
@@ -820,7 +887,7 @@ class _DetailTopBar extends StatelessWidget {
             ),
             IconButton(
               tooltip: AppLocalizations.of(context).photosSlideshow,
-              onPressed: slideshowEnabled ? onToggleSlideshow : null,
+              onPressed: onToggleSlideshow,
               icon: Icon(
                 slideshowPlaying
                     ? Icons.pause_rounded

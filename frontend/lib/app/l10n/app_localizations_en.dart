@@ -6484,6 +6484,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosSlideshow => 'Slideshow';
 
   @override
+  String get photosSlideshowUnavailable => 'No consecutive photos to play here';
+
+  @override
   String get photosAddToAlbum => 'Add to Album';
 
   @override

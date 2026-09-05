@@ -11879,6 +11879,12 @@ abstract class AppLocalizations {
   /// **'Slideshow'**
   String get photosSlideshow;
 
+  /// No description provided for @photosSlideshowUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No consecutive photos to play here'**
+  String get photosSlideshowUnavailable;
+
   /// No description provided for @photosAddToAlbum.
   ///
   /// In en, this message translates to:

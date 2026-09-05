@@ -6,12 +6,37 @@ import 'package:mocktail/mocktail.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
 import 'package:omninest/app/theme/app_theme.dart';
 import 'package:omninest/app/theme/app_theme_palette.dart';
+import 'package:omninest/core/auth/auth_controller.dart';
+import 'package:omninest/core/auth/auth_session_store_base.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
+import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_repository.dart';
+import 'package:omninest/features/photos/presentation/pages/photo_browse_page.dart';
 import 'package:omninest/features/photos/presentation/pages/photo_detail_page.dart';
+import 'package:omninest/features/photos/presentation/pages/photos_page.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_grid_tile.dart';
 
 class _MockPhotoRepository extends Mock implements PhotoRepository {}
+
+/// 预置照片列表的照片中心控制器，模拟真实加载完成后的状态。
+class _SeededPhotoCenterController extends PhotoCenterController {
+  _SeededPhotoCenterController(this.photos);
+
+  final List<PhotoItem> photos;
+
+  @override
+  Future<PhotoCenterState> build() async {
+    return PhotoCenterState(
+      dashboard: PhotoDashboard.empty(),
+      photos: photos,
+      favorites: const [],
+      albums: const [],
+      tab: PhotoTab.all,
+      photoTotalElements: photos.length,
+    );
+  }
+}
 
 /// 固定浏览范围的桩 Notifier，供详情页上一张/下一张与幻灯片使用。
 class _FixedScopeNotifier extends PhotoBrowseScopeNotifier {
@@ -54,6 +79,9 @@ class _Harness {
 
 _Harness _harness({
   List<PhotoItem> scope = const [],
+  List<PhotoItem>? centerSeed,
+  bool overrideScope = true,
+  String localeCode = 'en',
   String initialLocation = '/photos/photo-1',
 }) {
   final repository = _MockPhotoRepository();
@@ -84,15 +112,21 @@ _Harness _harness({
       overrides: [
         photoRepositoryProvider.overrideWithValue(repository),
         photoCenterControllerProvider.overrideWith(
-          () => _FakePhotoCenterController(),
+          () =>
+              centerSeed == null
+                  ? _FakePhotoCenterController()
+                  : _SeededPhotoCenterController(centerSeed),
         ),
-        photoBrowseScopeProvider.overrideWith(() => _FixedScopeNotifier(scope)),
+        if (overrideScope)
+          photoBrowseScopeProvider.overrideWith(
+            () => _FixedScopeNotifier(scope),
+          ),
       ],
       child: MaterialApp.router(
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('en'),
+        locale: Locale(localeCode),
         theme: OmniNestTheme.from(AppThemePalette.dark),
       ),
     ),
@@ -114,6 +148,173 @@ void main() {
     _photo('photo-2', 'Zurich'),
     _photo('photo-3', 'Geneva'),
   ];
+
+  testWidgets('生产链路：网格打开详情后幻灯片点击播放并自动推进', (tester) async {
+    final repository = _MockPhotoRepository();
+    when(
+      () => repository.dashboard(),
+    ).thenAnswer((_) async => PhotoDashboard.empty());
+    when(
+      () => repository.listPhotos(
+        query: any(named: 'query'),
+        page: any(named: 'page'),
+        size: any(named: 'size'),
+        sort: any(named: 'sort'),
+      ),
+    ).thenAnswer(
+      (_) async => PhotoPage(
+        items: scope,
+        page: 0,
+        size: 50,
+        totalElements: scope.length,
+        totalPages: 1,
+      ),
+    );
+    when(
+      () => repository.listFavorites(
+        query: any(named: 'query'),
+        page: any(named: 'page'),
+        size: any(named: 'size'),
+        sort: any(named: 'sort'),
+      ),
+    ).thenAnswer((_) async => PhotoPage.empty());
+    when(
+      () => repository.listTrash(),
+    ).thenAnswer((_) async => PhotoPage.empty());
+    when(
+      () => repository.listAlbums(),
+    ).thenAnswer((_) async => const <PhotoAlbum>[]);
+    when(() => repository.getPhoto(any())).thenAnswer(
+      (invocation) async =>
+          scope.firstWhere((p) => p.id == invocation.positionalArguments[0]),
+    );
+
+    final router = GoRouter(
+      initialLocation: '/photos',
+      routes: [
+        GoRoute(
+          path: '/photos',
+          builder: (context, state) => const PhotosPage(),
+        ),
+        GoRoute(
+          path: '/photos/browse',
+          builder: (context, state) => const PhotoBrowsePage(),
+        ),
+        GoRoute(
+          path: '/photos/:photoId',
+          builder:
+              (context, state) =>
+                  PhotoDetailPage(photoId: state.pathParameters['photoId']!),
+        ),
+      ],
+    );
+
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authSessionStoreProvider.overrideWithValue(MemoryAuthSessionStore()),
+          photoRepositoryProvider.overrideWithValue(repository),
+          photoCenterControllerProvider.overrideWith(
+            () => _SeededPhotoCenterController(scope),
+          ),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          theme: OmniNestTheme.from(AppThemePalette.dark),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 从真实网格点开第一张照片。
+    expect(find.byType(PhotoGridTile), findsNWidgets(3));
+    await tester.tap(find.byType(PhotoGridTile).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Bern'), findsOneWidget);
+
+    // 点击播放：徽章出现并开始自动推进。
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump();
+    expect(find.text('幻灯片 · 1 / 3'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(find.text('幻灯片 · 2 / 3'), findsOneWidget);
+  });
+
+  testWidgets('浏览页式进入（范围未写、中心列表含照片）可播放', (tester) async {
+    await _pumpDesktop(
+      tester,
+      _harness(
+        scope: scope,
+        centerSeed: scope,
+        overrideScope: false,
+        localeCode: 'zh',
+      ).child,
+    );
+
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump();
+    expect(find.text('幻灯片 · 1 / 3'), findsOneWidget);
+  });
+
+  testWidgets('无可播放序列时点击给出可见反馈且不进入播放态', (tester) async {
+    await _pumpDesktop(
+      tester,
+      _harness(
+        scope: scope,
+        centerSeed: const [],
+        overrideScope: false,
+        localeCode: 'zh',
+      ).child,
+    );
+
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump();
+    expect(find.text('当前没有可连续播放的照片'), findsOneWidget);
+    expect(find.textContaining('幻灯片 ·'), findsNothing);
+    expect(find.byIcon(Icons.pause_rounded), findsNothing);
+  });
+
+  testWidgets('浏览范围晚到时点击反馈后可正常播放', (tester) async {
+    final harness = _harness(
+      scope: scope,
+      centerSeed: const [],
+      overrideScope: false,
+      localeCode: 'zh',
+    );
+    await _pumpDesktop(tester, harness.child);
+
+    // 数据未就绪时点击只提示，不进入播放态。
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump();
+    expect(find.text('当前没有可连续播放的照片'), findsOneWidget);
+    expect(find.byIcon(Icons.pause_rounded), findsNothing);
+
+    // 浏览范围晚到写入后无需重建页面即可播放。
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(PhotoDetailPage)),
+    );
+    container.read(photoBrowseScopeProvider.notifier).set(scope);
+    // 清除第一次点击的提示条，避免干扰第二次点击的断言。
+    ScaffoldMessenger.of(
+      tester.element(find.byType(PhotoDetailPage)),
+    ).clearSnackBars();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.play_arrow_rounded));
+    await tester.pump();
+    expect(find.text('幻灯片 · 1 / 3'), findsOneWidget);
+    expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+    expect(find.text('当前没有可连续播放的照片'), findsNothing);
+  });
 
   testWidgets('顶栏使用关闭/下载/删除命令且删除不再是永久删除文案', (tester) async {
     await _pumpDesktop(tester, _harness(scope: scope).child);

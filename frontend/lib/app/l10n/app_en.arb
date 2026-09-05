@@ -2888,6 +2888,7 @@
   "photosShowInfo": "Show Info",
   "photosEdit": "Edit",
   "photosSlideshow": "Slideshow",
+  "photosSlideshowUnavailable": "No consecutive photos to play here",
   "photosAddToAlbum": "Add to Album",
   "photosPhotoInfo": "Photo Info",
   "photosBasicInfo": "Basic Info",

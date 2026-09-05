@@ -945,7 +945,7 @@ class PhotoSlideshowPlayingNotifier extends Notifier<bool> {
   @override
   bool build() => false;
 
-  void toggle() => state = !state;
+  void start() => state = true;
 
   void stop() => state = false;
 }

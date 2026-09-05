@@ -6292,6 +6292,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosSlideshow => '幻灯片';
 
   @override
+  String get photosSlideshowUnavailable => '当前没有可连续播放的照片';
+
+  @override
   String get photosAddToAlbum => '加入相册';
 
   @override
