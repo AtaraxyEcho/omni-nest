@@ -1860,7 +1860,8 @@ CREATE TABLE "omni"."geo_cities" (
   "longitude" numeric(10,7) NOT NULL,
   "population" int8 NOT NULL DEFAULT 0,
   "feature_code" varchar(10),
-  "created_at" timestamptz(6) NOT NULL DEFAULT now()
+  "created_at" timestamptz(6) NOT NULL DEFAULT now(),
+  CONSTRAINT "pk_geo_cities" PRIMARY KEY ("dataset_id", "geoname_id")
 )
 ;
 

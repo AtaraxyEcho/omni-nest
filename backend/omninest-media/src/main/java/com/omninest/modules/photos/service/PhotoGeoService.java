@@ -212,33 +212,11 @@ public class PhotoGeoService {
             BigDecimal latitude,
             BigDecimal longitude,
             GeoCitySnapshot pinnedSnapshot) {
-        double lat = latitude.doubleValue();
-        double lng = longitude.doubleValue();
-        if (pinnedSnapshot != null) {
-            return nearestInSnapshot(pinnedSnapshot, lat, lng);
-        }
-        GeoCitySnapshot current = geoCityIndex.currentSnapshot();
-        if (current.cities().isEmpty()) {
-            return Optional.empty();
-        }
-        return nearestInSnapshot(current, lat, lng);
-    }
-
-    private static Optional<GeoCityMatch> nearestInSnapshot(
-            GeoCitySnapshot snapshot,
-            double latitude,
-            double longitude) {
-        GeoCitySnapshot.Entry best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (GeoCitySnapshot.Entry entry : snapshot.cities()) {
-            double distance = GeoDistance.haversineKm(
-                    latitude, longitude, entry.latitudeRadians(), entry.longitudeRadians());
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = entry;
-            }
-        }
-        return best == null ? Optional.empty() : Optional.of(new GeoCityMatch(best, bestDistance));
+        GeoCitySnapshot target = pinnedSnapshot != null ? pinnedSnapshot : geoCityIndex.currentSnapshot();
+        return GeoCityIndex.nearestInSnapshot(
+                target,
+                latitude.doubleValue(),
+                longitude.doubleValue());
     }
 
     private static boolean isValidCoordinate(BigDecimal latitude, BigDecimal longitude) {

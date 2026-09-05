@@ -140,7 +140,7 @@ class BuiltinCatalogFlywayMigrationTest {
 
     @Test
     void catalogContainsCompleteRuntimeConfigurationDirectory() throws SQLException {
-        Assertions.assertThat(countObjects("SELECT count(*) FROM omni.config_entries")).isEqualTo(55);
+        Assertions.assertThat(countObjects("SELECT count(*) FROM omni.config_entries")).isEqualTo(59);
         Assertions.assertThat(countObjects("""
                 SELECT count(*)
                 FROM (
@@ -151,6 +151,10 @@ class BuiltinCatalogFlywayMigrationTest {
                         ('reader.import.enabled'),
                         ('photo.backup'),
                         ('photo.geo.rate'),
+                        ('photo.geo.offline'),
+                        ('photo.geo.nominatim'),
+                        ('photo.geo.max-distance-km'),
+                        ('photo.geo.import.batch-size'),
                         ('storage.quota.default'),
                         ('storage.quota.warning'),
                         ('share.enabled'),

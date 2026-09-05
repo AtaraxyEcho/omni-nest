@@ -117,6 +117,14 @@ public final class ConfigDefinitionCatalog {
                 "config.photo.backup", "是否启用照片自动备份"));
         add(values, number("photo.geo.rate", "1", "photo", ConfigSurface.GENERAL,
                 "config.photo.geo.rate", "地理编码每秒请求上限", 1, 10));
+        add(values, bool("photo.geo.offline", true, "photo", ConfigSurface.GENERAL,
+                "config.photo.geo.offline", "是否启用 GeoNames 离线逆地理编码"));
+        add(values, bool("photo.geo.nominatim", false, "photo", ConfigSurface.GENERAL,
+                "config.photo.geo.nominatim", "离线未命中时是否回退 Nominatim 在线服务"));
+        add(values, number("photo.geo.max-distance-km", "100", "photo", ConfigSurface.GENERAL,
+                "config.photo.geo.maxDistance", "离线最近城市最大可信距离（公里，0 表示不限制）", 0, 2000));
+        add(values, number("photo.geo.import.batch-size", "1000", "photo", ConfigSurface.GENERAL,
+                "config.photo.geo.importBatchSize", "GeoNames 导入每批写入行数", 100, 10_000));
         add(values, number("storage.quota.default", "10", "storage", ConfigSurface.GENERAL,
                 "config.storage.defaultQuota", "新用户默认存储配额（GB，0 表示无限制）", 0, 1_048_576));
         add(values, number("storage.quota.warning", "80", "storage", ConfigSurface.GENERAL,

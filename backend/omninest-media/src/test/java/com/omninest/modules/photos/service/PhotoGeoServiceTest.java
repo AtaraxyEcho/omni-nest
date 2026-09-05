@@ -42,7 +42,7 @@ class PhotoGeoServiceTest {
     }
 
     private GeoCitySnapshot snapshotWithNearCity() {
-        return new GeoCitySnapshot("v1", java.util.List.of(new GeoCitySnapshot.Entry(
+        return GeoCitySnapshot.of("v1", java.util.List.of(new GeoCitySnapshot.Entry(
                 1809858, "Guangzhou", "广州市", "CN", "China", "中国",
                 "Guangdong", "广东省",
                 Math.toRadians(23.13), Math.toRadians(113.26))));

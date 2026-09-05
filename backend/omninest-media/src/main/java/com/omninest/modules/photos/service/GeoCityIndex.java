@@ -19,7 +19,8 @@ import org.springframework.stereotype.Component;
  *
  * <p>启动即加载已发布（PUBLISHED）数据集并构建不可变快照；数据集发布或收到广播后
  * 通过"构建新快照 + 原子引用交换"整体刷新，禁止先清空再加载的中间态。
- * 查询为 O(N) 线性 Haversine 扫描，cities5000 规模（数万行）为亚毫秒级。</p>
+ * 最近城市查询基于快照的纬度排序副本做球面距离下界剪枝扫描（方案 §35 全量线性扫描
+ * 在真实 cities5000 数据上实测超出延迟目标后触发的内置优化），结果与全量 O(N) 扫描一致。</p>
  *
  * @author OmniNest
  */
@@ -54,21 +55,81 @@ public class GeoCityIndex {
      * @return 最近城市命中结果
      */
     public Optional<GeoCityMatch> nearest(double latitude, double longitude) {
+        return nearestInSnapshot(snapshot.get(), latitude, longitude);
+    }
+
+    /**
+     * 在指定快照内查询最近城市（供回填任务的钉定快照复用同一条剪枝扫描路径）。
+     *
+     * <p>剪枝依据：大圆角距恒不低于两点纬度差，因此当候选城市的纬度差对应弧长
+     * 已不小于当前最优距离时，纬度排序下该侧剩余候选均不可能更近。</p>
+     *
+     * @param snapshot 目标快照
+     * @param latitude 纬度（度）
+     * @param longitude 经度（度）
+     * @return 最近城市命中结果
+     */
+    public static Optional<GeoCityMatch> nearestInSnapshot(
+            GeoCitySnapshot snapshot,
+            double latitude,
+            double longitude) {
         if (!isValidCoordinate(latitude, longitude)) {
             return Optional.empty();
         }
-        List<GeoCitySnapshot.Entry> cities = snapshot.get().cities();
+        GeoCitySnapshot.Entry[] byLatitude = snapshot.byLatitude();
+        if (byLatitude.length == 0) {
+            return Optional.empty();
+        }
+
+        double latitudeRadians = Math.toRadians(latitude);
+        double longitudeRadians = Math.toRadians(longitude);
+
+        int higher = lowerBound(byLatitude, latitudeRadians);
+        int lower = higher - 1;
+        boolean lowerDone = lower < 0;
+        boolean higherDone = higher >= byLatitude.length;
+
         GeoCitySnapshot.Entry best = null;
-        double bestDistance = Double.MAX_VALUE;
-        for (GeoCitySnapshot.Entry entry : cities) {
-            double distance = GeoDistance.haversineKm(
-                    latitude, longitude, entry.latitudeRadians(), entry.longitudeRadians());
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = entry;
+        double bestKm = Double.MAX_VALUE;
+        while (!lowerDone || !higherDone) {
+            GeoCitySnapshot.Entry candidate;
+            boolean takeLower;
+            if (lowerDone) {
+                takeLower = false;
+            } else if (higherDone) {
+                takeLower = true;
+            } else {
+                takeLower = latitudeRadians - byLatitude[lower].latitudeRadians()
+                        <= byLatitude[higher].latitudeRadians() - latitudeRadians;
+            }
+            if (takeLower) {
+                candidate = byLatitude[lower--];
+                lowerDone = lower < 0;
+            } else {
+                candidate = byLatitude[higher++];
+                higherDone = higher >= byLatitude.length;
+            }
+
+            if (GeoDistance.EARTH_RADIUS_KM
+                    * Math.abs(candidate.latitudeRadians() - latitudeRadians) >= bestKm) {
+                if (takeLower) {
+                    lowerDone = true;
+                } else {
+                    higherDone = true;
+                }
+                continue;
+            }
+            double distanceKm = GeoDistance.haversineKmRadians(
+                    latitudeRadians,
+                    longitudeRadians,
+                    candidate.latitudeRadians(),
+                    candidate.longitudeRadians());
+            if (distanceKm < bestKm) {
+                bestKm = distanceKm;
+                best = candidate;
             }
         }
-        return best == null ? Optional.empty() : Optional.of(new GeoCityMatch(best, bestDistance));
+        return best == null ? Optional.empty() : Optional.of(new GeoCityMatch(best, bestKm));
     }
 
     /** @return 当前快照（不可变） */
@@ -122,7 +183,7 @@ public class GeoCityIndex {
     public String reloadCurrentPublished() {
         var dataset = geoDatasetRepository.findFirstByStatusOrderByPublishedAtDesc(GeoDataset.STATUS_PUBLISHED);
         if (dataset.isEmpty()) {
-            swap(GeoCitySnapshot.EMPTY);
+            snapshot.set(GeoCitySnapshot.EMPTY);
             log.info("已清空 GeoNames 离线索引（无已发布数据集）");
             return null;
         }
@@ -132,13 +193,24 @@ public class GeoCityIndex {
 
     private void swapTo(String datasetVersion, java.util.UUID datasetId) {
         List<GeoCityRepository.GeoCityRow> rows = geoCityRepository.findRowsByDatasetId(datasetId);
-        swap(GeoCitySnapshot.from(datasetVersion, rows));
+        snapshot.set(GeoCitySnapshot.from(datasetVersion, rows));
         log.info("GeoNames 离线城市索引已切换: datasetVersion={}, cityCount={}",
                 datasetVersion, rows.size());
     }
 
-    private void swap(GeoCitySnapshot next) {
-        snapshot.set(next);
+    /** 返回第一个纬度不小于目标值的下标（upper bound）。 */
+    private static int lowerBound(GeoCitySnapshot.Entry[] byLatitude, double latitudeRadians) {
+        int low = 0;
+        int high = byLatitude.length;
+        while (low < high) {
+            int mid = (low + high) >>> 1;
+            if (byLatitude[mid].latitudeRadians() < latitudeRadians) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
     }
 
     private static boolean isValidCoordinate(double latitude, double longitude) {

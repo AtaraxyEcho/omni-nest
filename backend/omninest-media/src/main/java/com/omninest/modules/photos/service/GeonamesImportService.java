@@ -219,6 +219,7 @@ public class GeonamesImportService {
 
         GeoLocationNameSelector selector = new GeoLocationNameSelector();
         long[] scanned = {0};
+        long[] lastHeartbeatNanos = {System.nanoTime()};
         parser.streamAlternateNames(Files.newInputStream(importDir.resolve(ALTERNATES_FILE)), candidate -> {
             long geonameId = candidate.geonameId();
             if (cityIds.contains(geonameId)
@@ -227,10 +228,12 @@ public class GeonamesImportService {
                 selector.offer(geonameId, candidate.language(), candidate.name(), candidate.preferred(), candidate.historic());
             }
             scanned[0]++;
-            if (scanned[0] % 5_000_000 == 0) {
+            // 按时间间隔保活心跳（约 30 秒），避免长扫描阶段被误判为心跳超时。
+            if (System.nanoTime() - lastHeartbeatNanos[0] > 30_000_000_000L) {
                 taskRecordService.updateResult(taskId, Map.of(
                         "phase", PHASE_IMPORTING_ALTERNATE_NAMES,
                         "alternateNamesScanned", scanned[0]));
+                lastHeartbeatNanos[0] = System.nanoTime();
             }
         });
 
@@ -348,7 +351,7 @@ public class GeonamesImportService {
     }
 
     private int cityPhaseProgress(long written) {
-        // cities5000 约 5 万行，按每 1250 行提升 1% 估算，封顶到城市阶段区间（3~44）。
+        // cities5000 实测约 7 万行，按每 1250 行提升 1% 估算，封顶到城市阶段区间（3~44）。
         return Math.min(44, 3 + (int) (written / 1250));
     }
 
