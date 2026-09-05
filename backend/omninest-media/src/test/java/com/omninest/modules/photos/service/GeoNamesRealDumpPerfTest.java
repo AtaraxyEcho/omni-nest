@@ -22,13 +22,13 @@ import org.junit.jupiter.api.TestInstance;
 /**
  * 真实 GeoNames dump 的解析与内存索引性能验证（方案 §84）。
  *
- * <p>依赖本地文件 data/geonames/imports/2026-09-05/（cities5000.txt 必需，
+ * <p>依赖本地文件 data/geonames/（cities5000.txt 必需，
  * alternateNamesV2.txt 可选）；文件缺失时整类跳过，不影响常规测试。</p>
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GeoNamesRealDumpPerfTest {
 
-    private static final String DUMP_RELATIVE = "data/geonames/imports/2026-09-05";
+    private static final String DUMP_RELATIVE = "data/geonames";
 
     private final GeoNamesParser parser = new GeoNamesParser();
 
@@ -40,7 +40,7 @@ class GeoNamesRealDumpPerfTest {
     @BeforeAll
     void loadRealDump() throws IOException {
         org.junit.jupiter.api.Assumptions.assumeTrue(dumpDir() != null,
-                "未找到真实 dump 目录 data/geonames/imports/2026-09-05，跳过性能验证");
+                "未找到真实 dump 目录 data/geonames，跳过性能验证");
         Path dumpDir = dumpDir();
 
         long parseStart = System.nanoTime();

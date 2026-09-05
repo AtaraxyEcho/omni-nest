@@ -102,7 +102,7 @@ public class GeonamesImportService {
 
         GeoDataset dataset = geoDatasetRepository.findById(datasetId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "GeoNames 数据集不存在"));
-        Path importDir = importDir(dumpDate);
+        Path importDir = importDir();
         try {
             runPhases(taskId, dataset, importDir, phase);
         } catch (TaskCancelled cancelled) {
@@ -355,8 +355,9 @@ public class GeonamesImportService {
         return Math.min(44, 3 + (int) (written / 1250));
     }
 
-    private Path importDir(String dumpDate) {
-        return Path.of(importProperties.getDir(), "imports", dumpDate).normalize();
+    /** @return GeoNames 数据文件共享目录（四个 dump 文件直接置于该目录下） */
+    private Path importDir() {
+        return Path.of(importProperties.getDir()).normalize();
     }
 
     private <T> T parseRequired(Path file, IoFunction<InputStream, T> parserFunction) throws IOException {

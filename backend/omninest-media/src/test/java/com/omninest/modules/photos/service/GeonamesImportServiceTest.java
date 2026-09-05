@@ -132,9 +132,9 @@ class GeonamesImportServiceTest {
     }
 
     private void write(String fileName, String content) throws IOException {
-        Path dir = tempDir.resolve("imports").resolve("2026-09-05");
-        Files.createDirectories(dir);
-        Files.writeString(dir.resolve(fileName), content, StandardCharsets.UTF_8);
+        // 方案 B：四个 dump 文件直接平铺在共享目录下。
+        Files.createDirectories(tempDir);
+        Files.writeString(tempDir.resolve(fileName), content, StandardCharsets.UTF_8);
     }
 
     @Test
@@ -184,7 +184,7 @@ class GeonamesImportServiceTest {
 
     @Test
     void failureMarksDatasetFailedAndPropagates() throws IOException {
-        Files.delete(tempDir.resolve("imports").resolve("2026-09-05").resolve("cities5000.txt"));
+        Files.delete(tempDir.resolve("cities5000.txt"));
 
         assertThrows(BusinessException.class, () -> service.executeImportTask(UUID.randomUUID()));
 

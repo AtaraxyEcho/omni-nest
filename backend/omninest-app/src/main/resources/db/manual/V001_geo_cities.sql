@@ -5,7 +5,8 @@
 -- 数据准备（部署时人工执行，数据文件不入版本库）：
 --   1. 下载 GeoNames dump（https://download.geonames.org/export/dump/）：
 --        cities5000.zip、admin1CodesASCII.txt、countryInfo.txt、alternateNamesV2.zip
---   2. 解压后放到服务端共享目录 data/geonames/imports/<dump日期>/ 下：
+--   2. 解压后把四个文件直接放到服务端共享目录 data/geonames/ 下（可用
+--      photo.geo.import.dir 配置覆盖；dump 日期仅用于版本记录，不进路径）：
 --        cities5000.txt、admin1CodesASCII.txt、countryInfo.txt、alternateNamesV2.txt
 --      多实例部署时至少 Worker 实例必须挂载该共享目录
 --   3. 调用管理端点创建导入任务（photo:admin 权限）：

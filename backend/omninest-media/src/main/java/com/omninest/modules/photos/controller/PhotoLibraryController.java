@@ -176,7 +176,7 @@ public class PhotoLibraryController {
     }
 
     @Operation(summary = "创建 GeoNames 数据集导入任务",
-            description = "从服务端共享目录 data/geonames/imports/{dumpDate}/ 读取 dump 文件，"
+            description = "从服务端共享目录（photo.geo.import.dir，默认 data/geonames）读取 dump 文件，"
                     + "由 Worker 异步导入、验证并发布为当前线上数据集")
     @PreAuthorize("hasAuthority('" + Permissions.PHOTO_ADMIN + "')")
     @PostMapping("/api/v1/admin/photos/geo/import")

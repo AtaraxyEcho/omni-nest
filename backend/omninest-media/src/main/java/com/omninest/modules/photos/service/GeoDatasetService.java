@@ -72,8 +72,9 @@ public class GeoDatasetService {
     /**
      * 创建 GeoNames 数据集导入任务。
      *
-     * <p>仅创建 geo_dataset 与 sys_tasks 并投递消息；文件须由管理员预先放置在
-     * 共享目录 imports/{dumpDate}/ 下，由 Worker 读取。</p>
+     * <p>仅创建 geo_dataset 与 sys_tasks 并投递消息；四个 dump 文件须由管理员预先放置在
+     * 共享目录（photo.geo.import.dir，默认 data/geonames）下，由 Worker 读取；
+     * dumpDate 仅用于数据集版本记录，不参与文件路径。</p>
      *
      * @param request 导入请求（dumpDate 必填）
      * @param operatorUserId 操作管理员用户 ID
