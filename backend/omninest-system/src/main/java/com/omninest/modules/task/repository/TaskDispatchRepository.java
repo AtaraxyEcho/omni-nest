@@ -3,6 +3,7 @@ package com.omninest.modules.task.repository;
 import com.omninest.modules.task.domain.TaskDispatch;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,6 +16,14 @@ import org.springframework.data.repository.query.Param;
  * @author OmniNest
  */
 public interface TaskDispatchRepository extends JpaRepository<TaskDispatch, UUID> {
+
+    /**
+     * 查询任务最近一次投递记录（心跳恢复重投原始消息用）。
+     *
+     * @param taskId 任务 ID
+     * @return 最近一次投递记录
+     */
+    Optional<TaskDispatch> findFirstByTaskIdOrderByCreatedAtDesc(UUID taskId);
 
     /**
      * 悲观锁领取可发布记录。
