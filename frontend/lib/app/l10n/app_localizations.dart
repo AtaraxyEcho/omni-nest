@@ -12185,6 +12185,456 @@ abstract class AppLocalizations {
   /// **'Save failed, please try again later'**
   String get photosSaveFailed;
 
+  /// No description provided for @photosEditorCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get photosEditorCancel;
+
+  /// No description provided for @photosEditorUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get photosEditorUndo;
+
+  /// No description provided for @photosEditorRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get photosEditorRedo;
+
+  /// No description provided for @photosEditorDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get photosEditorDone;
+
+  /// No description provided for @photosEditorRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get photosEditorRemove;
+
+  /// No description provided for @photosEditorBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get photosEditorBack;
+
+  /// No description provided for @photosEditorMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get photosEditorMore;
+
+  /// No description provided for @photosEditorDoneLoadingMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes are being applied'**
+  String get photosEditorDoneLoadingMsg;
+
+  /// No description provided for @photosEditorImportStateHistoryMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialize Editor'**
+  String get photosEditorImportStateHistoryMsg;
+
+  /// No description provided for @photosEditorLoadingDialogMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait...'**
+  String get photosEditorLoadingDialogMsg;
+
+  /// No description provided for @photosEditorCloseWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Image Editor?'**
+  String get photosEditorCloseWarningTitle;
+
+  /// No description provided for @photosEditorCloseWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to close the Image Editor? Your changes will not be saved.'**
+  String get photosEditorCloseWarningMessage;
+
+  /// No description provided for @photosEditorCloseWarningConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get photosEditorCloseWarningConfirm;
+
+  /// No description provided for @photosEditorPaintBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Paint'**
+  String get photosEditorPaintBottomNav;
+
+  /// No description provided for @photosEditorPaintMoveAndZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom'**
+  String get photosEditorPaintMoveAndZoom;
+
+  /// No description provided for @photosEditorPaintFreestyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Freestyle'**
+  String get photosEditorPaintFreestyle;
+
+  /// No description provided for @photosEditorPaintArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get photosEditorPaintArrow;
+
+  /// No description provided for @photosEditorPaintLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get photosEditorPaintLine;
+
+  /// No description provided for @photosEditorPaintRectangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get photosEditorPaintRectangle;
+
+  /// No description provided for @photosEditorPaintCircle.
+  ///
+  /// In en, this message translates to:
+  /// **'Circle'**
+  String get photosEditorPaintCircle;
+
+  /// No description provided for @photosEditorPaintDashLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Dash line'**
+  String get photosEditorPaintDashLine;
+
+  /// No description provided for @photosEditorPaintDashDotLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Dash-dot line'**
+  String get photosEditorPaintDashDotLine;
+
+  /// No description provided for @photosEditorPaintHexagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hexagon'**
+  String get photosEditorPaintHexagon;
+
+  /// No description provided for @photosEditorPaintPolygon.
+  ///
+  /// In en, this message translates to:
+  /// **'Polygon'**
+  String get photosEditorPaintPolygon;
+
+  /// No description provided for @photosEditorPaintBlur.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur'**
+  String get photosEditorPaintBlur;
+
+  /// No description provided for @photosEditorPaintPixelate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pixelate'**
+  String get photosEditorPaintPixelate;
+
+  /// No description provided for @photosEditorLineWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Line width'**
+  String get photosEditorLineWidth;
+
+  /// No description provided for @photosEditorEraser.
+  ///
+  /// In en, this message translates to:
+  /// **'Eraser'**
+  String get photosEditorEraser;
+
+  /// No description provided for @photosEditorToggleFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle fill'**
+  String get photosEditorToggleFill;
+
+  /// No description provided for @photosEditorChangeOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Change opacity'**
+  String get photosEditorChangeOpacity;
+
+  /// No description provided for @photosEditorOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Opacity'**
+  String get photosEditorOpacity;
+
+  /// No description provided for @photosEditorColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get photosEditorColor;
+
+  /// No description provided for @photosEditorStrokeWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke Width'**
+  String get photosEditorStrokeWidth;
+
+  /// No description provided for @photosEditorFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill'**
+  String get photosEditorFill;
+
+  /// No description provided for @photosEditorTextInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter text'**
+  String get photosEditorTextInputHint;
+
+  /// No description provided for @photosEditorTextBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get photosEditorTextBottomNav;
+
+  /// No description provided for @photosEditorTextAlign.
+  ///
+  /// In en, this message translates to:
+  /// **'Align text'**
+  String get photosEditorTextAlign;
+
+  /// No description provided for @photosEditorFontScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Font scale'**
+  String get photosEditorFontScale;
+
+  /// No description provided for @photosEditorTextBackgroundMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Background mode'**
+  String get photosEditorTextBackgroundMode;
+
+  /// No description provided for @photosEditorCropBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop/ Rotate'**
+  String get photosEditorCropBottomNav;
+
+  /// No description provided for @photosEditorCropRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate'**
+  String get photosEditorCropRotate;
+
+  /// No description provided for @photosEditorCropFlip.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip'**
+  String get photosEditorCropFlip;
+
+  /// No description provided for @photosEditorCropTilt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tilt'**
+  String get photosEditorCropTilt;
+
+  /// No description provided for @photosEditorCropTiltHorizontal.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal'**
+  String get photosEditorCropTiltHorizontal;
+
+  /// No description provided for @photosEditorCropTiltVertical.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical'**
+  String get photosEditorCropTiltVertical;
+
+  /// No description provided for @photosEditorCropRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratio'**
+  String get photosEditorCropRatio;
+
+  /// No description provided for @photosEditorCropReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get photosEditorCropReset;
+
+  /// No description provided for @photosEditorRatioFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get photosEditorRatioFree;
+
+  /// No description provided for @photosEditorRatioOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get photosEditorRatioOriginal;
+
+  /// No description provided for @photosEditorTuneBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Tune'**
+  String get photosEditorTuneBottomNav;
+
+  /// No description provided for @photosEditorTuneBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness'**
+  String get photosEditorTuneBrightness;
+
+  /// No description provided for @photosEditorTuneContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'Contrast'**
+  String get photosEditorTuneContrast;
+
+  /// No description provided for @photosEditorTuneSaturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation'**
+  String get photosEditorTuneSaturation;
+
+  /// No description provided for @photosEditorTuneExposure.
+  ///
+  /// In en, this message translates to:
+  /// **'Exposure'**
+  String get photosEditorTuneExposure;
+
+  /// No description provided for @photosEditorTuneHue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get photosEditorTuneHue;
+
+  /// No description provided for @photosEditorTuneTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get photosEditorTuneTemperature;
+
+  /// No description provided for @photosEditorTuneFade.
+  ///
+  /// In en, this message translates to:
+  /// **'Fade'**
+  String get photosEditorTuneFade;
+
+  /// No description provided for @photosEditorTuneTint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tint'**
+  String get photosEditorTuneTint;
+
+  /// No description provided for @photosEditorFilterBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get photosEditorFilterBottomNav;
+
+  /// No description provided for @photosEditorFilterNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No Filter'**
+  String get photosEditorFilterNone;
+
+  /// No description provided for @photosEditorBlurBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur'**
+  String get photosEditorBlurBottomNav;
+
+  /// No description provided for @photosEditorEmojiBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get photosEditorEmojiBottomNav;
+
+  /// No description provided for @photosEditorEmojiSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get photosEditorEmojiSearch;
+
+  /// No description provided for @photosEditorEmojiRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get photosEditorEmojiRecent;
+
+  /// No description provided for @photosEditorEmojiSmileys.
+  ///
+  /// In en, this message translates to:
+  /// **'Smileys & People'**
+  String get photosEditorEmojiSmileys;
+
+  /// No description provided for @photosEditorEmojiAnimals.
+  ///
+  /// In en, this message translates to:
+  /// **'Animals & Nature'**
+  String get photosEditorEmojiAnimals;
+
+  /// No description provided for @photosEditorEmojiFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food & Drink'**
+  String get photosEditorEmojiFood;
+
+  /// No description provided for @photosEditorEmojiActivities.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities'**
+  String get photosEditorEmojiActivities;
+
+  /// No description provided for @photosEditorEmojiTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel & Places'**
+  String get photosEditorEmojiTravel;
+
+  /// No description provided for @photosEditorEmojiObjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Objects'**
+  String get photosEditorEmojiObjects;
+
+  /// No description provided for @photosEditorEmojiSymbols.
+  ///
+  /// In en, this message translates to:
+  /// **'Symbols'**
+  String get photosEditorEmojiSymbols;
+
+  /// No description provided for @photosEditorEmojiFlags.
+  ///
+  /// In en, this message translates to:
+  /// **'Flags'**
+  String get photosEditorEmojiFlags;
+
+  /// No description provided for @photosEditorStickerBottomNav.
+  ///
+  /// In en, this message translates to:
+  /// **'Stickers'**
+  String get photosEditorStickerBottomNav;
+
+  /// No description provided for @photosEditorLayerEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get photosEditorLayerEdit;
+
+  /// No description provided for @photosEditorLayerRotateScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate and Scale'**
+  String get photosEditorLayerRotateScale;
+
   /// No description provided for @photosRolledBack.
   ///
   /// In en, this message translates to:

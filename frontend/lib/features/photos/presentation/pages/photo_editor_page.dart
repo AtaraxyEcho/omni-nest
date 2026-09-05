@@ -8,6 +8,7 @@ import 'package:omninest/core/navigation/navigation_extensions.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_editor_configs.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
 
 /// 照片编辑页面：基于 pro_image_editor 的整图编辑（裁剪/滤镜/调参等）。
@@ -27,6 +28,9 @@ class PhotoEditorPage extends ConsumerWidget {
               photo.hasCover || photo.sourceUrl != null
                   ? ProImageEditor.network(
                     photo.sourceUrl ?? photo.coverUrl!,
+                    configs: buildPhotoEditorConfigs(
+                      AppLocalizations.of(context),
+                    ),
                     callbacks: ProImageEditorCallbacks(
                       onImageEditingComplete: (bytes) async {
                         await _saveEditedImage(context, ref, bytes);

@@ -6638,6 +6638,232 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosSaveFailed => 'Save failed, please try again later';
 
   @override
+  String get photosEditorCancel => 'Cancel';
+
+  @override
+  String get photosEditorUndo => 'Undo';
+
+  @override
+  String get photosEditorRedo => 'Redo';
+
+  @override
+  String get photosEditorDone => 'Done';
+
+  @override
+  String get photosEditorRemove => 'Remove';
+
+  @override
+  String get photosEditorBack => 'Back';
+
+  @override
+  String get photosEditorMore => 'More';
+
+  @override
+  String get photosEditorDoneLoadingMsg => 'Changes are being applied';
+
+  @override
+  String get photosEditorImportStateHistoryMsg => 'Initialize Editor';
+
+  @override
+  String get photosEditorLoadingDialogMsg => 'Please wait...';
+
+  @override
+  String get photosEditorCloseWarningTitle => 'Close Image Editor?';
+
+  @override
+  String get photosEditorCloseWarningMessage =>
+      'Are you sure you want to close the Image Editor? Your changes will not be saved.';
+
+  @override
+  String get photosEditorCloseWarningConfirm => 'OK';
+
+  @override
+  String get photosEditorPaintBottomNav => 'Paint';
+
+  @override
+  String get photosEditorPaintMoveAndZoom => 'Zoom';
+
+  @override
+  String get photosEditorPaintFreestyle => 'Freestyle';
+
+  @override
+  String get photosEditorPaintArrow => 'Arrow';
+
+  @override
+  String get photosEditorPaintLine => 'Line';
+
+  @override
+  String get photosEditorPaintRectangle => 'Rectangle';
+
+  @override
+  String get photosEditorPaintCircle => 'Circle';
+
+  @override
+  String get photosEditorPaintDashLine => 'Dash line';
+
+  @override
+  String get photosEditorPaintDashDotLine => 'Dash-dot line';
+
+  @override
+  String get photosEditorPaintHexagon => 'Hexagon';
+
+  @override
+  String get photosEditorPaintPolygon => 'Polygon';
+
+  @override
+  String get photosEditorPaintBlur => 'Blur';
+
+  @override
+  String get photosEditorPaintPixelate => 'Pixelate';
+
+  @override
+  String get photosEditorLineWidth => 'Line width';
+
+  @override
+  String get photosEditorEraser => 'Eraser';
+
+  @override
+  String get photosEditorToggleFill => 'Toggle fill';
+
+  @override
+  String get photosEditorChangeOpacity => 'Change opacity';
+
+  @override
+  String get photosEditorOpacity => 'Opacity';
+
+  @override
+  String get photosEditorColor => 'Color';
+
+  @override
+  String get photosEditorStrokeWidth => 'Stroke Width';
+
+  @override
+  String get photosEditorFill => 'Fill';
+
+  @override
+  String get photosEditorTextInputHint => 'Enter text';
+
+  @override
+  String get photosEditorTextBottomNav => 'Text';
+
+  @override
+  String get photosEditorTextAlign => 'Align text';
+
+  @override
+  String get photosEditorFontScale => 'Font scale';
+
+  @override
+  String get photosEditorTextBackgroundMode => 'Background mode';
+
+  @override
+  String get photosEditorCropBottomNav => 'Crop/ Rotate';
+
+  @override
+  String get photosEditorCropRotate => 'Rotate';
+
+  @override
+  String get photosEditorCropFlip => 'Flip';
+
+  @override
+  String get photosEditorCropTilt => 'Tilt';
+
+  @override
+  String get photosEditorCropTiltHorizontal => 'Horizontal';
+
+  @override
+  String get photosEditorCropTiltVertical => 'Vertical';
+
+  @override
+  String get photosEditorCropRatio => 'Ratio';
+
+  @override
+  String get photosEditorCropReset => 'Reset';
+
+  @override
+  String get photosEditorRatioFree => 'Free';
+
+  @override
+  String get photosEditorRatioOriginal => 'Original';
+
+  @override
+  String get photosEditorTuneBottomNav => 'Tune';
+
+  @override
+  String get photosEditorTuneBrightness => 'Brightness';
+
+  @override
+  String get photosEditorTuneContrast => 'Contrast';
+
+  @override
+  String get photosEditorTuneSaturation => 'Saturation';
+
+  @override
+  String get photosEditorTuneExposure => 'Exposure';
+
+  @override
+  String get photosEditorTuneHue => 'Hue';
+
+  @override
+  String get photosEditorTuneTemperature => 'Temperature';
+
+  @override
+  String get photosEditorTuneFade => 'Fade';
+
+  @override
+  String get photosEditorTuneTint => 'Tint';
+
+  @override
+  String get photosEditorFilterBottomNav => 'Filter';
+
+  @override
+  String get photosEditorFilterNone => 'No Filter';
+
+  @override
+  String get photosEditorBlurBottomNav => 'Blur';
+
+  @override
+  String get photosEditorEmojiBottomNav => 'Emoji';
+
+  @override
+  String get photosEditorEmojiSearch => 'Search';
+
+  @override
+  String get photosEditorEmojiRecent => 'Recent';
+
+  @override
+  String get photosEditorEmojiSmileys => 'Smileys & People';
+
+  @override
+  String get photosEditorEmojiAnimals => 'Animals & Nature';
+
+  @override
+  String get photosEditorEmojiFood => 'Food & Drink';
+
+  @override
+  String get photosEditorEmojiActivities => 'Activities';
+
+  @override
+  String get photosEditorEmojiTravel => 'Travel & Places';
+
+  @override
+  String get photosEditorEmojiObjects => 'Objects';
+
+  @override
+  String get photosEditorEmojiSymbols => 'Symbols';
+
+  @override
+  String get photosEditorEmojiFlags => 'Flags';
+
+  @override
+  String get photosEditorStickerBottomNav => 'Stickers';
+
+  @override
+  String get photosEditorLayerEdit => 'Edit';
+
+  @override
+  String get photosEditorLayerRotateScale => 'Rotate and Scale';
+
+  @override
   String get photosRolledBack => 'Rolled back to specified version';
 
   @override

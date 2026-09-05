@@ -6445,6 +6445,231 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosSaveFailed => '保存失败，请稍后重试';
 
   @override
+  String get photosEditorCancel => '取消';
+
+  @override
+  String get photosEditorUndo => '撤销';
+
+  @override
+  String get photosEditorRedo => '重做';
+
+  @override
+  String get photosEditorDone => '完成';
+
+  @override
+  String get photosEditorRemove => '移除';
+
+  @override
+  String get photosEditorBack => '返回';
+
+  @override
+  String get photosEditorMore => '更多';
+
+  @override
+  String get photosEditorDoneLoadingMsg => '正在应用更改';
+
+  @override
+  String get photosEditorImportStateHistoryMsg => '正在载入编辑内容';
+
+  @override
+  String get photosEditorLoadingDialogMsg => '请稍候…';
+
+  @override
+  String get photosEditorCloseWarningTitle => '关闭图片编辑器？';
+
+  @override
+  String get photosEditorCloseWarningMessage => '确定要关闭图片编辑器吗？未保存的更改将丢失。';
+
+  @override
+  String get photosEditorCloseWarningConfirm => '确定';
+
+  @override
+  String get photosEditorPaintBottomNav => '绘画';
+
+  @override
+  String get photosEditorPaintMoveAndZoom => '移动与缩放';
+
+  @override
+  String get photosEditorPaintFreestyle => '自由绘制';
+
+  @override
+  String get photosEditorPaintArrow => '箭头';
+
+  @override
+  String get photosEditorPaintLine => '直线';
+
+  @override
+  String get photosEditorPaintRectangle => '矩形';
+
+  @override
+  String get photosEditorPaintCircle => '圆形';
+
+  @override
+  String get photosEditorPaintDashLine => '虚线';
+
+  @override
+  String get photosEditorPaintDashDotLine => '点划线';
+
+  @override
+  String get photosEditorPaintHexagon => '六边形';
+
+  @override
+  String get photosEditorPaintPolygon => '多边形';
+
+  @override
+  String get photosEditorPaintBlur => '模糊';
+
+  @override
+  String get photosEditorPaintPixelate => '像素化';
+
+  @override
+  String get photosEditorLineWidth => '线条粗细';
+
+  @override
+  String get photosEditorEraser => '橡皮擦';
+
+  @override
+  String get photosEditorToggleFill => '切换填充';
+
+  @override
+  String get photosEditorChangeOpacity => '更改不透明度';
+
+  @override
+  String get photosEditorOpacity => '不透明度';
+
+  @override
+  String get photosEditorColor => '颜色';
+
+  @override
+  String get photosEditorStrokeWidth => '描边宽度';
+
+  @override
+  String get photosEditorFill => '填充';
+
+  @override
+  String get photosEditorTextInputHint => '输入文字';
+
+  @override
+  String get photosEditorTextBottomNav => '文字';
+
+  @override
+  String get photosEditorTextAlign => '文字对齐';
+
+  @override
+  String get photosEditorFontScale => '字号';
+
+  @override
+  String get photosEditorTextBackgroundMode => '背景色';
+
+  @override
+  String get photosEditorCropBottomNav => '裁剪旋转';
+
+  @override
+  String get photosEditorCropRotate => '旋转';
+
+  @override
+  String get photosEditorCropFlip => '翻转';
+
+  @override
+  String get photosEditorCropTilt => '矫正';
+
+  @override
+  String get photosEditorCropTiltHorizontal => '水平';
+
+  @override
+  String get photosEditorCropTiltVertical => '垂直';
+
+  @override
+  String get photosEditorCropRatio => '比例';
+
+  @override
+  String get photosEditorCropReset => '重置';
+
+  @override
+  String get photosEditorRatioFree => '自由';
+
+  @override
+  String get photosEditorRatioOriginal => '原始';
+
+  @override
+  String get photosEditorTuneBottomNav => '调节';
+
+  @override
+  String get photosEditorTuneBrightness => '亮度';
+
+  @override
+  String get photosEditorTuneContrast => '对比度';
+
+  @override
+  String get photosEditorTuneSaturation => '饱和度';
+
+  @override
+  String get photosEditorTuneExposure => '曝光';
+
+  @override
+  String get photosEditorTuneHue => '色相';
+
+  @override
+  String get photosEditorTuneTemperature => '色温';
+
+  @override
+  String get photosEditorTuneFade => '褪色';
+
+  @override
+  String get photosEditorTuneTint => '色调';
+
+  @override
+  String get photosEditorFilterBottomNav => '滤镜';
+
+  @override
+  String get photosEditorFilterNone => '无滤镜';
+
+  @override
+  String get photosEditorBlurBottomNav => '模糊';
+
+  @override
+  String get photosEditorEmojiBottomNav => '表情';
+
+  @override
+  String get photosEditorEmojiSearch => '搜索';
+
+  @override
+  String get photosEditorEmojiRecent => '最近';
+
+  @override
+  String get photosEditorEmojiSmileys => '笑脸与人物';
+
+  @override
+  String get photosEditorEmojiAnimals => '动物与自然';
+
+  @override
+  String get photosEditorEmojiFood => '食物与饮品';
+
+  @override
+  String get photosEditorEmojiActivities => '活动';
+
+  @override
+  String get photosEditorEmojiTravel => '旅行与地点';
+
+  @override
+  String get photosEditorEmojiObjects => '物品';
+
+  @override
+  String get photosEditorEmojiSymbols => '符号';
+
+  @override
+  String get photosEditorEmojiFlags => '旗帜';
+
+  @override
+  String get photosEditorStickerBottomNav => '贴纸';
+
+  @override
+  String get photosEditorLayerEdit => '编辑';
+
+  @override
+  String get photosEditorLayerRotateScale => '旋转与缩放';
+
+  @override
   String get photosRolledBack => '已回滚到指定版本';
 
   @override
