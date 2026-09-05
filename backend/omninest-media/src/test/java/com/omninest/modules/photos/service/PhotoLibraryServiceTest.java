@@ -74,6 +74,7 @@ class PhotoLibraryServiceTest {
     private ReadThroughCache readThroughCache;
     private MediaSyncEventService syncEventService;
     private PhotoContentAnalysisService contentAnalysisService;
+    private PhotoGeoService photoGeoService;
 
     private PhotoLibraryService service;
 
@@ -90,6 +91,7 @@ class PhotoLibraryServiceTest {
         readThroughCache = mock(ReadThroughCache.class);
         syncEventService = mock(MediaSyncEventService.class);
         contentAnalysisService = mock(PhotoContentAnalysisService.class);
+        photoGeoService = mock(PhotoGeoService.class);
 
         service = new PhotoLibraryService(
                 photoItemRepository,
@@ -102,7 +104,8 @@ class PhotoLibraryServiceTest {
                 fileQueryService,
                 readThroughCache,
                 syncEventService,
-                contentAnalysisService
+                contentAnalysisService,
+                photoGeoService
         );
     }
 

@@ -86,6 +86,7 @@ public class PhotoLibraryService {
     private final ReadThroughCache readThroughCache;
     private final MediaSyncEventService syncEventService;
     private final PhotoContentAnalysisService contentAnalysisService;
+    private final PhotoGeoService photoGeoService;
 
     /**
      * 照片仪表盘，返回统计数据和近期/收藏照片（缓存 3 分钟）。
@@ -406,6 +407,38 @@ public class PhotoLibraryService {
         log.info("回收站清空任务已创建: taskId={}, photoCount={}, userId={}",
                 taskId, items.size(), ownerUserId);
         return taskId;
+    }
+
+    /**
+     * 为有 GPS 坐标但缺少地名信息的照片补充逆地理编码结果。
+     *
+     * <p>导入时的逆地理编码可能因限流或网络失败而缺失，此方法用于按需回填。</p>
+     *
+     * @param ownerUserId 当前用户 ID
+     * @param photoId 照片 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void backfillPhotoGeocode(UUID ownerUserId, UUID photoId) {
+        PhotoItem item = photoItemRepository.findByOwnerUserIdAndId(ownerUserId, photoId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "图片不存在"));
+        if (item.getGpsLatitude() == null || item.getGpsLongitude() == null) {
+            return;
+        }
+        Map<String, Object> existing = item.getGpsLocation();
+        if (existing != null
+                && (existing.containsKey("city") || existing.containsKey("displayName"))) {
+            return;
+        }
+        Map<String, Object> geoInfo = photoGeoService.reverseGeocode(
+                item.getGpsLatitude(),
+                item.getGpsLongitude()
+        );
+        if (geoInfo.isEmpty()) {
+            return;
+        }
+        item.setGpsLocation(geoInfo);
+        photoItemRepository.save(item);
+        log.info("照片位置地名回填完成: photoId={}, userId={}", photoId, ownerUserId);
     }
 
     /**

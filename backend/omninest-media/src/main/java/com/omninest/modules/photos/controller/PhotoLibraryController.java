@@ -222,6 +222,15 @@ public class PhotoLibraryController {
         return ApiResponse.success(FilePurgeTaskDto.queued(taskId));
     }
 
+    @Operation(summary = "补充位置地名", description = "对有 GPS 坐标但缺少地名的照片重新执行逆地理编码")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_WRITE + "')")
+    @PostMapping("/api/v1/photos/{photoId}/geocode")
+    ApiResponse<Void> backfillGeocode(@PathVariable UUID photoId) {
+        UUID userId = currentUserContext.requireCurrentUserId();
+        libraryService.backfillPhotoGeocode(userId, photoId);
+        return ApiResponse.success(null);
+    }
+
     // ─── 收藏 ───
 
     @Operation(summary = "获取收藏照片", description = "返回用户收藏的所有照片")
