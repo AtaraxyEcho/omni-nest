@@ -1,10 +1,10 @@
 package com.omninest.modules.photos.service;
 
 import com.alibaba.fastjson2.JSON;
-import com.omninest.common.ratelimit.RateLimitService;
 import com.alibaba.fastjson2.JSONObject;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.omninest.common.ratelimit.RateLimitService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics;
 import jakarta.annotation.PostConstruct;
@@ -17,13 +17,17 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * GPS 逆地理编码服务，使用 OpenStreetMap Nominatim API 将坐标转换为地名。
- * 速率限制和缓存行为通过配置中心动态调整。
+ * GPS 逆地理编码服务：离线 GeoNames 优先，Nominatim 仅作为可选兜底。
+ *
+ * <p>离线主路径完全本地：最近城市 + 双语名称格式化，无外部网络依赖；
+ * 离线关闭、索引为空或坐标超距时，若 Nominatim 开关开启则回退在线服务。
+ * 速率限制和缓存行为通过配置中心动态调整。</p>
  *
  * @author OmniNest
  */
@@ -38,10 +42,17 @@ public class PhotoGeoService {
     private static final long MAX_CACHE_ENTRIES = 10_000;
     private static final Duration CACHE_TTL = Duration.ofHours(24);
 
+    private static final String METRIC_OFFLINE_SUCCESS = "photo.geo.offline.success";
+    private static final String METRIC_DISTANCE_REJECTED = "photo.geo.distance.rejected";
+    private static final String METRIC_NOMINATIM_FALLBACK = "photo.geo.nominatim.fallback";
+    private static final String METRIC_INVALID_COORDINATE = "photo.geo.invalid.coordinate";
+    private static final String METRIC_NO_INDEX = "photo.geo.no.index";
+
     private final PhotosRuntimeConfigService configService;
     private final NominatimRateLimiter rateLimiter;
     private final RateLimitService distributedRateLimiter;
     private final MeterRegistry meterRegistry;
+    private final GeoCityIndex geoCityIndex;
 
     private final Cache<String, Map<String, Object>> cache = Caffeine.newBuilder()
             .maximumSize(MAX_CACHE_ENTRIES)
@@ -62,25 +73,67 @@ public class PhotoGeoService {
     }
 
     /**
-     * 逆地理编码：将经纬度转换为地名信息。
-     * 速率限制和缓存行为从配置中心动态读取。
+     * 逆地理编码：将经纬度转换为地名信息（使用当前在线索引快照）。
      *
      * @param latitude 纬度
      * @param longitude 经度
-     * @return 地名信息 Map（含 city/state/country/district/displayName），失败时返回空 Map
+     * @return 地名信息 Map，无法解析时返回空 Map
      */
     public Map<String, Object> reverseGeocode(BigDecimal latitude, BigDecimal longitude) {
-        if (latitude == null || longitude == null) {
+        return reverseGeocode(null, latitude, longitude);
+    }
+
+    /**
+     * 逆地理编码：可绑定指定数据集快照（回填任务保证整个任务期间使用同一数据版本）。
+     *
+     * @param pinnedSnapshot 绑定快照，为 null 时使用当前在线快照
+     * @param latitude 纬度
+     * @param longitude 经度
+     * @return 地名信息 Map，无法解析时返回空 Map
+     */
+    public Map<String, Object> reverseGeocode(
+            GeoCitySnapshot pinnedSnapshot,
+            BigDecimal latitude,
+            BigDecimal longitude) {
+        if (!isValidCoordinate(latitude, longitude)) {
+            counter(METRIC_INVALID_COORDINATE).increment();
             return Map.of();
         }
 
+        if (configService.isGeoOfflineEnabled()) {
+            Optional<GeoCityMatch> nearest = nearest(latitude, longitude, pinnedSnapshot);
+            if (nearest.isEmpty()) {
+                counter(METRIC_NO_INDEX).increment();
+            } else {
+                int maxKm = configService.geoMaxDistanceKm();
+                GeoCityMatch match = nearest.get();
+                if (maxKm == 0 || match.distanceKm() <= maxKm) {
+                    counter(METRIC_OFFLINE_SUCCESS).increment();
+                    return GeoLocationFormatter.toGpsLocation(match);
+                }
+                // 距离超出可信范围（如海上坐标），不填充误导性地名。
+                counter(METRIC_DISTANCE_REJECTED).increment();
+            }
+        }
+
+        if (!configService.isNominatimEnabled()) {
+            return Map.of();
+        }
+        counter(METRIC_NOMINATIM_FALLBACK).increment();
+        return nominatimReverseGeocode(latitude, longitude);
+    }
+
+    /**
+     * Nominatim 在线兜底：带缓存与双层速率限制。
+     *
+     * @param latitude 纬度
+     * @param longitude 经度
+     * @return 地名信息 Map，失败时返回空 Map
+     */
+    private Map<String, Object> nominatimReverseGeocode(BigDecimal latitude, BigDecimal longitude) {
         boolean cacheEnabled = configService.isGeoCacheEnabled();
-        String cacheKey = String.format(
-                Locale.ROOT,
-                "%.2f,%.2f",
-                latitude.doubleValue(),
-                longitude.doubleValue()
-        );
+        String cacheKey = String.format(Locale.ROOT, "%.2f,%.2f",
+                latitude.doubleValue(), longitude.doubleValue());
 
         if (cacheEnabled) {
             Map<String, Object> cached = cache.getIfPresent(cacheKey);
@@ -92,8 +145,7 @@ public class PhotoGeoService {
         int rateLimit = Math.max(1, configService.geoRateLimitPerSecond());
 
         // Redis 分布式预检：多实例部署时防止超过全局速率
-        if (!distributedRateLimiter.tryAcquire(
-                "nominatim:geo", rateLimit, Duration.ofSeconds(1))) {
+        if (!distributedRateLimiter.tryAcquire("nominatim:geo", rateLimit, Duration.ofSeconds(1))) {
             log.warn("Nominatim 分布式速率限制，跳过本次查询");
             return Map.of();
         }
@@ -124,26 +176,21 @@ public class PhotoGeoService {
             putIfNotBlank(result, "displayName", json.getString("display_name"));
             JSONObject address = json.getJSONObject("address");
             if (address != null) {
-                String city = address.getString("city");
-                if (city == null || city.isBlank()) {
-                    city = address.getString("town");
-                }
-                if (city == null || city.isBlank()) {
-                    city = address.getString("village");
-                }
-                if (city == null || city.isBlank()) {
-                    city = address.getString("municipality");
-                }
+                String city = firstNotBlank(
+                        address.getString("city"),
+                        address.getString("town"),
+                        address.getString("village"),
+                        address.getString("municipality"));
                 String district = firstNotBlank(
                         address.getString("city_district"),
                         address.getString("district"),
                         address.getString("county"),
-                        address.getString("suburb")
-                );
+                        address.getString("suburb"));
                 putIfNotBlank(result, "city", city);
                 putIfNotBlank(result, "state", address.getString("state"));
                 putIfNotBlank(result, "district", district);
                 putIfNotBlank(result, "country", address.getString("country"));
+                result.put("geocoder", "nominatim");
             }
 
             Map<String, Object> immutableResult = Map.copyOf(result);
@@ -159,6 +206,55 @@ public class PhotoGeoService {
             log.warn("逆地理编码失败: lat={}, lon={}, error={}", latitude, longitude, ex.getMessage());
             return Map.of();
         }
+    }
+
+    private Optional<GeoCityMatch> nearest(
+            BigDecimal latitude,
+            BigDecimal longitude,
+            GeoCitySnapshot pinnedSnapshot) {
+        double lat = latitude.doubleValue();
+        double lng = longitude.doubleValue();
+        if (pinnedSnapshot != null) {
+            return nearestInSnapshot(pinnedSnapshot, lat, lng);
+        }
+        GeoCitySnapshot current = geoCityIndex.currentSnapshot();
+        if (current.cities().isEmpty()) {
+            return Optional.empty();
+        }
+        return nearestInSnapshot(current, lat, lng);
+    }
+
+    private static Optional<GeoCityMatch> nearestInSnapshot(
+            GeoCitySnapshot snapshot,
+            double latitude,
+            double longitude) {
+        GeoCitySnapshot.Entry best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (GeoCitySnapshot.Entry entry : snapshot.cities()) {
+            double distance = GeoDistance.haversineKm(
+                    latitude, longitude, entry.latitudeRadians(), entry.longitudeRadians());
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = entry;
+            }
+        }
+        return best == null ? Optional.empty() : Optional.of(new GeoCityMatch(best, bestDistance));
+    }
+
+    private static boolean isValidCoordinate(BigDecimal latitude, BigDecimal longitude) {
+        if (latitude == null || longitude == null) {
+            return false;
+        }
+        double lat = latitude.doubleValue();
+        double lng = longitude.doubleValue();
+        return !Double.isNaN(lat) && !Double.isNaN(lng)
+                && !Double.isInfinite(lat) && !Double.isInfinite(lng)
+                && lat >= -90.0 && lat <= 90.0
+                && lng >= -180.0 && lng <= 180.0;
+    }
+
+    private io.micrometer.core.instrument.Counter counter(String name) {
+        return meterRegistry.counter(name);
     }
 
     private void putIfNotBlank(Map<String, Object> target, String key, String value) {

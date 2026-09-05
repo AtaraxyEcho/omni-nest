@@ -240,6 +240,29 @@ public class TaskRecordService {
     }
 
     /**
+     * 查询任务当前执行阶段。
+     *
+     * @param taskId 任务 ID
+     * @return 执行阶段，未设置时返回 null
+     */
+    @Transactional(readOnly = true)
+    public String taskPhase(UUID taskId) {
+        return requireTask(taskId).getPhase();
+    }
+
+    /**
+     * 查询指定任务类型下处于活跃状态的任务标识（跨用户，用于全局任务去重）。
+     *
+     * @param taskType 任务类型
+     * @param statuses 活跃状态集合
+     * @return 活跃任务标识
+     */
+    @Transactional(readOnly = true)
+    public List<UUID> findActiveTaskIdsByType(String taskType, Collection<String> statuses) {
+        return taskRecordRepository.findIdsByTaskTypeAndStatusIn(taskType, statuses);
+    }
+
+    /**
      * 标记任务失败。
      *
      * @param taskId 任务 ID

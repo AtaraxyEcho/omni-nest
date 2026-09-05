@@ -1826,6 +1826,44 @@ CREATE INDEX "idx_photo_items_owner_deleted_at" ON "omni"."photo_items" USING bt
 ) WHERE "deleted_at" IS NOT NULL
 ;
 
+CREATE TABLE "omni"."geo_dataset" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "dataset_version" varchar(64) NOT NULL,
+  "source_dump_date" date NOT NULL,
+  "dataset_type" varchar(32) NOT NULL DEFAULT 'cities5000'::character varying,
+  "source_hash" varchar(128),
+  "status" varchar(20) NOT NULL,
+  "created_at" timestamptz(6) NOT NULL DEFAULT now(),
+  "updated_at" timestamptz(6) NOT NULL DEFAULT now(),
+  "published_at" timestamptz(6),
+  "version" int8 NOT NULL DEFAULT 0,
+  CONSTRAINT "pk_geo_dataset" PRIMARY KEY ("id")
+)
+;
+
+CREATE UNIQUE INDEX "uk_geo_dataset_version" ON "omni"."geo_dataset" USING btree (
+  "dataset_version" ASC
+)
+;
+
+CREATE TABLE "omni"."geo_cities" (
+  "dataset_id" uuid NOT NULL,
+  "geoname_id" int8 NOT NULL,
+  "name" varchar(200) NOT NULL,
+  "name_zh" varchar(200),
+  "country_code" varchar(2) NOT NULL,
+  "country_name_en" varchar(200),
+  "country_name_zh" varchar(200),
+  "province_name_en" varchar(200),
+  "province_name_zh" varchar(200),
+  "latitude" numeric(10,7) NOT NULL,
+  "longitude" numeric(10,7) NOT NULL,
+  "population" int8 NOT NULL DEFAULT 0,
+  "feature_code" varchar(10),
+  "created_at" timestamptz(6) NOT NULL DEFAULT now()
+)
+;
+
 CREATE TABLE "omni"."photo_scan_jobs" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "owner_user_id" uuid NOT NULL,
@@ -3819,7 +3857,7 @@ COMMENT ON COLUMN "omni"."photo_items"."flash" IS '闪光灯模式或状态';
 COMMENT ON COLUMN "omni"."photo_items"."white_balance" IS '白平衡模式';
 COMMENT ON COLUMN "omni"."photo_items"."metering_mode" IS '测光模式';
 COMMENT ON COLUMN "omni"."photo_items"."lens_model" IS '镜头型号';
-COMMENT ON COLUMN "omni"."photo_items"."gps_location" IS 'PostGIS地理坐标点';
+COMMENT ON COLUMN "omni"."photo_items"."gps_location" IS '照片地理位置 JSON，保存 GPS 反向地理编码结果';
 
 COMMENT ON TABLE "omni"."photo_scan_jobs" IS '照片库扫描任务表，记录扫描进度和执行结果';
 COMMENT ON COLUMN "omni"."photo_scan_jobs"."id" IS '照片扫描任务唯一标识，主键';
@@ -3831,6 +3869,34 @@ COMMENT ON COLUMN "omni"."photo_scan_jobs"."details" IS '扫描详情，JSONB格
 COMMENT ON COLUMN "omni"."photo_scan_jobs"."created_at" IS '创建时间';
 COMMENT ON COLUMN "omni"."photo_scan_jobs"."updated_at" IS '更新时间';
 COMMENT ON COLUMN "omni"."photo_scan_jobs"."version" IS '乐观锁版本号';
+
+COMMENT ON TABLE "omni"."geo_dataset" IS 'GeoNames 离线地理数据集版本表，管理导入、验证与发布生命周期';
+COMMENT ON COLUMN "omni"."geo_dataset"."id" IS '数据集唯一标识，主键';
+COMMENT ON COLUMN "omni"."geo_dataset"."dataset_version" IS '数据集版本号，全局唯一';
+COMMENT ON COLUMN "omni"."geo_dataset"."source_dump_date" IS 'GeoNames dump 日期';
+COMMENT ON COLUMN "omni"."geo_dataset"."dataset_type" IS '数据集类型，如 cities5000';
+COMMENT ON COLUMN "omni"."geo_dataset"."source_hash" IS '源文件摘要，用于追溯';
+COMMENT ON COLUMN "omni"."geo_dataset"."status" IS '数据集状态：IMPORTING / READY / PUBLISHED / ARCHIVED / FAILED';
+COMMENT ON COLUMN "omni"."geo_dataset"."created_at" IS '创建时间';
+COMMENT ON COLUMN "omni"."geo_dataset"."updated_at" IS '更新时间';
+COMMENT ON COLUMN "omni"."geo_dataset"."published_at" IS '发布时间';
+COMMENT ON COLUMN "omni"."geo_dataset"."version" IS '乐观锁版本号';
+
+COMMENT ON TABLE "omni"."geo_cities" IS 'GeoNames 城市表，按数据集分版本保存城市双语名称与坐标';
+COMMENT ON COLUMN "omni"."geo_cities"."dataset_id" IS '所属数据集ID，关联geo_dataset';
+COMMENT ON COLUMN "omni"."geo_cities"."geoname_id" IS 'GeoNames 城市唯一ID';
+COMMENT ON COLUMN "omni"."geo_cities"."name" IS 'GeoNames 主名称';
+COMMENT ON COLUMN "omni"."geo_cities"."name_zh" IS '城市中文名，选优自 alternateNames';
+COMMENT ON COLUMN "omni"."geo_cities"."country_code" IS 'ISO 国家码';
+COMMENT ON COLUMN "omni"."geo_cities"."country_name_en" IS '国家英文名';
+COMMENT ON COLUMN "omni"."geo_cities"."country_name_zh" IS '国家中文名';
+COMMENT ON COLUMN "omni"."geo_cities"."province_name_en" IS '一级行政区英文名';
+COMMENT ON COLUMN "omni"."geo_cities"."province_name_zh" IS '一级行政区中文名';
+COMMENT ON COLUMN "omni"."geo_cities"."latitude" IS '纬度';
+COMMENT ON COLUMN "omni"."geo_cities"."longitude" IS '经度';
+COMMENT ON COLUMN "omni"."geo_cities"."population" IS '人口数量';
+COMMENT ON COLUMN "omni"."geo_cities"."feature_code" IS 'GeoNames 地物类型代码';
+COMMENT ON COLUMN "omni"."geo_cities"."created_at" IS '创建时间';
 
 COMMENT ON TABLE "omni"."photo_tags" IS '照片标签表，保存人工或自动生成的标签';
 COMMENT ON COLUMN "omni"."photo_tags"."id" IS '照片标签唯一标识，主键';

@@ -166,6 +166,16 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    Queue photoGeoImportQueue() {
+        return durableQueue(QueueNames.PHOTO_GEO_IMPORT_QUEUE);
+    }
+
+    @Bean
+    Queue photoGeoBackfillQueue() {
+        return durableQueue(QueueNames.PHOTO_GEO_BACKFILL_QUEUE);
+    }
+
+    @Bean
     Queue comicParseQueue() {
         return durableQueue(QueueNames.COMIC_PARSE_QUEUE);
     }
@@ -276,6 +286,16 @@ public class RabbitMqConfig {
     @Bean
     Binding photoAiBinding(Queue photoAiQueue, DirectExchange taskExchange) {
         return BindingBuilder.bind(photoAiQueue).to(taskExchange).with(QueueNames.PHOTO_AI_ROUTING_KEY);
+    }
+
+    @Bean
+    Binding photoGeoImportBinding(Queue photoGeoImportQueue, DirectExchange taskExchange) {
+        return BindingBuilder.bind(photoGeoImportQueue).to(taskExchange).with(QueueNames.PHOTO_GEO_IMPORT_ROUTING_KEY);
+    }
+
+    @Bean
+    Binding photoGeoBackfillBinding(Queue photoGeoBackfillQueue, DirectExchange taskExchange) {
+        return BindingBuilder.bind(photoGeoBackfillQueue).to(taskExchange).with(QueueNames.PHOTO_GEO_BACKFILL_ROUTING_KEY);
     }
 
     @Bean

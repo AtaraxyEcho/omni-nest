@@ -47,6 +47,7 @@ import com.omninest.modules.photos.service.PhotoAlbumService;
 import com.omninest.modules.photos.service.PhotoBackupService;
 import com.omninest.modules.photos.service.PhotoBatchService;
 import com.omninest.modules.photos.service.PhotoEditService;
+import com.omninest.modules.photos.service.GeoDatasetService;
 import com.omninest.modules.photos.service.PhotoLibraryService;
 import com.omninest.modules.photos.service.PhotoRelationService;
 import com.omninest.modules.photos.service.PhotosRuntimeConfigService;
@@ -86,6 +87,7 @@ public class PhotoLibraryController {
     private final PhotoAdminService adminService;
     private final PhotoBatchService batchService;
     private final PhotoEditService editService;
+    private final GeoDatasetService geoDatasetService;
     private final PhotoBackupService backupService;
     private final PhotoAiService photoAiService;
     private final PhotoAiTaskService photoAiTaskService;
@@ -171,6 +173,39 @@ public class PhotoLibraryController {
     ApiResponse<List<PhotoTrashResultDto>> deletePhotos(@Valid @RequestBody DeletePhotosRequest body) {
         UUID userId = currentUserContext.requireCurrentUserId();
         return ApiResponse.success(libraryService.movePhotosToTrash(userId, body.photoIds()));
+    }
+
+    @Operation(summary = "创建 GeoNames 数据集导入任务",
+            description = "从服务端共享目录 data/geonames/imports/{dumpDate}/ 读取 dump 文件，"
+                    + "由 Worker 异步导入、验证并发布为当前线上数据集")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_ADMIN + "')")
+    @PostMapping("/api/v1/admin/photos/geo/import")
+    ApiResponse<GeoDatasetService.GeoImportCreated> importGeoDataset(
+            @RequestBody GeoDatasetService.GeoImportRequest body
+    ) {
+        UUID operatorId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(geoDatasetService.createImportTask(body, operatorId));
+    }
+
+    @Operation(summary = "重载离线地名索引", description = "将本实例内存索引重载到当前已发布数据集")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_ADMIN + "')")
+    @PostMapping("/api/v1/admin/photos/geo/reload")
+    ApiResponse<Map<String, Object>> reloadGeoIndex() {
+        String datasetVersion = geoDatasetService.reloadCurrentPublished();
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("datasetVersion", datasetVersion);
+        return ApiResponse.success(body);
+    }
+
+    @Operation(summary = "创建存量照片位置回填任务",
+            description = "为有坐标但缺地名的照片创建后台回填任务；已存在活跃回填任务时返回原任务")
+    @PreAuthorize("hasAuthority('" + Permissions.PHOTO_ADMIN + "')")
+    @PostMapping("/api/v1/admin/photos/geo/backfill")
+    ApiResponse<GeoDatasetService.GeoBackfillCreated> backfillGeocode(
+            @RequestParam(required = false) Integer batchSize
+    ) {
+        UUID operatorId = currentUserContext.requireCurrentUserId();
+        return ApiResponse.success(geoDatasetService.createBackfillTask(operatorId, batchSize));
     }
 
     @Operation(summary = "保存外部编辑结果", description = "接收编辑器产出的整图字节并存为新编辑版本")

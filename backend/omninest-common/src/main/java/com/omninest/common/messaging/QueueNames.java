@@ -49,6 +49,10 @@ public final class QueueNames {
     public static final String PHOTO_BATCH_ROUTING_KEY = "photo.batch";
     public static final String PHOTO_AI_QUEUE = "omninest.tasks.photo-ai";
     public static final String PHOTO_AI_ROUTING_KEY = "photo.ai";
+    public static final String PHOTO_GEO_IMPORT_QUEUE = "omninest.tasks.photo-geo-import";
+    public static final String PHOTO_GEO_IMPORT_ROUTING_KEY = "photo.geo.import";
+    public static final String PHOTO_GEO_BACKFILL_QUEUE = "omninest.tasks.photo-geo-backfill";
+    public static final String PHOTO_GEO_BACKFILL_ROUTING_KEY = "photo.geo.backfill";
     public static final String DEAD_LETTER_EXCHANGE = "omninest.tasks.dlx";
     public static final String DEAD_LETTER_QUEUE = "omninest.tasks.dead-letter";
     public static final String DEAD_LETTER_ROUTING_KEY = "dead-letter";
@@ -77,6 +81,8 @@ public final class QueueNames {
             PHOTO_INDEX_QUEUE,
             PHOTO_BATCH_QUEUE,
             PHOTO_AI_QUEUE,
+            PHOTO_GEO_IMPORT_QUEUE,
+            PHOTO_GEO_BACKFILL_QUEUE,
             COMIC_PARSE_QUEUE,
             READER_PARSE_QUEUE,
             FILE_PURGE_QUEUE,

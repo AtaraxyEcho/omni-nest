@@ -110,6 +110,23 @@ public interface TaskRecordRepository extends JpaRepository<TaskRecord, UUID> {
     );
 
     /**
+     * 查询指定任务类型下处于活跃状态的任务标识（跨用户，用于全局任务去重）。
+     *
+     * @param taskType 任务类型
+     * @param statuses 活跃状态集合
+     * @return 活跃任务标识
+     */
+    @Query("""
+            select t.id from TaskRecord t
+            where t.taskType = :taskType
+            and t.status in :statuses
+            """)
+    List<UUID> findIdsByTaskTypeAndStatusIn(
+            @Param("taskType") String taskType,
+            @Param("statuses") Collection<String> statuses
+    );
+
+    /**
      * 查询资源当前活跃任务。
      *
      * @param ownerUserId 所属用户 ID

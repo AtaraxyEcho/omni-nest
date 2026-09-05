@@ -21,6 +21,10 @@ public class PhotosRuntimeConfigService extends BaseRuntimeConfigService {
     public static final String PHOTO_AI_TIMEOUT = "photo.ai.timeout";
     public static final String PHOTO_BACKUP_ENABLED = "photo.backup";
     public static final String PHOTO_GEO_RATE = "photo.geo.rate";
+    public static final String PHOTO_GEO_OFFLINE = "photo.geo.offline";
+    public static final String PHOTO_GEO_NOMINATIM = "photo.geo.nominatim";
+    public static final String PHOTO_GEO_MAX_DISTANCE = "photo.geo.max-distance-km";
+    public static final String PHOTO_GEO_IMPORT_BATCH_SIZE = "photo.geo.import.batch-size";
 
     private final AiSidecarProperties deploymentProperties;
     private final LegacyDeploymentConfigResolver legacyDeploymentConfigResolver;
@@ -94,6 +98,43 @@ public class PhotosRuntimeConfigService extends BaseRuntimeConfigService {
     /** @return 是否启用地理编码缓存 */
     public boolean isGeoCacheEnabled() {
         return true;
+    }
+
+    /** @return 是否启用 GeoNames 离线逆地理编码（默认启用） */
+    public boolean isGeoOfflineEnabled() {
+        return cachedConfigValue(PHOTO_GEO_OFFLINE)
+                .or(() -> cachedConfigValue("photo.geo.offline-enabled"))
+                .map(value -> parseBoolean(value, true))
+                .orElse(true);
+    }
+
+    /** @return 离线最近城市的最大可信距离（公里），0 表示不限制；超出则不填充地名 */
+    public int geoMaxDistanceKm() {
+        return Math.clamp(
+                cachedConfigValue(PHOTO_GEO_MAX_DISTANCE)
+                        .or(() -> cachedConfigValue("photo.geo.max-distance-km"))
+                        .map(value -> parseInt(value, 100))
+                        .orElse(100),
+                0,
+                2000);
+    }
+
+    /** @return GeoNames 导入每批写入行数 */
+    public int geoImportBatchSize() {
+        return Math.clamp(
+                cachedConfigValue(PHOTO_GEO_IMPORT_BATCH_SIZE)
+                        .map(value -> parseInt(value, 1000))
+                        .orElse(1000),
+                100,
+                10_000);
+    }
+
+    /** @return 是否启用 Nominatim 在线兜底（默认关闭，属行为变更的显式开关） */
+    public boolean isNominatimEnabled() {
+        return cachedConfigValue(PHOTO_GEO_NOMINATIM)
+                .or(() -> cachedConfigValue("photo.geo.nominatim-enabled"))
+                .map(value -> parseBoolean(value, false))
+                .orElse(false);
     }
 
     /**
