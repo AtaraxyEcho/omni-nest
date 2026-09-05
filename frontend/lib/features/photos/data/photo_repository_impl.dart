@@ -47,6 +47,9 @@ class PhotoRepositoryImpl implements PhotoRepository {
   Future<void> restorePhoto(String photoId) => _api.restorePhoto(photoId);
 
   @override
+  Future<void> backfillGeocode(String photoId) => _api.backfillGeocode(photoId);
+
+  @override
   Future<TaskSubmission> purgePhoto(String photoId, {bool cascade = false}) =>
       _api.purgePhoto(photoId, cascade: cascade);
 

@@ -32,7 +32,7 @@ class _PhotoSlideshowPageState extends ConsumerState<PhotoSlideshowPage> {
   Timer? _autoAdvanceTimer;
   bool _showControls = true;
   Timer? _hideControlsTimer;
-  late final WindowChromeLease _windowChromeLease;
+  WindowChromeLease? _windowChromeLease;
 
   @override
   void initState() {
@@ -41,9 +41,13 @@ class _PhotoSlideshowPageState extends ConsumerState<PhotoSlideshowPage> {
     _pageController = PageController(initialPage: _currentIndex);
     _startAutoAdvance();
     _scheduleHideControls();
-    _windowChromeLease = ref
-        .read(windowChromeControllerProvider.notifier)
-        .acquireImmersive(owner: 'photos.slideshow');
+    // 沉浸租约会同步修改 Provider 状态，延迟到首帧后获取，避免构建期报错。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _windowChromeLease = ref
+          .read(windowChromeControllerProvider.notifier)
+          .acquireImmersive(owner: 'photos.slideshow');
+    });
   }
 
   @override
@@ -51,7 +55,7 @@ class _PhotoSlideshowPageState extends ConsumerState<PhotoSlideshowPage> {
     _autoAdvanceTimer?.cancel();
     _hideControlsTimer?.cancel();
     _pageController.dispose();
-    _windowChromeLease.release();
+    _windowChromeLease?.release();
     super.dispose();
   }
 

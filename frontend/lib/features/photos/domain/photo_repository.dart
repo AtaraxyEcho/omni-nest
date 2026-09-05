@@ -37,6 +37,9 @@ abstract interface class PhotoRepository {
   /// 从回收站恢复照片。
   Future<void> restorePhoto(String photoId);
 
+  /// 为有 GPS 坐标但缺少地名的照片补充逆地理编码。
+  Future<void> backfillGeocode(String photoId);
+
   /// 永久删除回收站中的照片。
   Future<TaskSubmission> purgePhoto(String photoId, {bool cascade = false});
 

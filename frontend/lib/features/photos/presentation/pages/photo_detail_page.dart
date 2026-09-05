@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_trash_view.dart';
@@ -65,6 +67,38 @@ class _PhotoDetailBody extends ConsumerStatefulWidget {
 
 class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   bool _showInfo = false;
+  bool _locationBackfillAttempted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _backfillLocationIfNeeded();
+    });
+  }
+
+  void _backfillLocationIfNeeded() {
+    if (_locationBackfillAttempted) return;
+    _locationBackfillAttempted = true;
+    final photo = widget.photo;
+    if (!photo.hasGps) return;
+    final location = photo.gpsLocation;
+    if (location != null && location.isNotEmpty) return;
+    unawaited(_backfillGeocode());
+  }
+
+  Future<void> _backfillGeocode() async {
+    try {
+      await ref
+          .read(photoCenterControllerProvider.notifier)
+          .backfillGeocode(widget.photo.id);
+      if (!mounted) return;
+      ref.invalidate(photoDetailProvider(widget.photo.id));
+    } on Exception {
+      // 逆地理编码失败时静默降级：位置信息仅在成功时展示。
+    }
+  }
 
   /// 在当前照片列表中找到相邻照片 ID，返回 null 表示无相邻照片。
   String? _adjacentPhotoId(PhotoItem photo, int offset) {

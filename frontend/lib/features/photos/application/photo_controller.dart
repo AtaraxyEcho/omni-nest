@@ -107,6 +107,9 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
       isSelectionMode: previous?.isSelectionMode ?? false,
       groupBy: previous?.groupBy ?? GroupBy.date,
       searchQuery: previous?.searchQuery ?? '',
+      timeline: previous?.timeline,
+      timelinePage: previous?.timelinePage ?? 0,
+      timelineTotalElements: previous?.timelineTotalElements ?? 0,
       trashPhotos: previous?.trashPhotos ?? const [],
       trashTotalElements: previous?.trashTotalElements ?? 0,
       photoPage: photoPage.page,
@@ -162,6 +165,10 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
         errorMessage: partialErrors.isEmpty ? null : partialErrors.join('；'),
       ),
     );
+    // 时间线在移入回收站/恢复后计数会变化：已加载过则强制重载，保证徽章与列表一致。
+    if (current.timeline != null) {
+      unawaited(loadTimeline(force: true));
+    }
   }
 
   /// 上传完成后立即刷新，并在异步自动导入尚未完成时执行有限补查。
@@ -696,6 +703,16 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
           trashPageError: describeUserFacingError(e).message,
         ),
       );
+    }
+  }
+
+  /// 为有 GPS 坐标但缺少地名的照片补充逆地理编码。
+  Future<void> backfillGeocode(String photoId) async {
+    try {
+      await _repo.backfillGeocode(photoId);
+    } on Exception catch (e) {
+      _setError(describeUserFacingError(e).message);
+      rethrow;
     }
   }
 

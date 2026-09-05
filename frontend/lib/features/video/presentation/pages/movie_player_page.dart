@@ -128,9 +128,13 @@ class _MoviePlayerPageState extends ConsumerState<MoviePlayerPage> {
     _player.setVolume(_volume);
     _startHideTimer();
     if (isMobilePlatform) {
-      _windowChromeLease = _windowChromeController.acquireImmersive(
-        owner: 'video.player.${widget.videoItemId}',
-      );
+      // 租约会同步修改 Provider 状态，延迟到首帧后获取。
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _windowChromeLease = _windowChromeController.acquireImmersive(
+          owner: 'video.player.${widget.videoItemId}',
+        );
+      });
     }
   }
 

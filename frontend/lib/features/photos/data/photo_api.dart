@@ -83,6 +83,11 @@ class PhotoApi {
     await apiClient.dio.post<void>('/photos/$photoId/restore');
   }
 
+  /// 为有 GPS 坐标但缺少地名的照片补充逆地理编码。
+  Future<void> backfillGeocode(String photoId) async {
+    await apiClient.dio.post<void>('/photos/$photoId/geocode');
+  }
+
   /// 永久删除回收站中的照片。
   Future<TaskSubmission> purgePhoto(
     String photoId, {
