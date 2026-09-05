@@ -66,7 +66,7 @@ class _PhotoDetailBody extends ConsumerStatefulWidget {
 }
 
 class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
-  bool _showInfo = false;
+  bool get _showInfo => ref.watch(photoInfoPanelVisibleProvider);
   bool _locationBackfillAttempted = false;
 
   @override
@@ -152,7 +152,8 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
             }
           },
           onDelete: _confirmDelete,
-          onToggleInfo: () => setState(() => _showInfo = !_showInfo),
+          onToggleInfo:
+              () => ref.read(photoInfoPanelVisibleProvider.notifier).toggle(),
           onAddToAlbum: () => _showAddToAlbumDialog(context, ref),
           onEdit: () => context.push('/photos/${photo.id}/edit'),
           onSlideshow:

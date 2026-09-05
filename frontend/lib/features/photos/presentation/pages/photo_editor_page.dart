@@ -10,6 +10,7 @@ import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_editor_top_bar.dart';
+import 'package:omninest/features/photos/presentation/widgets/photo_crop_overlay.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_editor_toolbar.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_version_list_sheet.dart';
 
@@ -281,10 +282,13 @@ class _EditorBody extends StatelessWidget {
               child:
                   photo.hasCover
                       ? cropMode
-                          ? _CropOverlay(
-                            imageUrl: photo.coverUrl!,
+                          ? PhotoCropOverlay(
                             imageWidth: photo.width?.toDouble() ?? 1,
                             imageHeight: photo.height?.toDouble() ?? 1,
+                            preview: CachedNetworkImage(
+                              imageUrl: photo.coverUrl!,
+                              fit: BoxFit.contain,
+                            ),
                             onConfirmed: onCropConfirmed,
                             onCancelled: onCropCancelled,
                           )
@@ -381,10 +385,6 @@ class _EditorBody extends StatelessWidget {
         return _applySepia(_applySaturation(matrix));
       case FilterPreset.original:
         return _applySaturation(matrix);
-      case FilterPreset.blur:
-      case FilterPreset.sharpen:
-        // blur/sharpen 需要 ConvolveOp，前端仅做颜色矩阵
-        return _applySaturation(matrix);
     }
   }
 
@@ -472,271 +472,4 @@ class _EditorBody extends StatelessWidget {
       0.0,
     ];
   }
-}
-
-class _CropOverlay extends StatefulWidget {
-  const _CropOverlay({
-    required this.imageUrl,
-    required this.imageWidth,
-    required this.imageHeight,
-    required this.onConfirmed,
-    required this.onCancelled,
-  });
-
-  final String imageUrl;
-  final double imageWidth;
-  final double imageHeight;
-  final ValueChanged<Rect> onConfirmed;
-  final VoidCallback onCancelled;
-
-  @override
-  State<_CropOverlay> createState() => _CropOverlayState();
-}
-
-class _CropOverlayState extends State<_CropOverlay> {
-  Offset? _start;
-  Offset? _end;
-  final GlobalKey _imageKey = GlobalKey();
-
-  Rect? get _cropRect {
-    if (_start == null || _end == null) return null;
-    final left = _start!.dx < _end!.dx ? _start!.dx : _end!.dx;
-    final top = _start!.dy < _end!.dy ? _start!.dy : _end!.dy;
-    final right = _start!.dx > _end!.dx ? _start!.dx : _end!.dx;
-    final bottom = _start!.dy > _end!.dy ? _start!.dy : _end!.dy;
-    return Rect.fromLTRB(left, top, right, bottom);
-  }
-
-  Rect? _toImageCoords() {
-    final rect = _cropRect;
-    if (rect == null) return null;
-    final renderBox =
-        _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return null;
-    final boxSize = renderBox.size;
-    if (boxSize.isEmpty) return null;
-    // 图片按 contain 居中绘制：先求实际绘制区域与留边，再换算图片像素坐标，
-    // 否则裁剪框与原图位置不一致。
-    final fitted = applyBoxFit(
-      BoxFit.contain,
-      Size(widget.imageWidth, widget.imageHeight),
-      boxSize,
-    );
-    final drawn = fitted.destination;
-    final offsetX = (boxSize.width - drawn.width) / 2;
-    final offsetY = (boxSize.height - drawn.height) / 2;
-    double toImageX(double dx) =>
-        (dx - offsetX) / drawn.width * widget.imageWidth;
-    double toImageY(double dy) =>
-        (dy - offsetY) / drawn.height * widget.imageHeight;
-    return Rect.fromLTRB(
-      toImageX(rect.left).clamp(0.0, widget.imageWidth),
-      toImageY(rect.top).clamp(0.0, widget.imageHeight),
-      toImageX(rect.right).clamp(0.0, widget.imageWidth),
-      toImageY(rect.bottom).clamp(0.0, widget.imageHeight),
-    );
-  }
-
-  void _onPanStart(DragStartDetails details) {
-    final renderBox =
-        _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final local = renderBox.globalToLocal(details.globalPosition);
-    setState(() {
-      _start = local;
-      _end = local;
-    });
-  }
-
-  void _onPanUpdate(DragUpdateDetails details) {
-    final renderBox =
-        _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final local = renderBox.globalToLocal(details.globalPosition);
-    setState(() => _end = local);
-  }
-
-  void _confirm() {
-    final imageRect = _toImageCoords();
-    if (imageRect != null && imageRect.width > 10 && imageRect.height > 10) {
-      widget.onConfirmed(imageRect);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 600;
-    return Column(
-      children: [
-        // 操作栏
-        Container(
-          height: 48,
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: context.photosColors.surfaceContainer.withValues(
-              alpha: 0.70,
-            ),
-          ),
-          child: Row(
-            children: [
-              if (!compact) ...[
-                Icon(
-                  Icons.crop,
-                  color: context.photosColors.onSurfaceVariant,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context).photosCropDragHint,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: context.photosColors.onSurfaceVariant,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ] else
-                const Spacer(),
-              TextButton(
-                onPressed: widget.onCancelled,
-                child: Text(AppLocalizations.of(context).photosCancel),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: _cropRect != null ? _confirm : null,
-                child: Text(AppLocalizations.of(context).photosConfirmCrop),
-              ),
-            ],
-          ),
-        ),
-        // 图片 + 裁剪遮罩
-        Expanded(
-          child: GestureDetector(
-            onPanStart: _onPanStart,
-            onPanUpdate: _onPanUpdate,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // 图片
-                Center(
-                  child: CachedNetworkImage(
-                    key: _imageKey,
-                    imageUrl: widget.imageUrl,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                // 裁剪遮罩
-                if (_cropRect != null)
-                  CustomPaint(painter: _CropOverlayPainter(_cropRect!)),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CropOverlayPainter extends CustomPainter {
-  _CropOverlayPainter(this.rect);
-
-  final Rect rect;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 半透明遮罩
-    final overlayPaint = Paint()..color = Colors.black.withValues(alpha: 0.50);
-    canvas.drawPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(Offset.zero & size),
-        Path()..addRect(rect),
-      ),
-      overlayPaint,
-    );
-    // 裁剪框边框
-    final borderPaint =
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2;
-    canvas.drawRect(rect, borderPaint);
-    // 三分线
-    final gridPaint =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.30)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1;
-    final thirdW = rect.width / 3;
-    final thirdH = rect.height / 3;
-    for (int i = 1; i <= 2; i++) {
-      canvas.drawLine(
-        Offset(rect.left + thirdW * i, rect.top),
-        Offset(rect.left + thirdW * i, rect.bottom),
-        gridPaint,
-      );
-      canvas.drawLine(
-        Offset(rect.left, rect.top + thirdH * i),
-        Offset(rect.right, rect.top + thirdH * i),
-        gridPaint,
-      );
-    }
-    // 四角手柄
-    final handlePaint =
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3;
-    const handleLen = 16.0;
-    // 左上
-    canvas.drawLine(
-      rect.topLeft,
-      rect.topLeft + const Offset(handleLen, 0),
-      handlePaint,
-    );
-    canvas.drawLine(
-      rect.topLeft,
-      rect.topLeft + const Offset(0, handleLen),
-      handlePaint,
-    );
-    // 右上
-    canvas.drawLine(
-      rect.topRight,
-      rect.topRight + const Offset(-handleLen, 0),
-      handlePaint,
-    );
-    canvas.drawLine(
-      rect.topRight,
-      rect.topRight + const Offset(0, handleLen),
-      handlePaint,
-    );
-    // 左下
-    canvas.drawLine(
-      rect.bottomLeft,
-      rect.bottomLeft + const Offset(handleLen, 0),
-      handlePaint,
-    );
-    canvas.drawLine(
-      rect.bottomLeft,
-      rect.bottomLeft + const Offset(0, -handleLen),
-      handlePaint,
-    );
-    // 右下
-    canvas.drawLine(
-      rect.bottomRight,
-      rect.bottomRight + const Offset(-handleLen, 0),
-      handlePaint,
-    );
-    canvas.drawLine(
-      rect.bottomRight,
-      rect.bottomRight + const Offset(0, -handleLen),
-      handlePaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_CropOverlayPainter oldDelegate) =>
-      oldDelegate.rect != rect;
 }

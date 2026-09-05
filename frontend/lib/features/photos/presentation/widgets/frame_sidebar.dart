@@ -150,7 +150,7 @@ class _FrameLogo extends StatelessWidget {
           const SizedBox(width: 16),
           mark,
           const SizedBox(width: 12),
-          Flexible(
+          Expanded(
             child: Text(
               AppLocalizations.of(context).photosModuleDisplayName,
               maxLines: 1,
@@ -257,7 +257,7 @@ class _FrameNavItemState extends State<_FrameNavItem> {
                 ),
                 if (!widget.collapsed) ...[
                   const SizedBox(width: 10),
-                  Flexible(
+                  Expanded(
                     child: AnimatedDefaultTextStyle(
                       duration: stateDuration,
                       style: TextStyle(

@@ -889,6 +889,19 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
   }
 }
 
+/// 照片详情页信息面板的展开状态；在上一张/下一张切换间保持。
+class PhotoInfoPanelVisibleNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+final photoInfoPanelVisibleProvider =
+    NotifierProvider<PhotoInfoPanelVisibleNotifier, bool>(
+      PhotoInfoPanelVisibleNotifier.new,
+    );
+
 final photoCenterControllerProvider =
     AsyncNotifierProvider<PhotoCenterController, PhotoCenterState>(
       PhotoCenterController.new,

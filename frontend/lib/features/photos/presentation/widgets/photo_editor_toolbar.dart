@@ -7,7 +7,7 @@ import 'package:omninest/core/widgets/app_slider.dart';
 enum EditTool { crop, rotate, brightness, contrast, saturation, filter }
 
 /// 滤镜预设
-enum FilterPreset { original, grayscale, sepia, blur, sharpen }
+enum FilterPreset { original, grayscale, sepia }
 
 /// 照片编辑底部工具栏
 class PhotoEditorToolbar extends StatelessWidget {
@@ -277,8 +277,6 @@ class _FilterChips extends StatelessWidget {
       FilterPreset.original: l10n.photosFilterOriginal,
       FilterPreset.grayscale: l10n.photosFilterGrayscale,
       FilterPreset.sepia: l10n.photosFilterSepia,
-      FilterPreset.blur: l10n.photosFilterBlur,
-      FilterPreset.sharpen: l10n.photosFilterSharpen,
     };
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
