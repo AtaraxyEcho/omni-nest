@@ -178,12 +178,18 @@ public class PhotoLibraryController {
     @Operation(summary = "回收站照片列表", description = "分页查询回收站中的照片")
     @PreAuthorize("hasAuthority('" + Permissions.PHOTO_READ + "')")
     @GetMapping("/api/v1/photos/trash/page")
-    ApiResponse<Page<PhotoListItemDto>> trashPage(
+    ApiResponse<PageResponse<PhotoListItemDto>> trashPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size
     ) {
         UUID userId = currentUserContext.requireCurrentUserId();
-        return ApiResponse.success(libraryService.listTrashPage(userId, page, size));
+        Page<PhotoListItemDto> result = libraryService.listTrashPage(userId, page, size);
+        return ApiResponse.success(PageResponse.of(
+                result.getContent(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements()
+        ));
     }
 
     @Operation(summary = "恢复回收站照片", description = "将照片从回收站恢复为正常状态")

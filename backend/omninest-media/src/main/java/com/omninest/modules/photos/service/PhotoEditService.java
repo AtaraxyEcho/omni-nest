@@ -217,6 +217,7 @@ public class PhotoEditService {
                 case "BRIGHTNESS" -> applyBrightness(image, params);
                 case "CONTRAST" -> applyContrast(image, params);
                 case "FILTER" -> applyFilter(image, params);
+                case "SATURATION" -> applySaturation(image, params);
                 default -> throw new BusinessException(ErrorCode.PARAM_ERROR, "不支持的编辑类型: " + editType);
             };
             inputGuard.validateDimensions(result.getWidth(), result.getHeight());
@@ -242,11 +243,54 @@ public class PhotoEditService {
 
     private BufferedImage applyRotation(BufferedImage image, Map<String, Object> params) {
         double angle = ((Number) params.getOrDefault("angle", 90)).doubleValue();
+        // 90/270 度旋转交换画布宽高，避免角落被原尺寸画布裁掉。
+        long turns = Math.round(Math.abs(angle) / 90.0);
+        if (turns % 2 == 1) {
+            boolean clockwise = angle > 0;
+            BufferedImage rotated = new BufferedImage(
+                    image.getHeight(), image.getWidth(), image.getType());
+            Graphics2D g = rotated.createGraphics();
+            if (clockwise) {
+                g.translate(rotated.getWidth(), 0);
+                g.rotate(Math.toRadians(90));
+            } else {
+                g.translate(0, rotated.getHeight());
+                g.rotate(Math.toRadians(-90));
+            }
+            g.drawImage(image, 0, 0, null);
+            g.dispose();
+            return rotated;
+        }
         double radians = Math.toRadians(angle);
         AffineTransform transform = AffineTransform.getRotateInstance(radians,
                 image.getWidth() / 2.0, image.getHeight() / 2.0);
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
         return op.filter(image, null);
+    }
+
+    /** 饱和度调整：factor 1 为原图，0 为灰度，2 为两倍饱和度。 */
+    private BufferedImage applySaturation(BufferedImage image, Map<String, Object> params) {
+        float factor = ((Number) params.getOrDefault("factor", 1.0f)).floatValue();
+        BufferedImage result = new BufferedImage(
+                image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                int r = (rgb >> 16) & 0xFF;
+                int g = (rgb >> 8) & 0xFF;
+                int b = rgb & 0xFF;
+                float gray = 0.299f * r + 0.587f * g + 0.114f * b;
+                int nr = clampColor(Math.round(gray + (r - gray) * factor));
+                int ng = clampColor(Math.round(gray + (g - gray) * factor));
+                int nb = clampColor(Math.round(gray + (b - gray) * factor));
+                result.setRGB(x, y, (nr << 16) | (ng << 8) | nb);
+            }
+        }
+        return result;
+    }
+
+    private int clampColor(int value) {
+        return Math.min(255, Math.max(0, value));
     }
 
     private BufferedImage applyCrop(BufferedImage image, Map<String, Object> params) {

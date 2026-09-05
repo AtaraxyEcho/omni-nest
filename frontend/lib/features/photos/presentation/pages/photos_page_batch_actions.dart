@@ -99,8 +99,7 @@ class _BatchActionBar extends StatelessWidget {
                   // 批量删除
                   _BatchAction(
                     icon: Icons.delete_outline,
-                    label: AppLocalizations.of(context).photosDelete,
-                    isDestructive: true,
+                    label: AppLocalizations.of(context).photosDeleteShort,
                     onTap: () => _confirmBatchTrash(context),
                   ),
                 ],
@@ -289,13 +288,11 @@ class _BatchAction extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.isDestructive = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final bool isDestructive;
 
   @override
   Widget build(BuildContext context) {
@@ -311,20 +308,14 @@ class _BatchAction extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color:
-                    isDestructive
-                        ? context.photosColors.danger
-                        : context.photosColors.onSurfaceVariant,
+                color: context.photosColors.onSurfaceVariant,
                 size: 18,
               ),
               SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color:
-                      isDestructive
-                          ? context.photosColors.danger
-                          : context.photosColors.onSurfaceVariant,
+                  color: context.photosColors.onSurfaceVariant,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),

@@ -4,7 +4,7 @@ import 'package:omninest/app/theme/feature/photos_colors.dart';
 import 'package:omninest/core/widgets/app_slider.dart';
 
 /// 编辑操作类型
-enum EditTool { crop, rotate, brightness, contrast, filter }
+enum EditTool { crop, rotate, brightness, contrast, saturation, filter }
 
 /// 滤镜预设
 enum FilterPreset { original, grayscale, sepia, blur, sharpen }
@@ -18,9 +18,11 @@ class PhotoEditorToolbar extends StatelessWidget {
     required this.onCrop,
     required this.brightness,
     required this.contrast,
+    required this.saturation,
     required this.selectedFilter,
     required this.onBrightnessChanged,
     required this.onContrastChanged,
+    required this.onSaturationChanged,
     required this.onFilterSelected,
     super.key,
   });
@@ -31,9 +33,11 @@ class PhotoEditorToolbar extends StatelessWidget {
   final VoidCallback onCrop;
   final double brightness;
   final double contrast;
+  final double saturation;
   final FilterPreset selectedFilter;
   final ValueChanged<double> onBrightnessChanged;
   final ValueChanged<double> onContrastChanged;
+  final ValueChanged<double> onSaturationChanged;
   final ValueChanged<FilterPreset> onFilterSelected;
 
   @override
@@ -66,6 +70,14 @@ class PhotoEditorToolbar extends StatelessWidget {
               min: 0,
               max: 2,
               onChanged: onContrastChanged,
+            ),
+          if (selectedTool == EditTool.saturation)
+            _SliderRow(
+              label: AppLocalizations.of(context).photosSaturation,
+              value: saturation,
+              min: -1,
+              max: 1,
+              onChanged: onSaturationChanged,
             ),
           if (selectedTool == EditTool.filter)
             _FilterChips(

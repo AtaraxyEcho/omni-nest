@@ -28,10 +28,10 @@ class FrameSidebar extends StatelessWidget {
   static const List<FrameView> _primaryViews = <FrameView>[
     FrameView.grid,
     FrameView.favorites,
+    FrameView.albums,
     FrameView.timeline,
     FrameView.locations,
     FrameView.tags,
-    FrameView.albums,
   ];
 
   @override
@@ -263,7 +263,7 @@ class _FrameNavItemState extends State<_FrameNavItem> {
                       style: TextStyle(
                         color: foreground,
                         fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w400,
                         letterSpacing: 0.13,
                       ),
                       child: Text(

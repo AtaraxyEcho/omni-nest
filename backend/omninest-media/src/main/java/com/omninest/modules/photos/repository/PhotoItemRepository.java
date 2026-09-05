@@ -218,14 +218,13 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
      */
     @Query(value = """
             WITH month_page AS (
-                SELECT DATE_TRUNC('month', p.date_taken AT TIME ZONE :zoneId) AS month_start,
+                SELECT DATE_TRUNC('month', COALESCE(p.date_taken, p.created_at) AT TIME ZONE :zoneId) AS month_start,
                        COUNT(*) AS photo_count
                   FROM omni.photo_items p
                   JOIN omni.file_nodes f ON f.id = p.file_node_id
                  WHERE p.owner_user_id = :ownerUserId
                    AND f.is_deleted = false
                    AND p.deleted_at IS NULL
-                   AND p.date_taken IS NOT NULL
                  GROUP BY month_start
                  ORDER BY month_start DESC
                  OFFSET :groupOffset
@@ -252,12 +251,12 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                        p.created_at,
                        ROW_NUMBER() OVER (
                            PARTITION BY mp.month_start
-                           ORDER BY p.date_taken DESC, p.id ASC
+                           ORDER BY COALESCE(p.date_taken, p.created_at) DESC, p.id ASC
                        ) AS preview_rank
                   FROM omni.photo_items p
                   JOIN omni.file_nodes f ON f.id = p.file_node_id
                   JOIN month_page mp
-                    ON DATE_TRUNC('month', p.date_taken AT TIME ZONE :zoneId) = mp.month_start
+                    ON DATE_TRUNC('month', COALESCE(p.date_taken, p.created_at) AT TIME ZONE :zoneId) = mp.month_start
                  WHERE p.owner_user_id = :ownerUserId
                    AND f.is_deleted = false
                    AND p.deleted_at IS NULL
@@ -308,7 +307,6 @@ public interface PhotoItemRepository extends JpaRepository<PhotoItem, UUID> {
                    WHERE p.owner_user_id = :ownerUserId
                      AND f.is_deleted = false
                      AND p.deleted_at IS NULL
-                     AND p.date_taken IS NOT NULL
                    GROUP BY month_start
               ) timeline_months
             """, nativeQuery = true)

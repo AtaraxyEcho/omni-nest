@@ -182,14 +182,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         (state) =>
             PhotoAlbumDetailPage(albumId: state.pathParameters['albumId']!),
       ),
-      _animatedRoute(
-        '/photos/:photoId',
-        (state) => PhotoDetailPage(photoId: state.pathParameters['photoId']!),
-      ),
-      _animatedRoute(
-        '/photos/:photoId/edit',
-        (state) => PhotoEditorPage(photoId: state.pathParameters['photoId']!),
-      ),
       GoRoute(
         path: '/photos/slideshow',
         pageBuilder: (context, state) {
@@ -208,6 +200,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           );
         },
+      ),
+      _animatedRoute(
+        '/photos/:photoId',
+        (state) => PhotoDetailPage(photoId: state.pathParameters['photoId']!),
+      ),
+      _animatedRoute(
+        '/photos/:photoId/edit',
+        (state) => PhotoEditorPage(photoId: state.pathParameters['photoId']!),
       ),
       _animatedRoute(
         '/shared/photos/:token',

@@ -27,6 +27,7 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
   EditTool? _selectedTool;
   double _brightness = 0;
   double _contrast = 1;
+  double _saturation = 0;
   FilterPreset _filter = FilterPreset.original;
   double _rotation = 0;
   bool _saving = false;
@@ -42,6 +43,7 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
         data:
             (photo) => _EditorBody(
               photo: photo,
+              saturation: _saturation,
               selectedTool: _selectedTool,
               brightness: _brightness,
               contrast: _contrast,
@@ -57,6 +59,7 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
               onCropCancelled: _onCropCancelled,
               onBrightnessChanged: (v) => setState(() => _brightness = v),
               onContrastChanged: (v) => setState(() => _contrast = v),
+              onSaturationChanged: (v) => setState(() => _saturation = v),
               onFilterSelected: (f) => setState(() => _filter = f),
               onSave: () => _saveEdit(context, ref, widget.photoId),
               onShowVersions: () => _showVersions(context, ref, widget.photoId),
@@ -98,31 +101,28 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
     WidgetRef ref,
     String photoId,
   ) async {
-    // 确定编辑类型和参数
-    String editType;
-    Map<String, dynamic> editParams;
+    // 收集全部非默认调整，按几何在前、颜色在后的顺序逐个提交。
+    final edits = <(String, Map<String, dynamic>)>[
+      if (_cropRect != null)
+        (
+          'CROP',
+          {
+            'x': _cropRect!.left.round(),
+            'y': _cropRect!.top.round(),
+            'width': _cropRect!.width.round(),
+            'height': _cropRect!.height.round(),
+          },
+        ),
+      if (_rotation != 0) ('ROTATE', {'angle': _rotation}),
+      // 后端 BRIGHTNESS 为乘法系数：滑杆 -1..1 映射为 0..2。
+      if (_brightness != 0) ('BRIGHTNESS', {'factor': 1 + _brightness}),
+      if (_contrast != 1) ('CONTRAST', {'factor': _contrast}),
+      if (_saturation != 0) ('SATURATION', {'factor': 1 + _saturation}),
+      // 后端按 name 读取滤镜名：grayscale/sepia/blur/sharpen。
+      if (_filter != FilterPreset.original) ('FILTER', {'name': _filter.name}),
+    ];
 
-    if (_cropRect != null) {
-      editType = 'CROP';
-      editParams = {
-        'x': _cropRect!.left.round(),
-        'y': _cropRect!.top.round(),
-        'width': _cropRect!.width.round(),
-        'height': _cropRect!.height.round(),
-      };
-    } else if (_rotation != 0) {
-      editType = 'ROTATE';
-      editParams = {'angle': _rotation};
-    } else if (_brightness != 0) {
-      editType = 'BRIGHTNESS';
-      editParams = {'factor': _brightness};
-    } else if (_contrast != 1) {
-      editType = 'CONTRAST';
-      editParams = {'factor': _contrast};
-    } else if (_filter != FilterPreset.original) {
-      editType = 'FILTER';
-      editParams = {'filter': _filter.name};
-    } else {
+    if (edits.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context).photosNoChanges)),
@@ -133,9 +133,10 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
 
     setState(() => _saving = true);
     try {
-      await ref
-          .read(photoCenterControllerProvider.notifier)
-          .applyEdit(photoId, editType, editParams);
+      final notifier = ref.read(photoCenterControllerProvider.notifier);
+      for (final (editType, editParams) in edits) {
+        await notifier.applyEdit(photoId, editType, editParams);
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context).photosEditSaved)),
@@ -145,6 +146,7 @@ class _PhotoEditorPageState extends ConsumerState<PhotoEditorPage> {
           _rotation = 0;
           _brightness = 0;
           _contrast = 1;
+          _saturation = 0;
           _filter = FilterPreset.original;
           _selectedTool = null;
           _cropRect = null;
@@ -220,6 +222,7 @@ class _EditorBody extends StatelessWidget {
     required this.selectedTool,
     required this.brightness,
     required this.contrast,
+    required this.saturation,
     required this.filter,
     required this.rotation,
     required this.saving,
@@ -231,6 +234,7 @@ class _EditorBody extends StatelessWidget {
     required this.onCropCancelled,
     required this.onBrightnessChanged,
     required this.onContrastChanged,
+    required this.onSaturationChanged,
     required this.onFilterSelected,
     required this.onSave,
     required this.onShowVersions,
@@ -240,6 +244,7 @@ class _EditorBody extends StatelessWidget {
   final EditTool? selectedTool;
   final double brightness;
   final double contrast;
+  final double saturation;
   final FilterPreset filter;
   final double rotation;
   final bool saving;
@@ -251,6 +256,7 @@ class _EditorBody extends StatelessWidget {
   final VoidCallback onCropCancelled;
   final ValueChanged<double> onBrightnessChanged;
   final ValueChanged<double> onContrastChanged;
+  final ValueChanged<double> onSaturationChanged;
   final ValueChanged<FilterPreset> onFilterSelected;
   final VoidCallback onSave;
   final VoidCallback onShowVersions;
@@ -299,9 +305,11 @@ class _EditorBody extends StatelessWidget {
           onCrop: onCrop,
           brightness: brightness,
           contrast: contrast,
+          saturation: saturation,
           selectedFilter: filter,
           onBrightnessChanged: onBrightnessChanged,
           onContrastChanged: onContrastChanged,
+          onSaturationChanged: onSaturationChanged,
           onFilterSelected: onFilterSelected,
         ),
       ],
@@ -337,27 +345,27 @@ class _EditorBody extends StatelessWidget {
   }
 
   List<double> _buildColorMatrix() {
-    // 亮度调整
-    final b = brightness;
-    // 对比度调整
+    // 与后端保存语义对齐：亮度为乘法系数 (1+b)，对比度为 (v-128)*c+128。
+    final brightnessScale = 1 + brightness;
     final c = contrast;
-    // 基础矩阵（亮度 + 对比度）
+    final scale = c * brightnessScale;
+    final offset = 128 * (1 - c);
     final matrix = <double>[
-      c,
+      scale,
       0.0,
       0.0,
       0.0,
-      b * 255,
+      offset,
       0.0,
-      c,
-      0.0,
-      0.0,
-      b * 255,
+      scale,
       0.0,
       0.0,
-      c,
+      offset,
       0.0,
-      b * 255,
+      0.0,
+      scale,
+      0.0,
+      offset,
       0.0,
       0.0,
       0.0,
@@ -365,18 +373,53 @@ class _EditorBody extends StatelessWidget {
       0.0,
     ];
 
-    // 滤镜叠加
+    // 滤镜与饱和度叠加
     switch (filter) {
       case FilterPreset.grayscale:
-        return _applyGrayscale(matrix);
+        return _applyGrayscale(_applySaturation(matrix));
       case FilterPreset.sepia:
-        return _applySepia(matrix);
+        return _applySepia(_applySaturation(matrix));
       case FilterPreset.original:
+        return _applySaturation(matrix);
       case FilterPreset.blur:
       case FilterPreset.sharpen:
         // blur/sharpen 需要 ConvolveOp，前端仅做颜色矩阵
-        return matrix;
+        return _applySaturation(matrix);
     }
+  }
+
+  /// 饱和度矩阵：out = gray + f * (in - gray)，f = 1 + saturation。
+  List<double> _applySaturation(List<double> m) {
+    final f = 1 + saturation;
+    const lr = 0.299;
+    const lg = 0.587;
+    const lb = 0.114;
+    // 灰度行对输入像素的合成系数
+    final grayR = lr * m[0] + lg * m[5] + lb * m[10];
+    final grayG = lr * m[1] + lg * m[6] + lb * m[11];
+    final grayB = lr * m[2] + lg * m[7] + lb * m[12];
+    return <double>[
+      f * m[0] + (1 - f) * grayR,
+      f * m[1] + (1 - f) * grayG,
+      f * m[2] + (1 - f) * grayB,
+      0.0,
+      m[4],
+      f * m[5] + (1 - f) * grayR,
+      f * m[6] + (1 - f) * grayG,
+      f * m[7] + (1 - f) * grayB,
+      0.0,
+      m[9],
+      f * m[10] + (1 - f) * grayR,
+      f * m[11] + (1 - f) * grayG,
+      f * m[12] + (1 - f) * grayB,
+      0.0,
+      m[14],
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+    ];
   }
 
   List<double> _applyGrayscale(List<double> m) {
@@ -470,15 +513,27 @@ class _CropOverlayState extends State<_CropOverlay> {
     final renderBox =
         _imageKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return null;
-    final size = renderBox.size;
-    // 将 widget 坐标转换为图片像素坐标
-    final scaleX = widget.imageWidth / size.width;
-    final scaleY = widget.imageHeight / size.height;
+    final boxSize = renderBox.size;
+    if (boxSize.isEmpty) return null;
+    // 图片按 contain 居中绘制：先求实际绘制区域与留边，再换算图片像素坐标，
+    // 否则裁剪框与原图位置不一致。
+    final fitted = applyBoxFit(
+      BoxFit.contain,
+      Size(widget.imageWidth, widget.imageHeight),
+      boxSize,
+    );
+    final drawn = fitted.destination;
+    final offsetX = (boxSize.width - drawn.width) / 2;
+    final offsetY = (boxSize.height - drawn.height) / 2;
+    double toImageX(double dx) =>
+        (dx - offsetX) / drawn.width * widget.imageWidth;
+    double toImageY(double dy) =>
+        (dy - offsetY) / drawn.height * widget.imageHeight;
     return Rect.fromLTRB(
-      (rect.left * scaleX).clamp(0, widget.imageWidth),
-      (rect.top * scaleY).clamp(0, widget.imageHeight),
-      (rect.right * scaleX).clamp(0, widget.imageWidth),
-      (rect.bottom * scaleY).clamp(0, widget.imageHeight),
+      toImageX(rect.left).clamp(0.0, widget.imageWidth),
+      toImageY(rect.top).clamp(0.0, widget.imageHeight),
+      toImageX(rect.right).clamp(0.0, widget.imageWidth),
+      toImageY(rect.bottom).clamp(0.0, widget.imageHeight),
     );
   }
 

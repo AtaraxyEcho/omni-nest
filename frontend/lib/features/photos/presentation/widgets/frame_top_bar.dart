@@ -53,6 +53,18 @@ class FrameTopBar extends ConsumerWidget {
       onChanged: onSearchChanged,
       hintText: l10n.photosSearchHint,
       maxWidth: searchExpanded ? double.infinity : 232,
+      // 较共享默认更紧凑的垂直内边距，压低搜索框高度。
+      decoration: InputDecoration(
+        isDense: true,
+        filled: true,
+        hintText: l10n.photosSearchHint,
+        prefixIcon: const Icon(Icons.search_rounded, size: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
     );
     if (searchExpanded) {
       searchField = Expanded(child: searchField);

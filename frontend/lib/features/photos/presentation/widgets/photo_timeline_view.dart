@@ -103,16 +103,15 @@ class _PhotoTimelineViewState extends ConsumerState<PhotoTimelineView> {
           parent: BouncingScrollPhysics(),
         ),
         slivers: [
-          for (final year in timeline.years) ...[
-            _YearHeader(year: year.year),
+          // 与设计稿一致：按月平铺（November 2024），不再插入年份分组头。
+          for (final year in timeline.years)
             for (final month in year.months) ...[
-              _MonthHeader(month: month),
+              _MonthHeader(year: year.year, month: month),
               _MonthPhotoGrid(
                 photos: month.previewPhotos,
                 onOpenPhoto: widget.onOpenPhoto,
               ),
             ],
-          ],
           SliverToBoxAdapter(child: _TimelineFooter(state: widget.state)),
         ],
       ),
@@ -205,62 +204,10 @@ class _TimelineFooter extends ConsumerWidget {
   }
 }
 
-class _YearHeader extends StatelessWidget {
-  const _YearHeader({required this.year});
-
-  final int year;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverPersistentHeader(
-      pinned: true,
-      delegate: _YearHeaderDelegate(year: year),
-    );
-  }
-}
-
-class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _YearHeaderDelegate({required this.year});
-
-  final int year;
-
-  @override
-  double get minExtent => 48;
-
-  @override
-  double get maxExtent => 48;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      height: 48,
-      alignment: Alignment.centerLeft,
-      padding: EdgeInsets.symmetric(horizontal: 24),
-      color: context.photosColors.surface,
-      child: Text(
-        AppLocalizations.of(context).photosYear(year),
-        style: TextStyle(
-          color: context.photosColors.onSurface,
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          height: 28 / 22,
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _YearHeaderDelegate oldDelegate) =>
-      year != oldDelegate.year;
-}
-
 class _MonthHeader extends StatelessWidget {
-  const _MonthHeader({required this.month});
+  const _MonthHeader({required this.year, required this.month});
 
+  final int year;
   final PhotoMonthGroup month;
 
   @override
@@ -273,7 +220,7 @@ class _MonthHeader extends StatelessWidget {
             Text(
               MaterialLocalizations.of(
                 context,
-              ).formatMonthYear(DateTime(2024, month.month)),
+              ).formatMonthYear(DateTime(year, month.month)),
               style: TextStyle(
                 color: context.photosColors.onSurface,
                 fontSize: 15,

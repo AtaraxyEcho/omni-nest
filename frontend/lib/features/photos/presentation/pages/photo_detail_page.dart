@@ -28,9 +28,25 @@ class PhotoDetailPage extends ConsumerWidget {
       body: photoAsync.when(
         data: (photo) => _PhotoDetailBody(photo: photo),
         error:
-            (error, stackTrace) => AppErrorView(
-              message: describeUserFacingError(error).message,
-              onRetry: () => ref.invalidate(photoDetailProvider(photoId)),
+            (error, stackTrace) => Column(
+              children: [
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: AppLocalizations.of(context).photosBackToPhotos,
+                      onPressed: () => context.popOrGo('/photos'),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: AppErrorView(
+                    message: describeUserFacingError(error).message,
+                    onRetry: () => ref.invalidate(photoDetailProvider(photoId)),
+                  ),
+                ),
+              ],
             ),
         loading: () => const AppLoading.detail(),
       ),
@@ -156,9 +172,14 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     String? nextId,
   ) {
     final imageUrl = photo.sourceUrl ?? photo.coverUrl;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final viewBackground =
+        isDark
+            ? FramePalette.viewerBg
+            : context.photosColors.surfaceContainerLow;
     return ColoredBox(
-      // Frame 设计稿查看器底色 #0D0D0C。
-      color: FramePalette.viewerBg,
+      // 暗色使用设计稿查看器底色，亮色跟随主题浅色底。
+      color: viewBackground,
       child: Stack(
         children: [
           Positioned.fill(
@@ -1049,14 +1070,30 @@ class _ViewerArrowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scrim =
+        isDark
+            ? Colors.white.withValues(alpha: 0.12)
+            : Colors.black.withValues(alpha: 0.35);
+    final border =
+        isDark
+            ? Colors.white.withValues(alpha: 0.24)
+            : Colors.white.withValues(alpha: 0.10);
+    final iconColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.92)
+            : Colors.white.withValues(alpha: 0.88);
     return Positioned.fill(
       child: Align(
         alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Material(
-            color: Colors.black.withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(8),
+            color: scrim,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: border),
+            ),
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
               onTap: onTap,
@@ -1065,11 +1102,7 @@ class _ViewerArrowButton extends StatelessWidget {
                 child: SizedBox(
                   width: 42,
                   height: 42,
-                  child: Icon(
-                    icon,
-                    size: 22,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
+                  child: Icon(icon, size: 22, color: iconColor),
                 ),
               ),
             ),

@@ -14748,6 +14748,24 @@ abstract class AppLocalizations {
   /// **'Moved to Trash'**
   String get photosTrashMoved;
 
+  /// No description provided for @photosBackToPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Photos'**
+  String get photosBackToPhotos;
+
+  /// No description provided for @photosDeleteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get photosDeleteShort;
+
+  /// No description provided for @photosSaturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation'**
+  String get photosSaturation;
+
   /// No description provided for @photosModuleDisplayName.
   ///
   /// In en, this message translates to:

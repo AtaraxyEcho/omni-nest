@@ -7838,6 +7838,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosTrashMoved => '已移入回收站';
 
   @override
+  String get photosBackToPhotos => '返回照片';
+
+  @override
+  String get photosDeleteShort => '删除';
+
+  @override
+  String get photosSaturation => '饱和度';
+
+  @override
   String get photosModuleDisplayName => '光影集';
 
   @override

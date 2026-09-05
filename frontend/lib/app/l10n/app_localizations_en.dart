@@ -8087,6 +8087,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosTrashMoved => 'Moved to Trash';
 
   @override
+  String get photosBackToPhotos => 'Back to Photos';
+
+  @override
+  String get photosDeleteShort => 'Delete';
+
+  @override
+  String get photosSaturation => 'Saturation';
+
+  @override
   String get photosModuleDisplayName => 'Lightbox';
 
   @override
