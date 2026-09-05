@@ -6065,7 +6065,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get photosCancel => '取消';
 
   @override
-  String get photosDelete => '永久删除';
+  String get photosDelete => '删除';
+
+  @override
+  String get photosDeletePermanently => '永久删除';
 
   @override
   String photosDeletedPhoto(Object title) {
@@ -6196,6 +6199,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get photosArchiveDownloadFailed => 'ZIP 下载失败，可重新选择同一路径继续下载';
+
+  @override
+  String get photosDownloadPhoto => '下载原片';
+
+  @override
+  String get photosDownloadFailed => '下载失败，请稍后重试';
+
+  @override
+  String photosDownloadSaved(Object path) {
+    return '已保存至 $path';
+  }
+
+  @override
+  String get photosDownloadSourceUnavailable => '原图暂不可用，无法下载';
+
+  @override
+  String photosSlideshowBadge(int current, int total) {
+    return '幻灯片 · $current / $total';
+  }
 
   @override
   String get photosBatchAddTag => '批量添加标签';

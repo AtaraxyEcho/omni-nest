@@ -11480,8 +11480,14 @@ abstract class AppLocalizations {
   /// No description provided for @photosDelete.
   ///
   /// In en, this message translates to:
-  /// **'Permanently Delete'**
+  /// **'Delete'**
   String get photosDelete;
+
+  /// No description provided for @photosDeletePermanently.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Permanently'**
+  String get photosDeletePermanently;
 
   /// No description provided for @photosDeletedPhoto.
   ///
@@ -11710,6 +11716,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ZIP download failed. Choose the same path to resume.'**
   String get photosArchiveDownloadFailed;
+
+  /// No description provided for @photosDownloadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Download original'**
+  String get photosDownloadPhoto;
+
+  /// No description provided for @photosDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed, please try again later'**
+  String get photosDownloadFailed;
+
+  /// No description provided for @photosDownloadSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String photosDownloadSaved(Object path);
+
+  /// No description provided for @photosDownloadSourceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Original file is unavailable for download'**
+  String get photosDownloadSourceUnavailable;
+
+  /// No description provided for @photosSlideshowBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Slideshow · {current} / {total}'**
+  String photosSlideshowBadge(int current, int total);
 
   /// No description provided for @photosBatchAddTag.
   ///

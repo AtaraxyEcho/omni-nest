@@ -2750,7 +2750,8 @@
     }
   },
   "photosCancel": "Cancel",
-  "photosDelete": "Permanently Delete",
+  "photosDelete": "Delete",
+  "photosDeletePermanently": "Delete Permanently",
   "photosDeletedPhoto": "Permanently deleted \"{title}\" and its source file",
   "@photosDeletedPhoto": {
     "placeholders": {
@@ -2830,6 +2831,26 @@
     }
   },
   "photosArchiveDownloadFailed": "ZIP download failed. Choose the same path to resume.",
+  "photosDownloadPhoto": "Download original",
+  "photosDownloadFailed": "Download failed, please try again later",
+  "photosDownloadSaved": "Saved to {path}",
+  "@photosDownloadSaved": {
+    "placeholders": {
+      "path": {}
+    }
+  },
+  "photosDownloadSourceUnavailable": "Original file is unavailable for download",
+  "photosSlideshowBadge": "Slideshow · {current} / {total}",
+  "@photosSlideshowBadge": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "photosBatchAddTag": "Batch Add Tags",
   "photosTagName": "Tag Name",
   "photosTagNameHint": "e.g. Travel",

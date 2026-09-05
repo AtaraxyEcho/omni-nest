@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_palette.dart';
 import 'package:omninest/features/photos/presentation/widgets/frame_trash_view.dart';
 import 'package:omninest/app/l10n/app_localizations.dart';
@@ -10,11 +11,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omninest/core/errors/error_message.dart';
 import 'package:omninest/core/navigation/navigation_extensions.dart';
+import 'package:omninest/features/photos/platform/photo_batch_web_download.dart';
 import 'package:omninest/features/photos/presentation/widgets/photo_common_widgets.dart';
 import 'package:omninest/core/widgets/app_error_view.dart';
 import 'package:omninest/core/widgets/app_loading.dart';
 import 'package:omninest/features/photos/application/photo_controller.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
+
+/// 桌面端 EXIF 侧栏宽度：设计稿 w-72（288px）。
+const double _kExifPanelWidth = 288;
 
 /// 照片详情/查看器页面
 class PhotoDetailPage extends ConsumerWidget {
@@ -66,8 +71,12 @@ class _PhotoDetailBody extends ConsumerStatefulWidget {
 }
 
 class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
+  static const Duration _slideshowInterval = Duration(seconds: 3);
+
   bool get _showInfo => ref.watch(photoInfoPanelVisibleProvider);
   bool _locationBackfillAttempted = false;
+  bool _advancing = false;
+  Timer? _slideshowTimer;
 
   @override
   void initState() {
@@ -75,7 +84,16 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _backfillLocationIfNeeded();
+      if (ref.read(photoSlideshowPlayingProvider)) {
+        _startSlideshow();
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _slideshowTimer?.cancel();
+    super.dispose();
   }
 
   void _backfillLocationIfNeeded() {
@@ -127,219 +145,96 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   }
 
   /// 预取目标详情后再替换路由，避免切换时出现加载动画。
+  ///
+  /// 预取期间拒绝再次推进，防止定时器或连点造成的并发替换路由。
   Future<void> _goToAdjacentPhoto(String targetId) async {
+    if (_advancing) return;
+    _advancing = true;
     try {
       await ref.read(photoDetailProvider(targetId).future);
     } on Exception {
       // 预取失败时照常跳转，由目标页面展示错误。
+    } finally {
+      _advancing = false;
     }
     if (!mounted) return;
     context.pushReplacement('/photos/$targetId');
   }
 
-  @override
-  Widget build(BuildContext context) {
+  // ─── 幻灯片（设计稿 PhotoViewer 内嵌播放模式） ───
+
+  void _startSlideshow() {
+    _slideshowTimer?.cancel();
+    _slideshowTimer = null;
+    if (_browseScope(widget.photo).length < 2) return;
+    _slideshowTimer = Timer.periodic(_slideshowInterval, (_) {
+      _slideshowAdvance();
+    });
+  }
+
+  void _stopSlideshow() {
+    _slideshowTimer?.cancel();
+    _slideshowTimer = null;
+  }
+
+  /// 播放到范围末尾后循环回第一张，与设计稿一致。
+  void _slideshowAdvance() {
+    if (!mounted) return;
     final photo = widget.photo;
-    final compact = MediaQuery.sizeOf(context).width < 700;
-    final prevId = _adjacentPhotoId(photo, -1);
-    final nextId = _adjacentPhotoId(photo, 1);
-    return Column(
-      children: [
-        // 顶部操作栏
-        _DetailTopBar(
-          photo: photo,
-          onBack: () => context.popOrGo('/photos'),
-          onToggleFavorite: () async {
-            try {
-              if (!mounted) return;
-              await ref
-                  .read(photoCenterControllerProvider.notifier)
-                  .toggleFavorite(photo.id, currentFavorite: photo.favorite);
-              if (!mounted) return;
-              // 刷新详情
-              ref.invalidate(photoDetailProvider(photo.id));
-            } on Exception {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      AppLocalizations.of(context).photosOperationFailed,
-                    ),
-                  ),
-                );
-              }
-            }
-          },
-          onDelete: _confirmDelete,
-          onToggleInfo:
-              () => ref.read(photoInfoPanelVisibleProvider.notifier).toggle(),
-          onAddToAlbum: () => _showAddToAlbumDialog(context, ref),
-          onEdit: () => context.push('/photos/${photo.id}/edit'),
-          onSlideshow:
-              () => context.push(
-                '/photos/slideshow',
-                extra: _slideshowExtra(photo),
-              ),
-          showInfo: _showInfo,
-          compact: compact,
-        ),
-        // 照片查看区：上/下一张按钮悬浮于图片左右两侧（Frame 设计稿样式）
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final photoView = _buildPhotoView(context, photo, prevId, nextId);
-              if (!compact) {
-                return Row(
-                  children: [
-                    Expanded(child: photoView),
-                    if (_showInfo) _ExifPanel(photo: photo),
-                  ],
-                );
-              }
-              return Column(
-                children: [
-                  Expanded(child: photoView),
-                  if (_showInfo)
-                    SizedBox(
-                      height: (constraints.maxHeight * 0.42).clamp(
-                        180.0,
-                        300.0,
-                      ),
-                      child: _ExifPanel(photo: photo, compact: true),
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    final list = _browseScope(photo);
+    final index = list.indexWhere((p) => p.id == photo.id);
+    if (index < 0 || list.length < 2) return;
+    final target = list[(index + 1) % list.length];
+    unawaited(_goToAdjacentPhoto(target.id));
   }
 
-  Widget _buildPhotoView(
-    BuildContext context,
-    PhotoItem photo,
-    String? prevId,
-    String? nextId,
-  ) {
-    final imageUrl = photo.sourceUrl ?? photo.coverUrl;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final viewBackground =
-        isDark
-            ? FramePalette.viewerBg
-            : context.photosColors.surfaceContainerLow;
-    return ColoredBox(
-      // 暗色使用设计稿查看器底色，亮色跟随主题浅色底。
-      color: viewBackground,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Center(
-              child:
-                  imageUrl != null && imageUrl.isNotEmpty
-                      ? Hero(
-                        tag: 'photo-cover-${photo.id}',
-                        child: InteractiveViewer(
-                          minScale: 1,
-                          maxScale: 5,
-                          child: SizedBox.expand(
-                            child: CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              cacheKey:
-                                  photo.sourceUrl != null
-                                      ? photo.sourceCacheKey
-                                      : photo.coverCacheKey,
-                              fit: BoxFit.contain,
-                              placeholder:
-                                  (context, url) => Center(
-                                    child: CircularProgressIndicator(
-                                      color:
-                                          context.photosColors.primaryContainer,
-                                    ),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) => Center(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.broken_image_outlined,
-                                          color: context
-                                              .photosColors
-                                              .onSurfaceVariant
-                                              .withValues(alpha: 0.4),
-                                          size: 48,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          AppLocalizations.of(
-                                            context,
-                                          ).photosImageLoadFailed,
-                                          style: TextStyle(
-                                            color:
-                                                context
-                                                    .photosColors
-                                                    .onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                            ),
-                          ),
-                        ),
-                      )
-                      : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.photo_outlined,
-                            color: context.photosColors.onSurfaceVariant
-                                .withValues(alpha: 0.4),
-                            size: 64,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            photo.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: context.photosColors.onSurfaceVariant,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-            ),
-          ),
-          if (prevId != null)
-            _ViewerArrowButton(
-              icon: Icons.chevron_left_rounded,
-              tooltip: AppLocalizations.of(context).photosPrevPhoto,
-              alignRight: false,
-              onTap: () => _navigateToAdjacent(photo, -1),
-            ),
-          if (nextId != null)
-            _ViewerArrowButton(
-              icon: Icons.chevron_right_rounded,
-              tooltip: AppLocalizations.of(context).photosNextPhoto,
-              alignRight: true,
-              onTap: () => _navigateToAdjacent(photo, 1),
-            ),
-        ],
-      ),
-    );
-  }
+  // ─── 下载原片 ───
 
-  /// 幻灯片播放当前可见照片全集，从当前照片开始。
-  Map<String, dynamic> _slideshowExtra(PhotoItem photo) {
-    var photos = _browseScope(photo);
-    if (photos.isEmpty) {
-      photos = <PhotoItem>[photo];
+  Future<void> _downloadPhoto() async {
+    final photo = widget.photo;
+    final sourceUrl = photo.sourceUrl;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    if (sourceUrl == null || sourceUrl.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.photosDownloadSourceUnavailable)),
+      );
+      return;
     }
-    final index = photos.indexWhere((item) => item.id == photo.id);
-    return {'photos': photos, 'initialIndex': index < 0 ? 0 : index};
+    final fileName = photo.downloadFileName;
+    try {
+      if (kIsWeb) {
+        await downloadPhotoBatchInBrowser(url: sourceUrl, fileName: fileName);
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.photosDownloadStarted)),
+        );
+        return;
+      }
+      final savedPath = await ref
+          .read(photoCenterControllerProvider.notifier)
+          .savePhotoFileToDisk(
+            url: sourceUrl,
+            sizeBytes: photo.fileSize,
+            suggestedName: fileName,
+          );
+      if (savedPath == null) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.photosDownloadSaved(savedPath))),
+      );
+    } on Exception {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.photosDownloadFailed)),
+      );
+    }
+  }
+
+  /// 关闭查看器：复位幻灯片播放后返回照片列表。
+  ///
+  /// 深链进入时路由栈内没有上级页面，popOrGo 会退化为 go()，
+  /// PopScope 不触发，因此这里显式停止播放。
+  void _closeViewer() {
+    ref.read(photoSlideshowPlayingProvider.notifier).stop();
+    context.popOrGo('/photos');
   }
 
   Future<void> _confirmDelete() async {
@@ -359,7 +254,7 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.photosTrashMoved)));
-      context.popOrGo('/photos');
+      _closeViewer();
     } on Exception {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -441,91 +336,397 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
       }
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final photo = widget.photo;
+    final compact = MediaQuery.sizeOf(context).width < 700;
+    final scope = _browseScope(photo);
+    final scopeIndex = scope.indexWhere((p) => p.id == photo.id);
+    final prevId = _adjacentPhotoId(photo, -1);
+    final nextId = _adjacentPhotoId(photo, 1);
+
+    // 幻灯片开关由 Provider 承载，跨上一张/下一张路由替换保持播放。
+    ref.listen(photoSlideshowPlayingProvider, (_, playing) {
+      if (playing) {
+        _startSlideshow();
+      } else {
+        _stopSlideshow();
+      }
+    });
+
+    return PopScope(
+      // 路由真实退出（关闭/系统返回/删除后返回）时复位播放状态；
+      // 幻灯片推进使用的 pushReplacement 不经过 pop，不会触发复位。
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) return;
+        ref.read(photoSlideshowPlayingProvider.notifier).stop();
+      },
+      child: Stack(
+        children: [
+          // 主体：照片舞台 + 桌面端信息侧栏（侧栏固定宽度，舞台自适应让位）
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _buildPhotoView(context, photo, prevId, nextId)),
+              if (!compact)
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.ease,
+                  alignment: Alignment.centerRight,
+                  child:
+                      _showInfo
+                          ? SizedBox(
+                            width: _kExifPanelWidth,
+                            child: _ExifPanel(photo: photo),
+                          )
+                          : const SizedBox.shrink(),
+                ),
+            ],
+          ),
+          // 紧凑端信息侧栏：全高右抽屉 + 遮罩
+          if (compact && _showInfo)
+            Positioned.fill(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = (constraints.maxWidth * 0.86).clamp(
+                    288.0,
+                    360.0,
+                  );
+                  return Stack(
+                    children: [
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap:
+                              () =>
+                                  ref
+                                      .read(
+                                        photoInfoPanelVisibleProvider.notifier,
+                                      )
+                                      .toggle(),
+                          child: ColoredBox(
+                            color: Colors.black.withValues(alpha: 0.40),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: width,
+                        child: _ExifPanel(photo: photo),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          // 顶部操作栏：设计稿样式，半透明浮层横贯照片与侧栏
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _DetailTopBar(
+              photo: photo,
+              onClose: _closeViewer,
+              onToggleFavorite: () async {
+                try {
+                  if (!mounted) return;
+                  await ref
+                      .read(photoCenterControllerProvider.notifier)
+                      .toggleFavorite(
+                        photo.id,
+                        currentFavorite: photo.favorite,
+                      );
+                  if (!mounted) return;
+                  // 刷新详情
+                  ref.invalidate(photoDetailProvider(photo.id));
+                } on Exception {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLocalizations.of(context).photosOperationFailed,
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              onDelete: _confirmDelete,
+              onToggleInfo:
+                  () =>
+                      ref.read(photoInfoPanelVisibleProvider.notifier).toggle(),
+              onAddToAlbum: () => _showAddToAlbumDialog(context, ref),
+              onEdit: () {
+                // 进入编辑器前停止幻灯片，避免定时器在编辑页下继续换图。
+                ref.read(photoSlideshowPlayingProvider.notifier).stop();
+                context.push('/photos/${photo.id}/edit');
+              },
+              onToggleSlideshow:
+                  () =>
+                      ref.read(photoSlideshowPlayingProvider.notifier).toggle(),
+              onDownload: () => unawaited(_downloadPhoto()),
+              showInfo: _showInfo,
+              slideshowPlaying: ref.watch(photoSlideshowPlayingProvider),
+              slideshowEnabled: scope.length >= 2,
+              compact: compact,
+            ),
+          ),
+          // 幻灯片播放徽章：底部居中
+          if (ref.watch(photoSlideshowPlayingProvider) &&
+              scopeIndex >= 0 &&
+              scope.isNotEmpty)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 20,
+              child: IgnorePointer(
+                child: Center(
+                  child: _SlideshowBadge(
+                    current: scopeIndex + 1,
+                    total: scope.length,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoView(
+    BuildContext context,
+    PhotoItem photo,
+    String? prevId,
+    String? nextId,
+  ) {
+    final imageUrl = photo.sourceUrl ?? photo.coverUrl;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final viewBackground =
+        isDark
+            ? FramePalette.viewerBg
+            : context.photosColors.surfaceContainerLow;
+    return ColoredBox(
+      // 暗色使用设计稿查看器底色，亮色跟随主题浅色底。
+      color: viewBackground,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              // 设计稿照片区四周留白 40px，顶部避开浮层顶栏。
+              padding: const EdgeInsets.fromLTRB(40, 56, 40, 24),
+              child: Center(
+                child:
+                    imageUrl != null && imageUrl.isNotEmpty
+                        ? Hero(
+                          tag: 'photo-cover-${photo.id}',
+                          child: InteractiveViewer(
+                            minScale: 1,
+                            maxScale: 5,
+                            child: SizedBox.expand(
+                              child: CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                cacheKey:
+                                    photo.sourceUrl != null
+                                        ? photo.sourceCacheKey
+                                        : photo.coverCacheKey,
+                                fit: BoxFit.contain,
+                                placeholder:
+                                    (context, url) => Center(
+                                      child: CircularProgressIndicator(
+                                        color:
+                                            context
+                                                .photosColors
+                                                .primaryContainer,
+                                      ),
+                                    ),
+                                errorWidget:
+                                    (context, url, error) => Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.broken_image_outlined,
+                                            color: context
+                                                .photosColors
+                                                .onSurfaceVariant
+                                                .withValues(alpha: 0.4),
+                                            size: 48,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            AppLocalizations.of(
+                                              context,
+                                            ).photosImageLoadFailed,
+                                            style: TextStyle(
+                                              color:
+                                                  context
+                                                      .photosColors
+                                                      .onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                              ),
+                            ),
+                          ),
+                        )
+                        : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.photo_outlined,
+                              color: context.photosColors.onSurfaceVariant
+                                  .withValues(alpha: 0.4),
+                              size: 64,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              photo.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: context.photosColors.onSurfaceVariant,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+              ),
+            ),
+          ),
+          if (prevId != null)
+            _ViewerArrowButton(
+              icon: Icons.chevron_left_rounded,
+              tooltip: AppLocalizations.of(context).photosPrevPhoto,
+              alignRight: false,
+              onTap: () => _navigateToAdjacent(photo, -1),
+            ),
+          if (nextId != null)
+            _ViewerArrowButton(
+              icon: Icons.chevron_right_rounded,
+              tooltip: AppLocalizations.of(context).photosNextPhoto,
+              alignRight: true,
+              onTap: () => _navigateToAdjacent(photo, 1),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
-/// 详情页顶部栏
+/// 详情页顶部栏：设计稿 PhotoViewer 样式的半透明浮层。
 class _DetailTopBar extends StatelessWidget {
   const _DetailTopBar({
     required this.photo,
-    required this.onBack,
+    required this.onClose,
     required this.onToggleFavorite,
     required this.onDelete,
     required this.onToggleInfo,
     required this.onAddToAlbum,
     required this.onEdit,
-    required this.onSlideshow,
+    required this.onToggleSlideshow,
+    required this.onDownload,
     required this.showInfo,
+    required this.slideshowPlaying,
+    required this.slideshowEnabled,
     required this.compact,
   });
 
   final PhotoItem photo;
-  final VoidCallback onBack;
+  final VoidCallback onClose;
   final VoidCallback onToggleFavorite;
   final VoidCallback onDelete;
   final VoidCallback onToggleInfo;
   final VoidCallback onAddToAlbum;
   final VoidCallback onEdit;
-  final VoidCallback onSlideshow;
+  final VoidCallback onToggleSlideshow;
+  final VoidCallback onDownload;
   final bool showInfo;
+  final bool slideshowPlaying;
+  final bool slideshowEnabled;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barColor =
+        isDark
+            ? Colors.black.withValues(alpha: 0.38)
+            : context.photosColors.surfaceContainer.withValues(alpha: 0.92);
+    final iconColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.70)
+            : context.photosColors.onSurfaceVariant;
+    final activeColor = context.frameColors.accent;
+    final titleColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.90)
+            : context.photosColors.onSurface;
+    final dateColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.50)
+            : context.photosColors.onSurfaceVariant;
+    final centerTitle = photo.locationDisplay ?? photo.title;
+    final date = photo.dateTaken ?? photo.createdAt;
+
     return Container(
-      height: 56,
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: context.photosColors.surfaceContainer.withValues(
-          alpha: compact ? 0.98 : 0.70,
-        ),
-        border: Border(
-          bottom: BorderSide(
-            color: context.photosColors.outlineVariant.withValues(alpha: 0.32),
-          ),
-        ),
+        color: barColor,
+        border:
+            isDark
+                ? null
+                : Border(
+                  bottom: BorderSide(
+                    color: context.photosColors.outlineVariant.withValues(
+                      alpha: 0.32,
+                    ),
+                  ),
+                ),
       ),
       child: Row(
         children: [
           IconButton(
-            tooltip: AppLocalizations.of(context).photosBack,
-            onPressed: onBack,
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: context.photosColors.onSurface,
-            ),
+            tooltip: AppLocalizations.of(context).coreClose,
+            onPressed: onClose,
+            icon: Icon(Icons.close_rounded, color: iconColor),
+            visualDensity: VisualDensity.compact,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 4),
           Expanded(
-            child: Text(
-              photo.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: context.photosColors.onSurface,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip:
-                photo.favorite
-                    ? AppLocalizations.of(context).photosUnfavorite
-                    : AppLocalizations.of(context).photosFavorite,
-            onPressed: onToggleFavorite,
-            icon: Icon(
-              photo.favorite
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              color:
-                  photo.favorite
-                      ? context.photosColors.danger
-                      : context.photosColors.onSurfaceVariant,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  centerTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (date != null)
+                  Text(
+                    _formatShortDate(date),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: dateColor, fontSize: 11),
+                  ),
+              ],
             ),
           ),
           if (compact)
             PopupMenuButton<_PhotoMenuAction>(
               tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+              color: context.photosColors.surfaceContainerHigh,
+              icon: Icon(Icons.more_vert_rounded, color: iconColor),
               onSelected: (action) {
                 switch (action) {
                   case _PhotoMenuAction.info:
@@ -533,9 +734,11 @@ class _DetailTopBar extends StatelessWidget {
                   case _PhotoMenuAction.edit:
                     onEdit();
                   case _PhotoMenuAction.slideshow:
-                    onSlideshow();
+                    onToggleSlideshow();
                   case _PhotoMenuAction.addToAlbum:
                     onAddToAlbum();
+                  case _PhotoMenuAction.download:
+                    onDownload();
                   case _PhotoMenuAction.delete:
                     onDelete();
                 }
@@ -556,12 +759,19 @@ class _DetailTopBar extends StatelessWidget {
                     ),
                     PopupMenuItem(
                       value: _PhotoMenuAction.slideshow,
+                      enabled: slideshowEnabled,
                       child: Text(AppLocalizations.of(context).photosSlideshow),
                     ),
                     PopupMenuItem(
                       value: _PhotoMenuAction.addToAlbum,
                       child: Text(
                         AppLocalizations.of(context).photosAddToAlbum,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _PhotoMenuAction.download,
+                      child: Text(
+                        AppLocalizations.of(context).photosDownloadPhoto,
                       ),
                     ),
                     PopupMenuItem(
@@ -576,34 +786,75 @@ class _DetailTopBar extends StatelessWidget {
           else ...[
             IconButton(
               tooltip:
+                  photo.favorite
+                      ? AppLocalizations.of(context).photosUnfavorite
+                      : AppLocalizations.of(context).photosFavorite,
+              onPressed: onToggleFavorite,
+              icon: Icon(
+                photo.favorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                color: photo.favorite ? activeColor : iconColor,
+                size: 20,
+              ),
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              tooltip:
                   showInfo
                       ? AppLocalizations.of(context).photosHideInfo
                       : AppLocalizations.of(context).photosShowInfo,
               onPressed: onToggleInfo,
-              icon: const Icon(Icons.info_outline_rounded),
+              icon: Icon(
+                Icons.info_outline_rounded,
+                color: showInfo ? activeColor : iconColor,
+                size: 20,
+              ),
+              visualDensity: VisualDensity.compact,
             ),
             IconButton(
               tooltip: AppLocalizations.of(context).photosEdit,
               onPressed: onEdit,
-              icon: const Icon(Icons.edit_outlined),
+              icon: Icon(Icons.edit_outlined, color: iconColor, size: 20),
+              visualDensity: VisualDensity.compact,
             ),
             IconButton(
               tooltip: AppLocalizations.of(context).photosSlideshow,
-              onPressed: onSlideshow,
-              icon: const Icon(Icons.slideshow_outlined),
+              onPressed: slideshowEnabled ? onToggleSlideshow : null,
+              icon: Icon(
+                slideshowPlaying
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                color: slideshowPlaying ? activeColor : iconColor,
+                size: 22,
+              ),
+              visualDensity: VisualDensity.compact,
             ),
             IconButton(
               tooltip: AppLocalizations.of(context).photosAddToAlbum,
               onPressed: onAddToAlbum,
-              icon: const Icon(Icons.create_new_folder_outlined),
+              icon: Icon(
+                Icons.create_new_folder_outlined,
+                color: iconColor,
+                size: 20,
+              ),
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              tooltip: AppLocalizations.of(context).photosDownloadPhoto,
+              onPressed: onDownload,
+              icon: Icon(Icons.download_outlined, color: iconColor, size: 20),
+              visualDensity: VisualDensity.compact,
             ),
             IconButton(
               tooltip: AppLocalizations.of(context).photosDelete,
               onPressed: onDelete,
               icon: Icon(
                 Icons.delete_outline_rounded,
-                color: context.photosColors.danger,
+                color: iconColor,
+                size: 20,
               ),
+              visualDensity: VisualDensity.compact,
             ),
           ],
         ],
@@ -612,170 +863,264 @@ class _DetailTopBar extends StatelessWidget {
   }
 }
 
-/// EXIF 信息面板
-enum _PhotoMenuAction { info, edit, slideshow, addToAlbum, delete }
+/// 幻灯片播放状态徽章：底部居中，黑色半透明胶囊。
+class _SlideshowBadge extends StatelessWidget {
+  const _SlideshowBadge({required this.current, required this.total});
 
+  final int current;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.50),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.play_arrow_rounded,
+            size: 14,
+            color: Colors.white.withValues(alpha: 0.80),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            AppLocalizations.of(context).photosSlideshowBadge(current, total),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.80),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _PhotoMenuAction { info, edit, slideshow, addToAlbum, download, delete }
+
+/// EXIF 信息侧栏：设计稿 w-72 独立全高侧栏，堆叠式标签/数值行。
 class _ExifPanel extends ConsumerWidget {
-  const _ExifPanel({required this.photo, this.compact = false});
+  const _ExifPanel({required this.photo});
 
   final PhotoItem photo;
-  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDark
+            ? FramePalette.viewerPanel
+            : context.photosColors.surfaceContainer;
+    final headerColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.90)
+            : context.photosColors.onSurface;
+    final sectionColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.50)
+            : context.photosColors.onSurfaceVariant;
+    final labelColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.35)
+            : context.photosColors.onSurfaceVariant.withValues(alpha: 0.7);
+    final valueColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.80)
+            : context.photosColors.onSurface;
+    final dividerColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : context.photosColors.outlineVariant.withValues(alpha: 0.24);
+    final pillBackground =
+        isDark
+            ? Colors.white.withValues(alpha: 0.10)
+            : context.photosColors.surfaceContainerHighest;
+    final pillColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.60)
+            : context.photosColors.onSurfaceVariant;
+
     return Container(
-      width: compact ? double.infinity : 280,
+      width: double.infinity,
       decoration: BoxDecoration(
-        color: context.photosColors.surfaceContainer,
-        border: Border(
-          left: BorderSide(
-            color:
-                compact
-                    ? Colors.transparent
-                    : context.photosColors.outlineVariant.withValues(
-                      alpha: 0.24,
-                    ),
-          ),
-          top: BorderSide(
-            color: context.photosColors.outlineVariant.withValues(alpha: 0.24),
-          ),
-        ),
+        color: backgroundColor,
+        border: Border(left: BorderSide(color: dividerColor)),
       ),
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(20),
+        // 顶部留白避开浮层顶栏（设计稿 pt-16）。
+        padding: const EdgeInsets.fromLTRB(20, 68, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               AppLocalizations.of(context).photosPhotoInfo,
               style: TextStyle(
-                color: context.photosColors.onSurface,
-                fontSize: 16,
+                color: headerColor,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
               ),
             ),
             const SizedBox(height: 20),
-            // 基本信息
-            _InfoSection(
+            _ExifSection(
               title: AppLocalizations.of(context).photosBasicInfo,
-              items: [
+              sectionColor: sectionColor,
+              children: [
                 if (photo.format.isNotEmpty)
-                  _InfoItem(
+                  _ExifEntry(
                     label: AppLocalizations.of(context).photosFormat,
                     value: photo.format.toUpperCase(),
+                    labelColor: labelColor,
+                    valueColor: valueColor,
                   ),
-                _InfoItem(
+                _ExifEntry(
                   label: AppLocalizations.of(context).photosFileSize,
                   value: photo.fileSizeDisplay,
+                  labelColor: labelColor,
+                  valueColor: valueColor,
                 ),
                 if (photo.resolutionDisplay != null)
-                  _InfoItem(
+                  _ExifEntry(
                     label: AppLocalizations.of(context).photosResolution,
                     value: photo.resolutionDisplay!,
+                    labelColor: labelColor,
+                    valueColor: valueColor,
                   ),
                 if (photo.dateTaken != null)
-                  _InfoItem(
+                  _ExifEntry(
                     label: AppLocalizations.of(context).photosDateTaken,
                     value: _formatDate(photo.dateTaken!),
+                    labelColor: labelColor,
+                    valueColor: valueColor,
                   ),
               ],
             ),
-            // 相机信息
             if (photo.hasExif) ...[
               const SizedBox(height: 20),
-              _InfoSection(
+              _ExifSection(
                 title: AppLocalizations.of(context).photosCameraInfo,
-                items: [
+                sectionColor: sectionColor,
+                children: [
                   if (photo.cameraMake != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosBrand,
                       value: photo.cameraMake!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.cameraModel != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosModel,
                       value: photo.cameraModel!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.lensModel != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosLens,
                       value: photo.lensModel!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.aperture != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosAperture,
                       value: 'f/${photo.aperture}',
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.shutterSpeed != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosShutterSpeed,
                       value: photo.shutterSpeed!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.iso != null)
-                    _InfoItem(label: 'ISO', value: '${photo.iso}'),
+                    _ExifEntry(
+                      label: 'ISO',
+                      value: '${photo.iso}',
+                      labelColor: labelColor,
+                      valueColor: valueColor,
+                    ),
                   if (photo.focalLength != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosFocalLength,
                       value: '${photo.focalLength}mm',
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                 ],
               ),
             ],
-            // 高级EXIF信息
             if (photo.hasAdvancedExif) ...[
               const SizedBox(height: 20),
-              _InfoSection(
+              _ExifSection(
                 title: AppLocalizations.of(context).photosShootingParams,
-                items: [
+                sectionColor: sectionColor,
+                children: [
                   if (photo.flash != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosFlash,
                       value: photo.flash!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.whiteBalance != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosWhiteBalance,
                       value: photo.whiteBalance!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                   if (photo.meteringMode != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosMeteringMode,
                       value: photo.meteringMode!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
                 ],
               ),
             ],
-            // GPS信息
             if (photo.hasGps) ...[
               const SizedBox(height: 20),
-              _InfoSection(
+              _ExifSection(
                 title: AppLocalizations.of(context).photosLocationInfo,
-                items: [
+                sectionColor: sectionColor,
+                children: [
                   if (photo.locationDisplay != null)
-                    _InfoItem(
+                    _ExifEntry(
                       label: AppLocalizations.of(context).photosPlace,
                       value: photo.locationDisplay!,
+                      labelColor: labelColor,
+                      valueColor: valueColor,
                     ),
-                  _InfoItem(
+                  _ExifEntry(
                     label: AppLocalizations.of(context).photosCoordinates,
                     value:
                         '${photo.gpsLatitude!.toStringAsFixed(6)}, ${photo.gpsLongitude!.toStringAsFixed(6)}',
+                    labelColor: labelColor,
+                    valueColor: valueColor,
                   ),
                 ],
               ),
             ],
-            // 图像分析标签
             if (photo.contentAnalysis?.labels.isNotEmpty == true) ...[
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
                 AppLocalizations.of(context).photosAIRecognition,
                 style: TextStyle(
-                  color: context.photosColors.onSurfaceVariant,
+                  color: sectionColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               for (final entry
                   in photo.contentAnalysis!.labelsByNamespace.entries) ...[
                 Padding(
@@ -783,7 +1128,7 @@ class _ExifPanel extends ConsumerWidget {
                   child: Text(
                     _localizedPhotoAnalysisNamespace(context, entry.key),
                     style: TextStyle(
-                      color: context.photosColors.onSurfaceVariant,
+                      color: labelColor,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
@@ -794,72 +1139,56 @@ class _ExifPanel extends ConsumerWidget {
                   runSpacing: 6,
                   children: [
                     for (final label in entry.value)
-                      Chip(
-                        label: Text(
-                          _localizedPhotoContentLabel(context, label.code),
-                          style: TextStyle(
-                            color: context.photosColors.onSurface,
-                            fontSize: 12,
-                          ),
-                        ),
-                        backgroundColor: context.photosColors.primaryContainer
-                            .withValues(alpha: 0.14),
-                        side: BorderSide.none,
+                      _InfoPill(
+                        text: _localizedPhotoContentLabel(context, label.code),
+                        background: pillBackground,
+                        foreground: pillColor,
                       ),
                   ],
                 ),
                 const SizedBox(height: 8),
               ],
             ],
-            // 描述
             if (photo.description != null && photo.description!.isNotEmpty) ...[
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
                 AppLocalizations.of(context).photosDescription,
                 style: TextStyle(
-                  color: context.photosColors.onSurfaceVariant,
+                  color: sectionColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               Text(
                 photo.description!,
                 style: TextStyle(
-                  color: context.photosColors.onSurface,
+                  color: valueColor,
                   fontSize: 13,
                   height: 18 / 13,
                 ),
               ),
             ],
-            // 标签
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               AppLocalizations.of(context).photosTag,
               style: TextStyle(
-                color: context.photosColors.onSurfaceVariant,
+                color: sectionColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 6,
               runSpacing: 6,
               children: [
                 for (final tag in photo.tags)
-                  Chip(
-                    label: Text(
-                      _localizedPhotoAiCategory(context, tag),
-                      style: TextStyle(
-                        color: context.photosColors.onSurface,
-                        fontSize: 12,
-                      ),
-                    ),
-                    backgroundColor: context.photosColors.surfaceContainerHigh,
-                    side: BorderSide.none,
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () async {
+                  _InfoPill(
+                    text: _localizedPhotoAiCategory(context, tag),
+                    background: pillBackground,
+                    foreground: pillColor,
+                    onRemoved: () async {
                       try {
                         await ref
                             .read(photoCenterControllerProvider.notifier)
@@ -881,23 +1210,14 @@ class _ExifPanel extends ConsumerWidget {
                       }
                     },
                   ),
-                ActionChip(
-                  label: Text(
-                    AppLocalizations.of(context).photosAddTag,
-                    style: TextStyle(
-                      color: context.photosColors.primaryContainer,
-                      fontSize: 12,
-                    ),
+                _InfoPill(
+                  text: AppLocalizations.of(context).photosAddTag,
+                  background: context.frameColors.accent.withValues(
+                    alpha: 0.12,
                   ),
-                  backgroundColor: context.photosColors.primaryContainer
-                      .withValues(alpha: 0.12),
-                  side: BorderSide.none,
-                  avatar: Icon(
-                    Icons.add,
-                    size: 16,
-                    color: context.photosColors.primaryContainer,
-                  ),
-                  onPressed: () => _showAddTagDialog(context, ref),
+                  foreground: context.frameColors.accent,
+                  icon: Icons.add,
+                  onRemoved: () => _showAddTagDialog(context, ref),
                 ),
               ],
             ),
@@ -905,11 +1225,6 @@ class _ExifPanel extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
-        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _showAddTagDialog(BuildContext context, WidgetRef ref) async {
@@ -983,6 +1298,132 @@ class _ExifPanel extends ConsumerWidget {
   }
 }
 
+/// EXIF 分组标题。
+class _ExifSection extends StatelessWidget {
+  const _ExifSection({
+    required this.title,
+    required this.sectionColor,
+    required this.children,
+  });
+
+  final String title;
+  final Color sectionColor;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            color: sectionColor,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 10),
+        ...children,
+      ],
+    );
+  }
+}
+
+/// 设计稿 EXIF 行：标签在上、数值在下，行间 14px。
+class _ExifEntry extends StatelessWidget {
+  const _ExifEntry({
+    required this.label,
+    required this.value,
+    required this.labelColor,
+    required this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color labelColor;
+  final Color valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: labelColor, fontSize: 11)),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 设计稿标签胶囊：全圆角、半透明底、可带关闭或加号动作。
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({
+    required this.text,
+    required this.background,
+    required this.foreground,
+    this.icon,
+    this.onRemoved,
+  });
+
+  final String text;
+  final Color background;
+  final Color foreground;
+  final IconData? icon;
+  final VoidCallback? onRemoved;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = onRemoved;
+    return Material(
+      color: background,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        onTap: action,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 14, color: foreground),
+                const SizedBox(width: 4),
+              ],
+              Text(text, style: TextStyle(color: foreground, fontSize: 12)),
+              if (action != null && icon == null) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.close_rounded, size: 14, color: foreground),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _formatDate(DateTime date) {
+  return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
+      '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+}
+
+String _formatShortDate(DateTime date) {
+  return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+}
+
 String _localizedPhotoAiCategory(BuildContext context, String category) {
   final l10n = AppLocalizations.of(context);
   return switch (category) {
@@ -1050,69 +1491,6 @@ String _localizedPhotoAnalysisNamespace(
     'STYLE' => l10n.photosAnalysisStyle,
     _ => l10n.photosAIRecognition,
   };
-}
-
-class _InfoSection extends StatelessWidget {
-  const _InfoSection({required this.title, required this.items});
-
-  final String title;
-  final List<_InfoItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty) return SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: context.photosColors.onSurfaceVariant,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        SizedBox(height: 8),
-        for (final item in items) ...[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 72,
-                child: Text(
-                  item.label,
-                  style: TextStyle(
-                    color: context.photosColors.onSurfaceVariant.withValues(
-                      alpha: 0.7,
-                    ),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  item.value,
-                  style: TextStyle(
-                    color: context.photosColors.onSurface,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-        ],
-      ],
-    );
-  }
-}
-
-class _InfoItem {
-  const _InfoItem({required this.label, required this.value});
-
-  final String label;
-  final String value;
 }
 
 /// Frame 查看器左右切换按钮：42px 方形、圆角 8、35% 黑底、白色 60% 线形图标。

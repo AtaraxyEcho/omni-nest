@@ -125,4 +125,24 @@ void main() {
 
     expect(first.coverCacheKey, renewed.coverCacheKey);
   });
+
+  test('下载文件名在标题缺扩展名时按格式补全', () {
+    PhotoItem buildPhoto(String title, String format) {
+      return PhotoItem(
+        id: 'photo-1',
+        fileNodeId: 'file-1',
+        title: title,
+        format: format,
+        fileSize: 1,
+        metadataStatus: 'MATCHED',
+        favorite: false,
+        createdAt: DateTime(2026),
+      );
+    }
+
+    expect(buildPhoto('Summer', 'JPEG').downloadFileName, 'Summer.jpeg');
+    expect(buildPhoto('Summer.jpg', 'JPEG').downloadFileName, 'Summer.jpg');
+    expect(buildPhoto('Summer.HEIC', 'HEIC').downloadFileName, 'Summer.HEIC');
+    expect(buildPhoto('Summer', '').downloadFileName, 'Summer');
+  });
 }

@@ -170,6 +170,17 @@ class PhotoRepositoryImpl implements PhotoRepository {
   ) => _api.downloadBatchArchive(ticket, destinationPath);
 
   @override
+  Future<void> downloadPhotoFile({
+    required String url,
+    required int sizeBytes,
+    required String destinationPath,
+  }) => _api.downloadPhotoFile(
+    url: url,
+    sizeBytes: sizeBytes,
+    destinationPath: destinationPath,
+  );
+
+  @override
   Future<PhotoEditVersion> applyEdit(
     String photoId,
     String editType,

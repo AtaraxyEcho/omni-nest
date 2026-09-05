@@ -6251,7 +6251,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosCancel => 'Cancel';
 
   @override
-  String get photosDelete => 'Permanently Delete';
+  String get photosDelete => 'Delete';
+
+  @override
+  String get photosDeletePermanently => 'Delete Permanently';
 
   @override
   String photosDeletedPhoto(Object title) {
@@ -6385,6 +6388,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get photosArchiveDownloadFailed =>
       'ZIP download failed. Choose the same path to resume.';
+
+  @override
+  String get photosDownloadPhoto => 'Download original';
+
+  @override
+  String get photosDownloadFailed => 'Download failed, please try again later';
+
+  @override
+  String photosDownloadSaved(Object path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get photosDownloadSourceUnavailable =>
+      'Original file is unavailable for download';
+
+  @override
+  String photosSlideshowBadge(int current, int total) {
+    return 'Slideshow · $current / $total';
+  }
 
   @override
   String get photosBatchAddTag => 'Batch Add Tags';

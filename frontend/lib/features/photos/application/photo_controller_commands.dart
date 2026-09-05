@@ -103,6 +103,26 @@ mixin PhotoCenterControllerCommands on AsyncNotifier<PhotoCenterState> {
     return location.path;
   }
 
+  /// 弹出系统保存对话框并下载单张照片原片到所选位置。
+  ///
+  /// 返回保存路径；用户取消选择时返回 null。
+  Future<String?> savePhotoFileToDisk({
+    required String url,
+    required int sizeBytes,
+    required String suggestedName,
+  }) async {
+    final location = await getSaveLocation(suggestedName: suggestedName);
+    if (location == null) {
+      return null;
+    }
+    await _repo.downloadPhotoFile(
+      url: url,
+      sizeBytes: sizeBytes,
+      destinationPath: location.path,
+    );
+    return location.path;
+  }
+
   /// 应用编辑操作
   Future<PhotoEditVersion> applyEdit(
     String photoId,

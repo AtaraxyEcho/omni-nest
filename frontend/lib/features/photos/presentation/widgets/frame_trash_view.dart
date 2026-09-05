@@ -362,7 +362,9 @@ class _TrashTileState extends State<_TrashTile> {
                               _TrashPillButton(
                                 icon: Icons.delete_outline_rounded,
                                 label:
-                                    AppLocalizations.of(context).photosDelete,
+                                    AppLocalizations.of(
+                                      context,
+                                    ).photosDeletePermanently,
                                 background: const Color(0xFFEF4444),
                                 foreground: Colors.white,
                                 onTap: widget.onDeleteForever,

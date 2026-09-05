@@ -144,6 +144,27 @@ class PhotoItem {
   /// 原图缓存键不包含临时签名参数，避免详情页重复下载同一文件。
   String get sourceCacheKey => 'photo-source:$id';
 
+  /// 下载原片时建议的文件名；标题缺少扩展名时按格式补全。
+  String get downloadFileName {
+    final name = title.trim();
+    final ext = format.toLowerCase();
+    if (ext.isEmpty) {
+      return name;
+    }
+    if (name.toLowerCase().endsWith('.$ext')) {
+      return name;
+    }
+    // 标题自带其他写法的扩展名（如 .jpg 与格式 jpeg）时不重复追加。
+    final dotIndex = name.lastIndexOf('.');
+    final suffix = dotIndex < 0 ? '' : name.substring(dotIndex + 1);
+    final looksLikeExtension =
+        dotIndex > 0 &&
+        suffix.length >= 2 &&
+        suffix.length <= 5 &&
+        RegExp(r'^[A-Za-z0-9]+$').hasMatch(suffix);
+    return looksLikeExtension ? name : '$name.$ext';
+  }
+
   /// 文件大小可读格式
   String get fileSizeDisplay {
     if (fileSize < 1024) return '$fileSize B';

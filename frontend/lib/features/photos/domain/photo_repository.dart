@@ -141,6 +141,13 @@ abstract interface class PhotoRepository {
     String destinationPath,
   );
 
+  /// 续传并保存单张照片原片。
+  Future<void> downloadPhotoFile({
+    required String url,
+    required int sizeBytes,
+    required String destinationPath,
+  });
+
   /// 应用编辑操作
   Future<PhotoEditVersion> applyEdit(
     String photoId,

@@ -939,6 +939,22 @@ final photoInfoPanelVisibleProvider =
       PhotoInfoPanelVisibleNotifier.new,
     );
 
+/// 照片详情页幻灯片播放状态；跨上一张/下一张路由替换保持，
+/// 由详情页在路由真实退出（关闭/系统返回）时复位为暂停。
+class PhotoSlideshowPlayingNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+
+  void stop() => state = false;
+}
+
+final photoSlideshowPlayingProvider =
+    NotifierProvider<PhotoSlideshowPlayingNotifier, bool>(
+      PhotoSlideshowPlayingNotifier.new,
+    );
+
 final photoCenterControllerProvider =
     AsyncNotifierProvider<PhotoCenterController, PhotoCenterState>(
       PhotoCenterController.new,

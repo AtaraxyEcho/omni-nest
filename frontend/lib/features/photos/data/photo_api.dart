@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:omninest/core/errors/app_exception.dart';
 import 'package:omninest/core/network/api_client.dart';
 import 'package:omninest/features/photos/data/photo_batch_archive_downloader.dart';
+import 'package:omninest/features/photos/data/photo_file_downloader.dart';
 import 'package:omninest/features/photos/domain/photo.dart';
 import 'package:omninest/features/photos/domain/photo_album.dart';
 import 'package:omninest/features/photos/domain/photo_batch_task.dart';
@@ -368,6 +369,20 @@ class PhotoApi {
     return downloadPhotoBatchArchive(
       dio: apiClient.dio,
       ticket: ticket,
+      destinationPath: destinationPath,
+    );
+  }
+
+  /// 在原生平台续传单张照片原片并原子保存。
+  Future<void> downloadPhotoFile({
+    required String url,
+    required int sizeBytes,
+    required String destinationPath,
+  }) {
+    return downloadPhotoFileToPath(
+      dio: apiClient.dio,
+      url: url,
+      sizeBytes: sizeBytes,
       destinationPath: destinationPath,
     );
   }
