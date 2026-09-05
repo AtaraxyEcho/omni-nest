@@ -39,7 +39,18 @@ class _FrameViewContent extends ConsumerWidget {
         FrameView.grid || FrameView.favorites => _buildGrid(context, ref),
         FrameView.timeline => PhotoTimelineView(
           key: const ValueKey('frame-timeline'),
-          onOpenPhoto: onOpenPhoto,
+          onOpenPhoto: (photo) {
+            // 时间线的浏览范围为当前已加载的各月份预览照片。
+            final timeline = state.timeline;
+            if (timeline != null) {
+              final previews = <PhotoItem>[
+                for (final year in timeline.years)
+                  for (final month in year.months) ...month.previewPhotos,
+              ];
+              ref.read(photoBrowseScopeProvider.notifier).set(previews);
+            }
+            onOpenPhoto(photo);
+          },
           state: state,
         ),
         FrameView.locations => FrameEmptyView(
@@ -80,7 +91,11 @@ class _FrameViewContent extends ConsumerWidget {
     final grid = FrameMasonryGrid(
       key: ValueKey(isFavorites ? 'frame-grid-favorites' : 'frame-grid-all'),
       photos: state.visiblePhotos,
-      onOpenPhoto: onOpenPhoto,
+      onOpenPhoto: (photo) {
+        // 记录浏览范围：详情页的上一张/下一张与幻灯片以该序列为准。
+        ref.read(photoBrowseScopeProvider.notifier).set(state.visiblePhotos);
+        onOpenPhoto(photo);
+      },
       onToggleFavorite: onToggleFavorite,
       emptyMessage: isFavorites ? l10n.photosNoFavorites : l10n.photosNoPhotos,
       emptySubtitle:

@@ -100,11 +100,19 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
     }
   }
 
-  /// 在当前照片列表中找到相邻照片 ID，返回 null 表示无相邻照片。
-  String? _adjacentPhotoId(PhotoItem photo, int offset) {
+  /// 当前浏览范围：浏览视图打开照片时写入；未写入时回退为全部照片。
+  List<PhotoItem> _browseScope(PhotoItem photo) {
     final centerState = ref.read(photoCenterControllerProvider).asData?.value;
-    if (centerState == null) return null;
-    final list = centerState.photos;
+    final scope = ref.read(photoBrowseScopeProvider);
+    if (scope.length > 1 && scope.any((item) => item.id == photo.id)) {
+      return scope;
+    }
+    return centerState?.photos ?? const <PhotoItem>[];
+  }
+
+  /// 在当前浏览范围中找到相邻照片 ID，返回 null 表示无相邻照片。
+  String? _adjacentPhotoId(PhotoItem photo, int offset) {
+    final list = _browseScope(photo);
     final index = list.indexWhere((p) => p.id == photo.id);
     if (index < 0) return null;
     final target = index + offset;
@@ -115,6 +123,17 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
   void _navigateToAdjacent(PhotoItem photo, int offset) {
     final targetId = _adjacentPhotoId(photo, offset);
     if (targetId == null || !mounted) return;
+    unawaited(_goToAdjacentPhoto(targetId));
+  }
+
+  /// 预取目标详情后再替换路由，避免切换时出现加载动画。
+  Future<void> _goToAdjacentPhoto(String targetId) async {
+    try {
+      await ref.read(photoDetailProvider(targetId).future);
+    } on Exception {
+      // 预取失败时照常跳转，由目标页面展示错误。
+    }
+    if (!mounted) return;
     context.pushReplacement('/photos/$targetId');
   }
 
@@ -315,9 +334,10 @@ class _PhotoDetailBodyState extends ConsumerState<_PhotoDetailBody> {
 
   /// 幻灯片播放当前可见照片全集，从当前照片开始。
   Map<String, dynamic> _slideshowExtra(PhotoItem photo) {
-    final state = ref.read(photoCenterControllerProvider).asData?.value;
-    final visible = state?.visiblePhotos ?? const <PhotoItem>[];
-    final photos = visible.isNotEmpty ? visible : <PhotoItem>[photo];
+    var photos = _browseScope(photo);
+    if (photos.isEmpty) {
+      photos = <PhotoItem>[photo];
+    }
     final index = photos.indexWhere((item) => item.id == photo.id);
     return {'photos': photos, 'initialIndex': index < 0 ? 0 : index};
   }

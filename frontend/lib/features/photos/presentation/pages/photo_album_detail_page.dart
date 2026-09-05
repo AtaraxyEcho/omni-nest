@@ -113,8 +113,13 @@ class _AlbumDetailBody extends ConsumerWidget {
                                 return PhotoGridTile(
                                   key: ValueKey(photo.id),
                                   photo: photo,
-                                  onTap:
-                                      () => context.push('/photos/${photo.id}'),
+                                  onTap: () {
+                                    // 浏览范围 = 当前相册的照片序列。
+                                    ref
+                                        .read(photoBrowseScopeProvider.notifier)
+                                        .set(photos);
+                                    context.push('/photos/${photo.id}');
+                                  },
                                   onLongPress:
                                       () => _confirmRemoveFromAlbum(
                                         context,

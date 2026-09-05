@@ -889,6 +889,21 @@ class PhotoCenterController extends AsyncNotifier<PhotoCenterState>
   }
 }
 
+/// 当前浏览的照片序列：详情页的上一张/下一张与幻灯片范围来源。
+///
+/// 由各浏览视图（全部照片、收藏、时间线、影集详情等）在用户打开照片时写入。
+class PhotoBrowseScopeNotifier extends Notifier<List<PhotoItem>> {
+  @override
+  List<PhotoItem> build() => const [];
+
+  void set(List<PhotoItem> photos) => state = List.unmodifiable(photos);
+}
+
+final photoBrowseScopeProvider =
+    NotifierProvider<PhotoBrowseScopeNotifier, List<PhotoItem>>(
+      PhotoBrowseScopeNotifier.new,
+    );
+
 /// 照片详情页信息面板的展开状态；在上一张/下一张切换间保持。
 class PhotoInfoPanelVisibleNotifier extends Notifier<bool> {
   @override

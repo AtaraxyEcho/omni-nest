@@ -31,21 +31,31 @@ class SlideshowControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 顶部关闭按钮
+        // 顶部关闭按钮：与查看器箭头一致的描边方块
         Positioned(
           top: 16,
           right: 16,
-          child: IconButton(
-            tooltip: AppLocalizations.of(context).coreClose,
-            onPressed: onClose,
-            icon: Icon(
-              Icons.close_rounded,
-              color: context.photosColors.slideshowText,
-              size: 28,
+          child: Material(
+            color: Colors.black.withValues(alpha: 0.45),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.24)),
             ),
-            style: IconButton.styleFrom(
-              backgroundColor: context.photosColors.badgeBg,
-              padding: const EdgeInsets.all(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: onClose,
+              child: Tooltip(
+                message: AppLocalizations.of(context).coreClose,
+                child: SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 22,
+                    color: Colors.white.withValues(alpha: 0.92),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
